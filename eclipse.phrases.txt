@@ -1,0 +1,30 @@
+"Phrases"
+{
+  "Choice 1"
+  {
+    "en"  "Instant"
+	  "es"  "Instantaneos"
+  }
+    "Choice 2"
+  {
+    "en"  "Long Action"
+    "es"  "Larga duración"
+  }
+
+  "Choice 3"
+  {
+    "en"  "Team Bonuses"
+    "es"  "Bonos de equipo"
+
+  }
+  "Menu Title"
+  {
+    "en"  "Eclipse Management System"
+    "es"  "Sistema de Gestion Eclipse"
+  }
+  "Vote Nextmap"
+  {
+    "en"  "Vote Nextmap"
+    "es"  "Votar Siguiente Mapa"
+  }
+}
