@@ -5,14 +5,18 @@
 /////// DATABASE MANAGEMENT SYSTEM ///////////
 #define EMS_MAIN_FILE	 // EMS_MAIN_FILE define main file as the current core
 #define ADMIN_DB_NAME "admins"
-#tryinclude "modules/db-utils.sp"
+#tryinclude "utils/database.utils.sp"
 //////////////////////////////////////////////
 
 /////// MENU TEST ///////////////////////////
 #define CHOICE1 "#choice1"
 #define CHOICE2 "#choice2"
 #define CHOICE3 "#choice3"
-#tryinclude "modules/buy-menu.sp"
+#tryinclude "modules/buy-menu.module.sp"
+//////////////////////////////////////////////
+
+/////// SERVER MANAGEMENT UTILS ////////////
+#tryinclude "utils/server-management.utils.sp"
 //////////////////////////////////////////////
 
 #pragma newdecls required
@@ -46,4 +50,6 @@ public void OnPluginStart()
 	}
 	LoadTranslations("eclipse.phrases");
 	RegConsoleCmd("buy", Cmd_Buy);
+	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
+	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
 }

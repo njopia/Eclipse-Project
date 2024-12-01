@@ -2,7 +2,7 @@
 Handle db;
 
 #if !defined EMS_MAIN_FILE
-	#error Este archivo debe estar dentro de "scripting/modules/" al momento de compilar orquestador principal.
+	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
 
 public bool doSqlConnection(const char[] databaseName)

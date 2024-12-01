@@ -1,4 +1,7 @@
 
+#if !defined EMS_MAIN_FILE
+	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
+#endif
 
 public int MenuHandler1(Menu menu, MenuAction action, int param1, int param2)
 {
@@ -18,7 +21,7 @@ public int MenuHandler1(Menu menu, MenuAction action, int param1, int param2)
 			}
 			else
 			{
-				PrintToChatAll("Cliente %d selected %s", param1, info);
+				PrintToChatAll("Clientes %d selected %s", param1, info);
 			}
 		}
 
