@@ -2,9 +2,13 @@
 #include <sdktools>
 #include <sourcemod>
 
+#pragma newdecls required
+#pragma semicolon 1
+
 /////// DATABASE MANAGEMENT SYSTEM ///////////
 #define EMS_MAIN_FILE	 // EMS_MAIN_FILE define main file as the current core
-#define ADMIN_DB_NAME "admins"
+#define ADMIN_DB_NAME	"admins"
+#define PLAYERS_DB_NAME "players"
 #tryinclude "utils/database.utils.sp"
 //////////////////////////////////////////////
 
@@ -19,9 +23,11 @@
 #tryinclude "utils/server-management.utils.sp"
 //////////////////////////////////////////////
 
-#pragma newdecls required
-#pragma semicolon 1
+/////// PLUGIN VARIABLES ////////////////////
 
+#define LOG_PATH "logs\\Eclipse_Management_System.log"
+static char logfilepath[PLATFORM_MAX_PATH];
+//////////////////////////////////////////////
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -44,12 +50,22 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
-	if (!doSqlConnection(ADMIN_DB_NAME))
+	BuildPath(Path_SM, logfilepath, sizeof(logfilepath), LOG_PATH);
+	LogToFile(logfilepath, "|               PLUGIN START                |");
+
+	if (checkDBFile(PLAYERS_DB_NAME))
 	{
-		SetFailState("Error en la conexion a la base de datos");
+		doSqlConnection(PLAYERS_DB_NAME);
 	}
+	if (checkDBFile(ADMIN_DB_NAME))
+	{
+		doSqlConnection(ADMIN_DB_NAME);
+	}
+	buyMenuOnPluginStart();
 	LoadTranslations("eclipse.phrases");
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
+
+	//CreateTimer(1.0, Timer_UpdateUVLight, _, TIMER_REPEAT);
 }

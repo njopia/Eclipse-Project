@@ -1,5 +1,4 @@
-
-Handle db;
+Handle		 g_hDb;	   // Handle global para la conexión a la base de datos
 
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
@@ -8,15 +7,18 @@ Handle db;
 public bool doSqlConnection(const char[] databaseName)
 {
 	char Error[256];
-	db = SQL_Connect(databaseName, true, Error, sizeof(Error));
-	if (db == INVALID_HANDLE)
+	g_hDb = SQL_Connect(databaseName, true, Error, sizeof(Error));
+	if (g_hDb == INVALID_HANDLE)
 	{
-		PrintToServer("[DB-UTILS] Error en la conexion a la base de datos: %s", databaseName);
-        return false;
+		return false;
 	}
-	else
+	return true;
+}
+bool checkDBFile(const char[] databaseName)
+{
+	if (!SQL_CheckConfig(databaseName))
 	{
-		PrintToServer("[DB-UTILS] Conexion a la base de datos exitosa: %s", databaseName);
+		return false;
 	}
-    return true;
+	return true;
 }
