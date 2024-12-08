@@ -1,10 +1,12 @@
-Menu g_SubMenu;
 Menu g_MainMenu;
-#define BM_CHOICE_1_1 "BM_Instant"
-#define BM_CHOICE_1_2 "BM_LongAction"
-#define BM_CHOICE_1_3 "BM_Deployables"
-#define BM_CHOICE_1_4 "BM_TeamBonuses"
+Menu g_DeployablesMenu;
+#define BM_CHOICE_0_1 "BM_Instant"
+#define BM_CHOICE_0_2 "BM_LongAction"
+#define BM_CHOICE_0_3 "BM_Deployables"
+#define BM_CHOICE_0_4 "BM_TeamBonuses"
 
+#define BM_CHOICE_1_1 "BM_UVL"
+#define BM_CHOICE_1_2 "BM_HS"
 // Deployable Arrays
 static UVLightModel[33];
 static UVLightGlow[33];
@@ -18,7 +20,8 @@ static HSTimer[33];
 static RBTrigger[33];
 static RBTimer[33];
 
-const int TIME_UV_LIGHT = 20;
+const int TIME_UV_LIGHT		   = 20;
+const int TIME_HEALING_STATION = 20;
 // Timer Arrays
 static UVLightTimer[33];
 #if !defined EMS_MAIN_FILE
@@ -46,39 +49,22 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			char info[32];
 			menu.GetItem(param2, info, sizeof(info));
 
-			if (StrEqual(info, BM_CHOICE_1_1))
+			if (StrEqual(info, BM_CHOICE_0_1))
 			{
-				SpawnHealingStation(client);
-				PrintToChat(client, "\x04[Deployables]\x01 Deploying Healing Station");
+				PrintToChat(client, "\x05[Eclipse]\x01 Instants");
 			}
-			if (StrEqual(info, BM_CHOICE_1_2))
+			if (StrEqual(info, BM_CHOICE_0_2))
 			{
-				if (UVLightTimer[client] <= 0)
-				{
-					new flags = GetEntityFlags(client);
-					if (flags & FL_ONGROUND)
-					{
-						SpawnUVLight(client);
-						UpdateUVLight(client);
-					}
-					else
-					{
-						PrintToChat(client, "\x05[Eclipse]\x01 You must be on the ground to spawn a UV Light.");
-					}
-				}
-				else
-				{
-					PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", UVLightTimer[client]);
-				}
+				PrintToChat(client, "\x05[Eclipse]\x01 Long Action");
 			}
-			if (StrEqual(info, BM_CHOICE_1_3))
+			if (StrEqual(info, BM_CHOICE_0_3))
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01  3");
+				PrintToChat(client, "\x05[Eclipse]\x01  Deployables Menu");
+				g_DeployablesMenu.Display(client, 20);
 			}
-			if (StrEqual(info, BM_CHOICE_1_4))
+			if (StrEqual(info, BM_CHOICE_0_4))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 Team Bonuses");
-				g_SubMenu.Display(client, 20);
 			}
 		}
 
@@ -91,22 +77,6 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 		{
 			delete menu;
 		}
-
-		case MenuAction_DrawItem:
-		{
-			int	 style;
-			char info[32];
-			menu.GetItem(param2, info, sizeof(info), style);
-
-			if (StrEqual(info, BM_CHOICE_1_3))
-			{
-				return ITEMDRAW_DISABLED;
-			}
-			else
-			{
-				return style;
-			}
-		}
 	}
 
 	return 0;
@@ -118,39 +88,67 @@ void CreateSubMenu(int client)
 	char title[40];
 
 	// Create Submenu
-	g_SubMenu = new Menu(MenuHandler_SubMenu1, MENU_ACTIONS_ALL);
+	g_DeployablesMenu = new Menu(MenuHandler_Deployables, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Submenu Title", client);
-	g_SubMenu.SetTitle(title);
+	g_DeployablesMenu.SetTitle(title);
 
 	// Add Submenu Items
-	Format(text, sizeof(text), "%T", "Option 1", client);
-	g_SubMenu.AddItem("option1", text);
+	Format(text, sizeof(text), "%T", "UV Light", client);
+	g_DeployablesMenu.AddItem(BM_CHOICE_1_1, text);
 
-	Format(text, sizeof(text), "%T", "Option 2", client);
-	g_SubMenu.AddItem("option2", text);
-	g_SubMenu.ExitBackButton = true;
-	g_SubMenu.ExitButton	 = true;
+	Format(text, sizeof(text), "%T", "Healing Station", client);
+	g_DeployablesMenu.AddItem(BM_CHOICE_1_2, text);
+	g_DeployablesMenu.ExitBackButton = true;
+	g_DeployablesMenu.ExitButton	 = true;
 }
 
-public int MenuHandler_SubMenu1(Menu menu, MenuAction action, int client, int param)
+public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
 {
 	PrintToChatAll("action: %i", action);
 	if (action == MenuAction_Select)
 	{
 		char info[32];
 		menu.GetItem(param, info, sizeof(info));
-		if (StrEqual(info, "option1"))
+		if (StrEqual(info, BM_CHOICE_1_1))
 		{
-			PrintToChat(client, "Has seleccionado Opción 1 en Submenú 1");
+			if (UVLightTimer[client] <= 0)
+			{
+				new flags = GetEntityFlags(client);
+				if (flags & FL_ONGROUND)
+				{
+					SpawnUVLight(client);
+					UpdateUVLight(client);
+					PrintToChat(client, "\x04[Deployables]\x01 Deploying UV Light");
+				}
+				else
+				{
+					PrintToChat(client, "\x05[Eclipse]\x01 You must be on the ground to spawn a UV Light.");
+				}
+			}
+			else
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", UVLightTimer[client]);
+			}
 		}
-		else if (StrEqual(info, "option2")) {
-			PrintToChat(client, "Has seleccionado Opción 2 en Submenú 1");
+		else if (StrEqual(info, BM_CHOICE_1_2)) {
+			if (HSTimer[client] <= 0)
+			{
+				new flags = GetEntityFlags(client);
+				if (flags & FL_ONGROUND)
+				{
+					SpawnHealingStation(client);
+					PrintToChat(client, "\x04[Deployables]\x01 Deploying Healing Station");
+				}
+				else
+				{
+					PrintToChat(client, "\x05[Eclipse]\x01 You must be on the ground to spawn a Healing Station.");
+				}
+			}
+			else
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", HSTimer[client]);
+			}
 		}
-	}
-	else if (action == MenuAction_End)
-	{
-		g_MainMenu.Display(client, 20);
-		
 	}
 	return 0;
 }
@@ -162,18 +160,18 @@ public Action Cmd_Buy(int client, int args)
 	g_MainMenu = new Menu(MenuHandler1, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Menu Title", client);
 	g_MainMenu.SetTitle(title, LANG_SERVER);
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_1, client);
-	g_MainMenu.AddItem(BM_CHOICE_1_1, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_2, client);
-	g_MainMenu.AddItem(BM_CHOICE_1_2, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_3, client);
-	g_MainMenu.AddItem(BM_CHOICE_1_3, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_4, client);
-	g_MainMenu.AddItem(BM_CHOICE_1_4, text);
+	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);
+	g_MainMenu.AddItem(BM_CHOICE_0_1, text);
+	Format(text, sizeof(text), "%T", BM_CHOICE_0_2, client);
+	g_MainMenu.AddItem(BM_CHOICE_0_2, text);
+	Format(text, sizeof(text), "%T", BM_CHOICE_0_3, client);
+	g_MainMenu.AddItem(BM_CHOICE_0_3, text);
+	Format(text, sizeof(text), "%T", BM_CHOICE_0_4, client);
+	g_MainMenu.AddItem(BM_CHOICE_0_4, text);
 	g_MainMenu.ExitButton = true;
 	g_MainMenu.Display(client, 20);
 	// Initialize Submenu if it doesn't exist
-	if (g_SubMenu == null)
+	if (g_DeployablesMenu == null)
 	{
 		CreateSubMenu(client);
 	}
@@ -254,46 +252,7 @@ stock SpawnUVLight(client)
 		}
 	}
 }
-stock TimerUpdateClients()
-{
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		UpdateTimers(i);
-	}
-}
-stock UpdateTimers(client)
-{
-	if (IsSurvivor(client) || IsSpectator(client))
-	{
-		new maxdeployables = 1;
 
-		new deployabletimer[1 + 1];
-		deployabletimer[1] = UVLightTimer[client];
-		new deployabletime[1 + 1];
-		deployabletime[1] = 1;
-		for (new deployables = 1; deployables <= maxdeployables; deployables++)
-		{
-			if (deployabletimer[deployables] > 0)
-			{
-				if (deployabletimer[deployables] > deployabletime[deployables] || deployabletimer[deployables] < deployabletime[deployables])
-				{
-					UpdateDeployable(client, deployables);
-				}
-				else if (deployabletimer[deployables] == deployabletime[deployables])
-				{
-					DestroyDeployable(client, deployables);
-				}
-			}
-		}
-	}
-}
-stock UpdateDeployable(client, deployable)
-{
-	switch (deployable)
-	{
-		case 1: UpdateUVLight(client);
-	}
-}
 stock UpdateUVLight(client)
 {
 	new item	= UVLightModel[client];
@@ -421,7 +380,7 @@ stock SpawnHealingStation(int client)
 		GetEntPropVector(item, Prop_Send, "m_vecMaxs", maxbounds);
 		// PrintToChat(client, "%f %f %f", minbounds[0], minbounds[1], minbounds[2]);
 		// PrintToChat(client, "%f %f %f", maxbounds[0], maxbounds[1], maxbounds[2]);
-		new glowcolor = RGB_TO_INT(0, 100, 255);
+		new glowcolor = RGB_TO_INT(29, 185, 2);
 		SetEntProp(item, Prop_Send, "m_glowColorOverride", glowcolor);
 		SetEntProp(item, Prop_Send, "m_iGlowType", 2);
 	}
@@ -450,7 +409,7 @@ stock SpawnHealingStation(int client)
 	{
 		if (HSModel[client] > 0 && HSTrigger[client] > 0)
 		{
-			HSTimer[client] = 300;
+			HSTimer[client] = TIME_HEALING_STATION;
 		}
 		else if (HSModel[client] > 0)
 		{
@@ -468,78 +427,17 @@ stock SpawnHealingStation(int client)
 		}
 	}
 }
-stock RGB_TO_INT(red, green, blue)
-{
-	return (blue * 65536) + (green * 256) + red;
-}
-stock DealDamageEntity(target, attacker, dmgtype, dmg, char inflictor[255])
-{
-	if (target > 32)
-	{
-		if (IsValidEntity(target))
-		{
-			char damage[16];
-			char type[16];
-			IntToString(dmg, damage, sizeof(damage));
-			IntToString(dmgtype, type, sizeof(type));
-			new pointHurt = CreateEntityByName("point_hurt");
-			if (pointHurt)
-			{
-				if (IsInfected(target) || IsWitch(target))
-				{
-					new ragdoll = GetEntProp(target, Prop_Data, "m_bClientSideRagdoll");
-					if (ragdoll == 0)
-					{
-						DispatchKeyValue(target, "targetname", "hurtme");
-						DispatchKeyValue(pointHurt, "Damage", damage);
-						DispatchKeyValue(pointHurt, "DamageTarget", "hurtme");
-						DispatchKeyValue(pointHurt, "DamageType", type);
-						DispatchKeyValue(pointHurt, "classname", inflictor);
-						DispatchSpawn(pointHurt);
-						if (IsClientInGame(attacker))
-						{
-							AcceptEntityInput(pointHurt, "Hurt", attacker);
-						}
-						DispatchKeyValue(target, "targetname", "donthurtme");
-					}
-				}
-				AcceptEntityInput(pointHurt, "Kill");
-			}
-		}
-	}
-}
-
-public Action TimerUpdate1(Handle timer)
-{
-	if (!IsServerProcessing())
-	{
-		return Plugin_Continue;
-	}
-
-	if (bMenuOn)
-	{
-		TimerUpdateClients();
-	}
-
-	return Plugin_Continue;
-}
-stock DestroyDeployable(client, deployable)
-{
-	switch (deployable)
-	{
-		case 1: DestroyUVLight(client);
-	}
-}
 
 public Action HSOnPressed(int entity, int activator, int caller, UseType type, float value)
 {
-	PrintToChatAll("HSOnPressed");
+	PrintToChatAll("HSOnPressed1");
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (HSTrigger[i] == entity)
 		{
-			if (HSTimer[i] <= 241)
+			if (HSTimer[i] <= 21)
 			{
+				PrintToChatAll("HSTrigger: %i entity: %i", HSTrigger[i], entity);
 				return Plugin_Handled;
 			}
 		}
@@ -551,6 +449,7 @@ public Action HSOnPressed(int entity, int activator, int caller, UseType type, f
 		new health	  = GetEntProp(activator, Prop_Data, "m_iHealth");
 		if (maxhealth > health)
 		{
+			PrintToChatAll("max > health ");
 			return Plugin_Continue;
 		}
 	}
@@ -685,4 +584,134 @@ public void RemoveHS(Handle timer, int entity)
 public void ResetHealingStation(Handle timer, int client)
 {
 	HSTrigger[client] = 0;
+}
+//////////////////////////////////
+stock RGB_TO_INT(red, green, blue)
+{
+	return (blue * 65536) + (green * 256) + red;
+}
+stock DealDamageEntity(target, attacker, dmgtype, dmg, char inflictor[255])
+{
+	if (target > 32)
+	{
+		if (IsValidEntity(target))
+		{
+			char damage[16];
+			char type[16];
+			IntToString(dmg, damage, sizeof(damage));
+			IntToString(dmgtype, type, sizeof(type));
+			new pointHurt = CreateEntityByName("point_hurt");
+			if (pointHurt)
+			{
+				if (IsInfected(target) || IsWitch(target))
+				{
+					new ragdoll = GetEntProp(target, Prop_Data, "m_bClientSideRagdoll");
+					if (ragdoll == 0)
+					{
+						DispatchKeyValue(target, "targetname", "hurtme");
+						DispatchKeyValue(pointHurt, "Damage", damage);
+						DispatchKeyValue(pointHurt, "DamageTarget", "hurtme");
+						DispatchKeyValue(pointHurt, "DamageType", type);
+						DispatchKeyValue(pointHurt, "classname", inflictor);
+						DispatchSpawn(pointHurt);
+						if (IsClientInGame(attacker))
+						{
+							AcceptEntityInput(pointHurt, "Hurt", attacker);
+						}
+						DispatchKeyValue(target, "targetname", "donthurtme");
+					}
+				}
+				AcceptEntityInput(pointHurt, "Kill");
+			}
+		}
+	}
+}
+
+public Action TimerUpdate1(Handle timer)
+{
+	if (!IsServerProcessing())
+	{
+		return Plugin_Continue;
+	}
+
+	if (bMenuOn)
+	{
+		TimerUpdateClients();
+	}
+
+	return Plugin_Continue;
+}
+stock DestroyDeployable(client, deployable)
+{
+	switch (deployable)
+	{
+		case 1: DestroyUVLight(client);
+		case 2: DestroyHealingStation(client);
+	}
+}
+stock UpdateHealingStation(client)
+{
+	new item  = HSModel[client];
+	new timer = HSTimer[client];
+	if (item > 0 && IsValidEntity(item))
+	{
+		char classname[16];
+		GetEdictClassname(item, classname, sizeof(classname));
+		if (StrEqual(classname, "prop_dynamic", false))
+		{
+			char model[42];
+			GetEntPropString(item, Prop_Data, "m_ModelName", model, sizeof(model));
+			if (StrEqual(model, "models/props_unique/hospital/iv_pole.mdl", false))
+			{
+				if (timer <= 250)
+				{
+					SetEntProp(item, Prop_Send, "m_bFlashing", 1);
+				}
+			}
+		}
+	}
+	HSTimer[client] -= 1;
+}
+stock UpdateDeployable(client, deployable)
+{
+	switch (deployable)
+	{
+		case 1: UpdateUVLight(client);
+		case 2: UpdateHealingStation(client);
+	}
+}
+stock TimerUpdateClients()
+{
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		UpdateTimers(i);
+	}
+}
+stock UpdateTimers(client)
+{
+	if (IsSurvivor(client) || IsSpectator(client))
+	{
+		new maxdeployables = 2;
+
+		new deployabletimer[2 + 1];
+		deployabletimer[1] = UVLightTimer[client];
+		deployabletimer[2] = HSTimer[client];
+		new deployabletime[2 + 1];
+		deployabletime[1] = TIME_UV_LIGHT;
+		deployabletime[2] = TIME_HEALING_STATION;
+		for (new deployables = 1; deployables <= maxdeployables; deployables++)
+		{
+			if (deployabletimer[deployables] >= 0)
+			{
+				if (deployabletimer[deployables] == 0)
+				{
+					DestroyDeployable(client, deployables);
+				}
+				else {
+					PrintToChatAll("deployabletimer: %i deployabletime: %i", deployabletimer[deployables], deployabletime[deployables]);
+					UpdateDeployable(client, deployables);
+				}
+			}
+		}
+	}
 }

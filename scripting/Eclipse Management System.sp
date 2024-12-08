@@ -32,7 +32,7 @@ public Plugin myinfo =
 {
 	name		= "Eclipse management system",
 	author		= "Natan Jopia",
-	description = "daabase management system module",
+	description = "database management system module",
 	version		= "1.0.0",
 	url			= "https://gitlab.com/sourcepawn1/sm-win"
 };
