@@ -1,21 +1,24 @@
 "Phrases"
 {
-  "Choice 1"
+  "BM_Instant"
   {
     "en"  "Instant"
-	  "es"  "Instantaneos"
+    "es"  "Instantaneos"
   }
-    "Choice 2"
+  "BM_LongAction"
   {
     "en"  "Long Action"
     "es"  "Larga duración"
   }
-
-  "Choice 3"
+  "BM_Deployables"
+  {
+    "en"  "Deployables"
+    "es"  "Desplegables"
+  }
+  "BM_TeamBonuses"
   {
     "en"  "Team Bonuses"
     "es"  "Bonos de equipo"
-
   }
   "Menu Title"
   {
@@ -27,4 +30,28 @@
     "en"  "Vote Nextmap"
     "es"  "Votar Siguiente Mapa"
   }
-}
+  "UV Light"
+  {
+    "en"  "UV Light"
+    "es"  "Luz UV"
+  }
+  "Healing Station"
+  {
+    "en"  "Healing Station"
+    "es"  "Estación de Curación"
+  }
+  "Submenu Title"
+  {
+    "en"  "Submenu Title"
+    "es"  "Subtítulo del Submenú"
+  }
+  "Option 1"
+  {
+    "en"  "Option 1"
+    "es"  "Opción 1"
+  }
+  "Option 2"
+  {
+    "en"  "Option 2"
+    "es"  "Opción 2"
+}}

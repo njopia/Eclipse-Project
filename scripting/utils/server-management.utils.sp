@@ -11,6 +11,7 @@ public Action Cmd_Reload_Plugins(int client, int args)
 
 public Action Cmd_Reload_Translations(int client, int args)
 {
+	PrintToChatAll("Reloading Translations");
 	ServerCommand("sm_reload_translations");
 	PrintToChat(client, "Translations Reloaded");
 	return Plugin_Handled;

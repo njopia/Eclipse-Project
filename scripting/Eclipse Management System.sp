@@ -1,6 +1,7 @@
 #include <sdkhooks>
 #include <sdktools>
 #include <sourcemod>
+#include <left4dhooks>
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -12,10 +13,12 @@
 #tryinclude "utils/database.utils.sp"
 //////////////////////////////////////////////
 
-/////// MENU TEST ///////////////////////////
-#define CHOICE1 "#choice1"
-#define CHOICE2 "#choice2"
-#define CHOICE3 "#choice3"
+/////// HELPERS /////////////////////////////
+#tryinclude "helpers/entities.helpers.sp"
+#tryinclude "helpers/commands.helpers.sp"
+//////////////////////////////////////////////
+
+/////// BUY MENU /////////////////////////////
 #tryinclude "modules/buy-menu.module.sp"
 //////////////////////////////////////////////
 
@@ -23,11 +26,8 @@
 #tryinclude "utils/server-management.utils.sp"
 //////////////////////////////////////////////
 
-/////// PLUGIN VARIABLES ////////////////////
-
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
-//////////////////////////////////////////////
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -47,7 +47,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 			return APLRes_Failure;
 	}
 }
-
 public void OnPluginStart()
 {
 	BuildPath(Path_SM, logfilepath, sizeof(logfilepath), LOG_PATH);
@@ -62,10 +61,9 @@ public void OnPluginStart()
 		doSqlConnection(ADMIN_DB_NAME);
 	}
 	buyMenuOnPluginStart();
-	LoadTranslations("eclipse.phrases");
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
+	LoadTranslations("eclipse.phrases");
 
-	//CreateTimer(1.0, Timer_UpdateUVLight, _, TIMER_REPEAT);
 }
