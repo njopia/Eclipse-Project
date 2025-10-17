@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #include <left4dhooks>
+#include <sdktools>	   // necesario para ShowVGUIPanel
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -28,6 +29,7 @@
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
+
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -47,6 +49,12 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 			return APLRes_Failure;
 	}
 }
+
+public void OnPluginStop()
+{
+	LogToFile(logfilepath, "|               PLUGIN STOP                 |");
+}
+
 public void OnPluginStart()
 {
 	BuildPath(Path_SM, logfilepath, sizeof(logfilepath), LOG_PATH);
@@ -65,5 +73,4 @@ public void OnPluginStart()
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
 	LoadTranslations("eclipse.phrases");
-
 }
