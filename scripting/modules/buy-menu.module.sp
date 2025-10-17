@@ -25,6 +25,10 @@ bool		 g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxim
 
 const int	 TIME_UV_LIGHT		  = 300;
 const int	 TIME_HEALING_STATION = 300;
+
+// --- Visuals: Beacon ring model ---
+int			 g_iBeaconBeamModel	  = -1;	   // precached in OnMapStart
+
 // Timer Arrays
 static int	 UVLightTimer[33];
 #if !defined EMS_MAIN_FILE
@@ -47,6 +51,8 @@ public void OnClientDisconnect(int client)
 
 public void OnMapStart()
 {
+	g_iBeaconBeamModel = PrecacheModel("materials/sprites/laserbeam.vmt", true);
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_fNextHint[i]	   = 0.0;
@@ -220,6 +226,7 @@ stock void SpawnUVLight(int client)
 		DispatchKeyValue(item, "model", "models/props_lighting/light_battery_rigged_01.mdl");
 		DispatchKeyValue(item, "solid", "6");
 		TeleportEntity(item, Origin, Angles, NULL_VECTOR);
+		EMS_BeaconPulse_UV(item);
 		DispatchSpawn(item);
 		AcceptEntityInput(item, "DisableCollision");
 		int glowcolor = RGB_TO_INT(255, 255, 255);
@@ -391,6 +398,7 @@ stock void SpawnHealingStation(int client)
 		DispatchKeyValue(item, "model", "models/props_unique/hospital/iv_pole.mdl");
 		DispatchKeyValue(item, "solid", "6");
 		TeleportEntity(item, Origin, Angles, NULL_VECTOR);
+		EMS_BeaconPulse_Healing(item);
 		DispatchSpawn(item);
 		AcceptEntityInput(item, "DisableCollision");
 		HSModel[client] = item;
@@ -446,6 +454,46 @@ stock void SpawnHealingStation(int client)
 	}
 }
 
+// ======================================================================
+// Reusable beacon/onda expansiva helpers
+// ======================================================================
+
+/**
+ * Draws an expanding ring centered at an entity.
+ * @param entity     Center entity
+ * @param color      RGBA array, e.g. {0,255,0,255}
+ * @param start      Starting radius
+ * @param end        Final radius
+ * @param life       Seconds the ring lives
+ * @param width      Ring thickness
+ */
+void EMS_BeaconRingAtEntity(int entity, const int color[4], float start = 12.0, float end = 280.0, float life = 0.8, float width = 5.0)
+{
+	if (g_iBeaconBeamModel == -1)
+		return;
+
+	float origin[3];
+	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
+
+	// TE_SetupBeamRingPoint(origin, start, end, modelIndex, haloIndex, startFrame, frameRate, life, width, amplitude, color[4], speed, flags);
+	TE_SetupBeamRingPoint(origin, start, end, g_iBeaconBeamModel, 0, 0, 10, life, width, 0.0, color, 0, 0);
+	TE_SendToAll();
+}
+
+/** Convenience: healing station pulse (verde) */
+void EMS_BeaconPulse_Healing(int entity)
+{
+	int c[4] = { 0, 255, 0, 220 };
+	EMS_BeaconRingAtEntity(entity, c, 14.0, 300.0, 1.0, 6.0);
+}
+
+/** Convenience: UV Light pulse (violeta) */
+void EMS_BeaconPulse_UV(int entity)
+{
+	int c[4] = { 160, 32, 240, 220 };
+	EMS_BeaconRingAtEntity(entity, c, 14.0, 280.0, 0.9, 5.0);
+}
+
 public Action HSOnPressed(int entity, int activator, int caller, UseType type, float value)
 {
 	// Mantengo tu lógica previa
@@ -494,6 +542,7 @@ public Action HSOnPressed(int entity, int activator, int caller, UseType type, f
 			g_fNextHint[activator] = now + COOLDOWN_TIME;
 		}
 
+		EMS_BeaconPulse_Healing(entity);
 		return Plugin_Continue;
 	}
 
@@ -520,6 +569,7 @@ public Action HSOnThink(int entity)
 					float distance = GetVectorDistance(Origin, TOrigin, false);
 					if (distance < 125.0)
 					{
+						EMS_BeaconPulse_Healing(entity);
 						return Plugin_Continue;
 					}
 				}
@@ -647,7 +697,6 @@ public Action TimerUpdate1(Handle timer)
 	{
 		TimerUpdateClients();
 	}
-
 	return Plugin_Continue;
 }
 stock void DestroyDeployable(int client, int deployable)
