@@ -5,15 +5,45 @@
     "en"  "Instant"
     "es"  "Instantaneos"
   }
+  "BM_Instant_FireYell"
+  {
+    "en"  "Instant Fire Yell"
+    "es"  "Grito de Fuego Instantáneo"
+  }
+  "BM_Instant_PowerYell"
+  {
+    "en"  "Instant Power Yell"
+    "es"  "Grito de Poder Instantáneo"
+  }
   "BM_LongAction"
   {
     "en"  "Long Action"
     "es"  "Larga duración"
   }
+  "BM_LongAction_Long1Yell"
+  {
+    "en"  "Long Action 1 example"
+    "es"  "Ejemplo de Larga Duración 1"
+  }
+  "BM_LongAction_Long2Yell"
+  {
+    "en"  "Long Action 2 example"
+    "es"  "Ejemplo de Larga Duración 2"
+  }
   "BM_Deployables"
   {
     "en"  "Deployables"
     "es"  "Desplegables"
+  }
+  "BM_Deployables_UV_Light"
+  {
+    "en"  "UV Light"
+    "es"  "Luz UV"
+  }
+  "BM_Deployables_Healing_Station"
+  {
+    "en"  "Healing Station"
+    "es"  "Estación de Curación"
   }
   "BM_TeamBonuses"
   {
@@ -30,16 +60,7 @@
     "en"  "Vote Nextmap"
     "es"  "Votar Siguiente Mapa"
   }
-  "UV Light"
-  {
-    "en"  "UV Light"
-    "es"  "Luz UV"
-  }
-  "Healing Station"
-  {
-    "en"  "Healing Station"
-    "es"  "Estación de Curación"
-  }
+
   "Submenu Title"
   {
     "en"  "Submenu Title"

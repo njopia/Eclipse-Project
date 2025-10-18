@@ -16,7 +16,7 @@
 
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/entities.helpers.sp"
-#tryinclude "helpers/commands.helpers.sp" 
+#tryinclude "helpers/commands.helpers.sp"
 //////////////////////////////////////////////
 
 /////// BUY MENU /////////////////////////////

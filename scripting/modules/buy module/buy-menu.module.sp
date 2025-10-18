@@ -1,40 +1,23 @@
-Menu g_MainMenu;
-Menu g_DeployablesMenu;
-
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/beacons.helpers.sp"
 //////////////////////////////////////////////
 
 ////// FEATURES /////////////////////////////
-#tryinclude "features/uv-light.feature.sp"
+#tryinclude "features/01-instants/fire-yell.feature.sp"
+#tryinclude "features/01-instants/power-yell.feature.sp"
+#tryinclude "features/03-deployables/uv-light.feature.sp"
+#tryinclude "features/03-deployables/healing-station.feature.sp"
+#tryinclude "features/0-menu/buy-menu.feature.sp"
 //////////////////////////////////////////////
-#define BM_CHOICE_0_1 "BM_Instant"
-#define BM_CHOICE_0_2 "BM_LongAction"
-#define BM_CHOICE_0_3 "BM_Deployables"
-#define BM_CHOICE_0_4 "BM_TeamBonuses"
 
-#define BM_CHOICE_1_1 "BM_UVL"
-#define BM_CHOICE_1_2 "BM_HS"
-// Deployable Arrays
+static bool	  bMenuOn			   = false;
+static Handle hMenuOn			   = INVALID_HANDLE;
 
+const int	  TIME_UV_LIGHT		   = 300;
+const int	  TIME_HEALING_STATION = 300;
 
-static bool	  bMenuOn = false;
-static Handle hMenuOn = INVALID_HANDLE;
-
-// Healing Station
-static int	  HSTrigger[33];
-static int	  HSModel[33];
-static int	  HSTimer[33];
-
-// --- Globals anti-spam para Healing station ---
-float		 g_fNextHint[MAXPLAYERS + 1];		 // próximo momento permitido para mostrar hint
-bool		 g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxima
-
-const int	 TIME_UV_LIGHT		  = 300;
-const int	 TIME_HEALING_STATION = 300;
-
-#if !defined EMS_MAIN_FILE
-	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
+#if !defined  EMS_MAIN_FILE
+	 #error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
 
 public void buyMenuOnPluginStart()
@@ -62,380 +45,6 @@ public void OnMapStart()
 	}
 }
 
-public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
-{
-	switch (action)
-	{
-		case MenuAction_Start:
-		{
-			PrintToChatAll("Displaying menu");
-		}
-		case MenuAction_Select:
-		{
-			char info[32];
-			menu.GetItem(param2, info, sizeof(info));
-
-			if (StrEqual(info, BM_CHOICE_0_1))
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Instants");
-			}
-			if (StrEqual(info, BM_CHOICE_0_2))
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Long Action");
-			}
-			if (StrEqual(info, BM_CHOICE_0_3))
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01  Deployables Menu");
-				g_DeployablesMenu.Display(client, 20);
-			}
-			if (StrEqual(info, BM_CHOICE_0_4))
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Team Bonuses");
-			}
-		}
-
-		case MenuAction_Cancel:
-		{
-			PrintToChatAll("Client %d's menu was cancelled for reason %d", client, param2);
-		}
-
-		case MenuAction_End:
-		{
-			delete menu;
-		}
-	}
-
-	return 0;
-}
-// Function to Create Submenu
-void CreateSubMenu(int client)
-{
-	char text[40];
-	char title[40];
-
-	// Create Submenu
-	g_DeployablesMenu = new Menu(MenuHandler_Deployables, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Submenu Title", client);
-	g_DeployablesMenu.SetTitle(title);
-
-	// Add Submenu Items
-	Format(text, sizeof(text), "%T", "UV Light", client);
-	g_DeployablesMenu.AddItem(BM_CHOICE_1_1, text);
-
-	Format(text, sizeof(text), "%T", "Healing Station", client);
-	g_DeployablesMenu.AddItem(BM_CHOICE_1_2, text);
-	g_DeployablesMenu.ExitBackButton = true;
-	g_DeployablesMenu.ExitButton	 = true;
-}
-
-public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
-{
-	PrintToChatAll("action: %i", action);
-	if (action == MenuAction_Select)
-	{
-		char info[32];
-		menu.GetItem(param, info, sizeof(info));
-		if (StrEqual(info, BM_CHOICE_1_1))
-		{
-			if (UVLightTimer[client] <= 0)
-			{
-				int flags = GetEntityFlags(client);
-				if (flags & FL_ONGROUND)
-				{
-					SpawnUVLight(client);
-					UpdateUVLight(client);
-					PrintToChat(client, "\x04[Deployables]\x01 Deploying UV Light");
-				}
-				else
-				{
-					PrintToChat(client, "\x05[Eclipse]\x01 You must be on the ground to spawn a UV Light.");
-				}
-			}
-			else
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", UVLightTimer[client]);
-			}
-		}
-		else if (StrEqual(info, BM_CHOICE_1_2)) {
-			if (HSTimer[client] <= 0)
-			{
-				int flags = GetEntityFlags(client);
-				if (flags & FL_ONGROUND)
-				{
-					SpawnHealingStation(client);
-					PrintToChat(client, "\x04[Deployables]\x01 Deploying Healing Station");
-				}
-				else
-				{
-					PrintToChat(client, "\x05[Eclipse]\x01 You must be on the ground to spawn a Healing Station.");
-				}
-			}
-			else
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", HSTimer[client]);
-			}
-		}
-	}
-	return 0;
-}
-
-public Action Cmd_Buy(int client, int args)
-{
-	char text[40];
-	char title[40];
-	g_MainMenu = new Menu(MenuHandler1, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Menu Title", client);
-	g_MainMenu.SetTitle(title, LANG_SERVER);
-	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);
-	g_MainMenu.AddItem(BM_CHOICE_0_1, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_0_2, client);
-	g_MainMenu.AddItem(BM_CHOICE_0_2, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_0_3, client);
-	g_MainMenu.AddItem(BM_CHOICE_0_3, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_0_4, client);
-	g_MainMenu.AddItem(BM_CHOICE_0_4, text);
-	g_MainMenu.ExitButton = true;
-	g_MainMenu.Display(client, 20);
-	// Initialize Submenu if it doesn't exist
-	if (g_DeployablesMenu == null)
-	{
-		CreateSubMenu(client);
-	}
-	return Plugin_Handled;
-}
-
-//////////////////////////////////
-// DEPLOYABLES: Healing Station //
-//////////////////////////////////
-stock void SpawnHealingStation(int client)
-{
-	float Origin[3];
-	float Angles[3];
-	float Direction[3];
-	float minbounds[3];
-	float maxbounds[3];
-
-	GetClientAbsOrigin(client, Origin);
-	GetClientEyeAngles(client, Angles);
-	GetAngleVectors(Angles, Direction, NULL_VECTOR, NULL_VECTOR);
-	Origin[0] += Direction[0] * 32;
-	Origin[1] += Direction[1] * 32;
-	Origin[2] += Direction[2] * 1;
-	Angles[0] = 0.0;
-	Angles[2] = 0.0;
-
-	int item  = CreateEntityByName("prop_dynamic");
-	if (IsValidEntity(item))
-	{
-		DispatchKeyValue(item, "model", "models/props_unique/hospital/iv_pole.mdl");
-		DispatchKeyValue(item, "solid", "6");
-		TeleportEntity(item, Origin, Angles, NULL_VECTOR);
-		EMS_BeaconPulse_Healing(item);
-		DispatchSpawn(item);
-		AcceptEntityInput(item, "DisableCollision");
-		HSModel[client] = item;
-		GetEntPropVector(item, Prop_Send, "m_vecMins", minbounds);
-		GetEntPropVector(item, Prop_Send, "m_vecMaxs", maxbounds);
-		// PrintToChat(client, "%f %f %f", minbounds[0], minbounds[1], minbounds[2]);
-		// PrintToChat(client, "%f %f %f", maxbounds[0], maxbounds[1], maxbounds[2]);
-		int glowcolor = RGB_TO_INT(29, 185, 2);
-		SetEntProp(item, Prop_Send, "m_glowColorOverride", glowcolor);
-		SetEntProp(item, Prop_Send, "m_iGlowType", 2);
-	}
-	int item2 = CreateEntityByName("func_button_timed");
-	if (IsValidEntity(item2))
-	{
-		DispatchKeyValue(item2, "model", "models/props_unique/hospital/iv_pole.mdl");
-		DispatchKeyValue(item2, "solid", "2");
-		DispatchKeyValue(item2, "use_string", "Curandose como un campeón");
-		DispatchKeyValue(item2, "use_time", "2");
-		DispatchKeyValue(item2, "auto_disable", "0");
-		DispatchSpawn(item2);
-		ActivateEntity(item2);
-		TeleportEntity(item2, Origin, Angles, NULL_VECTOR);
-		HSTrigger[client] = item2;
-		SetEntPropVector(item2, Prop_Send, "m_vecMins", minbounds);
-		SetEntPropVector(item2, Prop_Send, "m_vecMaxs", maxbounds);
-		int enteffects = GetEntProp(item2, Prop_Send, "m_fEffects");
-		enteffects |= 32;
-		SetEntProp(item2, Prop_Send, "m_fEffects", enteffects);
-		SDKHook(item2, SDKHook_Use, HSOnPressed);
-		SDKHook(item2, SDKHook_Think, HSOnThink);
-		HookSingleEntityOutput(item2, "OnTimeUp", HSOnTimeUp, false);
-	}
-	if (HSTimer[client] <= 0)
-	{
-		if (HSModel[client] > 0 && HSTrigger[client] > 0)
-		{
-			HSTimer[client] = TIME_HEALING_STATION;
-		}
-		else if (HSModel[client] > 0)
-		{
-			SetVariantString("OnUser1 !self:Kill::0.1:-1");
-			AcceptEntityInput(item, "AddOutput");
-			AcceptEntityInput(item, "FireUser1");
-			HSModel[client] = 0;
-		}
-		else if (HSTrigger[client] > 0)
-		{
-			SetVariantString("OnUser1 !self:Kill::0.1:-1");
-			AcceptEntityInput(item2, "AddOutput");
-			AcceptEntityInput(item2, "FireUser1");
-			HSTrigger[client] = 0;
-		}
-	}
-}
-
-public Action HSOnPressed(int entity, int activator, int caller, UseType type, float value)
-{
-	// Mantengo tu lógica previa
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (HSTrigger[i] == entity)
-		{
-			if (HSTimer[i] <= 0)
-			{
-				return Plugin_Handled;
-			}
-		}
-	}
-
-	if (IsClientInGame(activator) && GetClientTeam(activator) == 2)
-	{
-		int	  maxhealth = GetEntProp(activator, Prop_Data, "m_iMaxHealth");
-		int	  health	= GetEntProp(activator, Prop_Data, "m_iHealth");
-		bool  bHasMax	= (health >= maxhealth);
-		float now		= GetGameTime();
-
-		// --- Si está en vida máxima: bloquear acción ---
-		if (bHasMax)
-		{
-			// Solo avisar la PRIMERA vez que alcanza vida máxima
-			if (!g_bHadMaxHealth[activator])
-			{
-				// Además, respeta cooldown por seguridad
-				if (now >= g_fNextHint[activator])
-				{
-					PrintToChat(activator, "Tienes salud máxima papi: %i / %i", health, maxhealth);
-					g_fNextHint[activator] = now + COOLDOWN_TIME;
-				}
-				g_bHadMaxHealth[activator] = true;
-			}
-			return Plugin_Handled;
-		}
-
-		// --- Si NO está en vida máxima: permitir acción y limpiar estado ---
-		g_bHadMaxHealth[activator] = false;
-
-		// Si igual quieres informar, que sea con cooldown
-		if (now >= g_fNextHint[activator])
-		{
-			PrintToChat(activator, "Salud actual: %i - Salud máxima: %i", health, maxhealth);
-			g_fNextHint[activator] = now + COOLDOWN_TIME;
-		}
-
-		EMS_BeaconPulse_Healing(entity);
-		return Plugin_Continue;
-	}
-
-	return Plugin_Handled;
-}
-
-public Action HSOnThink(int entity)
-{
-	if (entity > 32 && IsValidEntity(entity))
-	{
-		char classname[18];
-		GetEdictClassname(entity, classname, sizeof(classname));
-		if (StrEqual(classname, "func_button_timed", false))
-		{
-			int client = GetEntPropEnt(entity, Prop_Data, "m_hActivator");
-			if (client > 0)
-			{
-				if (IsClientInGame(client) && GetClientTeam(client) == 2)
-				{
-					float Origin[3];
-					float TOrigin[3];
-					GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
-					GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
-					float distance = GetVectorDistance(Origin, TOrigin, false);
-					if (distance < 125.0)
-					{
-						EMS_BeaconPulse_Healing(entity);
-						return Plugin_Continue;
-					}
-				}
-				PrintToChatAll("disabling");
-				AcceptEntityInput(entity, "Disable");
-				SetVariantString("OnUser1 !self:Enable::0.1:-1");
-				AcceptEntityInput(entity, "AddOutput");
-				AcceptEntityInput(entity, "FireUser1");
-			}
-		}
-	}
-	return Plugin_Handled;
-}
-stock void DestroyHealingStation(int client)
-{
-	int item  = HSModel[client];
-	int item2 = HSTrigger[client];
-	if (item > 0 && IsValidEntity(item))
-	{
-		char classname[16];
-		GetEdictClassname(item, classname, sizeof(classname));
-		if (StrEqual(classname, "prop_dynamic", false))
-		{
-			char model[42];
-			GetEntPropString(item, Prop_Data, "m_ModelName", model, sizeof(model));
-			if (StrEqual(model, "models/props_unique/hospital/iv_pole.mdl", false))
-			{
-				SetVariantString("OnUser1 !self:Kill::0.1:-1");
-				AcceptEntityInput(item, "AddOutput");
-				AcceptEntityInput(item, "FireUser1");
-				HSModel[client] = 0;
-			}
-		}
-	}
-	if (item2 > 0 && IsValidEntity(item2))
-	{
-		char classname[18];
-		GetEdictClassname(item2, classname, sizeof(classname));
-		if (StrEqual(classname, "func_button_timed", false))
-		{
-			CreateTimer(0.1, RemoveHS, item2, TIMER_FLAG_NO_MAPCHANGE);
-			CreateTimer(0.1, ResetHealingStation, client, TIMER_FLAG_NO_MAPCHANGE);
-		}
-	}
-	HSTimer[client] -= 1;
-}
-
-public HSOnTimeUp(const char[] name, int caller, activator, float delay)
-{
-	if (IsClientInGame(activator) && GetClientTeam(activator) == 2)
-	{
-		CheatCommand(activator, "give", "health");
-		L4D2_UseAdrenaline(activator, 20.0);
-	}
-}
-
-public void RemoveHS(Handle timer, int entity)
-{
-	if (entity > 32 && IsValidEntity(entity))
-	{
-		char classname[18];
-		GetEdictClassname(entity, classname, sizeof(classname));
-		if (StrEqual(classname, "func_button_timed", false))
-		{
-			AcceptEntityInput(entity, "Disable");
-			AcceptEntityInput(entity, "Kill");
-		}
-	}
-}
-
-public void ResetHealingStation(Handle timer, int client)
-{
-	HSTrigger[client] = 0;
-}
 //////////////////////////////////
 stock RGB_TO_INT(red, green, blue)
 {
@@ -495,39 +104,32 @@ stock void DestroyDeployable(int client, int deployable)
 {
 	switch (deployable)
 	{
-		case 1: DestroyUVLight(client);
-		case 2: DestroyHealingStation(client);
-	}
-}
-stock void UpdateHealingStation(int client)
-{
-	int item  = HSModel[client];
-	int timer = HSTimer[client];
-	if (item > 0 && IsValidEntity(item))
-	{
-		char classname[16];
-		GetEdictClassname(item, classname, sizeof(classname));
-		if (StrEqual(classname, "prop_dynamic", false))
+		case 1:
 		{
-			char model[42];
-			GetEntPropString(item, Prop_Data, "m_ModelName", model, sizeof(model));
-			if (StrEqual(model, "models/props_unique/hospital/iv_pole.mdl", false))
-			{
-				if (timer <= 250)
-				{
-					SetEntProp(item, Prop_Send, "m_bFlashing", 1);
-				}
-			}
+			DestroyUVLight(client);
+			return;
+		}
+		case 2:
+		{
+			DestroyHealingStation(client);
+			return;
 		}
 	}
-	HSTimer[client] -= 1;
 }
 stock void UpdateDeployable(int client, int deployable)
 {
 	switch (deployable)
 	{
-		case 1: UpdateUVLight(client);
-		case 2: UpdateHealingStation(client);
+		case 1:
+		{
+			UpdateUVLight(client);
+			return;
+		}
+		case 2:
+		{
+			UpdateHealingStation(client);
+			return;
+		}
 	}
 }
 stock void TimerUpdateClients()
@@ -541,27 +143,26 @@ stock void UpdateTimers(int client)
 {
 	if (IsSurvivor(client) || IsSpectator(client))
 	{
-		int maxdeployables = 2;
-
-		int deployabletimer[2 + 1];
-		deployabletimer[1] = UVLightTimer[client];
-		deployabletimer[2] = HSTimer[client];
-		new deployabletime[2 + 1];
-		deployabletime[1] = TIME_UV_LIGHT;
-		deployabletime[2] = TIME_HEALING_STATION;
-		for (new deployables = 1; deployables <= maxdeployables; deployables++)
+		// --- UV Light Timer ---
+		// Si el timer está corriendo, actualiza el estado.
+		if (UVLightTimer[client] > 0)
 		{
-			if (deployabletimer[deployables] >= 0)
-			{
-				if (deployabletimer[deployables] == 0)
-				{
-					DestroyDeployable(client, deployables);
-				}
-				else {
-					// PrintToChatAll("deployabletimer: %i deployabletime: %i", deployabletimer[deployables], deployabletime[deployables]);
-					UpdateDeployable(client, deployables);
-				}
-			}
+			UpdateUVLight(client);	  // Esta función ya resta 1 al timer.
+		}
+		// Si el timer llega a cero, destrúyelo.
+		else if (UVLightTimer[client] == 0)
+		{
+			DestroyUVLight(client);	   // Esta función pone el timer en -1 para marcarlo como destruido.
+		}
+
+		// --- Healing Station Timer ---
+		if (HSTimer[client] > 0)
+		{
+			UpdateHealingStation(client);
+		}
+		else if (HSTimer[client] == 0)
+		{
+			DestroyHealingStation(client);
 		}
 	}
 }
