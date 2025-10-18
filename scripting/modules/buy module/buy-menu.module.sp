@@ -1,6 +1,13 @@
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 
+/////// HELPERS /////////////////////////////
+#tryinclude "helpers/beacons.helpers.sp"
+//////////////////////////////////////////////
+
+////// FEATURES /////////////////////////////
+#tryinclude "features/uv-light.feature.sp"
+//////////////////////////////////////////////
 #define BM_CHOICE_0_1 "BM_Instant"
 #define BM_CHOICE_0_2 "BM_LongAction"
 #define BM_CHOICE_0_3 "BM_Deployables"
@@ -9,8 +16,8 @@ Menu g_DeployablesMenu;
 #define BM_CHOICE_1_1 "BM_UVL"
 #define BM_CHOICE_1_2 "BM_HS"
 // Deployable Arrays
-static int	  UVLightModel[33];
-static int	  UVLightGlow[33];
+
+
 static bool	  bMenuOn = false;
 static Handle hMenuOn = INVALID_HANDLE;
 
@@ -18,7 +25,7 @@ static Handle hMenuOn = INVALID_HANDLE;
 static int	  HSTrigger[33];
 static int	  HSModel[33];
 static int	  HSTimer[33];
-#define COOLDOWN_TIME 2.0
+
 // --- Globals anti-spam para Healing station ---
 float		 g_fNextHint[MAXPLAYERS + 1];		 // próximo momento permitido para mostrar hint
 bool		 g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxima
@@ -26,11 +33,6 @@ bool		 g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxim
 const int	 TIME_UV_LIGHT		  = 300;
 const int	 TIME_HEALING_STATION = 300;
 
-// --- Visuals: Beacon ring model ---
-int			 g_iBeaconBeamModel	  = -1;	   // precached in OnMapStart
-
-// Timer Arrays
-static int	 UVLightTimer[33];
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
@@ -202,176 +204,6 @@ public Action Cmd_Buy(int client, int args)
 	return Plugin_Handled;
 }
 
-///////////////////////////
-// DEPLOYABLES: UV Light //
-///////////////////////////
-
-stock void SpawnUVLight(int client)
-{
-	float Origin[3];
-	float Angles[3];
-	float Direction[3];
-	GetClientAbsOrigin(client, Origin);
-	GetClientEyeAngles(client, Angles);
-	GetAngleVectors(Angles, Direction, NULL_VECTOR, NULL_VECTOR);
-	Origin[0] += Direction[0] * 32;
-	Origin[1] += Direction[1] * 32;
-	Origin[2] += Direction[2] * 1;
-	Angles[0] = 0.0;
-	Angles[2] = 0.0;
-
-	int item  = CreateEntityByName("prop_dynamic");
-	if (IsValidEntity(item))
-	{
-		DispatchKeyValue(item, "model", "models/props_lighting/light_battery_rigged_01.mdl");
-		DispatchKeyValue(item, "solid", "6");
-		TeleportEntity(item, Origin, Angles, NULL_VECTOR);
-		EMS_BeaconPulse_UV(item);
-		DispatchSpawn(item);
-		AcceptEntityInput(item, "DisableCollision");
-		int glowcolor = RGB_TO_INT(255, 255, 255);
-		SetEntProp(item, Prop_Send, "m_glowColorOverride", glowcolor);
-		SetEntProp(item, Prop_Send, "m_iGlowType", 2);
-		UVLightModel[client] = item;
-	}
-	int light = CreateEntityByName("beam_spotlight");
-	if (light > 0)
-	{
-		GetAngleVectors(Angles, Direction, NULL_VECTOR, NULL_VECTOR);
-		Origin[0] += Direction[0] * 6;
-		Origin[1] += Direction[1] * 6;
-		Angles[0] = -90.0;
-		Angles[1] = 90.0;
-		TeleportEntity(light, Origin, Angles, NULL_VECTOR);
-		DispatchKeyValue(light, "spotlightwidth", "102");
-		DispatchKeyValue(light, "spotlightlength", "120");
-		DispatchKeyValue(light, "spawnflags", "3");
-		DispatchKeyValue(light, "rendercolor", "160 145 255");
-		DispatchKeyValue(light, "renderamt", "150");
-		DispatchKeyValue(light, "maxspeed", "100");
-		DispatchKeyValue(light, "HDRColorScale", "0.7");
-		DispatchKeyValue(light, "fadescale", "1");
-		DispatchKeyValue(light, "fademindist", "-1");
-		DispatchSpawn(light);
-		UVLightGlow[client] = light;
-	}
-	if (UVLightTimer[client] <= 0)
-	{
-		if (UVLightModel[client] > 0 && UVLightGlow[client] > 0)
-		{
-			UVLightTimer[client] = TIME_UV_LIGHT - 1;
-		}
-		else if (UVLightModel[client] > 0)
-		{
-			SetVariantString("OnUser1 !self:Kill::0.1:-1");
-			AcceptEntityInput(item, "AddOutput");
-			AcceptEntityInput(item, "FireUser1");
-			UVLightModel[client] = 0;
-		}
-		else if (UVLightGlow[client] > 0)
-		{
-			SetVariantString("OnUser1 !self:Kill::0.1:-1");
-			AcceptEntityInput(light, "AddOutput");
-			AcceptEntityInput(light, "FireUser1");
-			UVLightGlow[client] = 0;
-		}
-	}
-}
-
-stock void UpdateUVLight(int client)
-{
-	int item	= UVLightModel[client];
-	int light	= UVLightGlow[client];
-	int timer	= UVLightTimer[client];
-	int lighton = -1;
-	if (light > 0 && IsValidEntity(light))
-	{
-		char classname[16];
-		GetEdictClassname(light, classname, sizeof(classname));
-		if (StrEqual(classname, "beam_spotlight", false))
-		{
-			lighton = GetEntProp(light, Prop_Send, "m_bSpotlightOn");
-			if (lighton == 1 && timer <= 250)
-				AcceptEntityInput(light, "LightOff");
-			else if (timer <= 250)
-				AcceptEntityInput(light, "LightOn");
-		}
-	}
-	if (item > 0 && IsValidEntity(item))
-	{
-		char classname[16];
-		GetEdictClassname(item, classname, sizeof(classname));
-		if (StrEqual(classname, "prop_dynamic", false))
-		{
-			char model[50];
-			GetEntPropString(item, Prop_Data, "m_ModelName", model, sizeof(model));
-			if (StrEqual(model, "models/props_lighting/light_battery_rigged_01.mdl", false))
-			{
-				if (timer <= 250)
-				{
-					SetEntProp(item, Prop_Send, "m_bFlashing", 1);
-				}
-				if (lighton == 1)
-				{
-					float Origin[3];
-					GetEntPropVector(item, Prop_Send, "m_vecOrigin", Origin);
-					int entity = -1;
-					while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
-					{
-						float jOrigin[3];
-						GetEntPropVector(entity, Prop_Send, "m_vecOrigin", jOrigin);
-						float distance = GetVectorDistance(Origin, jOrigin, false);
-						if (distance <= 400)
-						{
-							int ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
-							if (ragdoll == 0)
-							{
-								DealDamageEntity(entity, client, 10, 600, "uv_light");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	UVLightTimer[client] -= 1;
-}
-stock void DestroyUVLight(int client)
-{
-	int item  = UVLightModel[client];
-	int light = UVLightGlow[client];
-	if (item > 0 && IsValidEntity(item))
-	{
-		char classname[16];
-		GetEdictClassname(item, classname, sizeof(classname));
-		if (StrEqual(classname, "prop_dynamic", false))
-		{
-			char model[50];
-			GetEntPropString(item, Prop_Data, "m_ModelName", model, sizeof(model));
-			if (StrEqual(model, "models/props_lighting/light_battery_rigged_01.mdl", false))
-			{
-				SetVariantString("OnUser1 !self:Kill::0.1:-1");
-				AcceptEntityInput(item, "AddOutput");
-				AcceptEntityInput(item, "FireUser1");
-				UVLightModel[client] = 0;
-			}
-		}
-	}
-	if (light > 0 && IsValidEntity(light))
-	{
-		char classname[16];
-		GetEdictClassname(light, classname, sizeof(classname));
-		if (StrEqual(classname, "beam_spotlight", false))
-		{
-			SetVariantString("OnUser1 !self:Kill::0.1:-1");
-			AcceptEntityInput(light, "AddOutput");
-			AcceptEntityInput(light, "FireUser1");
-			UVLightGlow[client] = 0;
-		}
-	}
-	UVLightTimer[client] -= 1;
-}
-
 //////////////////////////////////
 // DEPLOYABLES: Healing Station //
 //////////////////////////////////
@@ -452,46 +284,6 @@ stock void SpawnHealingStation(int client)
 			HSTrigger[client] = 0;
 		}
 	}
-}
-
-// ======================================================================
-// Reusable beacon/onda expansiva helpers
-// ======================================================================
-
-/**
- * Draws an expanding ring centered at an entity.
- * @param entity     Center entity
- * @param color      RGBA array, e.g. {0,255,0,255}
- * @param start      Starting radius
- * @param end        Final radius
- * @param life       Seconds the ring lives
- * @param width      Ring thickness
- */
-void EMS_BeaconRingAtEntity(int entity, const int color[4], float start = 12.0, float end = 280.0, float life = 0.8, float width = 5.0)
-{
-	if (g_iBeaconBeamModel == -1)
-		return;
-
-	float origin[3];
-	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", origin);
-
-	// TE_SetupBeamRingPoint(origin, start, end, modelIndex, haloIndex, startFrame, frameRate, life, width, amplitude, color[4], speed, flags);
-	TE_SetupBeamRingPoint(origin, start, end, g_iBeaconBeamModel, 0, 0, 10, life, width, 0.0, color, 0, 0);
-	TE_SendToAll();
-}
-
-/** Convenience: healing station pulse (verde) */
-void EMS_BeaconPulse_Healing(int entity)
-{
-	int c[4] = { 0, 255, 0, 220 };
-	EMS_BeaconRingAtEntity(entity, c, 14.0, 300.0, 1.0, 6.0);
-}
-
-/** Convenience: UV Light pulse (violeta) */
-void EMS_BeaconPulse_UV(int entity)
-{
-	int c[4] = { 160, 32, 240, 220 };
-	EMS_BeaconRingAtEntity(entity, c, 14.0, 280.0, 0.9, 5.0);
 }
 
 public Action HSOnPressed(int entity, int activator, int caller, UseType type, float value)
