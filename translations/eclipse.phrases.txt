@@ -7,8 +7,8 @@
   }
   "BM_Instant_ConvertHP"
   {
-    "en"  "Convert temporary HP to normal"
-    "es"  "Convertir HP temporal a normal"
+    "en"  "Keep Temporary Health"
+    "es"  "Conservar salud temporal"
   }
   "BM_Instant_FireYell"
   {
@@ -30,16 +30,12 @@
     "en"  "Long Action"
     "es"  "Larga duración"
   }
-  "BM_LongAction_Long1Yell"
+  "BM_LongAction_SurvSpeedUp"
   {
-    "en"  "Long Action 1 example"
-    "es"  "Ejemplo de Larga Duración 1"
+    "en"  "Speed Up"
+    "es"  "Velocidad aumentada"
   }
-  "BM_LongAction_Long2Yell"
-  {
-    "en"  "Long Action 2 example"
-    "es"  "Ejemplo de Larga Duración 2"
-  }
+
   "BM_Deployables"
   {
     "en"  "Deployables"

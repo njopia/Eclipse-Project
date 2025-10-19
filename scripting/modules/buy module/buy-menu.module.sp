@@ -12,7 +12,8 @@
 #tryinclude "features/01-instants/power-yell.feature.sp"
 #tryinclude "features/01-instants/leap-of-desesperation.feature.sp"
 //////////////////////////////////////////////
-
+#tryinclude "features/02-long-actions/surv-speed.feature.sp"
+//////////////////////////////////////////////
 ////// DEPLOYABLES ///////////////////////////
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"

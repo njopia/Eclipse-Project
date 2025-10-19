@@ -5,7 +5,7 @@
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
-
+Menu g_LongActionsMenu;
 #define BM_CHOICE_0_1 "BM_Instant"
 #define BM_CHOICE_0_2 "BM_LongAction"
 #define BM_CHOICE_0_3 "BM_Deployables"
@@ -16,8 +16,7 @@ Menu g_InstantsMenu;
 #define BM_CHOICE_1_3 "BM_Instant_PowerYell"
 #define BM_CHOICE_1_4 "BM_Instant_LeapOfDesperation"
 
-#define BM_CHOICE_2_1 "BM_LongAction_Long1Yell"
-#define BM_CHOICE_2_2 "BM_LongAction_Long2Yell"
+#define BM_CHOICE_2_1 "BM_LongAction_SurvSpeedUp"
 
 #define BM_CHOICE_3_1 "BM_Deployables_UV_Light"
 #define BM_CHOICE_3_2 "BM_Deployables_Healing_Station"
@@ -43,6 +42,7 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			if (StrEqual(info, BM_CHOICE_0_2))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 Long Action");
+				g_LongActionsMenu.Display(client, 20);
 			}
 			if (StrEqual(info, BM_CHOICE_0_3))
 			{
@@ -96,6 +96,23 @@ public void InstantsMenu(int client)
 	g_InstantsMenu.ExitButton	  = true;
 }
 
+public void LongActionsMenu(int client)
+{
+	char text[40];
+	char title[40];
+
+	// Create Submenu
+	g_LongActionsMenu = new Menu(MenuHandler_LongActions, MENU_ACTIONS_ALL);
+	Format(title, sizeof(title), "%T", "Submenu Title", client);
+	g_LongActionsMenu.SetTitle(title);
+
+	// Add Submenu Items
+	Format(text, sizeof(text), "%T", BM_CHOICE_2_1, client);
+	g_LongActionsMenu.AddItem(BM_CHOICE_2_1, text);
+
+	g_LongActionsMenu.ExitBackButton = true;
+	g_LongActionsMenu.ExitButton	 = true;
+}
 // Function to Create Submenu
 public void DeployablesMenu(int client)
 {
@@ -115,6 +132,48 @@ public void DeployablesMenu(int client)
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
 	g_DeployablesMenu.ExitBackButton = true;
 	g_DeployablesMenu.ExitButton	 = true;
+}
+
+public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int param)
+{
+	PrintToChatAll("action: %i", action);
+	if (action == MenuAction_Select)
+	{
+		char info[32];
+		menu.GetItem(param, info, sizeof(info));
+		if (StrEqual(info, BM_CHOICE_1_1))
+		{
+			ConvertHealth(client);
+		}
+		if (StrEqual(info, BM_CHOICE_1_2))
+		{
+			Activate_FireYell(client);
+		}
+		else if (StrEqual(info, BM_CHOICE_1_3))
+		{
+			Yell(client);
+		}
+		else if (StrEqual(info, BM_CHOICE_1_4))
+		{
+			Activate_LeapOfDesperation(client);
+		}
+	}
+	return 0;
+}
+
+public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[32];
+		menu.GetItem(param, info, sizeof(info));
+		if (StrEqual(info, BM_CHOICE_2_1))
+		{
+			PrintToChatAll("Activating Speed Boost for client %d", client);
+			Surv_SpeedBoost(client);
+		}
+	}
+	return 0;
 }
 
 public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
@@ -167,35 +226,6 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 	return 0;
 }
 
-public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int param)
-{
-	PrintToChatAll("action: %i", action);
-	if (action == MenuAction_Select)
-	{
-		char info[32];
-		menu.GetItem(param, info, sizeof(info));
-		if (StrEqual(info, BM_CHOICE_1_1))
-		{
-			// aca convertiremos el hp temporal a normal
-			// PrintToChatAll("Convert Temporary HP to Normal not implemented yet.");
-			ConvertHealth(client);
-		}
-		if (StrEqual(info, BM_CHOICE_1_2))
-		{
-			Activate_FireYell(client);
-		}
-		else if (StrEqual(info, BM_CHOICE_1_3))
-		{
-			Yell(client);
-		}
-		else if (StrEqual(info, BM_CHOICE_1_4))
-		{
-			Activate_LeapOfDesperation(client);
-		}
-	}
-	return 0;
-}
-
 public Action Cmd_Buy(int client, int args)
 {
 	char text[40];
@@ -214,13 +244,17 @@ public Action Cmd_Buy(int client, int args)
 	g_MainMenu.ExitButton = true;
 	g_MainMenu.Display(client, 20);
 	// Initialize Submenu if it doesn't exist
-	if (g_DeployablesMenu == null)
-	{
-		DeployablesMenu(client);
-	}
 	if (g_InstantsMenu == null)
 	{
 		InstantsMenu(client);
+	}
+	if (g_LongActionsMenu == null)
+	{
+		LongActionsMenu(client);
+	}
+	if (g_DeployablesMenu == null)
+	{
+		DeployablesMenu(client);
 	}
 	return Plugin_Handled;
 }
