@@ -1,3 +1,6 @@
+#if !defined  EMS_MAIN_FILE
+	 #error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
+#endif
 
 bool g_bDebugConvertHP = false;
 

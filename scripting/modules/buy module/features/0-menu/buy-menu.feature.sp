@@ -1,3 +1,7 @@
+
+#if !defined EMS_MAIN_FILE
+	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
+#endif
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
@@ -10,6 +14,7 @@ Menu g_InstantsMenu;
 #define BM_CHOICE_1_1 "BM_Instant_ConvertHP"
 #define BM_CHOICE_1_2 "BM_Instant_FireYell"
 #define BM_CHOICE_1_3 "BM_Instant_PowerYell"
+#define BM_CHOICE_1_4 "BM_Instant_LeapOfDesperation"
 
 #define BM_CHOICE_2_1 "BM_LongAction_Long1Yell"
 #define BM_CHOICE_2_2 "BM_LongAction_Long2Yell"
@@ -83,6 +88,9 @@ public void InstantsMenu(int client)
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_1_3, client);
 	g_InstantsMenu.AddItem(BM_CHOICE_1_3, text);
+
+	Format(text, sizeof(text), "%T", BM_CHOICE_1_4, client);
+	g_InstantsMenu.AddItem(BM_CHOICE_1_4, text);
 
 	g_InstantsMenu.ExitBackButton = true;
 	g_InstantsMenu.ExitButton	  = true;
@@ -169,7 +177,7 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 		if (StrEqual(info, BM_CHOICE_1_1))
 		{
 			// aca convertiremos el hp temporal a normal
-			//PrintToChatAll("Convert Temporary HP to Normal not implemented yet.");
+			// PrintToChatAll("Convert Temporary HP to Normal not implemented yet.");
 			ConvertHealth(client);
 		}
 		if (StrEqual(info, BM_CHOICE_1_2))
@@ -178,8 +186,11 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 		}
 		else if (StrEqual(info, BM_CHOICE_1_3))
 		{
-			// Activate_PowerYell(client);
 			Yell(client);
+		}
+		else if (StrEqual(info, BM_CHOICE_1_4))
+		{
+			Activate_LeapOfDesperation(client);
 		}
 	}
 	return 0;

@@ -20,6 +20,11 @@
     "en"  "Instant Power Yell"
     "es"  "Grito de Poder "
   }
+  "BM_Instant_LeapOfDesperation"
+  {
+    "en"  "Leap of Desperation"
+    "es"  "Salto de Desesperación"
+  }
   "BM_LongAction"
   {
     "en"  "Long Action"

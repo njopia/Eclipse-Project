@@ -1,3 +1,7 @@
+
+#if !defined EMS_MAIN_FILE
+	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
+#endif
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/beacons.helpers.sp"
 //////////////////////////////////////////////
@@ -6,6 +10,10 @@
 #tryinclude "features/01-instants/convert-hp.feature.sp"
 #tryinclude "features/01-instants/fire-yell.feature.sp"
 #tryinclude "features/01-instants/power-yell.feature.sp"
+#tryinclude "features/01-instants/leap-of-desesperation.feature.sp"
+//////////////////////////////////////////////
+
+////// DEPLOYABLES ///////////////////////////
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
 #tryinclude "features/0-menu/buy-menu.feature.sp"
