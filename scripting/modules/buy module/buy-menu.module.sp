@@ -35,7 +35,7 @@ public void OnClientDisconnect(int client)
 	g_bHadMaxHealth[client] = false;
 }
 
-public void OnMapStart()
+public void DelegateBuyMenuModule()
 {
 	g_iBeaconBeamModel = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 

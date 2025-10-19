@@ -1,7 +1,6 @@
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 
-
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/beacons.helpers.sp"
 //////////////////////////////////////////////
@@ -30,7 +29,6 @@ bool		 g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxim
 const int	 TIME_UV_LIGHT		  = 300;
 const int	 TIME_HEALING_STATION = 300;
 
-
 // Timer Arrays
 static int	 UVLightTimer[33];
 #if !defined EMS_MAIN_FILE
@@ -51,7 +49,7 @@ public void OnClientDisconnect(int client)
 	g_bHadMaxHealth[client] = false;
 }
 
-public void OnMapStart()
+public void DelegateBuyMenuModule()
 {
 	g_iBeaconBeamModel = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 

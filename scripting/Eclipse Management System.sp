@@ -2,7 +2,6 @@
 #include <sdktools>
 #include <sourcemod>
 #include <left4dhooks>
-#include <sdktools>	   // necesario para ShowVGUIPanel
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -14,6 +13,7 @@
 //////////////////////////////////////////////
 
 /////// HELPERS /////////////////////////////
+#tryinclude "helpers/commons.helpers.sp"
 #tryinclude "helpers/entities.helpers.sp"
 #tryinclude "helpers/commands.helpers.sp"
 #tryinclude "helpers/sdks.helpers.sp"
@@ -50,11 +50,6 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	}
 }
 
-public void OnPluginStop()
-{
-	LogToFile(logfilepath, "|               PLUGIN STOP                 |");
-}
-
 public void OnPluginStart()
 {
 	BuildPath(Path_SM, logfilepath, sizeof(logfilepath), LOG_PATH);
@@ -75,4 +70,10 @@ public void OnPluginStart()
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
 	LoadTranslations("eclipse.phrases");
+}
+
+public void OnMapStart()
+{
+	DelegateBuyMenuModule();
+	PrintToServer("Current Game Mode: %d", CurrentGameMode());
 }
