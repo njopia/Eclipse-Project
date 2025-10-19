@@ -41,6 +41,11 @@
     "en"  "Deployables"
     "es"  "Desplegables"
   }
+  "BM_Deployables_Ammo_Pile"
+  {
+    "en"  "Ammo Pile"
+    "es"  "Montón de Munición"
+  }
   "BM_Deployables_UV_Light"
   {
     "en"  "UV Light"

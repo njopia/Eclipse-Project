@@ -6,20 +6,22 @@ Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
 Menu g_LongActionsMenu;
+/// Main Menu Choices ///
 #define BM_CHOICE_0_1 "BM_Instant"
 #define BM_CHOICE_0_2 "BM_LongAction"
 #define BM_CHOICE_0_3 "BM_Deployables"
 #define BM_CHOICE_0_4 "BM_TeamBonuses"
-
+/// Instant Choices ///
 #define BM_CHOICE_1_1 "BM_Instant_ConvertHP"
 #define BM_CHOICE_1_2 "BM_Instant_FireYell"
 #define BM_CHOICE_1_3 "BM_Instant_PowerYell"
 #define BM_CHOICE_1_4 "BM_Instant_LeapOfDesperation"
-
+/// Long Action Choices ///
 #define BM_CHOICE_2_1 "BM_LongAction_SurvSpeedUp"
-
-#define BM_CHOICE_3_1 "BM_Deployables_UV_Light"
-#define BM_CHOICE_3_2 "BM_Deployables_Healing_Station"
+/// Deployables Choices ///
+#define BM_CHOICE_3_1 "BM_Deployables_Ammo_Pile"
+#define BM_CHOICE_3_2 "BM_Deployables_UV_Light"
+#define BM_CHOICE_3_3 "BM_Deployables_Healing_Station"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -130,6 +132,10 @@ public void DeployablesMenu(int client)
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_3_2, client);
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
+
+	Format(text, sizeof(text), "%T", BM_CHOICE_3_3, client);
+	g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
+
 	g_DeployablesMenu.ExitBackButton = true;
 	g_DeployablesMenu.ExitButton	 = true;
 }
@@ -184,6 +190,12 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 		menu.GetItem(param, info, sizeof(info));
 		if (StrEqual(info, BM_CHOICE_3_1))
 		{
+			SpawnAmmoByName(client, "pile");
+			PrintToChat(client, "\x04[Deployables]\x01 Deploying Ammo Pile");
+		}
+		else
+		if (StrEqual(info, BM_CHOICE_3_2))
+		{
 			if (UVLightTimer[client] <= 0)
 			{
 				int flags = GetEntityFlags(client);
@@ -203,7 +215,7 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", UVLightTimer[client]);
 			}
 		}
-		else if (StrEqual(info, BM_CHOICE_3_2)) {
+		else if (StrEqual(info, BM_CHOICE_3_3)) {
 			if (HSTimer[client] <= 0)
 			{
 				int flags = GetEntityFlags(client);

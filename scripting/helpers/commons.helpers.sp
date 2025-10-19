@@ -12,7 +12,3 @@
  * 						- `GAMEMODE_SURVIVAL` (4)
  * 						- `GAMEMODE_SCAVENGE` (8)
  */
-int CurrentGameMode()
-{
-	return L4D_GetGameModeType();
-}

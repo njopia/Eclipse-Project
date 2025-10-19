@@ -18,7 +18,7 @@
 #tryinclude "helpers/commands.helpers.sp"
 #tryinclude "helpers/sdks.helpers.sp"
 //////////////////////////////////////////////
-
+#tryinclude "utils/includes/precache.inc"
 /////// BUY MENU /////////////////////////////
 #tryinclude "modules/buy module/buy-menu.module.sp"
 //////////////////////////////////////////////
@@ -67,13 +67,36 @@ public void OnPluginStart()
 	buyMenuOnPluginStart();
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
+
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
+	g_cvarDebug = CreateConVar("sm_spawnammo_debug", "0", "Activa debug verboso (0/1).", 0, true, 0.0, true, 1.0);
 	LoadTranslations("eclipse.phrases");
+	PrecacheAll();
 }
 
 public void OnMapStart()
 {
 	DelegateBuyMenuModule();
-	PrintToServer("Current Game Mode: %d", CurrentGameMode());
+#if defined _EMS_PRECACHE_MODULE_
+	EMS_Precache_OnMapStart();
+#endif
+}
+
+public void PrecacheAll()
+{
+#if defined _EMS_PRECACHE_MODULE_
+	EMS_Precache_Init();
+	// (opcional) activar logs:
+	//EMS_Precache_SetDebug(true);
+#endif
+}
+
+public Action EMS_CmdPrecacheReload(int client, int args)
+{
+#if defined _EMS_PRECACHE_MODULE_
+	EMS_Precache_DoAll();
+	if (client > 0) PrintToChat(client, "[EMS] Precache recargado.");
+#endif
+	return Plugin_Handled;
 }

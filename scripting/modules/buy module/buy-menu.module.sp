@@ -15,6 +15,7 @@
 #tryinclude "features/02-long-actions/surv-speed.feature.sp"
 //////////////////////////////////////////////
 ////// DEPLOYABLES ///////////////////////////
+#tryinclude "features/03-deployables/ammo.feature.sp"
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
 #tryinclude "features/0-menu/buy-menu.feature.sp"
