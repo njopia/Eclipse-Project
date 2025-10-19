@@ -3,6 +3,7 @@
 //////////////////////////////////////////////
 
 ////// FEATURES /////////////////////////////
+#tryinclude "features/01-instants/convert-hp.feature.sp"
 #tryinclude "features/01-instants/fire-yell.feature.sp"
 #tryinclude "features/01-instants/power-yell.feature.sp"
 #tryinclude "features/03-deployables/uv-light.feature.sp"

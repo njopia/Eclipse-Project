@@ -4,7 +4,7 @@
 
 public Action Cmd_Reload_Plugins(int client, int args)
 {
-	ServerCommand("sm plugins refresh");
+	ServerCommand("sm plugins reload \"Eclipse management system\"");
 	PrintToChat(client, "Plugins Reloaded");
 	return Plugin_Handled;
 }

@@ -7,8 +7,9 @@ Menu g_InstantsMenu;
 #define BM_CHOICE_0_3 "BM_Deployables"
 #define BM_CHOICE_0_4 "BM_TeamBonuses"
 
-#define BM_CHOICE_1_1 "BM_Instant_FireYell"
-#define BM_CHOICE_1_2 "BM_Instant_PowerYell"
+#define BM_CHOICE_1_1 "BM_Instant_ConvertHP"
+#define BM_CHOICE_1_2 "BM_Instant_FireYell"
+#define BM_CHOICE_1_3 "BM_Instant_PowerYell"
 
 #define BM_CHOICE_2_1 "BM_LongAction_Long1Yell"
 #define BM_CHOICE_2_2 "BM_LongAction_Long2Yell"
@@ -79,6 +80,10 @@ public void InstantsMenu(int client)
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_1_2, client);
 	g_InstantsMenu.AddItem(BM_CHOICE_1_2, text);
+
+	Format(text, sizeof(text), "%T", BM_CHOICE_1_3, client);
+	g_InstantsMenu.AddItem(BM_CHOICE_1_3, text);
+
 	g_InstantsMenu.ExitBackButton = true;
 	g_InstantsMenu.ExitButton	  = true;
 }
@@ -106,7 +111,6 @@ public void DeployablesMenu(int client)
 
 public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
 {
-	PrintToChatAll("action: %i", action);
 	if (action == MenuAction_Select)
 	{
 		char info[32];
@@ -164,11 +168,18 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 		menu.GetItem(param, info, sizeof(info));
 		if (StrEqual(info, BM_CHOICE_1_1))
 		{
+			// aca convertiremos el hp temporal a normal
+			//PrintToChatAll("Convert Temporary HP to Normal not implemented yet.");
+			ConvertHealth(client);
+		}
+		if (StrEqual(info, BM_CHOICE_1_2))
+		{
 			Activate_FireYell(client);
 		}
-		else if (StrEqual(info, BM_CHOICE_1_2))
+		else if (StrEqual(info, BM_CHOICE_1_3))
 		{
-			Activate_PowerYell(client);
+			// Activate_PowerYell(client);
+			Yell(client);
 		}
 	}
 	return 0;

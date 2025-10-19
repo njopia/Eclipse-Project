@@ -6,7 +6,6 @@
 
 #pragma newdecls required
 #pragma semicolon 1
-
 /////// DATABASE MANAGEMENT SYSTEM ///////////
 #define EMS_MAIN_FILE	 // EMS_MAIN_FILE define main file as the current core
 #define ADMIN_DB_NAME	"admins"
@@ -17,6 +16,7 @@
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/entities.helpers.sp"
 #tryinclude "helpers/commands.helpers.sp"
+#tryinclude "helpers/sdks.helpers.sp"
 //////////////////////////////////////////////
 
 /////// BUY MENU /////////////////////////////
@@ -60,6 +60,7 @@ public void OnPluginStart()
 	BuildPath(Path_SM, logfilepath, sizeof(logfilepath), LOG_PATH);
 	LogToFile(logfilepath, "|               PLUGIN START                |");
 
+	HandleSdk();
 	if (checkDBFile(PLAYERS_DB_NAME))
 	{
 		doSqlConnection(PLAYERS_DB_NAME);

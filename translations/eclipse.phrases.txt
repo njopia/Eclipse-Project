@@ -5,15 +5,20 @@
     "en"  "Instant"
     "es"  "Instantaneos"
   }
+  "BM_Instant_ConvertHP"
+  {
+    "en"  "Convert temporary HP to normal"
+    "es"  "Convertir HP temporal a normal"
+  }
   "BM_Instant_FireYell"
   {
     "en"  "Instant Fire Yell"
-    "es"  "Grito de Fuego Instantáneo"
+    "es"  "Grito de Fuego"
   }
   "BM_Instant_PowerYell"
   {
     "en"  "Instant Power Yell"
-    "es"  "Grito de Poder Instantáneo"
+    "es"  "Grito de Poder "
   }
   "BM_LongAction"
   {

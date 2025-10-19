@@ -3,12 +3,10 @@
 #endif
 #define _power_yell_feature_
 
-#include <sdktools>
-#include <left4dhooks>	  // Necesario para L4D_StaggerPlayer
-
-///////////////////////////
-// INSTANTS: Power Yell  //
-///////////////////////////
+// ---  Efectos de sonido/grito ---
+#define YELLNICK_1			  "player/survivor/voice/gambler/battlecry04.wav"
+#define YELLNICK_2			  "player/survivor/voice/gambler/battlecry01.wav"
+#define YELLNICK_3			  "player/survivor/voice/gambler/battlecry02.wav"
 
 // --- Defines ---
 #define POWER_YELL_RADIUS	  400.0	   // Radio en unidades para repeler a los infectados.
@@ -20,78 +18,217 @@
 #define PARTICLE_FIRE		  "gas_explosion_ground_fire"
 #define PARTICLE_SHOCKWAVE	  "bomb_explosion_huge"
 
-// --- Variables ---
-static float g_fNextPowerYell[MAXPLAYERS + 1];
-
-/**
- * Activa la habilidad Power Yell para un jugador.
- * El jugador emite un grito que repele a los infectados comunes y especiales cercanos.
- *
- * @param client  Índice del jugador que activa la habilidad.
- */
-stock void	 Activate_PowerYell(int client)
+stock Yell(int client)
 {
-	// 1. Verificar que el cliente es válido
-	if (!IsValidSurvivor(client))
-		return;
+	if (!IsNormalPlayer(client)) return;
 
-	// 2. Verificar Cooldown
-	float remainingTime = g_fNextPowerYell[client] - GetGameTime();
-	if (remainingTime > 0.0)
+	EmitYell(client);
+
+	float pos[3];
+	float tpos[3];
+	float traceVec[3];
+	float resultingFling[3];
+	float currentVelVec[3];
+
+	GetClientAbsOrigin(client, pos);
+	float distance;
+
+	if (GetClientTeam(client) == 2)
 	{
-		PrintToChat(client, "\x05[Eclipse]\x01 Debes esperar \x04%.1f\x01 segundos para usar el Grito de Poder.", remainingTime);
-		return;
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (i == 0 || !IsValidEntity(i) || !IsClientInGame(i) || !IsPlayerAlive(i) || (IsPlayerGhost(i)))
+			{
+				continue;
+			}
+			if (GetClientTeam(client) == GetClientTeam(i))
+			{
+				continue;
+			}
+
+			GetClientAbsOrigin(i, tpos);
+			distance = GetVectorDistance(pos, tpos);
+
+			if ((FloatCompare(distance, POWER_YELL_RADIUS) == -1) && (!IsTank(i)))
+				AttachParticle(i, PARTICLE_ELECTRIC, 2.0, 0.0);
+			{
+				PrintToChatAll("Applying fling to player %d", i);
+				MakeVectorFromPoints(pos, tpos, traceVec);
+				GetVectorAngles(traceVec, resultingFling);
+
+				resultingFling[0] = Cosine(DegToRad(resultingFling[1])) * POWER_YELL_PUSH_FORCE;
+				resultingFling[1] = Sine(DegToRad(resultingFling[1])) * POWER_YELL_PUSH_FORCE;
+				resultingFling[2] = POWER_YELL_PUSH_FORCE;
+
+				GetEntPropVector(i, Prop_Data, "m_vecVelocity", currentVelVec);
+				resultingFling[0] += currentVelVec[0];
+				resultingFling[1] += currentVelVec[1];
+				resultingFling[2] += currentVelVec[2];
+				TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, resultingFling);
+				L4D_StaggerPlayer(i, client, resultingFling);
+			}
+		}
+		char class[32];
+		GetClientAbsOrigin(client, pos);
+		for (new i = MaxClients + 1; i < GetMaxEntities(); i++)
+		{
+			if (IsValidEntity(i) && IsValidEdict(i))
+			{
+				GetEdictClassname(i, class, sizeof(class));
+				if ((StrEqual(class, "infected")) || (StrEqual(class, "&infected")))
+				{
+					GetEntPropVector(i, Prop_Send, "m_vecOrigin", tpos);
+					distance = GetVectorDistance(pos, tpos);
+					if (FloatCompare(distance, POWER_YELL_RADIUS) == -1)
+					{
+						HurtPoint(client, i, 0, 536870912, 100);
+					}
+				}
+			}
+		}
 	}
-
-	// 3. Efectos audiovisuales
-	PlayPowerYellEffects(client);
-
-	// 4. Obtener posición del jugador
 	float origin[3];
 	GetClientAbsOrigin(client, origin);
-
-	// 5. Repeler infectados
-	int commonPushed  = PushCommonInfected(client, origin);
-	int specialPushed = PushSpecialInfected(client, origin);
-	int totalPushed	  = commonPushed + specialPushed;
-
-	// 6. Feedback al jugador
-	if (totalPushed > 0)
-	{
-		PrintToChat(client, "\x05[Eclipse]\x01 Repeliste a \x04%d\x01 infectados (\x04%d\x01 comunes, \x04%d\x01 especiales).",
-					totalPushed, commonPushed, specialPushed);
-	}
-	else
-	{
-		PrintToChat(client, "\x05[Eclipse]\x01 No hay infectados cerca para repeler.");
-	}
-
-	// 7. Establecer cooldown
-	g_fNextPowerYell[client] = GetGameTime() + POWER_YELL_COOLDOWN;
-}
-
-/**
- * Reproduce efectos de sonido y visuales para el Power Yell.
- */
-static void PlayPowerYellEffects(int client)
-{
-	// Sonido de grito
-	EmitSoundToAll("player/survivor/voice/producer/taunt01.wav", client, SNDCHAN_VOICE, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.8);
-
-	// Mensaje al jugador
-	PrintToChat(client, "\x05[Eclipse]\x01 ¡Has desatado un \x04Grito de Poder\x01!");
-
-	// Efectos visuales
-	float origin[3];
-	GetClientAbsOrigin(client, origin);
-
 	CreateParticleEffect(origin, PARTICLE_ELECTRIC, 2.0);
 	CreateShockwaveEffect(origin);
 }
+HurtPoint(client, ent, dmg, dmg_type, dmg_radius)
+{
+	if (!IsValidPlayer(client)) return;
+	if (!IsValidEdict(ent)) return;
 
-/**
- * Crea una partícula temporal en la posición dada.
- */
+	float pos[3];
+	char  StrDamage[16];
+	char  StrDamageType[16];
+	char  StrDamageRadius[16];
+	char  strDamageTarget[16];
+
+	Format(StrDamageType, sizeof(StrDamage), "%i", dmg);
+	Format(StrDamageType, sizeof(StrDamageType), "%i", dmg_type);
+	Format(StrDamageRadius, sizeof(StrDamageRadius), "%i", dmg_radius);
+	Format(strDamageTarget, sizeof(strDamageTarget), "hurtme%d", ent);
+
+	// GetClientAbsOrigin(client, pos);
+	GetEntPropVector(ent, Prop_Send, "m_vecOrigin", pos);
+	pos[2] += 1.0;
+
+	new pointHurt = CreateEntityByName("point_hurt");
+	DispatchKeyValue(ent, "targetname", strDamageTarget);
+	DispatchKeyValue(pointHurt, "DamageTarget", strDamageTarget);
+	DispatchKeyValue(pointHurt, "Damage", StrDamage);
+	DispatchKeyValue(pointHurt, "DamageRadius", StrDamageRadius);
+	DispatchKeyValue(pointHurt, "DamageType", StrDamageType);
+	// DispatchKeyValue(pointHurt, "DamageDelay", "1.0");
+	DispatchSpawn(pointHurt);
+	TeleportEntity(pointHurt, pos, NULL_VECTOR, NULL_VECTOR);
+	AcceptEntityInput(pointHurt, "Hurt", (client > 0 && client < MaxClients && IsClientInGame(client)) ? client : -1);
+
+	// PrintToChat(client, "point_hurtDamage %s, DamageType %s, DamageRadius %s, TargetName %s  successfully created", StrDamage, StrDamageType, StrDamageRadius, strDamageTarget);
+
+	DispatchKeyValue(pointHurt, "classname", "point_hurt");
+	DispatchKeyValue(ent, "targetname", "null");
+	AcceptEntityInput(pointHurt, "Kill");
+}
+
+public IsValidPlayer(client)
+{
+	if (client <= 0) return false;
+	if (client > MaxClients) return false;
+	if (!IsClientInGame(client)) return false;
+	if (IsFakeClient(client)) return false;
+	if (!IsClientConnected(client)) return false;
+
+	return true;
+}
+
+public IsNormalPlayer(client)
+{
+	if (client <= 0)
+		return false;
+
+	if (client > MaxClients)
+		return false;
+
+	if (!IsClientConnected(client))
+		return false;
+
+	if (!IsClientInGame(client))
+		return false;
+
+	return true;
+}
+
+static void AttachParticle(target, char[] particlename, float time, float origin)
+{
+	PrintToChatAll("1Particle %s attached to entity %d", particlename, target);
+	if (target > 0 && IsValidEntity(target))
+	{
+		PrintToChatAll("2Particle %s attached to entity %d", particlename, target);
+		new particle = CreateEntityByName("info_particle_system");
+		if (IsValidEntity(particle))
+		{
+			PrintToChatAll("3Particle %s attached to entity %d", particlename, target);
+			float pos[3];
+			GetEntPropVector(target, Prop_Send, "m_vecOrigin", pos);
+			pos[2] += origin;
+			TeleportEntity(particle, pos, NULL_VECTOR, NULL_VECTOR);
+			char tName[64];
+			Format(tName, sizeof(tName), "Attach%d", target);
+			DispatchKeyValue(target, "targetname", tName);
+			GetEntPropString(target, Prop_Data, "m_iName", tName, sizeof(tName));
+			DispatchKeyValue(particle, "scale", "");
+			DispatchKeyValue(particle, "effect_name", particlename);
+			DispatchKeyValue(particle, "parentname", tName);
+			DispatchKeyValue(particle, "targetname", "particle");
+			DispatchSpawn(particle);
+			ActivateEntity(particle);
+			SetVariantString(tName);
+			AcceptEntityInput(particle, "SetParent", particle, particle);
+			AcceptEntityInput(particle, "Enable");
+			AcceptEntityInput(particle, "start");
+			CreateTimer(time, DeleteParticles, particle, TIMER_FLAG_NO_MAPCHANGE);
+		}
+	}
+}
+
+static void DeleteParticles(Handle
+								timer,
+							any
+								particle)
+{
+	if (IsValidEntity(particle))
+	{
+		char classname[64];
+		GetEdictClassname(particle, classname, sizeof(classname));
+		if (StrEqual(classname, "info_particle_system", false))
+			AcceptEntityInput(particle, "Kill");
+	}
+}
+stock bool IsPlayerGhost(client)
+{
+	if (GetEntProp(client, Prop_Send, "m_isGhost", 1)) return true;
+	return false;
+}
+stock EmitYell(client)
+{
+	char model[256];
+	GetClientModel(client, model, sizeof(model));
+
+	if (!IsValidPlayer(client)) return;
+
+	if (GetClientTeam(client) == 2)
+	{
+		switch (GetRandomInt(1, 3))
+		{
+			case 1:
+				EmitSoundToAll(YELLNICK_1, client);
+			case 2:
+				EmitSoundToAll(YELLNICK_2, client);
+			case 3:
+				EmitSoundToAll(YELLNICK_3, client);
+		}
+	}
+}
 static void CreateParticleEffect(const float origin[3], const char[] effectName, float duration)
 {
 	int particle = CreateEntityByName("info_particle_system");
@@ -139,205 +276,4 @@ static void CreateShockwaveEffect(const float origin[3])
 		AcceptEntityInput(sprite, "AddOutput");
 		AcceptEntityInput(sprite, "FireUser1");
 	}
-}
-
-/**
- * Empuja a los infectados comunes dentro del radio.
- * @param attacker  Cliente que origina el empuje
- * @param origin    Posición de origen del empuje
- * @return          El número de infectados comunes empujados.
- */
-static int PushCommonInfected(int attacker, const float origin[3])
-{
-	int	  entity = -1;
-	int	  pushed = 0;
-	float entityOrigin[3];
-	float radiusSquared = POWER_YELL_RADIUS * POWER_YELL_RADIUS;	// Optimización
-
-	while ((entity = FindEntityByClassname(entity, "infected")) != -1)
-	{
-		// Validación: Verificar que la entidad existe y está viva
-		if (!IsValidEntity(entity))
-			continue;
-
-		int health = GetEntProp(entity, Prop_Data, "m_iHealth", 1);
-		if (health <= 0)
-			continue;
-
-		// Validación: Verificar que puede moverse
-		MoveType movetype = GetEntityMoveType(entity);
-		if (movetype == MOVETYPE_NONE || movetype == MOVETYPE_NOCLIP)
-			continue;
-
-		// Verificar distancia
-		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", entityOrigin);
-		if (GetVectorDistanceSquared(origin, entityOrigin) > radiusSquared)
-			continue;
-
-		// Empujar infectado común
-		PushCommonEntity(entity, origin, attacker);
-		pushed++;
-	}
-	return pushed;
-}
-
-/**
- * Empuja a los infectados especiales (jugadores) dentro del radio.
- * @param attacker  Cliente que origina el empuje
- * @param origin    Posición de origen del empuje
- * @return          El número de infectados especiales empujados.
- */
-static int PushSpecialInfected(int attacker, const float origin[3])
-{
-	int	  pushed = 0;
-	float entityOrigin[3];
-	float radiusSquared = POWER_YELL_RADIUS * POWER_YELL_RADIUS;
-
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		// Validación: Cliente conectado, vivo y en equipo infectado
-		if (!IsClientInGame(i))
-			continue;
-
-		if (!IsPlayerAlive(i))
-			continue;
-
-		if (GetClientTeam(i) != 3)
-			continue;
-
-		// No empujar fantasmas
-		if (IsPlayerGhost(i))
-			continue;
-
-		// Verificar que es un infectado especial válido
-		int zombieClass = GetEntProp(i, Prop_Send, "m_zombieClass");
-		if (zombieClass < ZOMBIECLASS_SMOKER || zombieClass > ZOMBIECLASS_CHARGER)
-			continue;
-
-		// No empujar Tanks (demasiado pesados)
-		if (zombieClass == ZOMBIECLASS_TANK)
-			continue;
-
-		// Verificar distancia
-		GetClientAbsOrigin(i, entityOrigin);
-		if (GetVectorDistanceSquared(origin, entityOrigin) > radiusSquared)
-			continue;
-
-		// Empujar infectado especial
-		PushSpecialEntity(i, origin, attacker);
-		pushed++;
-	}
-	return pushed;
-}
-
-/**
- * Empuja un infectado común con efecto de muerte por fuerza bruta
- */
-static void PushCommonEntity(int entity, const float origin[3], int attacker)
-{
-	// Calcular dirección del empuje
-	float targetOrigin[3];
-	GetEntPropVector(entity, Prop_Data, "m_vecOrigin", targetOrigin);
-
-	float pushDir[3];
-	SubtractVectors(targetOrigin, origin, pushDir);
-	NormalizeVector(pushDir, pushDir);
-
-	// Crear velocidad con componente vertical
-	float velocity[3];
-	velocity[0] = pushDir[0];
-	velocity[1] = pushDir[1];
-	velocity[2] = 0.6;	  // Componente vertical para levantarlos
-
-	// Escalar a la fuerza configurada
-	ScaleVector(velocity, POWER_YELL_PUSH_FORCE);
-
-	// Aplicar velocidad
-	TeleportEntity(entity, NULL_VECTOR, NULL_VECTOR, velocity);
-
-	// Matar el infectado común con daño contundente (más dramático)
-	SDKHooks_TakeDamage(entity, attacker, attacker, 100.0, DMG_CLUB);
-}
-
-/**
- * Empuja un infectado especial (jugador) usando L4D_StaggerPlayer
- */
-static void PushSpecialEntity(int entity, const float origin[3], int attacker)
-{
-	// Calcular dirección del empuje
-	float targetOrigin[3];
-	GetClientAbsOrigin(entity, targetOrigin);
-
-	float pushDir[3];
-	SubtractVectors(targetOrigin, origin, pushDir);
-	NormalizeVector(pushDir, pushDir);
-
-	// Calcular velocidad resultante
-	float velocity[3];
-	float angles[3];
-	GetVectorAngles(pushDir, angles);
-
-	velocity[0] = Cosine(DegToRad(angles[1])) * POWER_YELL_PUSH_FORCE;
-	velocity[1] = Sine(DegToRad(angles[1])) * POWER_YELL_PUSH_FORCE;
-	velocity[2] = POWER_YELL_PUSH_FORCE * 0.5;	  // Componente vertical
-
-	// Añadir velocidad actual del jugador para efecto más natural
-	float currentVelocity[3];
-	GetEntPropVector(entity, Prop_Data, "m_vecVelocity", currentVelocity);
-	AddVectors(velocity, currentVelocity, velocity);
-
-	// Aplicar velocidad y efecto de tambaleo
-	TeleportEntity(entity, NULL_VECTOR, NULL_VECTOR, velocity);
-	L4D_StaggerPlayer(entity, attacker, pushDir);
-
-	// Efecto de sonido de impacto
-	EmitSoundToAll("player/tank/hit/hulk_punch_1.wav", entity, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.5);
-}
-
-// ============================================
-// FUNCIONES AUXILIARES
-// ============================================
-
-/**
- * Verifica si un cliente es un sobreviviente válido
- */
-static bool IsValidSurvivor(int client)
-{
-	if (client <= 0 || client > MaxClients)
-		return false;
-
-	if (!IsClientInGame(client))
-		return false;
-
-	if (!IsPlayerAlive(client))
-		return false;
-
-	if (GetClientTeam(client) != 2)
-		return false;
-
-	return true;
-}
-
-/**
- * Verifica si el jugador es un fantasma
- */
-static bool IsPlayerGhost(int client)
-{
-	return (GetEntProp(client, Prop_Send, "m_isGhost") == 1);
-}
-
-/**
- * Calcula la distancia al cuadrado entre dos vectores (más rápido que GetVectorDistance)
- * Evita el cálculo de raíz cuadrada para mejor rendimiento.
- *
- * @param vec1  Primer vector
- * @param vec2  Segundo vector
- * @return      Distancia al cuadrado
- */
-static float GetVectorDistanceSquared(const float vec1[3], const float vec2[3])
-{
-	float dx = vec1[0] - vec2[0];
-	float dy = vec1[1] - vec2[1];
-	float dz = vec1[2] - vec2[2];
-	return (dx * dx + dy * dy + dz * dz);
 }
