@@ -17,6 +17,8 @@ public Plugin myinfo =
 	version		= "1.1.0",
 	url			= ""
 };
+bool g_IonActive[MAXPLAYERS + 1];
+int	 g_IonToken[MAXPLAYERS + 1];	// cambia si se inicia uno nuevo
 
 // ===================== Logging =====================
 #define ION_LOGFILE "addons/sourcemod/logs/ion_cannon.log"
@@ -191,16 +193,31 @@ void StartIonCannon(int client)
 	if (!IsValidClient(client) || !IsPlayerAlive(client) || GetClientTeam(client) != 2)
 		return;
 
-	// Guardar ventana en tiempo absoluto (respetando visual scale)
+	// Si ya hay uno activo, ignora.
+	if (g_IonActive[client] && GetGameTime() < g_EndTime[client])
+	{
+		PrintToChat(client, "[Ion] Ya hay un Ion Cannon activo para ti.");
+		IonLog("StartIonCannon BLOQUEADO (ya activo) client=%d", client);
+		return;
+	}
+
+	// Si quedara suciedad, limpia por si acaso.
+	DestroyIonFlare(client);
+
+	g_IonActive[client] = true;
+	g_IonToken[client]++;	 // nuevo ciclo
+	int	  token		  = g_IonToken[client];
+
 	float slow		  = g_cvVisualScale.FloatValue;
 	g_EndTime[client] = GetGameTime() + (g_cvWindow.FloatValue * slow);
 
 	CreateIonFlare(client);
 
 	float delay = g_cvDelay.FloatValue * slow;
+	// pasamos client en el "userid" y validamos token dentro de cada timer
 	CreateTimer(delay, Timer_StartIonCannon, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
-	IonLog("StartIonCannon: client=%d slow=%.2f endT=%.2f", client, slow, g_EndTime[client]);
+	IonLog("StartIonCannon OK: client=%d token=%d slow=%.2f endT=%.2f", client, token, slow, g_EndTime[client]);
 	PrintToChatAll("[Ion Debug] Iniciado por %N (delay %.1fs)", client, delay);
 }
 
@@ -209,18 +226,21 @@ public Action Timer_StartIonCannon(Handle timer, any userid)
 	int client = GetClientOfUserId(userid);
 	if (!IsValidClient(client)) return Plugin_Stop;
 
+	int	  token = g_IonToken[client];
+	float slow	= g_cvVisualScale.FloatValue;
+
 	SetupOrbitBeams(client);
 
-	float slow = g_cvVisualScale.FloatValue;
+	CreateTimer(2.4 * slow, Timer_CreateIonRing, PackCell(client, token), TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(3.0 * slow, Timer_CreateIonBlast, PackCell(client, token), TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(g_cvTickRotate.FloatValue * slow, Timer_LaserRotate, PackCell(client, token), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	// CreateTimer(g_cvTickRing.FloatValue * slow, Timer_IonRingTick, PackCell(client, token), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(g_cvTickRing.FloatValue * slow, Timer_IonRingTick, PackCell(client, g_IonToken[client]), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 
-	CreateTimer(2.4 * slow, Timer_CreateIonRing, userid, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(3.0 * slow, Timer_CreateIonBlast, userid, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(g_cvTickRotate.FloatValue * slow, Timer_LaserRotate, userid, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(g_cvTickRing.FloatValue * slow, Timer_IonRingTick, userid, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(g_cvTickCenter.FloatValue * slow, Timer_IonCenterBeamLoop, userid, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(g_cvPulseEvery.FloatValue * slow, Timer_IonPulse, userid, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(g_cvTickCenter.FloatValue * slow, Timer_IonCenterBeamLoop, PackCell(client, token), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(g_cvPulseEvery.FloatValue * slow, Timer_IonPulse, PackCell(client, token), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 
-	IonLog("Timer_StartIonCannon: client=%d timers armados", client);
+	IonLog("Timer_StartIonCannon: client=%d token=%d timers armados", client, token);
 	return Plugin_Stop;
 }
 
@@ -308,25 +328,29 @@ public Action Timer_CreateIonRing(Handle timer, any userid)
 	IonLog("Timer_CreateIonRing start client=%d", client);
 	return Plugin_Stop;
 }
-
-public Action Timer_IonRingTick(Handle timer, any userid)
+// ===================== Timer_IonRingTick (versión final) =====================
+public Action Timer_IonRingTick(Handle timer, any data)
 {
-	int client = GetClientOfUserId(userid);
-	if (!IsValidClient(client)) return Plugin_Stop;
+	int client, token;
+	UnpackCell(data, client, token);
+
+	// corta si este timer no corresponde al ciclo activo
+	if (AbortIfStale(client, token)) return Plugin_Stop;
 	if (!WindowTick(client)) return Plugin_Stop;
 
 	float p[3];
-	p = g_IonOrigin[client];
-	p[2] += 20.0;
+	p[0]	  = g_IonOrigin[client][0];
+	p[1]	  = g_IonOrigin[client][1];
+	p[2]	  = g_IonOrigin[client][2] + 20.0;
 
 	int sBeam = PrecacheModel(g_sSpriteBeam, true);
 	int sHalo = PrecacheModel(g_sSpriteHalo, true);
 
-	// life y width ALTOS para verlo lento
+	// ring visible y lento
 	TE_SetupBeamRingPoint(p, 350.0, 1000.0, sBeam, sHalo, 0, 30, 4.0, 80.0, 5.0, { 160, 145, 255, 155 }, 0, 0);
 	TE_SendToAll();
 
-	IonLog("Timer_IonRingTick client=%d p=(%.1f,%.1f,%.1f)", client, p[0], p[1], p[2]);
+	IonLog("Timer_IonRingTick token=%d client=%d p=(%.1f,%.1f,%.1f)", token, client, p[0], p[1], p[2]);
 	return Plugin_Continue;
 }
 
@@ -581,6 +605,7 @@ void DestroyIonFlare(int client)
 		AcceptEntityInput(ent, "Kill");
 		g_IonEnts[client][1] = 0;
 		IonLog("DestroyIonFlare: killed prop for client=%d", client);
+		g_IonActive[client] = false;
 	}
 
 	// Fallback: asegurar que nadie quedó sonando
@@ -636,14 +661,36 @@ void SetupOrbitBeams(int client)
 	}
 }
 
+#include <sdktools_tempents>	// Asegúrate de tener este include arriba
+
+// --- NUEVO SHAKE 100% compatible L4D2 ---
 void ScreenShakeSimple(int client, float amp)
 {
-	TE_Start("Shake");
-	TE_WriteFloat("amplitude", amp);
-	TE_WriteFloat("frequency", 1.0);
-	TE_WriteFloat("duration", 1.0);
-	TE_WriteVector("center", g_IonOrigin[client]);
-	TE_SendToClient(client);
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
+		return;
+
+	float pos[3];
+	GetClientAbsOrigin(client, pos);
+
+	int shake = CreateEntityByName("env_shake");
+	if (shake != -1 && IsValidEntity(shake))
+	{
+		char sAmp[16], sFreq[16], sDur[16];
+		FloatToString(amp, sAmp, sizeof(sAmp));
+		FloatToString(1.0, sFreq, sizeof(sFreq));	 // Hz
+		FloatToString(1.0, sDur, sizeof(sDur));		 // seg
+
+		DispatchKeyValue(shake, "amplitude", sAmp);
+		DispatchKeyValue(shake, "frequency", sFreq);
+		DispatchKeyValue(shake, "duration", sDur);
+		DispatchKeyValue(shake, "radius", "3000");	   // radio grande
+		DispatchKeyValue(shake, "spawnflags", "8");	   // 8 = solo al jugador local
+
+		DispatchSpawn(shake);
+		TeleportEntity(shake, pos, NULL_VECTOR, NULL_VECTOR);
+		AcceptEntityInput(shake, "StartShake");
+		AcceptEntityInput(shake, "Kill");
+	}
 }
 
 bool IsValidClient(int client)
@@ -675,4 +722,28 @@ public void Event_Cleanup(Event event, const char[] name, bool dontBroadcast)
 		DestroyIonFlare(i);
 	}
 	IonLog("Event_Cleanup ejecutado.");
+}
+// ===================== Packing helpers =====================
+// Empaqueta el índice del cliente y un token en un solo entero para los temporizadores.
+// El token ocupa los 16 bits superiores y el cliente los 16 bits inferiores.
+stock int PackCell(int client, int token)
+{
+	return (token << 16) | (client & 0xFFFF);
+}
+
+// Desempaqueta el entero para obtener el cliente y el token.
+stock void UnpackCell(any packed, int &client, int &token)
+{
+	client = (packed & 0xFFFF);
+	token  = (packed >> 16) & 0xFFFF;
+}
+
+// Opcional pero recomendado: aborta timers viejos o inválidos.
+// Comprueba si un temporizador debe abortar porque el cliente ya no es válido,
+// el efecto de Ion Cannon ya no está activo para él, o el token no coincide (es de un ciclo anterior).
+stock bool AbortIfStale(int client, int token)
+{
+	return !IsValidClient(client)
+		|| !g_IonActive[client]
+		|| token != g_IonToken[client];
 }
