@@ -56,6 +56,11 @@
     "en"  "Healing Station"
     "es"  "Estación de Curación"
   }
+  "BM_Deployables_Ion_Cannon"
+  {
+    "en"  "Ion Cannon"
+    "es"  "Cañón de Iones"
+  }
   "BM_TeamBonuses"
   {
     "en"  "Team Bonuses"

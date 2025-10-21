@@ -22,6 +22,7 @@ Menu g_LongActionsMenu;
 #define BM_CHOICE_3_1 "BM_Deployables_Ammo_Pile"
 #define BM_CHOICE_3_2 "BM_Deployables_UV_Light"
 #define BM_CHOICE_3_3 "BM_Deployables_Healing_Station"
+#define BM_CHOICE_3_4 "BM_Deployables_Ion_Cannon"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -136,6 +137,9 @@ public void DeployablesMenu(int client)
 	Format(text, sizeof(text), "%T", BM_CHOICE_3_3, client);
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
 
+	Format(text, sizeof(text), "%T", BM_CHOICE_3_4, client);
+	g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
+
 	g_DeployablesMenu.ExitBackButton = true;
 	g_DeployablesMenu.ExitButton	 = true;
 }
@@ -232,6 +236,13 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 			else
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", HSTimer[client]);
+			}
+		}
+		else if (StrEqual(info, BM_CHOICE_3_4))
+		{
+			if (BuyIonCannon(client))
+			{
+				PrintToChat(client, "\x04[Deployables]\x01 Deploying Ion Cannon");
 			}
 		}
 	}

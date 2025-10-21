@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Read(//c/Users/Socius/Desktop/sm/**)",
+      "Bash(spcomp:*)",
+      "Bash(where:*)",
+      "Bash(dir ion.sp)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Ion Cannon v2.0.0 - Buy System Integration & Fixes\n\n## Nuevas Características\n- API completa con 5 natives y 2 forwards para integración con sistemas de compras\n- Sistema de cargas (máximo configurable, consumo, restauración por ronda)\n- Sistema de cooldown entre usos\n- Tracking de kills para recompensas de puntos\n- Comandos admin (sm_ion_give, sm_ion_reset, sm_ion_info)\n- Ejemplo de integración (ion_buy_example.sp)\n\n## Fixes Implementados\n- Resuelto problema de duplicación de comandos (say/say_team ejecutaban doble)\n- Corregido window de tiempo (17s → 26s) para permitir 3 anillos completos\n- Eliminados todos los logs de debug para producción\n- Solo jugadores humanos reciben cargas (bots excluidos)\n\n## Archivos Eliminados\n- l4d_puntos.sp (no corresponde al proyecto)\n- pepe.txt (archivo de prueba)\n- nul (archivo inválido que bloqueaba git)\n\n## Configuración\n- ic_max_charges \"3\"\n- ic_cooldown \"45.0\"\n- ic_window \"26.0\"\n- ic_charges_per_round \"1\"\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

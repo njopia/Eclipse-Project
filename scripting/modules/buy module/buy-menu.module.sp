@@ -18,6 +18,7 @@
 #tryinclude "features/03-deployables/ammo.feature.sp"
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
+#tryinclude "features/03-deployables/ion-cannon.feature.sp"
 #tryinclude "features/0-menu/buy-menu.feature.sp"
 //////////////////////////////////////////////
 
@@ -43,6 +44,7 @@ public void OnClientDisconnect(int client)
 {
 	g_fNextHint[client]		= 0.0;
 	g_bHadMaxHealth[client] = false;
+	IonCannon_OnClientDisconnect(client);
 }
 
 public void DelegateBuyMenuModule()
