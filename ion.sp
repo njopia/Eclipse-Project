@@ -13,10 +13,10 @@
 
 public Plugin myinfo =
 {
-	name		= "Ion Cannon (Optimized)",
-	author		= "Socius (port) + optimizer",
-	description = "Ion cannon con ejecuciÃ³n optimizada sin duplicados",
-	version		= "1.2.0",
+	name		= "Ion Cannon (Buy System Ready)",
+	author		= "Socius (port) + optimizer + buy integration",
+	description = "Ion cannon con API para sistemas de compras con puntos",
+	version		= "2.0.0",
 	url			= ""
 };
 
@@ -24,38 +24,37 @@ public Plugin myinfo =
 bool g_IonActive[MAXPLAYERS + 1];
 int	 g_IonToken[MAXPLAYERS + 1];
 
+// ===================== Buy System Integration =====================
+float g_IonCooldown[MAXPLAYERS + 1];      // Cooldown timestamp
+int   g_IonCharges[MAXPLAYERS + 1];       // Cargas disponibles
+int   g_IonKillCount[MAXPLAYERS + 1];     // Kills en el Ion actual (para stats)
+int   g_IonTotalKills[MAXPLAYERS + 1];    // Kills totales acumulados
+int   g_RingCount[MAXPLAYERS + 1];        // Contador de anillos grandes (movido aquí)
+bool  g_ProcessingIonCommand[MAXPLAYERS + 1]; // Anti-duplicación say/say_team
+
+// Forwards para el sistema de compras (DEBEN estar antes de AskPluginLoad2)
+Handle g_hForward_OnActivate;
+Handle g_hForward_OnComplete;
+
+// ===================== PUBLIC API =====================
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	CreateNative("Ion_CanUse", Native_CanUse);
+	CreateNative("Ion_Activate", Native_Activate);
+	CreateNative("Ion_GetCooldown", Native_GetCooldown);
+	CreateNative("Ion_GetCharges", Native_GetCharges);
+	CreateNative("Ion_SetCharges", Native_SetCharges);
+
+	g_hForward_OnActivate = CreateGlobalForward("Ion_OnActivate", ET_Ignore, Param_Cell);
+	g_hForward_OnComplete = CreateGlobalForward("Ion_OnComplete", ET_Ignore, Param_Cell, Param_Cell);
+
+	RegPluginLibrary("ion_cannon");
+	return APLRes_Success;
+}
+
 // ===================== Cached Sprites (OPTIMIZADO) =====================
 int g_iCachedBeamSprite = -1;
 int g_iCachedHaloSprite = -1;
-
-// ===================== Logging & Debug =====================
-#define ION_LOGFILE "addons/sourcemod/logs/ion_cannon.log"
-void IonLog(const char[] fmt, any...)
-{
-	static char buffer[512];
-	VFormat(buffer, sizeof(buffer), fmt, 2);
-	LogToFileEx(ION_LOGFILE, "[%8.3f] %s", GetGameTime(), buffer);
-}
-
-// NUEVO: Debug en chat para todas las secuencias
-void IonDebug(const char[] fmt, any...)
-{
-	static char buffer[256];
-	VFormat(buffer, sizeof(buffer), fmt, 2);
-
-	// Log a archivo
-	IonLog("[DEBUG] %s", buffer);
-
-	// Enviar a todos los jugadores en chat
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i))
-		{
-			PrintToChat(i, "\x04[Ion Debug]\x01 %s", buffer);
-		}
-	}
-}
-
 // ===================== ConVars =====================
 ConVar g_cvModelFlare, g_cvSoundCrackle, g_cvSoundIon;
 ConVar g_cvParticleFlare, g_cvParticleFuse;
@@ -66,6 +65,13 @@ ConVar g_cvShakeNear, g_cvShakeMid, g_cvShakeFar;
 ConVar g_cvTickRotate, g_cvTickRing, g_cvTickCenter;
 ConVar g_cvBlastRings, g_cvBlastGap, g_cvVisualScale;
 ConVar g_cvAccessFlag;
+// g_cvDebugMode ya declarado arriba (línea 58)
+
+// Buy System ConVars
+ConVar g_cvMaxCharges;          // Máximo de cargas por jugador
+ConVar g_cvCooldownTime;        // Cooldown entre usos (segundos)
+ConVar g_cvChargeRestoreRound;  // Cargas restauradas por ronda
+// ConVar g_cvChargeOnPurchase;    // Reservado para uso futuro (compras directas)
 
 // String buffers
 char g_sModelFlare[PLATFORM_MAX_PATH];
@@ -101,7 +107,7 @@ public void OnPluginStart()
 
 	// OPTIMIZADO: Secuencia rápida de 10s delay + 3 anillos grandes cada 5s
 	g_cvDelay		  = CreateConVar("ic_delay", "10.0");          // 10 segundos hasta primera explosión
-	g_cvWindow		  = CreateConVar("ic_window", "17.0");         // 17 segundos totales (permite 3 anillos: 5s, 10s, 15s desde inicio)
+	g_cvWindow		  = CreateConVar("ic_window", "26.0");         // 26 segundos totales (delay 10s + anillos en 5s, 10s, 15s = 25s + margen)
 	g_cvPulseEvery	  = CreateConVar("ic_pulse_every", "3.0");     // Pulso de daño cada 3s
 	g_cvDamageCommon  = CreateConVar("ic_dmg_common", "10");
 	g_cvDamageSI	  = CreateConVar("ic_dmg_si", "10");
@@ -118,12 +124,77 @@ public void OnPluginStart()
 
 	g_cvAccessFlag	  = CreateConVar("ic_access_flag", "");
 
+	// Buy System ConVars
+	g_cvMaxCharges        = CreateConVar("ic_max_charges", "3", "Máximo de cargas de Ion Cannon", _, true, 1.0, true, 10.0);
+	g_cvCooldownTime      = CreateConVar("ic_cooldown", "45.0", "Cooldown entre usos (segundos)", _, true, 0.0, true, 300.0);
+	g_cvChargeRestoreRound = CreateConVar("ic_charges_per_round", "1", "Cargas restauradas al inicio de ronda", _, true, 0.0, true, 10.0);
+	// g_cvChargeOnPurchase  = CreateConVar("ic_charges_on_buy", "1", "Cargas otorgadas al comprar", _, true, 1.0, true, 5.0);  // Reservado para futuro
+
 	AutoExecConfig(true, "ion_cannon_optimized");
+
+	// Admin commands
+	RegAdminCmd("sm_ion_give", Cmd_GiveCharges, ADMFLAG_CHEATS, "Otorgar cargas de Ion a un jugador");
+	RegAdminCmd("sm_ion_reset", Cmd_ResetCooldown, ADMFLAG_CHEATS, "Resetear cooldown de un jugador");
+	RegAdminCmd("sm_ion_info", Cmd_IonInfo, ADMFLAG_GENERIC, "Ver información de Ion Cannon");
 
 	HookEvent("round_end", Event_Cleanup, EventHookMode_PostNoCopy);
 	HookEvent("mission_lost", Event_Cleanup, EventHookMode_PostNoCopy);
+	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 
-	IonLog("Plugin loaded (optimized version)");
+	// Limpiar estados al cargar/recargar plugin
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		g_IonActive[i] = false;
+		g_IonToken[i] = 0;
+		g_EndTime[i] = 0.0;
+		g_RingCount[i] = 0;
+		g_IonKillCount[i] = 0;
+		g_IonTotalKills[i] = 0;
+		g_IonCooldown[i] = 0.0;
+		g_ProcessingIonCommand[i] = false;
+		// NO resetear g_IonCharges aquí - se maneja en OnClientPutInServer/OnConfigsExecuted
+	}
+}
+
+public void OnConfigsExecuted()
+{
+	// Inicializar cargas para jugadores ya conectados (late load)
+	// Se ejecuta DESPUÉS de que los ConVars se hayan cargado
+	int maxCharges = g_cvMaxCharges.IntValue;
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))  // Solo jugadores humanos
+		{
+			// Si tiene 0 cargas O menos del máximo (para dar cargas al reload)
+			if (g_IonCharges[i] < maxCharges)
+			{
+				g_IonCharges[i] = maxCharges;  // Restaurar al máximo en reload
+			}
+		}
+	}
+}
+
+// ===================== Client Lifecycle =====================
+public void OnClientPutInServer(int client)
+{
+	// Solo inicializar cargas para jugadores humanos
+	// Los bots (infectados y sobrevivientes) no deberían tener acceso al Ion Cannon
+	if (!IsFakeClient(client))
+	{
+		g_IonCharges[client] = g_cvMaxCharges.IntValue;
+		g_IonCooldown[client] = 0.0;
+		g_IonKillCount[client] = 0;
+		g_IonTotalKills[client] = 0;
+	}
+	else
+	{
+		// Bots no tienen cargas
+		g_IonCharges[client] = 0;
+		g_IonCooldown[client] = 0.0;
+		g_IonKillCount[client] = 0;
+		g_IonTotalKills[client] = 0;
+	}
 }
 
 // OPTIMIZADO: Solo se ejecuta UNA VEZ por mapa
@@ -164,6 +235,10 @@ public void OnMapStart()
 	PrecacheSound("ambient/energy/weld1.wav", true);
 	PrecacheSound("ambient/energy/spark1.wav", true);
 
+	// NUEVO: Sonidos para sistema de compras
+	PrecacheSound("items/suitchargeok1.wav", true);  // Compra exitosa
+	PrecacheSound("buttons/button14.wav", true);     // Error
+
 	// NUEVO: Precache de partículas L4D2 nativas (SOLO las que realmente EXISTEN)
 	// NOTA: Solo weapon_pipebomb es 100% confiable en L4D2
 	PrecacheParticle("weapon_pipebomb");
@@ -171,8 +246,6 @@ public void OnMapStart()
 	// CACHE sprites para uso posterior
 	g_iCachedBeamSprite = PrecacheModel(g_sSpriteBeam, true);
 	g_iCachedHaloSprite = PrecacheModel(g_sSpriteHalo, true);
-
-	IonLog("OnMapStart: assets precached (beam=%d, halo=%d)", g_iCachedBeamSprite, g_iCachedHaloSprite);
 }
 
 public void OnMapEnd()
@@ -193,31 +266,63 @@ public Action Cmd_Say(int client, int args)
 
 	if (StrEqual(text, "!ion", false))
 	{
+		// Prevenir duplicación: usar bandera en lugar de timestamp
+		if (g_ProcessingIonCommand[client])
+		{
+			return Plugin_Handled;
+		}
+
+		g_ProcessingIonCommand[client] = true;
+
 		if (!IonHasAccess(client))
 		{
 			PrintToChat(client, "\x05[Ion]\x01 No tienes permiso.");
+			g_ProcessingIonCommand[client] = false;
 			return Plugin_Handled;
 		}
+
 		StartIonCannon(client);
+
+		// Resetear bandera después de un frame
+		RequestFrame(Frame_ResetIonCommand, GetClientUserId(client));
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
 
+// Resetear bandera de comando después de un frame
+public void Frame_ResetIonCommand(any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client > 0)
+	{
+		g_ProcessingIonCommand[client] = false;
+	}
+}
+
 public Action Cmd_Ion(int client, int args)
 {
 	if (!IsValidClient(client)) return Plugin_Handled;
+
+	// Si el flag está activo, significa que Cmd_Say ya está procesando !ion
+	// Evitar duplicación cuando el usuario escribe !ion (que dispara TANTO say como sm_ion)
+	if (g_ProcessingIonCommand[client])
+	{
+		return Plugin_Handled;
+	}
+
 	if (!IonHasAccess(client))
 	{
 		ReplyToCommand(client, "[Ion] No tienes permiso.");
 		return Plugin_Handled;
 	}
+
 	StartIonCannon(client);
 	return Plugin_Handled;
 }
 
 // ===================== Core Flow =====================
-void StartIonCannon(int client)
+void StartIonCannon(int client, bool fromNative = false)
 {
 	if (!IsValidClient(client) || !IsPlayerAlive(client) || GetClientTeam(client) != 2)
 		return;
@@ -226,6 +331,26 @@ void StartIonCannon(int client)
 	{
 		PrintToChat(client, "[Ion] Ya hay un Ion Cannon activo.");
 		return;
+	}
+
+	// Verificar cooldown (solo para comando directo, no para compras)
+	if (!fromNative)
+	{
+		float cooldown = g_IonCooldown[client] - GetGameTime();
+		if (cooldown > 0.0)
+		{
+			PrintToChat(client, "\x04[Ion]\x01 Cooldown: \x03%.0f\x01 segundos", cooldown);
+			PlayErrorSound(client);
+			return;
+		}
+
+		// Verificar cargas (solo para comando directo)
+		if (g_IonCharges[client] <= 0)
+		{
+			PrintToChat(client, "\x04[Ion]\x01 Sin cargas disponibles (\x030\x01/\x05%d\x01)", g_cvMaxCharges.IntValue);
+			PlayErrorSound(client);
+			return;
+		}
 	}
 
 	// Limpiar COMPLETAMENTE antes de iniciar nuevo
@@ -238,13 +363,30 @@ void StartIonCannon(int client)
 	float slow = g_cvVisualScale.FloatValue;
 	g_EndTime[client] = GetGameTime() + (g_cvWindow.FloatValue * slow);
 
+	// Resetear contador de kills para este Ion
+	g_IonKillCount[client] = 0;
+
+	// Aplicar cooldown
+	g_IonCooldown[client] = GetGameTime() + g_cvCooldownTime.FloatValue;
+
+	// Consumir carga (solo si no es desde native, el native lo maneja aparte)
+	if (!fromNative && g_IonCharges[client] > 0)
+	{
+		g_IonCharges[client]--;
+	}
+
 	CreateIonFlare(client);
 
 	float delay = g_cvDelay.FloatValue * slow;
 	CreateTimer(delay, Timer_StartIonCannon, PackCell(client, token), TIMER_FLAG_NO_MAPCHANGE);
 
-	IonLog("StartIonCannon: client=%d token=%d", client, token);
-	IonDebug("FASE 1: Ion Cannon iniciado - Delay: %.1fs", delay);
+	// Mostrar efectos visuales de activación
+	ShowActivationEffect(client);
+
+	// Llamar forward
+	Call_StartForward(g_hForward_OnActivate);
+	Call_PushCell(client);
+	Call_Finish();
 }
 
 public Action Timer_StartIonCannon(Handle timer, any data)
@@ -256,8 +398,6 @@ public Action Timer_StartIonCannon(Handle timer, any data)
 	float slow = g_cvVisualScale.FloatValue;
 	SetupOrbitBeams(client);
 
-	IonDebug("FASE 2: Timers iniciados - Beams activos");
-
 	// Secuencia rápida: impacto a los 0.5s, beams inmediatos
 	CreateTimer(0.5 * slow, Timer_CreateIonRing, data, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(1.0 * slow, Timer_CreateIonBlast, data, TIMER_FLAG_NO_MAPCHANGE);
@@ -268,9 +408,6 @@ public Action Timer_StartIonCannon(Handle timer, any data)
 	CreateTimer(g_cvTickCenter.FloatValue * slow, Timer_IonCenterBeamLoop, data, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(g_cvPulseEvery.FloatValue * slow, Timer_IonPulse, data, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 
-	IonLog("Timers armed: client=%d token=%d", client, token);
-	IonDebug("Tick Orbital: %.1fs | Anillo: %.1fs | Central: %.1fs",
-		g_cvTickRotate.FloatValue, g_cvTickRing.FloatValue, g_cvTickCenter.FloatValue);
 	return Plugin_Stop;
 }
 
@@ -293,7 +430,6 @@ void CreateIonFlare(int client)
 
 		// OPTIMIZADO: Solo emitir sonido UNA VEZ aquÃ­
 		EmitSoundToAll(g_sSoundCrackle, prop, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.8);
-		IonLog("Flare created: prop=%d", prop);
 	}
 
 	// Spotlight
@@ -346,13 +482,10 @@ public Action Timer_CreateIonRing(Handle timer, any data)
 	int client, token;
 	UnpackCell(data, client, token);
 	if (AbortIfStale(client, token)) return Plugin_Stop;
-
-	IonDebug("Anillo visual inicial (0.5s)");
 	return Plugin_Stop;
 }
 
-// Variable global para contar anillos
-static int g_RingCount[MAXPLAYERS + 1] = {0, ...};
+// g_RingCount ya declarado en línea 32 (movido al inicio para evitar errores de orden)
 
 public Action Timer_IonRingTick(Handle timer, any data)
 {
@@ -366,10 +499,6 @@ public Action Timer_IonRingTick(Handle timer, any data)
 	p[0] = g_IonOrigin[client][0];
 	p[1] = g_IonOrigin[client][1];
 	p[2] = g_IonOrigin[client][2] + 20.0;
-
-	IonDebug("ANILLO GRANDE #%d (Tick: %.1fs, Expansión: 30%% más lenta)",
-		g_RingCount[client], GetGameTime());
-
 	// OPTIMIZADO: Usar cache en lugar de PrecacheModel cada vez
 	// Radio unificado: 350.0 → 1800.0 (igual que todos los demás beams)
 	// Duración 5.2s (30% más lenta que antes: 4.0 × 1.3)
@@ -387,7 +516,6 @@ public Action Timer_IonRingTick(Handle timer, any data)
 	// NUEVO: Terminar automáticamente después del 3er anillo
 	if (g_RingCount[client] >= 3)
 	{
-		IonDebug("3 anillos completados - Finalizando Ion Cannon");
 		CreateTimer(0.5, Timer_ForceCleanup, PackCell(client, token), TIMER_FLAG_NO_MAPCHANGE);
 		return Plugin_Stop;
 	}
@@ -429,8 +557,6 @@ public Action Timer_CreateIonBlast(Handle timer, any data)
 
 	SmashIonFlare(client);
 
-	IonDebug("IMPACTO PRINCIPAL (1.0s) - Explosión GRANDE + Ceguera");
-
 	// OPTIMIZADO: Emitir sonido principal UNA VEZ
 	if (flare > MaxClients && IsValidEntity(flare))
 	{
@@ -446,8 +572,6 @@ public Action Timer_CreateIonBlast(Handle timer, any data)
 
 	// NUEVO: Efecto de ceguera SOLO en la primera explosión principal (aumenta percepción)
 	FlashSurvivors(2.5, 220);  // 2.5 segundos de ceguera, alpha 220 (semi-intensa)
-	IonDebug("Ceguera aplicada a sobrevivientes (2.5s)");
-
 	// OPTIMIZADO: Usar cache
 	TE_SetupBeamPoints(sky, flarePos, g_iCachedBeamSprite, g_iCachedHaloSprite,
 		0, 10, 6.0, 400.0, 450.0, 10, 4.0, {160,145,255,200}, 0);
@@ -737,8 +861,6 @@ void SmashIonFlare(int client)
 // OPTIMIZADO: Limpieza completa y centralizada
 void CleanupClientIon(int client)
 {
-	IonDebug("FASE FINAL: Limpieza del Ion Cannon (Total anillos: %d)", g_RingCount[client]);
-
 	// Stop ALL sounds
 	int flare = g_IonEnts[client][1];
 	if (flare > MaxClients && IsValidEntity(flare))
@@ -769,14 +891,33 @@ void CleanupClientIon(int client)
 		}
 	}
 
+	// Reportar estadísticas si el Ion estaba activo
+	if (g_IonActive[client])
+	{
+		// Actualizar total de kills
+		g_IonTotalKills[client] += g_IonKillCount[client];
+
+		// Llamar forward para recompensar puntos
+		Call_StartForward(g_hForward_OnComplete);
+		Call_PushCell(client);
+		Call_PushCell(g_IonKillCount[client]);
+		Call_Finish();
+
+		// Mostrar estadísticas al cliente
+		if (IsClientInGame(client))
+		{
+			PrintToChat(client, "\x04[Ion]\x01 Completado - Kills: \x05%d\x01 | Total: \x03%d",
+				g_IonKillCount[client], g_IonTotalKills[client]);
+		}
+	}
+
 	// Reset state
 	g_IonActive[client] = false;
 	g_IonOrigin[client][0] = 0.0;
 	g_IonOrigin[client][1] = 0.0;
 	g_IonOrigin[client][2] = 0.0;
 	g_RingCount[client] = 0;  // Reset contador de anillos
-
-	IonLog("CleanupClientIon: client=%d fully cleaned", client);
+	g_IonKillCount[client] = 0;  // Reset contador de kills
 }
 
 // ===================== Helpers =====================
@@ -876,7 +1017,6 @@ public void Event_Cleanup(Event event, const char[] name, bool dontBroadcast)
 	{
 		CleanupClientIon(i);
 	}
-	IonLog("Event_Cleanup: all ions destroyed");
 }
 
 // ===================== Packing Utilities =====================
@@ -918,11 +1058,7 @@ void PrecacheParticle(const char[] particleName)
 		int index = FindStringIndex(table, particleName);
 		if (index == INVALID_STRING_INDEX)
 		{
-			IonLog("WARNING: Particle '%s' not found in table", particleName);
-		}
-		else
-		{
-			IonLog("Precached particle: %s (index=%d)", particleName, index);
+			// Particle not found
 		}
 	}
 }
@@ -990,8 +1126,6 @@ void CreateExplosion(const float pos[3], bool bigExplosion = false)
 
 		CreateTimer(0.5, Timer_DeleteParticle, EntIndexToEntRef(sprite), TIMER_FLAG_NO_MAPCHANGE);
 	}
-
-	IonLog("CreateExplosion: big=%d at (%.1f,%.1f,%.1f)", bigExplosion, pos[0], pos[1], pos[2]);
 }
 
 void PlayExplosionSound(const float pos[3], bool bigExplosion = false)
@@ -1070,8 +1204,6 @@ void FlashSurvivors(float duration, int alpha = 255)
 
 			// Eliminar después de usar
 			CreateTimer(duration + 1.0, Timer_DeleteParticle, EntIndexToEntRef(fade), TIMER_FLAG_NO_MAPCHANGE);
-
-			IonLog("FlashSurvivors: applied to client=%d, duration=%.1f", i, duration);
 		}
 	}
 }
@@ -1128,4 +1260,291 @@ void IgniteInfectedInRadius(const float pos[3], float radius, float duration)
 			IgniteEntity(i, duration);
 		}
 	}
+}
+
+// ===================== BUY SYSTEM EVENTS =====================
+public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	int restoreAmount = g_cvChargeRestoreRound.IntValue;
+	int maxCharges = g_cvMaxCharges.IntValue;
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))  // Solo jugadores humanos
+		{
+			// Restaurar cargas (sin exceder el máximo)
+			g_IonCharges[i] = Math_Min(g_IonCharges[i] + restoreAmount, maxCharges);
+		}
+	}
+}
+
+int Math_Min(int a, int b)
+{
+	return (a < b) ? a : b;
+}
+
+// ===================== NATIVE IMPLEMENTATIONS =====================
+public int Native_CanUse(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (!IsValidClient(client))
+		return false;
+
+	// Verificar si está vivo
+	if (!IsPlayerAlive(client))
+		return false;
+
+	// Verificar equipo (solo sobrevivientes)
+	if (GetClientTeam(client) != 2)
+		return false;
+
+	// Verificar si ya tiene uno activo
+	if (g_IonActive[client] && GetGameTime() < g_EndTime[client])
+		return false;
+
+	// Verificar cooldown
+	if (GetGameTime() < g_IonCooldown[client])
+		return false;
+
+	return true;
+}
+
+public int Native_Activate(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
+		return false;
+
+	// Verificar cooldown
+	if (GetGameTime() < g_IonCooldown[client])
+		return false;
+
+	// Verificar que no tenga uno activo
+	if (g_IonActive[client] && GetGameTime() < g_EndTime[client])
+		return false;
+
+	// Activar Ion Cannon (fromNative = true)
+	StartIonCannon(client, true);
+
+	return true;
+}
+
+public int Native_GetCooldown(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (!IsValidClient(client))
+		return view_as<int>(0.0);
+
+	float remaining = g_IonCooldown[client] - GetGameTime();
+	if (remaining < 0.0)
+		remaining = 0.0;
+
+	return view_as<int>(remaining);
+}
+
+public int Native_GetCharges(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (!IsValidClient(client))
+		return 0;
+
+	return g_IonCharges[client];
+}
+
+public int Native_SetCharges(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	int charges = GetNativeCell(2);
+
+	if (!IsValidClient(client))
+		return 0;
+
+	int maxCharges = g_cvMaxCharges.IntValue;
+	g_IonCharges[client] = Math_Min(charges, maxCharges);
+
+	return 1;
+}
+
+// ===================== ADMIN COMMANDS =====================
+public Action Cmd_GiveCharges(int client, int args)
+{
+	if (args < 2)
+	{
+		ReplyToCommand(client, "[Ion] Uso: sm_ion_give <jugador> <cantidad>");
+		return Plugin_Handled;
+	}
+
+	char targetName[MAX_NAME_LENGTH], chargesStr[8];
+	GetCmdArg(1, targetName, sizeof(targetName));
+	GetCmdArg(2, chargesStr, sizeof(chargesStr));
+
+	int target = FindTarget(client, targetName, true, false);
+	if (target == -1)
+		return Plugin_Handled;
+
+	int charges = StringToInt(chargesStr);
+	int maxCharges = g_cvMaxCharges.IntValue;
+
+	g_IonCharges[target] = Math_Min(g_IonCharges[target] + charges, maxCharges);
+
+	ReplyToCommand(client, "[Ion] Otorgadas %d cargas a %N (Total: %d/%d)",
+		charges, target, g_IonCharges[target], maxCharges);
+	PrintToChat(target, "\x04[Ion]\x01 Has recibido \x05%d\x01 cargas de Ion Cannon", charges);
+
+	return Plugin_Handled;
+}
+
+public Action Cmd_ResetCooldown(int client, int args)
+{
+	if (args < 1)
+	{
+		ReplyToCommand(client, "[Ion] Uso: sm_ion_reset <jugador>");
+		return Plugin_Handled;
+	}
+
+	char targetName[MAX_NAME_LENGTH];
+	GetCmdArg(1, targetName, sizeof(targetName));
+
+	int target = FindTarget(client, targetName, true, false);
+	if (target == -1)
+		return Plugin_Handled;
+
+	g_IonCooldown[target] = 0.0;
+
+	ReplyToCommand(client, "[Ion] Cooldown reseteado para %N", target);
+	PrintToChat(target, "\x04[Ion]\x01 Tu cooldown ha sido reseteado");
+
+	return Plugin_Handled;
+}
+
+public Action Cmd_IonInfo(int client, int args)
+{
+	char targetName[MAX_NAME_LENGTH];
+	int target = client;
+
+	if (args >= 1)
+	{
+		GetCmdArg(1, targetName, sizeof(targetName));
+		target = FindTarget(client, targetName, true, false);
+		if (target == -1)
+			return Plugin_Handled;
+	}
+
+	float cooldown = g_IonCooldown[target] - GetGameTime();
+	if (cooldown < 0.0) cooldown = 0.0;
+
+	ReplyToCommand(client, "=== Ion Cannon Info: %N ===", target);
+	ReplyToCommand(client, "Cargas: %d/%d", g_IonCharges[target], g_cvMaxCharges.IntValue);
+	ReplyToCommand(client, "Cooldown: %.1fs", cooldown);
+	ReplyToCommand(client, "Activo: %s", g_IonActive[target] ? "Sí" : "No");
+	ReplyToCommand(client, "Kills (sesión actual): %d", g_IonKillCount[target]);
+	ReplyToCommand(client, "Kills (total): %d", g_IonTotalKills[target]);
+
+	return Plugin_Handled;
+}
+
+// ===================== VISUAL FEEDBACK SYSTEM =====================
+
+/**
+ * Muestra un HUD con información del Ion Cannon
+ */
+void ShowIonHUD(int client)
+{
+	if (!IsValidClient(client))
+		return;
+
+	int charges = g_IonCharges[client];
+	int maxCharges = g_cvMaxCharges.IntValue;
+	float cooldown = g_IonCooldown[client] - GetGameTime();
+
+	if (cooldown < 0.0) cooldown = 0.0;
+
+	char hudMsg[256];
+
+	if (g_IonActive[client])
+	{
+		float remaining = g_EndTime[client] - GetGameTime();
+		Format(hudMsg, sizeof(hudMsg),
+			"⚡ ION CANNON ACTIVO ⚡\nTiempo restante: %.1fs\nKills: %d",
+			remaining, g_IonKillCount[client]);
+	}
+	else if (cooldown > 0.0)
+	{
+		Format(hudMsg, sizeof(hudMsg),
+			"Ion Cannon\nCargas: %d/%d\nCooldown: %.0fs",
+			charges, maxCharges, cooldown);
+	}
+	else
+	{
+		Format(hudMsg, sizeof(hudMsg),
+			"Ion Cannon\n✓ LISTO [Cargas: %d/%d]",
+			charges, maxCharges);
+	}
+
+	// Mostrar en HUD
+	SetHudTextParams(-1.0, 0.75, 1.0, 160, 145, 255, 255, 0, 0.0, 0.0, 0.0);
+	ShowHudText(client, 3, hudMsg);
+}
+
+/**
+ * Sonido de confirmación de compra/activación
+ */
+void PlayPurchaseSound(int client)
+{
+	if (!IsValidClient(client))
+		return;
+
+	EmitSoundToClient(client, "items/suitchargeok1.wav", SOUND_FROM_PLAYER,
+		SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.8);
+}
+
+/**
+ * Sonido de error (cooldown, sin cargas, etc.)
+ */
+void PlayErrorSound(int client)
+{
+	if (!IsValidClient(client))
+		return;
+
+	EmitSoundToClient(client, "buttons/button14.wav", SOUND_FROM_PLAYER,
+		SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.6);
+}
+
+/**
+ * Efecto visual al activar el Ion Cannon
+ */
+void ShowActivationEffect(int client)
+{
+	if (!IsValidClient(client) || !IsPlayerAlive(client))
+		return;
+
+	float pos[3];
+	GetClientAbsOrigin(client, pos);
+	pos[2] += 50.0;
+
+	// Partícula de "power up"
+	float angles[3];
+	angles[0] = -90.0;
+	angles[1] = 0.0;
+	angles[2] = 0.0;
+
+	int particle = DisplayParticle("weapon_pipebomb", pos, angles);
+	if (particle > MaxClients)
+	{
+		CreateTimer(1.0, Timer_DeleteParticle, EntIndexToEntRef(particle), TIMER_FLAG_NO_MAPCHANGE);
+	}
+
+	// Sonido de activación
+	PlayPurchaseSound(client);
+
+	// Mensaje con información
+	PrintToChat(client, "\x04[Ion]\x01 ⚡ Ion Cannon activado! Cargas: \x05%d\x01/\x05%d",
+		g_IonCharges[client], g_cvMaxCharges.IntValue);
+
+	// Mostrar HUD
+	ShowIonHUD(client);
 }
