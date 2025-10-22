@@ -66,6 +66,11 @@
     "en"  "Team Bonuses"
     "es"  "Bonos de equipo"
   }
+  "BM_TeamBonuses_TeamHeal"
+  {
+    "en"  "Team Heal"
+    "es"  "Sanación de Equipo"
+  }
   "Menu Title"
   {
     "en"  "Eclipse Management System"

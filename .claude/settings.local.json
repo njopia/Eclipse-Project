@@ -4,7 +4,11 @@
       "Bash(git commit:*)",
       "Bash(.compile_shoulder_cannon.bat)",
       "Bash(cmd /c compile_shoulder_cannon.bat)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(dir:*)",
+      "Read(//c//**)",
+      "Read(//c/Program Files/**)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

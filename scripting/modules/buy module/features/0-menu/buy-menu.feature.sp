@@ -6,6 +6,7 @@ Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
 Menu g_LongActionsMenu;
+Menu g_TeamBonusesMenu;
 /// Main Menu Choices ///
 #define BM_CHOICE_0_1 "BM_Instant"
 #define BM_CHOICE_0_2 "BM_LongAction"
@@ -23,6 +24,8 @@ Menu g_LongActionsMenu;
 #define BM_CHOICE_3_2 "BM_Deployables_UV_Light"
 #define BM_CHOICE_3_3 "BM_Deployables_Healing_Station"
 #define BM_CHOICE_3_4 "BM_Deployables_Ion_Cannon"
+/// Team Bonuses Choices ///
+#define BM_CHOICE_4_1 "BM_TeamBonuses_TeamHeal"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -55,6 +58,11 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			if (StrEqual(info, BM_CHOICE_0_4))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 Team Bonuses");
+				TeamBonusesMenu(client);
+				if (g_TeamBonusesMenu != null)
+				{
+					g_TeamBonusesMenu.Display(client, 20);
+				}
 			}
 		}
 
@@ -142,6 +150,39 @@ public void DeployablesMenu(int client)
 
 	g_DeployablesMenu.ExitBackButton = true;
 	g_DeployablesMenu.ExitButton	 = true;
+}
+
+// Function to Create Team Bonuses Submenu
+public void TeamBonusesMenu(int client)
+{
+	char text[40];
+	char title[40];
+
+	// Create Submenu
+	g_TeamBonusesMenu = new Menu(MenuHandler_TeamBonuses, MENU_ACTIONS_ALL);
+	Format(title, sizeof(title), "%T", "Submenu Title", client);
+	g_TeamBonusesMenu.SetTitle(title);
+
+	// Add Submenu Items
+	Format(text, sizeof(text), "%T", BM_CHOICE_4_1, client);
+	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_1, text);
+
+	g_TeamBonusesMenu.ExitBackButton = true;
+	g_TeamBonusesMenu.ExitButton	 = true;
+}
+
+public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[32];
+		menu.GetItem(param, info, sizeof(info));
+		if (StrEqual(info, BM_CHOICE_4_1))
+		{
+			Activate_TeamHeal(client);
+		}
+	}
+	return 0;
 }
 
 public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int param)
@@ -278,6 +319,10 @@ public Action Cmd_Buy(int client, int args)
 	if (g_DeployablesMenu == null)
 	{
 		DeployablesMenu(client);
+	}
+	if (g_TeamBonusesMenu == null)
+	{
+		TeamBonusesMenu(client);
 	}
 	return Plugin_Handled;
 }
