@@ -19,6 +19,7 @@ static float g_fNextTeamHeal[MAXPLAYERS + 1];
 static Handle g_hTeamHealTimer[MAXPLAYERS + 1];
 static Handle g_hBotGlowBlinkTimer[MAXPLAYERS + 1];
 static bool g_bBotGlowVisible[MAXPLAYERS + 1];
+static int g_iMaxHealth[MAXPLAYERS + 1];
 
 /**
  * Activa la habilidad Team Heal para un jugador.
@@ -67,7 +68,7 @@ stock void Activate_TeamHeal(int client)
  */
 static void PlayTeamHealEffects(int client)
 {
-	// Sonido de activación
+	// Sonido de activación - usar comando de adrenaline
 	EmitSoundToAll("player/adrenaline_inject.wav", client, SNDCHAN_VOICE);
 
 	// Sonido adicional (victoria/activación)
@@ -88,6 +89,16 @@ static void PlayTeamHealEffects(int client)
 			L4D_ScreenFade(i, 0, 255, 0, 100, 0.3, FADE_IN);
 		}
 	}
+
+	// Aplicar efecto de adrenaline visual a todos (sin el tiempo de curación completo)
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsSurvivor(i) && IsPlayerAlive(i))
+		{
+			// Usar L4D2_UseAdrenaline para efecto visual
+			L4D2_UseAdrenaline(i, 3.0, false);
+		}
+	}
 }
 
 /**
@@ -99,8 +110,8 @@ static void CreateHealingParticle(const float origin[3])
 	if (particle == -1)
 		return;
 
-	// Usar partícula de curación/vida
-	DispatchKeyValue(particle, "effect_name", "gas_explosion_ground_fire");
+	// Usar partícula de sanación - luz verde brillante
+	DispatchKeyValue(particle, "effect_name", "heal_sparkles");
 	TeleportEntity(particle, origin, NULL_VECTOR, NULL_VECTOR);
 	DispatchSpawn(particle);
 	ActivateEntity(particle);
@@ -126,7 +137,7 @@ static int HealAllSurvivors()
 			continue;
 
 		// Obtener salud actual y máxima
-		int currentHealth = GetClientHealth(i);
+		int currentHealth = GetEntProp(i, Prop_Data, "m_iHealth");
 		int maxHealth = GetEntProp(i, Prop_Data, "m_iMaxHealth");
 
 		// Si no está al máximo, curar
@@ -139,15 +150,14 @@ static int HealAllSurvivors()
 				g_hTeamHealTimer[i] = INVALID_HANDLE;
 			}
 
-			// Crear timer para curación gradual
-			int healData[2];
-			healData[0] = i;  // Client index
-			healData[1] = maxHealth;  // Max health
+			// Guardar el maxHealth para el timer
+			g_iMaxHealth[i] = maxHealth;
 
+			// Crear timer para curación gradual
 			g_hTeamHealTimer[i] = CreateTimer(
 				TEAM_HEAL_TICK_INTERVAL,
 				Timer_HealTick,
-				healData,
+				i,
 				TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE
 			);
 
@@ -169,10 +179,9 @@ static int HealAllSurvivors()
 /**
  * Timer para aplicar sanación gradual a un jugador
  */
-public Action Timer_HealTick(Handle timer, int[] healData)
+public Action Timer_HealTick(Handle timer, int client)
 {
-	int client = healData[0];
-	int maxHealth = healData[1];
+	int maxHealth = g_iMaxHealth[client];
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client) || !IsSurvivor(client))
 	{
@@ -180,12 +189,11 @@ public Action Timer_HealTick(Handle timer, int[] healData)
 		return Plugin_Stop;
 	}
 
-	int currentHealth = GetClientHealth(client);
+	int currentHealth = GetEntProp(client, Prop_Data, "m_iHealth");
 
 	// Si llegó al máximo, detener timer
 	if (currentHealth >= maxHealth)
 	{
-		PrintToChat(client, "\x05[Eclipse]\x01 ¡Salud máxima alcanzada!");
 		g_hTeamHealTimer[client] = INVALID_HANDLE;
 		return Plugin_Stop;
 	}
@@ -197,12 +205,19 @@ public Action Timer_HealTick(Handle timer, int[] healData)
 		newHealth = maxHealth;
 	}
 
-	SetEntityHealth(client, newHealth);
+	SetEntProp(client, Prop_Data, "m_iHealth", newHealth);
 
 	// Mostrar feedback periódico
-	if (currentHealth % 10 == 0)
+	if (newHealth % 10 == 0)
 	{
 		PrintToChat(client, "\x05[Eclipse]\x01 Sanando... \x04%d\x01 / \x04%d\x01", newHealth, maxHealth);
+	}
+
+	// Si llegó al máximo después de curar, detener timer
+	if (newHealth >= maxHealth)
+	{
+		g_hTeamHealTimer[client] = INVALID_HANDLE;
+		return Plugin_Stop;
 	}
 
 	return Plugin_Continue;
