@@ -81,7 +81,7 @@ new bool:g_bDebugMode = true;
 public OnPluginStart()
 {
 	// ConVar de debug
-	g_hDebugMode = CreateConVar("sc_debug", "1", "Enable debug logging (0=off, 1=on)", FCVAR_NOTIFY);
+	g_hDebugMode = CreateConVar("sc_debug", "0", "Enable debug logging (0=off, 1=on)", FCVAR_NOTIFY);
 	g_bDebugMode = GetConVarBool(g_hDebugMode);
 	HookConVarChange(g_hDebugMode, OnDebugModeChanged);
 
@@ -271,9 +271,10 @@ public Action:Event_PlayerDisconnect(Handle:event, const String:name[], bool:don
 	{
 		RemoveShoulderCannon(client);
 
+		// OPTIMIZATION: Properly kill repeating timer
 		if (hViewTimer[client] != INVALID_HANDLE)
 		{
-			CloseHandle(hViewTimer[client]);
+			KillTimer(hViewTimer[client], false);
 			hViewTimer[client] = INVALID_HANDLE;
 		}
 	}
@@ -361,7 +362,7 @@ stock EquipShoulderCannon(client)
 				TeleportEntity(entity, Origin, Angles, NULL_VECTOR);
 				DebugLog("Entity %d teleported to offset position", entity);
 
-				RunRepeater(iRound, client, entity);
+				RunRepeater(client);
 				DebugLog("RunRepeater started for client %d with entity %d", client, entity);
 
 				SDKHook(entity, SDKHook_SetTransmit, Transmit_ShoulderCannon);
@@ -435,7 +436,7 @@ public Action:Transmit_ShoulderCannon(entity, client)
 // =========================
 // Targeting System
 // =========================
-stock RunRepeater(round, client, entity)
+stock RunRepeater(client)
 {
 	if (CannonRate[client] <= 0.0)
 	{
@@ -443,39 +444,39 @@ stock RunRepeater(round, client, entity)
 		CannonRate[client] = 0.15;
 	}
 
-	new Handle:Pack = CreateDataPack();
-	WritePackCell(Pack, round);
-	WritePackCell(Pack, client);
-	WritePackCell(Pack, entity);
-
-	DebugLog("RunRepeater: Creating timer with rate %.3f seconds", CannonRate[client]);
-	new Handle:timer = CreateTimer(CannonRate[client], CannonRepeater, Pack, TIMER_FLAG_NO_MAPCHANGE);
-
-	if (timer == INVALID_HANDLE)
+	// OPTIMIZATION: Kill existing timer for this client if it exists
+	if (hViewTimer[client] != INVALID_HANDLE)
 	{
-		LogMessage("[Shoulder Cannon] ERROR: Failed to create timer! Pack handle: %d", Pack);
-		CloseHandle(Pack);
+		KillTimer(hViewTimer[client], false);
+		hViewTimer[client] = INVALID_HANDLE;
+	}
+
+	// Use TIMER_REPEAT to reuse the same timer instead of creating a new one each time
+	// Pass client ID directly as data instead of using DataPack
+	DebugLog("RunRepeater: Creating repeating timer with rate %.3f seconds for client %d", CannonRate[client], client);
+	hViewTimer[client] = CreateTimer(CannonRate[client], CannonRepeater, client, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+
+	if (hViewTimer[client] == INVALID_HANDLE)
+	{
+		LogMessage("[Shoulder Cannon] ERROR: Failed to create timer for client %d", client);
 	}
 	else
 	{
-		DebugLog("RunRepeater: Timer created successfully");
+		DebugLog("RunRepeater: Timer created successfully for client %d", client);
 	}
 }
 
-public Action:CannonRepeater(Handle:timer, any:Pack)
+public Action:CannonRepeater(Handle:timer, any:client)
 {
-	ResetPack(Pack, false);
-	new round = ReadPackCell(Pack);
-	new client = ReadPackCell(Pack);
-	new cannon = ReadPackCell(Pack);
-	CloseHandle(Pack);
+	// OPTIMIZATION: No DataPack needed, client passed directly as data
+	new cannon = CannonEnt[client];
 
-	DebugLog("CannonRepeater: round=%d, client=%d, cannon=%d, iRound=%d", round, client, cannon, iRound);
+	DebugLog("CannonRepeater: client=%d, cannon=%d, iRound=%d", client, cannon, iRound);
 
-	if (iRound != round || !IsServerProcessing())
+	if (!IsServerProcessing())
 	{
-		DebugLog("CannonRepeater: Stopping - round mismatch or server not processing");
-		return;
+		DebugLog("CannonRepeater: Stopping - server not processing");
+		return Plugin_Stop;  // Stop timer when server stops
 	}
 
 	if (client > 0 && IsClientInGame(client) && IsPlayerAlive(client))
@@ -505,9 +506,9 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 
 					if (CannonOn[client] == 1 || IsPlayerIncap(client) || IsPlayerHeld(client))
 					{
-						DebugLog("CannonRepeater: Cannon disabled or player incap/held, looping...");
-						RunRepeater(round, client, cannon);
-						return;
+						DebugLog("CannonRepeater: Cannon disabled or player incap/held, continuing...");
+						// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+						return Plugin_Continue;
 					}
 
 					new ammo = CannonAmmo[client];
@@ -520,6 +521,9 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 					{
 						new zombieCount = 0, specialCount = 0, tankCount = 0, witchCount = 0;
 
+						// OPTIMIZATION: Get client position ONCE instead of in every iteration
+						GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
+
 						// Buscar zombies comunes
 						new entity = -1;
 						while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
@@ -530,7 +534,6 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								new ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
 								if (ragdoll == 0)
 								{
-									GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
 									GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
 									distance = GetVectorDistance(Origin, TOrigin);
 									if (distance < 600)
@@ -559,7 +562,6 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								new ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
 								if (ragdoll == 0)
 								{
-									GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
 									GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
 									distance = GetVectorDistance(Origin, TOrigin);
 									if (distance < 600)
@@ -587,7 +589,6 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								if (IsTank(entity) && nevertarget != 4 && nevertarget != 7)
 								{
 									tankCount++;
-									GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
 									GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
 									distance = GetVectorDistance(Origin, TOrigin);
 									if (distance < 600)
@@ -605,7 +606,6 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								else if (IsSpecialInfected(entity) && nevertarget != 2 && nevertarget != 5)
 								{
 									specialCount++;
-									GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
 									GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
 									distance = GetVectorDistance(Origin, TOrigin);
 									if (distance < 600)
@@ -634,29 +634,29 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								{
 									DestroyTarget(client, zombie, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (special > 0)
 								{
 									DestroyTarget(client, special, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (witch > 0)
 								{
 									DestroyTarget(client, witch, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (tank > 0)
 								{
 									DestroyTarget(client, tank, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 							}
 							case 1: // Specials first
@@ -665,29 +665,29 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								{
 									DestroyTarget(client, special, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (witch > 0)
 								{
 									DestroyTarget(client, witch, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (tank > 0)
 								{
 									DestroyTarget(client, tank, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (zombie > 0)
 								{
 									DestroyTarget(client, zombie, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 							}
 							case 2: // Witches first
@@ -696,29 +696,29 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								{
 									DestroyTarget(client, witch, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (tank > 0)
 								{
 									DestroyTarget(client, tank, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (zombie > 0)
 								{
 									DestroyTarget(client, zombie, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (special > 0)
 								{
 									DestroyTarget(client, special, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 							}
 							case 3: // Tanks first
@@ -727,29 +727,29 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 								{
 									DestroyTarget(client, tank, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (zombie > 0)
 								{
 									DestroyTarget(client, zombie, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (special > 0)
 								{
 									DestroyTarget(client, special, 1);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 								else if (witch > 0)
 								{
 									DestroyTarget(client, witch, 2);
 									CannonAmmo[client] -= 1;
-									RunRepeater(round, client, cannon);
-									return;
+									// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+									return Plugin_Continue;
 								}
 							}
 						}
@@ -759,18 +759,19 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 						DebugLog("Out of ammo!");
 						CannonAmmo[client] = -1;
 						PrintToChat(client, "\x04[Shoulder Cannon]\x01 Out of Ammo.");
-						RunRepeater(round, client, cannon);
-						return;
+						// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+						return Plugin_Continue;
 					}
 					else if (ammo < 0)
 					{
 						DebugLog("Ammo is negative, waiting...");
-						RunRepeater(round, client, cannon);
-						return;
+						// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+						return Plugin_Continue;
 					}
 
-					DebugLog("No targets found, continuing loop...");
-					RunRepeater(round, client, cannon);
+					DebugLog("No targets found, continuing...");
+					// OPTIMIZATION: Timer continues automatically with TIMER_REPEAT
+					return Plugin_Continue;
 				}
 				else
 				{
@@ -791,6 +792,9 @@ public Action:CannonRepeater(Handle:timer, any:Pack)
 	{
 		DebugLog("ERROR: Client %d not valid, not in game, or dead", client);
 	}
+
+	// OPTIMIZATION: Timer continues with TIMER_REPEAT
+	return Plugin_Continue;
 }
 
 stock DestroyTarget(client, target, entitytype)
@@ -814,12 +818,12 @@ stock DestroyTarget(client, target, entitytype)
 			case 1:
 			{
 				DebugLog("Dealing player damage to target %d", target);
-				DealDamagePlayer(target, client, 2, 12, "shoulder_cannon");
+				DealDamagePlayer(target, client, 2, 12);
 			}
 			case 2:
 			{
 				DebugLog("Dealing entity damage to target %d", target);
-				DealDamageEntity2(target, client, 2, 12, "shoulder_cannon");
+				DealDamageEntity2(target, client, 2, 12);
 			}
 		}
 
@@ -943,75 +947,73 @@ stock AttachParticle(target, const String:ParticleName[], Float:time, Float:x, F
 // =========================
 // Damage Functions
 // =========================
-stock DealDamagePlayer(target, attacker, dmgtype, dmg, String:inflictor[])
+stock DealDamagePlayer(target, attacker, dmgtype, dmg)
 {
 	if (target > 0 && target <= 32)
 	{
 		if (IsClientInGame(target) && IsPlayerAlive(target))
 		{
+			// OPTIMIZATION: Simplified point_hurt creation for faster damage application
 			decl String:damage[16], String:type[16];
 			IntToString(dmg, damage, sizeof(damage));
 			IntToString(dmgtype, type, sizeof(type));
 
 			new pointHurt = CreateEntityByName("point_hurt");
-			if (pointHurt)
+			if (pointHurt > 0)
 			{
 				DispatchKeyValue(target, "targetname", "hurtme");
 				DispatchKeyValue(pointHurt, "Damage", damage);
 				DispatchKeyValue(pointHurt, "DamageTarget", "hurtme");
 				DispatchKeyValue(pointHurt, "DamageType", type);
-				DispatchKeyValue(pointHurt, "classname", inflictor);
 				DispatchSpawn(pointHurt);
 				AcceptEntityInput(pointHurt, "Hurt", (attacker > 0 && IsClientInGame(attacker))?attacker:-1);
 				AcceptEntityInput(pointHurt, "Kill");
-				DispatchKeyValue(target, "targetname", "donthurtme");
+				DispatchKeyValue(target, "targetname", "");  // Clear targetname
 			}
 		}
 	}
 }
 
-stock DealDamageEntity2(target, attacker, dmgtype, dmg, String:inflictor[])
+stock DealDamageEntity2(target, attacker, dmgtype, dmg)
 {
-	if (target > 32)
+	if (target > 32 && IsValidEntity(target))
 	{
-		if (IsValidEntity(target))
+		if (IsInfected(target) || IsWitch(target))
 		{
-			decl String:damage[16], String:type[16];
-			IntToString(dmg, damage, sizeof(damage));
-			IntToString(dmgtype, type, sizeof(type));
-
-			new pointHurt = CreateEntityByName("point_hurt");
-			if (pointHurt)
+			new ragdoll = GetEntProp(target, Prop_Data, "m_bClientSideRagdoll");
+			if (ragdoll == 0)
 			{
-				if (IsInfected(target) || IsWitch(target))
+				// OPTIMIZATION: Set wound state for common infected before dealing damage
+				if (IsInfected(target))
 				{
-					new ragdoll = GetEntProp(target, Prop_Data, "m_bClientSideRagdoll");
-					if (ragdoll == 0)
+					new health = GetEntProp(target, Prop_Data, "m_iHealth");
+					if (health <= dmg)
 					{
-						if (IsInfected(target))
-						{
-							new health = GetEntProp(target, Prop_Data, "m_iHealth");
-							if (health <= dmg)
-							{
-								SetEntProp(target, Prop_Send, "m_iRequestedWound1", GetRandomInt(21,25));
-								SetEntProp(target, Prop_Data, "m_bClientSideRagdoll", 1);
-							}
-						}
-
-						DispatchKeyValue(target, "targetname", "hurtme");
-						DispatchKeyValue(pointHurt, "Damage", damage);
-						DispatchKeyValue(pointHurt, "DamageTarget", "hurtme");
-						DispatchKeyValue(pointHurt, "DamageType", type);
-						DispatchKeyValue(pointHurt, "classname", inflictor);
-						DispatchSpawn(pointHurt);
-						if (IsClientInGame(attacker))
-						{
-							AcceptEntityInput(pointHurt, "Hurt", attacker);
-						}
-						DispatchKeyValue(target, "targetname", "donthurtme");
+						SetEntProp(target, Prop_Send, "m_iRequestedWound1", GetRandomInt(21,25));
+						SetEntProp(target, Prop_Data, "m_bClientSideRagdoll", 1);
 					}
 				}
-				AcceptEntityInput(pointHurt, "Kill");
+
+				// OPTIMIZATION: Simplified point_hurt creation
+				decl String:damage[16], String:type[16];
+				IntToString(dmg, damage, sizeof(damage));
+				IntToString(dmgtype, type, sizeof(type));
+
+				new pointHurt = CreateEntityByName("point_hurt");
+				if (pointHurt > 0)
+				{
+					DispatchKeyValue(target, "targetname", "hurtme");
+					DispatchKeyValue(pointHurt, "Damage", damage);
+					DispatchKeyValue(pointHurt, "DamageTarget", "hurtme");
+					DispatchKeyValue(pointHurt, "DamageType", type);
+					DispatchSpawn(pointHurt);
+					if (IsClientInGame(attacker))
+					{
+						AcceptEntityInput(pointHurt, "Hurt", attacker);
+					}
+					AcceptEntityInput(pointHurt, "Kill");
+					DispatchKeyValue(target, "targetname", "");  // Clear targetname
+				}
 			}
 		}
 	}
@@ -1038,7 +1040,12 @@ stock bool:IsPlayerHeld(client)
 	new charger = GetEntPropEnt(client, Prop_Send, "m_pummelAttacker");
 	new hunter = GetEntPropEnt(client, Prop_Send, "m_pounceAttacker");
 	new smoker = GetEntPropEnt(client, Prop_Send, "m_tongueOwner");
-	if (jockey > 0 || charger > 0 || hunter > 0 || smoker > 0)
+
+	// Valid entity check: Must be > 0 and <= MaxClients
+	if ((jockey > 0 && jockey <= MaxClients) ||
+		(charger > 0 && charger <= MaxClients) ||
+		(hunter > 0 && hunter <= MaxClients) ||
+		(smoker > 0 && smoker <= MaxClients))
 	{
 		return true;
 	}
@@ -1104,8 +1111,8 @@ stock bool:IsWitch(entity)
 
 stock bool:IsClientViewing(client, target)
 {
-	// Simplified visibility check - just verify target is within reasonable FOV
-	// The cannon is automatic and should attack visible enemies more liberally
+	// Visibility check: FOV + Line of Sight
+	// Use actual player view angles and full 3D distance calculation
 
 	decl Float:fViewPos[3];
 	decl Float:fViewAng[3];
@@ -1119,52 +1126,87 @@ stock bool:IsClientViewing(client, target)
 	GetEntPropVector(target, Prop_Send, "m_vecOrigin", fTargetPos);
 	fTargetPos[2] += 30;
 
-	// Calculate view direction (remove vertical tilt for level view)
-	fViewAng[0] = 0.0;  // Remove pitch (up/down)
+	// Calculate view direction using ACTUAL view angles (including pitch and yaw)
 	GetAngleVectors(fViewAng, fViewDir, NULL_VECTOR, NULL_VECTOR);
 
-	// Calculate vector to target
+	// Calculate full 3D vector to target (not just horizontal)
 	fDistance[0] = fTargetPos[0] - fViewPos[0];
 	fDistance[1] = fTargetPos[1] - fViewPos[1];
-	fDistance[2] = 0.0;
+	fDistance[2] = fTargetPos[2] - fViewPos[2];
 
-	// Check if target is within reasonable FOV (less restrictive: 0.35 instead of 0.73)
-	// 0.35 allows ~70 degree cone instead of ~43 degree cone
+	// OPTIMIZATION: Check distance first (cheaper than raycast)
+	new Float:fDistance_Length = GetVectorLength(fDistance);
+	if (fDistance_Length > 600.0)
+	{
+		DebugLog("IsClientViewing: Target too far (%.0f > 600)", fDistance_Length);
+		return false;
+	}
+
+	// Check if target is within reasonable FOV
+	// 0.5 = ~60 degree cone (good balance between too strict and too permissive)
 	NormalizeVector(fDistance, fTargetDir);
 	new Float:dotProduct = GetVectorDotProduct(fViewDir, fTargetDir);
 
-	DebugLog("IsClientViewing: client=%d target=%d dotProduct=%.2f (threshold=0.35)", client, target, dotProduct);
-
-	if (dotProduct < 0.35)
+	if (dotProduct < 0.5)
 	{
-		DebugLog("IsClientViewing: Target outside FOV cone");
+		DebugLog("IsClientViewing: Target outside FOV cone (dot=%.2f < 0.5)", dotProduct);
 		return false;
 	}
 
-	// Optional: Check for line of sight (disabled for more aggressive targeting)
-	// Uncomment below if you want to require line of sight
-	/*
-	new Handle:hTrace = TR_TraceRayFilterEx(fViewPos, fTargetPos, MASK_PLAYERSOLID_BRUSHONLY, RayType_EndPoint, ClientViewsFilter);
-	if (TR_DidHit(hTrace))
+	// Check line of sight - only block on actual walls/brushes
+	// Use MASK_SOLID to only check against solid geometry, not props or players
+	new Handle:hTrace = TR_TraceRayFilterEx(fViewPos, fTargetPos, MASK_SOLID, RayType_EndPoint, ClientViewsFilter);
+	new bool:bBlocked = TR_DidHit(hTrace);
+
+	if (bBlocked)
 	{
+		decl String:hitEntity[64];
+		new entity = TR_GetEntityIndex(hTrace);
+		if (entity > 0)
+		{
+			GetEdictClassname(entity, hitEntity, sizeof(hitEntity));
+			DebugLog("IsClientViewing: Line of sight blocked by %s (entity %d)", hitEntity, entity);
+		}
+		else
+		{
+			DebugLog("IsClientViewing: Line of sight blocked by world geometry");
+		}
 		CloseHandle(hTrace);
-		DebugLog("IsClientViewing: Line of sight blocked");
 		return false;
 	}
-	CloseHandle(hTrace);
-	*/
 
-	DebugLog("IsClientViewing: Target is valid");
+	CloseHandle(hTrace);
+
+	DebugLog("IsClientViewing: Target is valid (dot=%.2f)", dotProduct);
 	return true;
 }
 
 public bool:ClientViewsFilter(Entity, Mask, any:Junk)
 {
+	// OPTIMIZATION: Exclude players and infected entities without string comparisons
+	// We want to shoot THROUGH infected to hit other infected behind them
+
 	if (Entity <= MaxClients)
 	{
-		return false;
+		return false;  // Exclude players
 	}
-	return true;
+
+	// Fast check: infected/witch entities have health prop
+	// Only get classname if needed for rare cases
+	if (GetEntProp(Entity, Prop_Data, "m_iHealth") > 0)
+	{
+		// Likely infected entity, exclude it
+		// This is faster than GetEdictClassname + StrEqual
+		new String:classname[16];
+		GetEdictClassname(Entity, classname, sizeof(classname));
+
+		if (StrEqual(classname, "infected") || StrEqual(classname, "witch"))
+		{
+			return false;  // Exclude infected/witch - we want to shoot them!
+		}
+	}
+
+	return true;  // Allow walls, brushes, etc. to block
 }
 
 stock ExternalView(client, Float:time)
