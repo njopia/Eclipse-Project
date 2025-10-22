@@ -1104,41 +1104,57 @@ stock bool:IsWitch(entity)
 
 stock bool:IsClientViewing(client, target)
 {
-	// Retrieve view and target eyes position
-	new Float:fThreshold = 0.73;
+	// Simplified visibility check - just verify target is within reasonable FOV
+	// The cannon is automatic and should attack visible enemies more liberally
+
 	decl Float:fViewPos[3];
-	GetClientEyePosition(client, fViewPos);
 	decl Float:fViewAng[3];
-	GetClientEyeAngles(client, fViewAng);
-	decl Float:fViewDir[3];
 	decl Float:fTargetPos[3];
-	GetEntPropVector(target, Prop_Send, "m_vecOrigin", fTargetPos);
-	fTargetPos[2] += 30;
+	decl Float:fViewDir[3];
 	decl Float:fTargetDir[3];
 	decl Float:fDistance[3];
 
-	// Calculate view direction
-	fViewAng[0] = fViewAng[2] = 0.0;
+	GetClientEyePosition(client, fViewPos);
+	GetClientEyeAngles(client, fViewAng);
+	GetEntPropVector(target, Prop_Send, "m_vecOrigin", fTargetPos);
+	fTargetPos[2] += 30;
+
+	// Calculate view direction (remove vertical tilt for level view)
+	fViewAng[0] = 0.0;  // Remove pitch (up/down)
 	GetAngleVectors(fViewAng, fViewDir, NULL_VECTOR, NULL_VECTOR);
 
-	// Calculate distance to viewer to see if it can be seen.
-	fDistance[0] = fTargetPos[0]-fViewPos[0];
-	fDistance[1] = fTargetPos[1]-fViewPos[1];
+	// Calculate vector to target
+	fDistance[0] = fTargetPos[0] - fViewPos[0];
+	fDistance[1] = fTargetPos[1] - fViewPos[1];
 	fDistance[2] = 0.0;
 
-	// Check dot product. If it's negative, that means the viewer is facing
-	// backwards to the target.
+	// Check if target is within reasonable FOV (less restrictive: 0.35 instead of 0.73)
+	// 0.35 allows ~70 degree cone instead of ~43 degree cone
 	NormalizeVector(fDistance, fTargetDir);
-	if (GetVectorDotProduct(fViewDir, fTargetDir) < fThreshold) return false;
+	new Float:dotProduct = GetVectorDotProduct(fViewDir, fTargetDir);
 
-	// Now check if there are no obstacles in between through raycasting
+	DebugLog("IsClientViewing: client=%d target=%d dotProduct=%.2f (threshold=0.35)", client, target, dotProduct);
+
+	if (dotProduct < 0.35)
+	{
+		DebugLog("IsClientViewing: Target outside FOV cone");
+		return false;
+	}
+
+	// Optional: Check for line of sight (disabled for more aggressive targeting)
+	// Uncomment below if you want to require line of sight
+	/*
 	new Handle:hTrace = TR_TraceRayFilterEx(fViewPos, fTargetPos, MASK_PLAYERSOLID_BRUSHONLY, RayType_EndPoint, ClientViewsFilter);
 	if (TR_DidHit(hTrace))
 	{
 		CloseHandle(hTrace);
+		DebugLog("IsClientViewing: Line of sight blocked");
 		return false;
 	}
 	CloseHandle(hTrace);
+	*/
+
+	DebugLog("IsClientViewing: Target is valid");
 	return true;
 }
 
