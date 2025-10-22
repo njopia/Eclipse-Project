@@ -25,7 +25,8 @@ Menu g_TeamBonusesMenu;
 #define BM_CHOICE_3_3 "BM_Deployables_Healing_Station"
 #define BM_CHOICE_3_4 "BM_Deployables_Ion_Cannon"
 /// Team Bonuses Choices ///
-#define BM_CHOICE_4_1 "BM_TeamBonuses_TeamHeal"
+#define BM_CHOICE_4_1 "BM_TeamBonuses_TeamSpeedBoost"
+#define BM_CHOICE_4_2 "BM_TeamBonuses_TeamHeal"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -167,6 +168,9 @@ public void TeamBonusesMenu(int client)
 	Format(text, sizeof(text), "%T", BM_CHOICE_4_1, client);
 	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_1, text);
 
+	Format(text, sizeof(text), "%T", BM_CHOICE_4_2, client);
+	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_2, text);
+
 	g_TeamBonusesMenu.ExitBackButton = true;
 	g_TeamBonusesMenu.ExitButton	 = true;
 }
@@ -178,6 +182,10 @@ public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int
 		char info[32];
 		menu.GetItem(param, info, sizeof(info));
 		if (StrEqual(info, BM_CHOICE_4_1))
+		{
+			Activate_TeamSpeedBoost(client);
+		}
+		if (StrEqual(info, BM_CHOICE_4_2))
 		{
 			Activate_TeamHeal(client);
 		}

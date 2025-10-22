@@ -71,6 +71,45 @@
     "en"  "Team Heal"
     "es"  "Sanación de Equipo"
   }
+  "BM_TeamBonuses_TeamSpeedBoost"
+  {
+    "en"  "Team Speed Boost"
+    "es"  "Aceleración de Equipo"
+  }
+  "TSB_OnlyForSurvivors"
+  {
+    "en"  "Only survivors can use this ability."
+    "es"  "Solo los sobrevivientes pueden usar esta habilidad."
+  }
+  "TSB_Cooldown"
+  {
+    "#format" "{1:i}"
+    "en"  "You must wait {1} seconds."
+    "es"  "Debes esperar {1} segundos."
+  }
+  "TSB_Activated"
+  {
+    "#format" "{1:i}"
+    "en"  "Team Speed Boost activated. Accelerating {1} survivors for 5 minutes."
+    "es"  "Aceleración de Equipo activada. Acelerando {1} sobrevivientes durante 5 minutos."
+  }
+  "TSB_ActivatedAll"
+  {
+    "#format" "{1:i}"
+    "en"  "{1} has activated Team Speed Boost. Everyone is accelerated!"
+    "es"  "{1} ha activado Aceleración de Equipo. ¡Todos están acelerados!"
+  }
+  "TSB_Expired"
+  {
+    "en"  "Team Speed Boost has expired."
+    "es"  "La Aceleración de Equipo ha expirado."
+  }
+  "TSB_TimeRemaining"
+  {
+    "#format" "{1:i}"
+    "en"  "Speed Boost active. Time remaining: {1} seconds."
+    "es"  "Aceleración activa. Tiempo restante: {1} segundos."
+  }
   "Menu Title"
   {
     "en"  "Eclipse Management System"

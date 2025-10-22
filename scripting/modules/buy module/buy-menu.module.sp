@@ -21,6 +21,7 @@
 #tryinclude "features/03-deployables/ion-cannon.feature.sp"
 //////////////////////////////////////////////
 ////// TEAM BONUSES ///////////////////////////
+#tryinclude "features/04-team-bonuses/team-speed-boost.feature.sp"
 #tryinclude "features/04-team-bonuses/team-heal.feature.sp"
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
