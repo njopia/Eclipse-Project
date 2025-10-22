@@ -422,19 +422,14 @@ public Action:Transmit_ShoulderCannon(entity, client)
 			{
 				if (CannonEnt[i] == entity)
 				{
-					if (i == client)
-					{
-						return Plugin_Handled;
-					}
-					else
-					{
-						return Plugin_Continue;
-					}
+					// Show to everyone (owner and other players)
+					// Plugin_Continue = allow the entity to be transmitted
+					return Plugin_Continue;
 				}
 			}
 		}
 	}
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 // =========================
@@ -1480,26 +1475,26 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 		}
 		else if (StrEqual(name, "[Commons] Target First", false))
 		{
-			CannonTargetFirst[client] = 1;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Specials\x01");
+			CannonTargetFirst[client] = 0;  // FIX: case 0 = Commons first
+			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Commons\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Specials] Target First", false))
 		{
-			CannonTargetFirst[client] = 2;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Witches\x01");
+			CannonTargetFirst[client] = 1;  // FIX: case 1 = Specials first
+			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Specials\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Witches] Target First", false))
 		{
-			CannonTargetFirst[client] = 3;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Tanks\x01");
+			CannonTargetFirst[client] = 2;  // FIX: case 2 = Witches first
+			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Witches\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Tanks] Target First", false))
 		{
-			CannonTargetFirst[client] = 0;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Commons\x01");
+			CannonTargetFirst[client] = 3;  // FIX: case 3 = Tanks first
+			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Tanks\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[+0.05] Fastest Fire Rate", false))
