@@ -21,15 +21,16 @@
 // --- Defines ---
 #define HUD_UPDATE_INTERVAL 0.5  // Actualizar HUD cada 0.5 segundos
 
-// --- Forward declarations ---
-// Estas funciones deben estar disponibles en otros módulos del sistema
-
-// Desde team-speed-boost.feature.sp
-forward public float GetTeamSpeedBoostRemaining(int client);
-forward public float GetTeamSpeedBoostCooldown(int client);
-
-// Desde team-heal.feature.sp
-forward public float GetTeamHealCooldown(int client);
+// --- External Functions (Definidas en otros módulos) ---
+// Estas funciones están definidas como 'stock' en otros módulos
+// y se resuelven automáticamente en tiempo de compilación
+//
+// Desde team-speed-boost.feature.sp:
+//   - GetTeamSpeedBoostRemaining(int client)
+//   - GetTeamSpeedBoostCooldown(int client)
+//
+// Desde team-heal.feature.sp:
+//   - GetTeamHealCooldown(int client)
 
 // --- Variables de buffers para HUD ---
 static char g_sHUD2_CustomText[512]  = "";
