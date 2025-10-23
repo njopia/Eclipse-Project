@@ -25,11 +25,11 @@
 // Estas funciones deben estar disponibles en otros módulos del sistema
 
 // Desde team-speed-boost.feature.sp
-forward float GetTeamSpeedBoostRemaining(int client);
-forward float GetTeamSpeedBoostCooldown(int client);
+forward public float GetTeamSpeedBoostRemaining(int client);
+forward public float GetTeamSpeedBoostCooldown(int client);
 
 // Desde team-heal.feature.sp
-forward float GetTeamHealCooldown(int client);
+forward public float GetTeamHealCooldown(int client);
 
 // --- Variables de buffers para HUD ---
 static char g_sHUD2_CustomText[512]  = "";
