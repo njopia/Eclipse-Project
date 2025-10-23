@@ -25,6 +25,7 @@
 #tryinclude "features/04-team-bonuses/team-heal.feature.sp"
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
+#tryinclude "features/0-menu/hud-system-display.feature.sp"
 //////////////////////////////////////////////
 
 static bool	  bMenuOn			   = false;
@@ -43,6 +44,9 @@ public void buyMenuOnPluginStart()
 	bMenuOn = GetConVarBool(hMenuOn);
 
 	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);
+
+	// Inicializar sistema de HUD dinámico
+	HUDSystemDisplay_OnPluginStart();
 }
 
 public void OnClientDisconnect(int client)
