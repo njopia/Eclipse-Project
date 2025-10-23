@@ -1,0 +1,236 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    HUD REFERENCE CARD - Sistema !buy                            ║
+║                          Quick Reference Guide                                  ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+
+┌─ CONFIGURACIÓN ESENCIAL ──────────────────────────────────────────────────────┐
+│                                                                                 │
+│  Agregar a: cfg/sourcemod/l4d2_scripted_hud.cfg                               │
+│                                                                                 │
+│  // === HUD 2 - TEAM BONUSES ===                                              │
+│  sm_hud2_enabled         "1"        // Activar                                │
+│  sm_hud2_visible         "1"        // Mostrar                                │
+│  sm_hud2_posX            "0.01"     // Posición X (0=izq, 1=der)             │
+│  sm_hud2_posY            "0.01"     // Posición Y (0=arr, 1=aba)             │
+│  sm_hud2_width           "300"      // Ancho                                  │
+│  sm_hud2_height          "150"      // Alto                                   │
+│  sm_hud2_text_align      "1"        // 1=Izq, 2=Cen, 3=Der                   │
+│  sm_hud2_background      "1"        // Mostrar fondo                          │
+│                                                                                 │
+│  // === HUD 3 - DEPLOYABLES ===                                               │
+│  sm_hud3_enabled         "1"        // Activar                                │
+│  sm_hud3_visible         "1"        // Mostrar                                │
+│  sm_hud3_posX            "0.01"     // Posición X                             │
+│  sm_hud3_posY            "0.12"     // Posición Y (debajo de HUD2)            │
+│  sm_hud3_width           "300"      // Ancho                                  │
+│  sm_hud3_height          "150"      // Alto                                   │
+│  sm_hud3_text_align      "1"        // Alineación                             │
+│  sm_hud3_background      "1"        // Mostrar fondo                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ INSTALACIÓN RÁPIDA (3 PASOS) ────────────────────────────────────────────────┐
+│                                                                                 │
+│  1. COMPILAR:                                                                  │
+│     spcomp.exe "scripting/Eclipse Management System.sp"                       │
+│                                                                                 │
+│  2. CONFIGURAR:                                                                │
+│     Agregar las líneas de arriba a: cfg/sourcemod/l4d2_scripted_hud.cfg      │
+│                                                                                 │
+│  3. RECARGAR:                                                                  │
+│     sm reload Eclipse Management System                                       │
+│     sm reload l4d2_scripted_hud                                               │
+│                                                                                 │
+│  ¡LISTO! El HUD debería aparecer en la esquina superior izquierda             │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ DATOS MOSTRADOS ─────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│  HUD2 - TEAM BONUSES (cada 0.5 segundos)                                      │
+│  ┌──────────────────────────────────┐                                         │
+│  │ === TEAM BONUSES ===             │                                         │
+│  │ Speed Boost: 4:32                │  ← Duración (MM:SS)                    │
+│  │ Team Heal CD: 25s                │  ← Cooldown (segundos)                 │
+│  │ Survivors: 4/4                   │  ← Contador                            │
+│  └──────────────────────────────────┘                                         │
+│                                                                                 │
+│  HUD3 - DEPLOYABLES (cada 0.5 segundos)                                       │
+│  ┌──────────────────────────────────┐                                         │
+│  │ === DEPLOYABLES ===              │                                         │
+│  │ UV Light: 250s                   │  ← Tiempo restante                     │
+│  │ Healing Station: 180s            │  ← Tiempo restante                     │
+│  └──────────────────────────────────┘                                         │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ LAYOUTS RECOMENDADOS ────────────────────────────────────────────────────────┐
+│                                                                                 │
+│  ESQUINA SUPERIOR IZQUIERDA (Defecto)                                          │
+│  sm_hud2_posX "0.01"     sm_hud3_posX "0.01"                                  │
+│  sm_hud2_posY "0.01"     sm_hud3_posY "0.12"                                  │
+│                                                                                 │
+│  ESQUINA SUPERIOR DERECHA                                                      │
+│  sm_hud2_posX "0.70"     sm_hud2_text_align "3"                               │
+│  sm_hud2_posY "0.01"     sm_hud3_posX "0.70"                                  │
+│  sm_hud3_posY "0.12"     sm_hud3_text_align "3"                               │
+│                                                                                 │
+│  CENTRO SUPERIOR                                                               │
+│  sm_hud2_posX "0.35"     sm_hud2_text_align "2"                               │
+│  sm_hud2_posY "0.01"     sm_hud3_posX "0.35"                                  │
+│  sm_hud3_posY "0.10"     sm_hud3_text_align "2"                               │
+│                                                                                 │
+│  ESQUINA INFERIOR IZQUIERDA                                                    │
+│  sm_hud2_posX "0.01"     sm_hud3_posX "0.01"                                  │
+│  sm_hud2_posY "0.85"     sm_hud3_posY "0.92"                                  │
+│                                                                                 │
+│  SOLO TEAM BONUSES (Sin Deployables)                                          │
+│  sm_hud2_enabled "1"                                                           │
+│  sm_hud3_enabled "0"                                                           │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ TROUBLESHOOTING RÁPIDO ──────────────────────────────────────────────────────┐
+│                                                                                 │
+│  PROBLEMA                           SOLUCIÓN                                   │
+│  ─────────────────────────────────────────────────────────────────────────────  │
+│  No aparece HUD                     → sm_hud2_enabled "1"                      │
+│  HUD no se actualiza               → Recompilar Eclipse Management System     │
+│  Muestra Tank en lugar de Bonuses  → Revisar compilación del módulo           │
+│  HUD solapado con otro plugin      → Cambiar posición (posX, posY)            │
+│  Texto se corta                    → Aumentar width o height                  │
+│  Parpadea mucho                    → Desactivar sm_hud2_blink "0"             │
+│                                                                                 │
+│  Para ver logs:                                                                │
+│  tail -f logs/Eclipse_Management_System.log                                   │
+│                                                                                 │
+│  Para verificar estado:                                                        │
+│  sm plugins list | grep Eclipse                                               │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ VALORES DE CONFIGURACIÓN ────────────────────────────────────────────────────┐
+│                                                                                 │
+│  ALINEACIÓN:           EQUIPO:              VISIBILIDAD:                       │
+│  1 = Izquierda         0 = Todos            0 = No visible                    │
+│  2 = Centro            1 = Survivors        1 = Visible                       │
+│  3 = Derecha           2 = Infected                                            │
+│                                                                                 │
+│  POSICIONAMIENTO (X):                       POSICIONAMIENTO (Y):              │
+│  0.00 = Extrema Izq                        0.00 = Extrema Arriba             │
+│  0.50 = Centro Horizontal                  0.50 = Centro Vertical            │
+│  1.00 = Extrema Der                        1.00 = Extrema Abajo              │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ OPCIONES AVANZADAS ──────────────────────────────────────────────────────────┐
+│                                                                                 │
+│  EFECTOS:                                                                      │
+│  sm_hud2_blink          "1"        // Parpadea cuando hay evento               │
+│  sm_hud2_beep           "1"        // Suena cuando cambia                      │
+│                                                                                 │
+│  ANIMACIÓN:                                                                    │
+│  sm_hud2_x_speed        "10.0"     // Velocidad movimiento X                 │
+│  sm_hud2_x_direction    "0"        // Dirección (0=IzqDer, 1=Contrario)      │
+│  sm_hud2_x_min          "0.01"     // Posición X mínima                      │
+│  sm_hud2_x_max          "0.70"     // Posición X máxima                      │
+│                                                                                 │
+│  TAMAÑO POR RESOLUCIÓN:                                                        │
+│  1920x1080: width="350" height="160"                                          │
+│  1280x720:  width="250" height="120"                                          │
+│  1366x768:  width="300" height="140"                                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ DOCUMENTACIÓN DISPONIBLE ────────────────────────────────────────────────────┐
+│                                                                                 │
+│  📖 HUD_DOCUMENTATION_INDEX.md      → Índice de documentación                 │
+│  ⚡ QUICK_START_HUD.md              → Inicio rápido (30 seg)                  │
+│  📊 RESUMEN_IMPLEMENTACION.txt      → Resumen ejecutivo                       │
+│  🔍 IMPLEMENTACION_HUD_DINÁMICO.md  → Visión general                          │
+│  ⚙️  GUIA_CONFIGURACION_HUD.md      → Todas las opciones                     │
+│  🏗️  ARQUITECTURA_TECNICA_HUD.md    → Detalles técnicos                       │
+│                                                                                 │
+│  Comienza con HUD_DOCUMENTATION_INDEX.md                                       │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ COMANDOS ÚTILES ─────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│  Recargar plugins:                                                             │
+│  sm reload Eclipse Management System                                          │
+│  sm reload l4d2_scripted_hud                                                  │
+│                                                                                 │
+│  Cambiar configuración en vivo:                                                │
+│  sm_hud2_posX "0.5"                  (sin necesidad de recargar)               │
+│  sm_hud2_visible "0"                 (ocultar HUD)                            │
+│  sm_hud2_visible "1"                 (mostrar HUD)                            │
+│                                                                                 │
+│  Ver estado:                                                                   │
+│  sm plugins list | grep Eclipse                                               │
+│  sm plugins list | grep hud                                                   │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ CARACTERÍSTICAS DEL SISTEMA ─────────────────────────────────────────────────┐
+│                                                                                 │
+│  ✅ Datos en tiempo real cada 0.5 segundos                                    │
+│  ✅ Muestra Team Speed Boost, Team Heal, Deployables                          │
+│  ✅ Contador dinámico de supervivientes                                        │
+│  ✅ Bajo overhead (< 1% CPU)                                                  │
+│  ✅ Configurable sin recargar plugins                                         │
+│  ✅ Múltiples layouts disponibles                                             │
+│  ✅ Backwards compatible                                                       │
+│  ✅ Extensible para agregar más datos                                         │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─ NOTAS IMPORTANTES ───────────────────────────────────────────────────────────┐
+│                                                                                 │
+│  • Los cambios en CVARs aplican inmediatamente                                │
+│  • No es necesario recargar plugins para cambiar posición                      │
+│  • El sistema detecta features automáticamente                                │
+│  • Si falta una feature, sigue funcionando con valores por defecto             │
+│  • La documentación está en el mismo directorio del proyecto                   │
+│  • Todos los cambios están en Git (3 commits limpios)                          │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+
+═════════════════════════════════════════════════════════════════════════════════
+
+PARA EMPEZAR AHORA:
+
+1. Compilar:
+   spcomp.exe "scripting/Eclipse Management System.sp"
+
+2. Agregar a cfg/sourcemod/l4d2_scripted_hud.cfg:
+   sm_hud2_enabled "1"
+   sm_hud3_enabled "1"
+   sm_hud2_posX "0.01"
+   sm_hud2_posY "0.01"
+   sm_hud3_posX "0.01"
+   sm_hud3_posY "0.12"
+
+3. Recargar:
+   sm reload Eclipse Management System
+   sm reload l4d2_scripted_hud
+
+═════════════════════════════════════════════════════════════════════════════════
+
+¿PREGUNTAS?
+
+Leer: HUD_DOCUMENTATION_INDEX.md
+
+═════════════════════════════════════════════════════════════════════════════════
