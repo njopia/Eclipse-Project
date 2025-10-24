@@ -29,6 +29,23 @@
 
 //==================================================
 
+// ================== CURRENCY SYSTEM ==================
+int g_iPlayerCurrency[MAXPLAYERS + 1];			// Player currency for buying items
+
+// Buy Cost ConVars
+Handle cvar_CostConvertHP = INVALID_HANDLE;
+Handle cvar_CostFireYell = INVALID_HANDLE;
+Handle cvar_CostPowerYell = INVALID_HANDLE;
+Handle cvar_CostLeap = INVALID_HANDLE;
+Handle cvar_CostSurvSpeed = INVALID_HANDLE;
+Handle cvar_CostAmmo = INVALID_HANDLE;
+Handle cvar_CostUVLight = INVALID_HANDLE;
+Handle cvar_CostHealingStation = INVALID_HANDLE;
+Handle cvar_CostIonCannon = INVALID_HANDLE;
+Handle cvar_CostTeamHeal = INVALID_HANDLE;
+Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
+// ======================================================
+
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/beacons.helpers.sp"
 //////////////////////////////////////////////
@@ -53,29 +70,10 @@
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
 //////////////////////////////////////////////
-///// COST VERIFICATION WRAPPERS (L4D STATS INTEGRATION)
-#tryinclude "features/buy-cost-wrapper.inc"
-//////////////////////////////////////////////
+
 
 static bool	  bMenuOn			   = false;
 static Handle hMenuOn			   = INVALID_HANDLE;
-
-// ================== CURRENCY SYSTEM (L4D STATS INTEGRATION) ==================
-static int g_iPlayerCurrency[MAXPLAYERS + 1];			// Player currency for buying items
-
-// Buy Cost ConVars
-static Handle cvar_CostConvertHP = INVALID_HANDLE;
-static Handle cvar_CostFireYell = INVALID_HANDLE;
-static Handle cvar_CostPowerYell = INVALID_HANDLE;
-static Handle cvar_CostLeap = INVALID_HANDLE;
-static Handle cvar_CostSurvSpeed = INVALID_HANDLE;
-static Handle cvar_CostAmmo = INVALID_HANDLE;
-static Handle cvar_CostUVLight = INVALID_HANDLE;
-static Handle cvar_CostHealingStation = INVALID_HANDLE;
-static Handle cvar_CostIonCannon = INVALID_HANDLE;
-static Handle cvar_CostTeamHeal = INVALID_HANDLE;
-static Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
-// ==============================================================================
 
 const int	  TIME_UV_LIGHT		   = 300;
 const int	  TIME_HEALING_STATION = 300;
@@ -90,7 +88,6 @@ public void buyMenuOnPluginStart()
 	bMenuOn = GetConVarBool(hMenuOn);
 
 	// ============ INITIALIZE BUY COSTS ============
-	// These costs are in points from l4d_stats
 	cvar_CostConvertHP = CreateConVar("buy_cost_convert_hp", "25", "Cost in points to buy Convert HP", FCVAR_PLUGIN);
 	cvar_CostFireYell = CreateConVar("buy_cost_fire_yell", "20", "Cost in points to buy Fire Yell", FCVAR_PLUGIN);
 	cvar_CostPowerYell = CreateConVar("buy_cost_power_yell", "30", "Cost in points to buy Power Yell", FCVAR_PLUGIN);
@@ -287,7 +284,7 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 }
 
 /**
- * Award currency to player (from l4d_stats points)
+ * Award currency to player
  */
 stock void AwardCurrency(int client, int amount, const char[] reason = "")
 {
@@ -297,9 +294,9 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 	g_iPlayerCurrency[client] += amount;
 
 	if (strlen(reason) > 0)
-		PrintToChat(client, "[Ranking] Ganaste %d puntos (%s). Balance: %d", amount, reason, g_iPlayerCurrency[client]);
+		PrintToChat(client, "[Eclipse] Ganaste %d puntos (%s). Balance: %d", amount, reason, g_iPlayerCurrency[client]);
 	else
-		PrintToChat(client, "[Ranking] Ganaste %d puntos. Balance: %d", amount, g_iPlayerCurrency[client]);
+		PrintToChat(client, "[Eclipse] Ganaste %d puntos. Balance: %d", amount, g_iPlayerCurrency[client]);
 }
 
 /**

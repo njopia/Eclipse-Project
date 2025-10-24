@@ -85,25 +85,37 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 
 public void InstantsMenu(int client)
 {
-	char text[40];
-	char title[40];
+	char text[64];
+	char title[128];
+	char baseText[40];
 
 	// Create Submenu
 	g_InstantsMenu = new Menu(MenuHandler_Instants, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Submenu Title", client);
+	char mainTitle[40];
+	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
+	int playerPoints = g_iPlayerCurrency[client];
+	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
 	g_InstantsMenu.SetTitle(title);
 
-	// Add Submenu Items
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_1, client);
+	// Add Submenu Items with costs
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_1_1, client);
+	int cost1 = GetConVarInt(cvar_CostConvertHP);
+	Format(text, sizeof(text), "%s (%d)", baseText, cost1);
 	g_InstantsMenu.AddItem(BM_CHOICE_1_1, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_2, client);
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_1_2, client);
+	int cost2 = GetConVarInt(cvar_CostFireYell);
+	Format(text, sizeof(text), "%s (%d)", baseText, cost2);
 	g_InstantsMenu.AddItem(BM_CHOICE_1_2, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_3, client);
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_1_3, client);
+	int cost3 = GetConVarInt(cvar_CostPowerYell);
+	Format(text, sizeof(text), "%s (%d)", baseText, cost3);
 	g_InstantsMenu.AddItem(BM_CHOICE_1_3, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_1_4, client);
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_1_4, client);
+	int cost4 = GetConVarInt(cvar_CostLeap);
+	Format(text, sizeof(text), "%s (%d)", baseText, cost4);
 	g_InstantsMenu.AddItem(BM_CHOICE_1_4, text);
 
 	g_InstantsMenu.ExitBackButton = true;
@@ -113,25 +125,29 @@ public void InstantsMenu(int client)
 public void LongActionsMenu(int client)
 {
 	char text[128];
-	char title[40];
+	char title[128];
 	char baseText[64];
 
 	// Create Submenu
 	g_LongActionsMenu = new Menu(MenuHandler_LongActions, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Submenu Title", client);
+	char mainTitle[40];
+	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
+	int playerPoints = g_iPlayerCurrency[client];
+	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
 	g_LongActionsMenu.SetTitle(title);
 
-	// Add Survivor Speed Boost Item with remaining time
+	// Add Survivor Speed Boost Item with remaining time and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_2_1, client);
+	int cost = GetConVarInt(cvar_CostSurvSpeed);
 	float speedBoostRemaining = GetSurvSpeedBoostRemaining(client);
 	if (speedBoostRemaining > 0.0)
 	{
 		int seconds = RoundToFloor(speedBoostRemaining);
-		Format(text, sizeof(text), "%s [Activo: %ds]", baseText, seconds);
+		Format(text, sizeof(text), "%s (%d) [Activo: %ds]", baseText, cost, seconds);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s", baseText);
+		Format(text, sizeof(text), "%s (%d)", baseText, cost);
 	}
 	g_LongActionsMenu.AddItem(BM_CHOICE_2_1, text);
 
@@ -142,45 +158,55 @@ public void LongActionsMenu(int client)
 public void DeployablesMenu(int client)
 {
 	char text[128];
-	char title[40];
+	char title[128];
 	char baseText[64];
 
 	// Create Submenu
 	g_DeployablesMenu = new Menu(MenuHandler_Deployables, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Submenu Title", client);
+	char mainTitle[40];
+	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
+	int playerPoints = g_iPlayerCurrency[client];
+	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
 	g_DeployablesMenu.SetTitle(title);
 
-	// Add Ammo Pile Item
-	Format(text, sizeof(text), "%T", BM_CHOICE_3_1, client);
+	// Add Ammo Pile Item with cost
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_1, client);
+	int costAmmo = GetConVarInt(cvar_CostAmmo);
+	Format(text, sizeof(text), "%s (%d)", baseText, costAmmo);
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_1, text);
 
-	// Add UV Light Item with remaining time
+	// Add UV Light Item with remaining time and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_2, client);
+	int costUV = GetConVarInt(cvar_CostUVLight);
 	if (UVLightTimer[client] > 0)
 	{
-		Format(text, sizeof(text), "%s [%ds]", baseText, UVLightTimer[client]);
+		Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costUV, UVLightTimer[client]);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s", baseText);
+		Format(text, sizeof(text), "%s (%d)", baseText, costUV);
 	}
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
 
-	// Add Healing Station Item with remaining time
+	// Add Healing Station Item with remaining time and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_3, client);
+	int costHS = GetConVarInt(cvar_CostHealingStation);
 	if (HSTimer[client] > 0)
 	{
-		Format(text, sizeof(text), "%s [%ds]", baseText, HSTimer[client]);
+		Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costHS, HSTimer[client]);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s", baseText);
+		Format(text, sizeof(text), "%s (%d)", baseText, costHS);
 	}
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
 
-	// Add Ion Cannon Item with remaining cooldown/charges info
+	// Add Ion Cannon Item with remaining cooldown/charges info and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_4, client);
-	GetIonCannonInfo(client, text, sizeof(text));
+	int costIC = GetConVarInt(cvar_CostIonCannon);
+	char ionCannonInfo[128];
+	GetIonCannonInfo(client, ionCannonInfo, sizeof(ionCannonInfo));
+	Format(text, sizeof(text), "%s (%d) %s", baseText, costIC, ionCannonInfo);
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
 
 	g_DeployablesMenu.ExitBackButton = true;
@@ -191,22 +217,26 @@ public void DeployablesMenu(int client)
 public void TeamBonusesMenu(int client)
 {
 	char text[128];
-	char title[40];
+	char title[128];
 	char baseText[64];
 
 	// Create Submenu
 	g_TeamBonusesMenu = new Menu(MenuHandler_TeamBonuses, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Submenu Title", client);
+	char mainTitle[40];
+	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
+	int playerPoints = g_iPlayerCurrency[client];
+	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
 	g_TeamBonusesMenu.SetTitle(title);
 
-	// Add Team Speed Boost Item with remaining time
+	// Add Team Speed Boost Item with remaining time and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_1, client);
+	int costTSB = GetConVarInt(cvar_CostTeamSpeedBoost);
 	float speedBoostRemaining = GetTeamSpeedBoostRemaining(client);
 	if (speedBoostRemaining > 0.0)
 	{
 		int minutes = RoundToFloor(speedBoostRemaining / 60.0);
 		int seconds = RoundToFloor(speedBoostRemaining - (minutes * 60));
-		Format(text, sizeof(text), "%s [Activo: %dm %ds]", baseText, minutes, seconds);
+		Format(text, sizeof(text), "%s (%d) [Activo: %dm %ds]", baseText, costTSB, minutes, seconds);
 	}
 	else
 	{
@@ -214,26 +244,27 @@ public void TeamBonusesMenu(int client)
 		if (speedBoostCooldown > 0.0)
 		{
 			int cdSeconds = RoundToFloor(speedBoostCooldown);
-			Format(text, sizeof(text), "%s [CD: %ds]", baseText, cdSeconds);
+			Format(text, sizeof(text), "%s (%d) [CD: %ds]", baseText, costTSB, cdSeconds);
 		}
 		else
 		{
-			Format(text, sizeof(text), "%s", baseText);
+			Format(text, sizeof(text), "%s (%d)", baseText, costTSB);
 		}
 	}
 	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_1, text);
 
-	// Add Team Heal Item with remaining cooldown
+	// Add Team Heal Item with remaining cooldown and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_2, client);
+	int costTH = GetConVarInt(cvar_CostTeamHeal);
 	float teamHealCooldown = GetTeamHealCooldown(client);
 	if (teamHealCooldown > 0.0)
 	{
 		int cdSeconds = RoundToFloor(teamHealCooldown);
-		Format(text, sizeof(text), "%s [CD: %ds]", baseText, cdSeconds);
+		Format(text, sizeof(text), "%s (%d) [CD: %ds]", baseText, costTH, cdSeconds);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s", baseText);
+		Format(text, sizeof(text), "%s (%d)", baseText, costTH);
 	}
 	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_2, text);
 
@@ -249,11 +280,15 @@ public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int
 		menu.GetItem(param, info, sizeof(info));
 		if (StrEqual(info, BM_CHOICE_4_1))
 		{
-			Activate_TeamSpeedBoost(client);
+			int cost = GetConVarInt(cvar_CostTeamSpeedBoost);
+			if (PurchaseItem(client, cost, "Team Speed Boost"))
+				Activate_TeamSpeedBoost(client);
 		}
 		if (StrEqual(info, BM_CHOICE_4_2))
 		{
-			Activate_TeamHeal(client);
+			int cost = GetConVarInt(cvar_CostTeamHeal);
+			if (PurchaseItem(client, cost, "Team Heal"))
+				Activate_TeamHeal(client);
 		}
 	}
 	return 0;
@@ -268,19 +303,27 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 		menu.GetItem(param, info, sizeof(info));
 		if (StrEqual(info, BM_CHOICE_1_1))
 		{
-			ConvertHealth(client);
+			int cost = GetConVarInt(cvar_CostConvertHP);
+			if (PurchaseItem(client, cost, "Convert HP"))
+				ConvertHealth(client);
 		}
 		if (StrEqual(info, BM_CHOICE_1_2))
 		{
-			Activate_FireYell(client);
+			int cost = GetConVarInt(cvar_CostFireYell);
+			if (PurchaseItem(client, cost, "Fire Yell"))
+				Activate_FireYell(client);
 		}
 		else if (StrEqual(info, BM_CHOICE_1_3))
 		{
-			Yell(client);
+			int cost = GetConVarInt(cvar_CostPowerYell);
+			if (PurchaseItem(client, cost, "Power Yell"))
+				Yell(client);
 		}
 		else if (StrEqual(info, BM_CHOICE_1_4))
 		{
-			Activate_LeapOfDesperation(client);
+			int cost = GetConVarInt(cvar_CostLeap);
+			if (PurchaseItem(client, cost, "Leap of Desperation"))
+				Activate_LeapOfDesperation(client);
 		}
 	}
 	return 0;
@@ -295,7 +338,9 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		if (StrEqual(info, BM_CHOICE_2_1))
 		{
 			PrintToChatAll("Activating Speed Boost for client %d", client);
-			Surv_SpeedBoost(client);
+			int cost = GetConVarInt(cvar_CostSurvSpeed);
+			if (PurchaseItem(client, cost, "Survivor Speed Boost"))
+				Surv_SpeedBoost(client);
 		}
 	}
 	return 0;
@@ -309,8 +354,12 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 		menu.GetItem(param, info, sizeof(info));
 		if (StrEqual(info, BM_CHOICE_3_1))
 		{
-			SpawnAmmoByName(client, "pile");
-			PrintToChat(client, "\x04[Deployables]\x01 Deploying Ammo Pile");
+			int cost = GetConVarInt(cvar_CostAmmo);
+			if (PurchaseItem(client, cost, "Ammo Pile"))
+			{
+				SpawnAmmoByName(client, "pile");
+				PrintToChat(client, "\x04[Deployables]\x01 Deploying Ammo Pile");
+			}
 		}
 		else
 		if (StrEqual(info, BM_CHOICE_3_2))
@@ -320,9 +369,13 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				int flags = GetEntityFlags(client);
 				if (flags & FL_ONGROUND)
 				{
-					SpawnUVLight(client);
-					UpdateUVLight(client);
-					PrintToChat(client, "\x04[Deployables]\x01 Deploying UV Light");
+					int cost = GetConVarInt(cvar_CostUVLight);
+					if (PurchaseItem(client, cost, "UV Light"))
+					{
+						SpawnUVLight(client);
+						UpdateUVLight(client);
+						PrintToChat(client, "\x04[Deployables]\x01 Deploying UV Light");
+					}
 				}
 				else
 				{
@@ -340,8 +393,12 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				int flags = GetEntityFlags(client);
 				if (flags & FL_ONGROUND)
 				{
-					SpawnHealingStation(client);
-					PrintToChat(client, "\x04[Deployables]\x01 Deploying Healing Station");
+					int cost = GetConVarInt(cvar_CostHealingStation);
+					if (PurchaseItem(client, cost, "Healing Station"))
+					{
+						SpawnHealingStation(client);
+						PrintToChat(client, "\x04[Deployables]\x01 Deploying Healing Station");
+					}
 				}
 				else
 				{
@@ -355,7 +412,8 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 		}
 		else if (StrEqual(info, BM_CHOICE_3_4))
 		{
-			if (BuyIonCannon(client))
+			int cost = GetConVarInt(cvar_CostIonCannon);
+			if (PurchaseItem(client, cost, "Ion Cannon") && BuyIonCannon(client))
 			{
 				PrintToChat(client, "\x04[Deployables]\x01 Deploying Ion Cannon");
 			}
