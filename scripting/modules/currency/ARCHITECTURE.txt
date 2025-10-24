@@ -1,0 +1,334 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║           ECLIPSE MANAGEMENT SYSTEM - CURRENCY ARCHITECTURE                ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        ESTRUCTURA GENERAL DEL SISTEMA                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              PLUGIN PRINCIPAL
+                                    │
+                ┌───────────────────┼───────────────────┐
+                │                   │                   │
+            BUY MENU            CURRENCY            SERVER MGMT
+            MODULE              MODULE              UTILITIES
+                │                   │                   │
+                ├─────────────┬─────┴────┬──────────────┤
+                │             │          │              │
+            Currency      Currency    Currency      Currency
+            Storage       Events      Advanced      Stats
+                                     Events
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE EVENTOS Y CURRENCY                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+EVENTO DEL JUEGO
+       │
+       ▼
+┌──────────────────────┐
+│ HookEvent() detecta  │ ← El evento se registra en SourceMod
+└──────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────┐
+│ Event_Handler valida:            │
+│ - Cliente válido (1-MaxClients)  │
+│ - Cliente en juego               │
+│ - Team correcto (Si aplica)      │
+└──────────────────────────────────┘
+       │
+    ✓ Si válido / ✗ Si no válido
+       │
+       ▼
+┌──────────────────────────────┐
+│ Obtener ConVar de reward:    │
+│ int reward =                 │
+│   GetConVarInt(cvar_...)     │
+└──────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────┐
+│ Llamar AwardCurrency()       │
+├──────────────────────────────┤
+│ - Suma puntos al jugador     │
+│ - Muestra mensaje            │
+│ - Llama Stats tracking       │
+└──────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────┐
+│ Registro en Estadísticas:    │
+│ - CurrencyStats_Add*()       │
+│ - Incrementa contadores      │
+│ - Guarda datos de sesión     │
+└──────────────────────────────┘
+       │
+       ▼
+    COMPLETO: Usuario gana puntos
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ESTRUCTURA DE MÓDULOS - ÁRBOL                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Eclipse Management System.sp (MAIN)
+│
+├─ sdkhooks (include)
+├─ sdktools (include)
+├─ sourcemod (include)
+├─ left4dhooks (include)
+│
+├─ DATABASE MANAGEMENT
+│  └─ database.utils.sp
+│
+├─ HELPERS
+│  ├─ commons.helpers.sp
+│  ├─ entities.helpers.sp
+│  ├─ commands.helpers.sp
+│  └─ sdks.helpers.sp
+│
+├─ BUY MENU MODULE
+│  ├─ buy-menu.module.sp ◄────────────────┐
+│  │  (Almacenamiento de Currency)        │
+│  │  ├─ g_iPlayerCurrency[]              │
+│  │  ├─ ConVars de costos                │
+│  │  └─ AwardCurrency() ◄──────────┬─────┤
+│  │                                 │     │
+│  └─ features/                      │     │
+│     ├─ 0-menu/                     │     │
+│     ├─ 01-instants/                │     │
+│     ├─ 02-long-actions/            │     │
+│     ├─ 03-deployables/             │     │
+│     └─ 04-team-bonuses/            │     │
+│                                    │     │
+├─ CURRENCY EVENTS MODULE ◄──────────┘     │
+│  ├─ currency-events.module.sp            │
+│  │  ├─ infected_death          ┌────────┘
+│  │  ├─ tank_killed             │
+│  │  ├─ witch_killed            │
+│  │  ├─ heal_success            │
+│  │  ├─ revive_success          │
+│  │  └─ defibrillator_used      │
+│  │                              │
+│  ├─ currency-advanced-events.module.sp
+│  │  ├─ tongue_pull_stopped     │
+│  │  ├─ pounce_stopped          │
+│  │  ├─ jockey_ride_end         │
+│  │  └─ survival_round_start    │
+│  │                              │
+│  └─ currency-stats.module.sp
+│     ├─ g_iCurrencyEarned[]    │
+│     ├─ g_iCommonKills[]       │
+│     ├─ g_iHeadshots[]         │
+│     ├─ g_iTotalRevivals[]     │
+│     └─ g_iTotalHeals[]        │
+│
+└─ SERVER MANAGEMENT UTILS
+   └─ server-management.utils.sp
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE INICIALIZACIÓN (OnPluginStart)                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+OnPluginStart()
+│
+├─ HandleSdk()
+├─ doSqlConnection() × 2 (para 2 DBs)
+│
+├─ buyMenuOnPluginStart() ◄─────── Inicializa Buy Menu
+│  ├─ CreateConVar (costs)
+│  ├─ CreateTimer(1.0, TimerUpdate1)
+│  └─ Initialize g_iPlayerCurrency[]
+│
+├─ CurrencyEvents_OnPluginStart() ◄─ NUEVO
+│  ├─ CreateConVar (event rewards)
+│  ├─ HookEvent × 6
+│  │
+│  └─ CurrencyAdvancedEvents_OnPluginStart()
+│     ├─ CreateConVar (advanced rewards)
+│     └─ HookEvent × 5
+│
+├─ RegConsoleCmd ("buy", "sm_buy")
+├─ RegAdminCmd ("rp", "rt")
+├─ CreateConVar (debug)
+├─ LoadTranslations()
+└─ PrecacheAll()
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    GESTIÓN DEL CICLO DE VIDA DEL CLIENTE                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Cliente se conecta
+│
+├─ OnClientConnect()
+│  └─ (Automático, stats no se resetean aún)
+│
+├─ OnClientDisconnect(client)
+│  ├─ g_iPlayerCurrency[client] = 0 (Reset)
+│  └─ ResetPlayerCurrencyStats(client) ◄─ NUEVO
+│     ├─ g_iCurrencyEarned[client] = 0
+│     ├─ g_iCommonKills[client] = 0
+│     ├─ g_iHeadshots[client] = 0
+│     ├─ g_iTotalRevivals[client] = 0
+│     └─ g_iTotalHeals[client] = 0
+│
+▼ Cliente se va
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    VARIABLES GLOBALES - MEMORIA                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+BUY MENU MODULE:
+├─ g_iPlayerCurrency[MAXPLAYERS + 1]  ← Balance de cada jugador
+└─ Múltiples cooldown arrays
+
+CURRENCY EVENTS MODULE:
+├─ cvar_CurrencyCommonKill
+├─ cvar_CurrencySpecialKill
+├─ cvar_CurrencyTankKill
+├─ cvar_CurrencyWitchKill
+├─ cvar_CurrencyHeadshot
+├─ cvar_CurrencyRevive
+├─ cvar_CurrencyHeal
+└─ cvar_CurrencyDefibrillator
+
+CURRENCY ADVANCED EVENTS MODULE:
+├─ cvar_CurrencyIncapSave
+├─ cvar_CurrencySmokerSave
+├─ cvar_CurrencyHunterSave
+├─ cvar_CurrencyChargerSave
+├─ cvar_CurrencyJockeySave
+├─ cvar_CurrencySpitterSave
+└─ cvar_CurrencySurvivalRound
+
+CURRENCY STATS MODULE:
+├─ g_iCurrencyEarned[MAXPLAYERS + 1]
+├─ g_iCommonKills[MAXPLAYERS + 1]
+├─ g_iSpecialKills[MAXPLAYERS + 1]
+├─ g_iHeadshots[MAXPLAYERS + 1]
+├─ g_iTotalRevivals[MAXPLAYERS + 1]
+└─ g_iTotalHeals[MAXPLAYERS + 1]
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    FLUJO DE COMPRA DE ITEMS                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Usuario escribe: /buy
+│
+▼
+Menu abierto (buy-menu.feature.sp)
+│
+├─ Mostrar opciones
+│  ├─ Instants
+│  ├─ Long Actions
+│  ├─ Deployables
+│  └─ Team Bonuses
+│
+├─ Usuario selecciona item
+│
+▼
+PurchaseItem(client, cost, itemName)
+│
+├─ CanAffordPurchase(client, cost)?
+│  ├─ SI: Restar de g_iPlayerCurrency[client]
+│  │      Mostrar "Comprado: X Item"
+│  │      Ejecutar acción del item
+│  │      return true
+│  └─ NO: Mostrar "No tienes suficientes puntos"
+│         return false
+│
+▼
+Item ejecutado (si compra exitosa)
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    RELACIÓN ENTRE MÓDULOS                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────┐
+│  buy-menu.module.sp     │ ← CORE (Almacena currency)
+│  • g_iPlayerCurrency[]  │
+│  • AwardCurrency()      │
+│  • PurchaseItem()       │
+│  • GetPlayerCurrency()  │
+└────────┬────────────────┘
+         │ Usado por:
+         ▼
+┌─────────────────────────┐
+│  currency-events.module.sp
+│  • Otorga puntos
+│  • Llama AwardCurrency()
+│  • Actualiza stats
+└────────┬────────────────┘
+         │ Complementado por:
+         ▼
+┌──────────────────────────────┐
+│  currency-advanced-events.sp │
+│  • Eventos especiales        │
+│  • Llama AwardCurrency()     │
+│  • Actualiza stats           │
+└────────┬─────────────────────┘
+         │ Ambos trackeados por:
+         ▼
+┌─────────────────────────┐
+│  currency-stats.module.sp
+│  • g_iCurrencyEarned[]
+│  • g_iCommonKills[]
+│  • g_iHeadshots[]
+│  • Etc.
+└─────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    EXTENSIBILIDAD - AGREGAR UN NUEVO EVENTO                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+1. CREAR ConVar en currency-events.module.sp o currency-advanced-events.module.sp
+   Handle cvar_CurrencyMyEvent = INVALID_HANDLE;
+   cvar_CurrencyMyEvent = CreateConVar("currency_my_event", "5", ..., FCVAR_PLUGIN);
+
+2. AGREGAR HookEvent
+   HookEvent("my_event_name", Event_MyEvent, EventHookMode_Pre);
+
+3. CREAR Handler
+   public Action Event_MyEvent(Event event, const char[] name, bool dontBroadcast)
+   {
+       // Obtener cliente
+       // Validar
+       // Obtener reward
+       // Llamar AwardCurrency()
+       // Actualizar stats si es necesario
+   }
+
+4. (OPCIONAL) CREAR getter/setter
+   stock void CurrencyMyEvent_SetReward(int amount) { ... }
+   stock int CurrencyMyEvent_GetReward() { ... }
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SEGURIDAD Y VALIDACIONES                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Cada evento verifica:
+✓ Cliente es válido (1 a MaxClients)
+✓ Cliente está en juego (IsClientInGame)
+✓ Team es correcto (si aplica)
+✓ Evento viene de SourceMod (HookEvent)
+
+Funciones helper verifican:
+✓ Cliente válido antes de modificar arrays
+✓ IsClientInGame antes de enviar mensajes
+✓ Rango de arrays no se sobrepasa
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    ESTADÍSTICAS Y AUDITORÍA                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Cada vez que se otorgan puntos:
+1. Se suman a g_iPlayerCurrency[client]
+2. Se registra en CurrencyStats_AddEarnings()
+3. Se actualiza contador específico (si aplica)
+   - CurrencyStats_AddCommonKill()
+   - CurrencyStats_AddHeadshot()
+   - etc.
+
+Resultado: Auditoría completa por sesión del jugador
+
+═════════════════════════════════════════════════════════════════════════════

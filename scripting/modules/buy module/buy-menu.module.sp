@@ -69,6 +69,7 @@ Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 #tryinclude "features/04-team-bonuses/team-heal.feature.sp"
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
+#tryinclude "features/0-menu/admin-currency.feature.sp"
 //////////////////////////////////////////////
 
 
@@ -118,6 +119,8 @@ public void OnClientDisconnect(int client)
 	g_iPlayerCurrency[client] = 0;  // Reset currency on disconnect
 	IonCannon_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
+	ResetPlayerCurrencyStats(client);  // Reset currency stats on disconnect
+	AdminMoney_OnClientDisconnect(client);  // Reset admin money data on disconnect
 }
 
 public void DelegateBuyMenuModule()
@@ -292,6 +295,9 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 		return;
 
 	g_iPlayerCurrency[client] += amount;
+
+	// Registrar en estadísticas
+	CurrencyStats_AddEarnings(client, amount);
 
 	if (strlen(reason) > 0)
 		PrintToChat(client, "[Eclipse] Ganaste %d puntos (%s). Balance: %d", amount, reason, g_iPlayerCurrency[client]);

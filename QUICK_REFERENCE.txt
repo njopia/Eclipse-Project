@@ -1,0 +1,237 @@
+═══════════════════════════════════════════════════════════════════════════
+               ECLIPSE MANAGEMENT SYSTEM - QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════
+
+MODIFICAR RECOMPENSAS EN VIVO (Sin recompilación):
+═══════════════════════════════════════════════════════════════════════════
+
+EVENTOS BÁSICOS:
+────────────────
+sm_cvar currency_common_kill 1
+sm_cvar currency_special_kill 5
+sm_cvar currency_tank_kill 20
+sm_cvar currency_witch_kill 15
+sm_cvar currency_headshot 2
+sm_cvar currency_revive 3
+sm_cvar currency_heal 1
+sm_cvar currency_defibrillator 5
+
+EVENTOS AVANZADOS:
+──────────────────
+sm_cvar currency_incap_save 2
+sm_cvar currency_smoker_save 3
+sm_cvar currency_hunter_save 3
+sm_cvar currency_charger_save 3
+sm_cvar currency_jockey_save 3
+sm_cvar currency_spitter_save 2
+sm_cvar currency_survival_round 10
+
+═══════════════════════════════════════════════════════════════════════════
+EJEMPLOS DE CONFIGURACIÓN:
+═══════════════════════════════════════════════════════════════════════════
+
+DIFÍCIL (Menos puntos):
+─────────────────────
+sm_cvar currency_common_kill 1
+sm_cvar currency_special_kill 3
+sm_cvar currency_tank_kill 15
+sm_cvar currency_witch_kill 10
+
+NORMAL (Default):
+─────────────────
+sm_cvar currency_common_kill 1
+sm_cvar currency_special_kill 5
+sm_cvar currency_tank_kill 20
+sm_cvar currency_witch_kill 15
+
+FÁCIL (Más puntos):
+──────────────────
+sm_cvar currency_common_kill 2
+sm_cvar currency_special_kill 8
+sm_cvar currency_tank_kill 30
+sm_cvar currency_witch_kill 20
+
+═══════════════════════════════════════════════════════════════════════════
+UBICACIÓN DE ARCHIVOS:
+═══════════════════════════════════════════════════════════════════════════
+
+Módulos de código:
+scripting/modules/currency/
+├── currency-events.module.sp
+├── currency-advanced-events.module.sp
+└── currency-stats.module.sp
+
+Documentación:
+scripting/modules/currency/
+├── CURRENCY_SYSTEM_README.txt
+├── ARCHITECTURE.txt
+└── IMPLEMENTATION_GUIDE.txt
+
+Plugin compilado:
+scripting/compiled/Eclipse Management System.smx
+
+═══════════════════════════════════════════════════════════════════════════
+FUNCIONES STOCK DISPONIBLES:
+═══════════════════════════════════════════════════════════════════════════
+
+OTORGAR CURRENCY:
+─────────────────
+AwardCurrency(client, amount, reason)
+Ejemplo: AwardCurrency(1, 10, "Bonificación especial")
+
+OBTENER INFORMACIÓN:
+────────────────────
+GetPlayerCurrency(client)              → int (puntos actuales)
+CurrencyStats_GetTotalEarned(client)   → int (total ganado sesión)
+CurrencyStats_GetCommonKills(client)   → int (comunes matados)
+CurrencyStats_GetSpecialKills(client)  → int (especiales matados)
+CurrencyStats_GetHeadshots(client)     → int (headshots)
+CurrencyStats_PrintPlayerStats(client) → void (muestra stats al jugador)
+
+MODIFICAR RECOMPENSAS:
+──────────────────────
+CurrencyEvents_SetCommonReward(amount)
+CurrencyEvents_SetSpecialReward(amount)
+CurrencyEvents_SetTankReward(amount)
+CurrencyEvents_SetWitchReward(amount)
+
+═══════════════════════════════════════════════════════════════════════════
+EVENTOS DISPONIBLES Y SUS REWARDS:
+═══════════════════════════════════════════════════════════════════════════
+
+killed_infected         1 punto
+killed_special          5 puntos
+killed_tank             20 puntos
+killed_witch            15 puntos
+headshot_bonus          2 puntos
+revived_ally            3 puntos
+healed_ally             1 punto
+defib_used              5 puntos (L4D2 only)
+
+escaped_smoker          3 puntos
+escaped_hunter          3 puntos
+escaped_jockey          3 puntos
+impacted_charger        3 puntos
+survival_complete       10 puntos
+
+═══════════════════════════════════════════════════════════════════════════
+DEBUGGING Y LOGS:
+═══════════════════════════════════════════════════════════════════════════
+
+El plugin registra en:
+logs/Eclipse_Management_System.log
+
+Los eventos de currency se pueden logear agregando en cualquier módulo:
+LogToFile(logfilepath, "[CURRENCY] Evento: %s", reason);
+
+═══════════════════════════════════════════════════════════════════════════
+AGREGAR EVENTO NUEVO (PASO A PASO):
+═══════════════════════════════════════════════════════════════════════════
+
+1. Crear ConVar:
+   Handle cvar_MyEvent = INVALID_HANDLE;
+   cvar_MyEvent = CreateConVar("currency_my_event", "5", ..., FCVAR_PLUGIN);
+
+2. Hook del evento:
+   HookEvent("my_event_name", Event_MyEvent, EventHookMode_Pre);
+
+3. Crear handler:
+   public Action Event_MyEvent(Event event, const char[] name, bool dontBroadcast)
+   {
+       int client = GetClientOfUserId(event.GetInt("userid"));
+       if (client <= 0 || !IsClientInGame(client)) return Plugin_Continue;
+
+       int reward = GetConVarInt(cvar_MyEvent);
+       AwardCurrency(client, reward, "Mi evento");
+       return Plugin_Continue;
+   }
+
+4. Compilar y probar
+
+═══════════════════════════════════════════════════════════════════════════
+ESTRUCTURA MÍNIMA DE UN MÓDULO NUEVO:
+═══════════════════════════════════════════════════════════════════════════
+
+#if !defined EMS_MAIN_FILE
+    #error You must compile main file "scripting/Eclipse Management System.sp".
+           This is only an auxiliary file.
+#endif
+
+Handle cvar_Event1 = INVALID_HANDLE;
+
+public void CurrencyMyModule_OnPluginStart()
+{
+    cvar_Event1 = CreateConVar("currency_event1", "5", "Desc", FCVAR_PLUGIN);
+    HookEvent("event_name", Event_Handler, EventHookMode_Pre);
+}
+
+public Action Event_Handler(Event event, const char[] name, bool dontBroadcast)
+{
+    int client = GetClientOfUserId(event.GetInt("userid"));
+    if (client <= 0 || !IsClientInGame(client)) return Plugin_Continue;
+
+    AwardCurrency(client, GetConVarInt(cvar_Event1), "Evento");
+    return Plugin_Continue;
+}
+
+═══════════════════════════════════════════════════════════════════════════
+COMPILACIÓN:
+═══════════════════════════════════════════════════════════════════════════
+
+Comando de compilación:
+spcomp.exe "Eclipse Management System.sp" -o "compiled/Eclipse Management System.smx"
+
+O desde VS Code (si está configurado):
+- Hacer clic en "Compile" en la interfaz
+
+Verificar compilación sin errores:
+- No debe haber "error" en la salida
+- "warning" está OK (solo aviso)
+- Tamaño final: ~100-155KB
+
+═══════════════════════════════════════════════════════════════════════════
+INSTALACIÓN EN SERVIDOR:
+═══════════════════════════════════════════════════════════════════════════
+
+1. Copiar compiled/Eclipse Management System.smx
+   A: addons/sourcemod/plugins/
+
+2. Reiniciar servidor o:
+   sm_reload Eclipse Management System
+
+3. Verificar en consola:
+   [SM] Plugin reloaded successfully.
+
+4. Verificar ConVars:
+   sm_cvar list currency_*
+   Debe listar 15 ConVars
+
+═══════════════════════════════════════════════════════════════════════════
+TESTEO RÁPIDO:
+═══════════════════════════════════════════════════════════════════════════
+
+Para verificar que funciona:
+
+1. Iniciar mapa con bots
+2. Crear comando de prueba:
+   sm_test_currency → Gana 100 puntos
+
+3. Matar infectado común → Gana 1 punto
+4. Matar special → Gana 5 puntos
+5. Verificar balance con comando
+
+═══════════════════════════════════════════════════════════════════════════
+REFERENCIA RÁPIDA - CONVAR TEMPLATE:
+═══════════════════════════════════════════════════════════════════════════
+
+Nombre:     currency_XXXX
+Default:    (depende del evento)
+Min:        0
+Max:        (sin límite, típicamente 1000)
+Type:       int
+
+Ejemplo:
+currency_common_kill     → currency_[evento]_[acción]
+currency_revive_bonus    → currency_[evento]_[modificador]
+
+═══════════════════════════════════════════════════════════════════════════

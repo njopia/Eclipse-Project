@@ -42,7 +42,6 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 		{
 			char info[32];
 			menu.GetItem(param2, info, sizeof(info));
-
 			if (StrEqual(info, BM_CHOICE_0_1))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 Instants");
@@ -425,10 +424,16 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 public Action Cmd_Buy(int client, int args)
 {
 	char text[40];
-	char title[40];
+	char title[128];
 	g_MainMenu = new Menu(MenuHandler1, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Menu Title", client);
-	g_MainMenu.SetTitle(title, LANG_SERVER);
+
+	// Agregar "Tus puntos" al título principal
+	int playerPoints = g_iPlayerCurrency[client];
+	char fullTitle[256];
+	Format(fullTitle, sizeof(fullTitle), "%s\nTus puntos: %d", title, playerPoints);
+	g_MainMenu.SetTitle(fullTitle, LANG_SERVER);
+
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_1, text);
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_2, client);

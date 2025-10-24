@@ -1,0 +1,568 @@
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║          ADMIN CURRENCY SYSTEM - DETALLES DE IMPLEMENTACIÓN                ║
+║                                                                             ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+
+═════════════════════════════════════════════════════════════════════════════
+ARCHIVOS MODIFICADOS / CREADOS
+═════════════════════════════════════════════════════════════════════════════
+
+1. ✓ NUEVO ARCHIVO CREADO:
+   └─ scripting/modules/buy module/features/0-menu/admin-currency.feature.sp
+      └─ Feature completa del sistema de admin currency
+
+2. ✓ ARCHIVO MODIFICADO:
+   └─ scripting/modules/buy module/buy-menu.module.sp
+      └─ Se agregó #tryinclude de admin-currency.feature.sp
+      └─ Se agregó AdminCurrency_OnClientDisconnect() en OnClientDisconnect()
+
+3. ✓ ARCHIVO MODIFICADO:
+   └─ scripting/Eclipse Management System.sp (main file)
+      └─ Se agregó AdminCurrency_OnPluginStart() en OnPluginStart()
+      └─ Se agregó RegConsoleCmd para Command_GiveCustom
+
+
+═════════════════════════════════════════════════════════════════════════════
+FLUJO DE EJECUCIÓN
+═════════════════════════════════════════════════════════════════════════════
+
+1. INICIO
+   └─ Plugin se carga
+   └─ OnPluginStart() es llamado
+   └─ AdminCurrency_OnPluginStart() se ejecuta
+      ├─ cvar_AdminCurrencyEnabled se crea (default: 1)
+      ├─ Comando "sm_givecurrency" se registra
+      ├─ Comando "sm_currency" se registra (alias)
+      └─ Comando "sm_givecustom" se registra
+
+
+2. ADMIN USA !givecurrency
+   └─ Command_GiveCurrency() se ejecuta
+   ├─ Valida que feature esté habilitada
+   ├─ Valida que el admin tenga permisos (ADMFLAG_GENERIC)
+   └─ Abre ShowPlayerSelectionMenu(admin)
+
+
+3. ADMIN SELECCIONA UN JUGADOR
+   └─ MenuHandler_SelectPlayer() se ejecuta
+   ├─ Obtiene el UserID del jugador seleccionado
+   ├─ Convierte UserID a cliente
+   ├─ Valida que el cliente esté conectado
+   └─ Abre ShowAmountSelectionMenu(admin, target)
+
+
+4. ADMIN ELIGE CANTIDAD
+   └─ Opción A: Cantidad preestablecida
+      ├─ MenuHandler_SelectAmount() se ejecuta
+      ├─ Obtiene el monto elegido
+      └─ Llama GivePlayerCurrency(admin, target, amount)
+
+   └─ Opción B: Cantidad personalizada
+      ├─ MenuHandler_SelectAmount() abre ShowCustomAmountPrompt()
+      ├─ Pide al admin que escriba: !givecustom <cantidad>
+      ├─ Command_GiveCustom() se ejecuta
+      ├─ Valida la cantidad ingresada
+      └─ Llama GivePlayerCurrency(admin, target, amount)
+
+
+5. OTORGAMIENTO DE CURRENCY
+   └─ GivePlayerCurrency() se ejecuta
+   ├─ Obtiene currency actual del jugador: GetPlayerCurrency(target)
+   ├─ Calcula nuevo total: newCurrency = currentCurrency + amount
+   ├─ Establece el nuevo total: SetPlayerCurrency(target, newCurrency)
+   ├─ Notifica al admin
+   ├─ Notifica al jugador
+   ├─ Registra en logs
+   └─ FIN
+
+
+6. DESCONEXIÓN
+   └─ OnClientDisconnect(client) es llamado
+   ├─ AdminCurrency_OnClientDisconnect() limpia datos
+   └─ g_iAdminCurrencyTarget[client] = 0
+
+
+═════════════════════════════════════════════════════════════════════════════
+ESTRUCTURA DE MENÚS
+═════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────┐
+│         MENÚ 1: SELECCIONAR JUGADOR                 │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  Selecciona un jugador para darle currency         │
+│                                                     │
+│  [PlayerName1]  ← Selecciona → MenuHandler_SelectPlayer()
+│  [PlayerName2]                        ↓
+│  [PlayerName3]                   Abre Menú 2
+│  [PlayerName4]
+│  ...
+│                                                     │
+└─────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────┐
+│         MENÚ 2: SELECCIONAR CANTIDAD                │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  ¿Cuántos puntos dar a PlayerName?                 │
+│                                                     │
+│  25 puntos      ← Selecciona → MenuHandler_SelectAmount()
+│  50 puntos                            ↓
+│  100 puntos                      Dos opciones:
+│  250 puntos                           ↓
+│  500 puntos        ┌─────────────────┴──────────────┐
+│  1000 puntos       ↓                                ↓
+│  Personalizado  [Preestablecida]              [Personalizada]
+│                    ↓                                ↓
+│  [Atrás]  GivePlayerCurrency()    ShowCustomAmountPrompt()
+│                                         ↓
+│                                  Pide: !givecustom <N>
+│                                         ↓
+│                                  Command_GiveCustom()
+│                                         ↓
+│                                  GivePlayerCurrency()
+│                                                     │
+└─────────────────────────────────────────────────────┘
+
+
+═════════════════════════════════════════════════════════════════════════════
+VARIABLES GLOBALES
+═════════════════════════════════════════════════════════════════════════════
+
+int g_iAdminCurrencyTarget[MAXPLAYERS + 1]
+  ├─ Rango: [0] a [MAXPLAYERS]
+  ├─ Propósito: Almacenar el jugador objetivo de cada admin
+  ├─ Inicialización: En ShowAmountSelectionMenu()
+  ├─ Limpieza: En AdminCurrency_OnClientDisconnect()
+  └─ Uso: Para recuperar target en MenuHandler_SelectAmount()
+
+
+═════════════════════════════════════════════════════════════════════════════
+CONVARS
+═════════════════════════════════════════════════════════════════════════════
+
+Nombre: admin_currency_enabled
+  ├─ Tipo: Boolean (0/1)
+  ├─ Valor por defecto: 1 (habilitado)
+  ├─ Descripción: "Enable admin currency menu? (0 = disabled, 1 = enabled)"
+  ├─ Flags: FCVAR_PLUGIN
+  ├─ Rango: 0.0 a 1.0
+  └─ Uso: GetConVarBool(cvar_AdminCurrencyEnabled)
+
+
+═════════════════════════════════════════════════════════════════════════════
+FUNCIONES PÚBLICAS
+═════════════════════════════════════════════════════════════════════════════
+
+1. AdminCurrency_OnPluginStart()
+   ├─ Tipo: public void
+   ├─ Propósito: Inicializar el sistema
+   ├─ Operaciones:
+   │  ├─ Crear ConVar admin_currency_enabled
+   │  ├─ Registrar comando sm_givecurrency
+   │  └─ Registrar comando sm_currency (alias)
+   └─ Llamado por: Eclipse Management System.sp :: OnPluginStart()
+
+
+2. Command_GiveCurrency(int client, int args)
+   ├─ Tipo: public Action
+   ├─ Propósito: Manejo del comando principal
+   ├─ Parámetros:
+   │  ├─ client: ID del cliente que ejecuta el comando (1-MAXPLAYERS)
+   │  └─ args: Número de argumentos (ignorado)
+   ├─ Validaciones:
+   │  ├─ Verifica si feature está habilitada
+   │  ├─ Verifica si cliente es válido
+   │  └─ Verifica si tiene permisos de admin
+   ├─ Retorna: Plugin_Handled
+   └─ Llamado por: Comando !givecurrency / sm_givecurrency
+
+
+3. ShowPlayerSelectionMenu(int client)
+   ├─ Tipo: void
+   ├─ Propósito: Mostrar menú de selección de jugadores
+   ├─ Parámetros:
+   │  └─ client: ID del admin que abrió el menú
+   ├─ Operaciones:
+   │  ├─ Crea Menu object
+   │  ├─ Itera jugadores para agregar items
+   │  ├─ Solo agrega sobrevivientes
+   │  └─ Muestra el menú
+   └─ Handler: MenuHandler_SelectPlayer()
+
+
+4. MenuHandler_SelectPlayer(Menu menu, MenuAction action, int param1, int param2)
+   ├─ Tipo: public int
+   ├─ Propósito: Manejar selección del primer menú
+   ├─ Parámetros:
+   │  ├─ menu: Objeto Menu
+   │  ├─ action: Acción (MenuAction_Select, MenuAction_Cancel, MenuAction_End)
+   │  ├─ param1: Cliente admin
+   │  └─ param2: Índice del item seleccionado
+   ├─ Casos:
+   │  ├─ MenuAction_Select: Abre menú de cantidad
+   │  ├─ MenuAction_Cancel: Maneja botón atrás
+   │  └─ MenuAction_End: Destruye el menú
+   └─ Retorna: 0
+
+
+5. ShowAmountSelectionMenu(int admin, int target)
+   ├─ Tipo: void
+   ├─ Propósito: Mostrar menú de selección de cantidad
+   ├─ Parámetros:
+   │  ├─ admin: ID del admin
+   │  └─ target: ID del jugador objetivo
+   ├─ Operaciones:
+   │  ├─ Crea Menu object
+   │  ├─ Agrega 6 opciones de cantidad fija
+   │  ├─ Agrega opción de cantidad personalizada
+   │  ├─ Guarda target en g_iAdminCurrencyTarget[admin]
+   │  └─ Muestra el menú
+   └─ Handler: MenuHandler_SelectAmount()
+
+
+6. MenuHandler_SelectAmount(Menu menu, MenuAction action, int param1, int param2)
+   ├─ Tipo: public int
+   ├─ Propósito: Manejar selección del segundo menú
+   ├─ Parámetros:
+   │  ├─ menu: Objeto Menu
+   │  ├─ action: Acción del menú
+   │  ├─ param1: Cliente admin
+   │  └─ param2: Índice del item seleccionado
+   ├─ Casos:
+   │  ├─ MenuAction_Select:
+   │  │  ├─ Si es cantidad fija: Llama GivePlayerCurrency()
+   │  │  └─ Si es custom: Abre ShowCustomAmountPrompt()
+   │  ├─ MenuAction_Cancel: Regresa al menú anterior
+   │  └─ MenuAction_End: Destruye el menú
+   └─ Retorna: 0
+
+
+7. ShowCustomAmountPrompt(int admin, int target)
+   ├─ Tipo: void
+   ├─ Propósito: Solicitar cantidad personalizada
+   ├─ Parámetros:
+   │  ├─ admin: ID del admin
+   │  └─ target: ID del jugador objetivo
+   ├─ Operaciones:
+   │  ├─ Guarda target en g_iAdminCurrencyTarget[admin]
+   │  ├─ Imprime instrucciones en chat del admin
+   │  └─ Informa al admin cuál es el jugador objetivo
+   └─ Usuario debe escribir: !givecustom <cantidad>
+
+
+8. Command_GiveCustom(int client, int args)
+   ├─ Tipo: public Action
+   ├─ Propósito: Procesar cantidad personalizada
+   ├─ Parámetros:
+   │  ├─ client: ID del cliente (debe ser el admin)
+   │  └─ args: Número de argumentos
+   ├─ Validaciones:
+   │  ├─ Verifica que haya al menos 1 argumento
+   │  ├─ Obtiene cantidad del primer argumento
+   │  ├─ Valida que cliente esté conectado
+   │  ├─ Valida que cantidad sea > 0
+   │  └─ Valida que jugador objetivo aún esté conectado
+   ├─ Operaciones:
+   │  └─ Llama GivePlayerCurrency(client, target, amount)
+   └─ Retorna: Plugin_Handled
+
+
+9. GivePlayerCurrency(int admin, int target, int amount)
+   ├─ Tipo: void
+   ├─ Propósito: Otorgar currency al jugador
+   ├─ Parámetros:
+   │  ├─ admin: ID del admin que otorga
+   │  ├─ target: ID del jugador que recibe
+   │  └─ amount: Cantidad de puntos a otorgar
+   ├─ Operaciones:
+   │  ├─ Valida que target esté conectado
+   │  ├─ Obtiene currency actual: GetPlayerCurrency(target)
+   │  ├─ Calcula nuevo total: newCurrency = currentCurrency + amount
+   │  ├─ Establece nuevo total: SetPlayerCurrency(target, newCurrency)
+   │  ├─ Notifica al admin
+   │  ├─ Notifica al jugador
+   │  ├─ Registra en logs
+   │  └─ LogMessage("ADMIN_CURRENCY: ...")
+   └─ Retorna: void
+
+
+10. AdminCurrency_OnClientDisconnect(int client)
+    ├─ Tipo: public void
+    ├─ Propósito: Limpiar datos al desconectarse
+    ├─ Parámetros:
+    │  └─ client: ID del cliente que se desconecta
+    ├─ Operaciones:
+    │  └─ Limpia g_iAdminCurrencyTarget[client] = 0
+    └─ Llamado por: buy-menu.module.sp :: OnClientDisconnect()
+
+
+═════════════════════════════════════════════════════════════════════════════
+VALIDACIONES Y SEGURIDAD
+═════════════════════════════════════════════════════════════════════════════
+
+1. VALIDACIÓN DE PERMISOS
+   ├─ Función: CheckCommandAccess(client, "sm_givecurrency", ADMFLAG_GENERIC, true)
+   ├─ Propósito: Verificar que el usuario tenga permisos de admin
+   ├─ Falla: Imprime "[Admin] No tienes permisos para usar este comando"
+   └─ Ubicación: Command_GiveCurrency()
+
+
+2. VALIDACIÓN DE FEATURE HABILITADA
+   ├─ Función: GetConVarBool(cvar_AdminCurrencyEnabled)
+   ├─ Propósito: Verificar que el sistema esté habilitado
+   ├─ Falla: Imprime "[Admin] El sistema de currency para admins está deshabilitado"
+   └─ Ubicación: Command_GiveCurrency()
+
+
+3. VALIDACIÓN DE CLIENTE VALIDO
+   ├─ Función: IsClientInGame(client)
+   ├─ Propósito: Verificar que el cliente esté en el juego
+   ├─ Ubicación: Múltiples funciones
+
+
+4. VALIDACIÓN DE SOBREVIVIENTES
+   ├─ Función: IsSurvivor(i)
+   ├─ Propósito: Solo mostrar sobrevivientes en el menú
+   ├─ Ubicación: ShowPlayerSelectionMenu()
+
+
+5. VALIDACIÓN DE CANTIDAD
+   ├─ Verificación: amount <= 0
+   ├─ Falla: Imprime "[Admin] Debes ingresar una cantidad válida"
+   └─ Ubicación: Command_GiveCustom()
+
+
+6. VALIDACIÓN DE JUGADOR OBJETIVO
+   ├─ Verificación: target <= 0 || !IsClientInGame(target)
+   ├─ Falla: Imprime "[Admin] El jugador se desconectó"
+   └─ Ubicación: GivePlayerCurrency(), MenuHandler_SelectAmount()
+
+
+═════════════════════════════════════════════════════════════════════════════
+INTEGRACIÓN CON FUNCIONES EXISTENTES
+═════════════════════════════════════════════════════════════════════════════
+
+Función: GetPlayerCurrency(int client)
+  Ubicación: buy-menu.module.sp:309
+  Propósito: Obtener currency actual del jugador
+  Uso en admin-currency: Para obtener balance antes de otorgar
+
+  Código:
+    int currentCurrency = GetPlayerCurrency(target);
+
+
+Función: SetPlayerCurrency(int client, int amount)
+  Ubicación: buy-menu.module.sp:320
+  Propósito: Establecer currency directamente
+  Uso en admin-currency: Para establecer el nuevo balance
+
+  Código:
+    SetPlayerCurrency(target, newCurrency);
+
+
+Función: CheckCommandAccess(client, command, flag, silent)
+  Propósito: Verificar permisos de comando
+  Uso en admin-currency: Validar que el admin tenga permisos
+
+  Código:
+    if (!CheckCommandAccess(client, "sm_givecurrency", ADMFLAG_GENERIC, true))
+
+
+Función: IsSurvivor(client)
+  Propósito: Verificar si es un sobreviviente
+  Uso en admin-currency: Filtrar jugadores en el menú
+
+  Código:
+    if (IsClientInGame(i) && IsSurvivor(i))
+
+
+═════════════════════════════════════════════════════════════════════════════
+CONSTANTES Y DEFINICIONES
+═════════════════════════════════════════════════════════════════════════════
+
+MAXPLAYERS + 1
+  ├─ Valor: 33 (para L4D2)
+  ├─ Uso: Tamaño de arrays de variables globales
+  └─ Razón: Array es 0-indexed, índices válidos son 1-32
+
+
+MAX_NAME_LENGTH
+  ├─ Valor: 128
+  ├─ Uso: Tamaño de buffer para nombres de jugadores
+  └─ Razón: Suficiente para cualquier nombre de Steam
+
+
+ITEMDRAW_DISABLED
+  ├─ Uso: Mostrar item deshabilitado en menú
+  └─ Ejemplo: "No hay jugadores disponibles"
+
+
+MENU_TIME_FOREVER
+  ├─ Uso: Tiempo infinito para que el menú permanezca abierto
+  └─ Propósito: Permitir que el usuario tome tiempo para elegir
+
+
+MenuCancel_ExitBack
+  ├─ Uso: Identificar cuando el usuario presiona "Atrás"
+  └─ Propósito: Regresar al menú anterior
+
+
+═════════════════════════════════════════════════════════════════════════════
+MANEJO DE ERRORES
+═════════════════════════════════════════════════════════════════════════════
+
+Scenario 1: Admin sin permisos
+  ├─ Validación: CheckCommandAccess(...) retorna false
+  ├─ Respuesta: PrintToChat("[Admin] No tienes permisos...")
+  └─ Resultado: Comando no se ejecuta
+
+Scenario 2: Sistema deshabilitado
+  ├─ Validación: GetConVarBool(cvar_AdminCurrencyEnabled) == 0
+  ├─ Respuesta: PrintToChat("[Admin] El sistema... está deshabilitado")
+  └─ Resultado: Comando no se ejecuta
+
+Scenario 3: Jugador se desconecta durante el proceso
+  ├─ Momento: Entre selección y otorgamiento
+  ├─ Validación: GetClientOfUserId(StringToInt(sUserID)) retorna 0
+  ├─ Respuesta: PrintToChat("[Admin] El jugador se desconectó")
+  └─ Resultado: Operación cancelada
+
+Scenario 4: Cantidad inválida en custom
+  ├─ Validación: StringToInt(sAmount) <= 0
+  ├─ Respuesta: PrintToChat("[Admin] Debes ingresar una cantidad válida")
+  └─ Resultado: Sin cambios al currency
+
+Scenario 5: No hay jugadores conectados
+  ├─ Validación: menu.ItemCount == 0
+  ├─ Respuesta: Menú muestra "No hay jugadores disponibles" (deshabilitado)
+  └─ Resultado: No se puede seleccionar
+
+
+═════════════════════════════════════════════════════════════════════════════
+FORMATO DE MENSAJES
+═════════════════════════════════════════════════════════════════════════════
+
+AL ADMIN (exitoso):
+  "[Admin] ✓ Diste %d puntos a %s (Total: %d)"
+  Parámetros: [amount] [jugador_name] [nuevo_total]
+
+AL JUGADOR (exitoso):
+  "[Admin] El admin %s te dio %d puntos (Total: %d)"
+  Parámetros: [admin_name] [amount] [nuevo_total]
+
+EN LOG:
+  "ADMIN_CURRENCY: %s gave %d points to %s (new total: %d)"
+  Parámetros: [admin_name] [amount] [jugador_name] [nuevo_total]
+
+ERROR - Permisos:
+  "[Admin] No tienes permisos para usar este comando"
+
+ERROR - Sistema deshabilitado:
+  "[Admin] El sistema de currency para admins está deshabilitado"
+
+ERROR - Jugador desconectado:
+  "[Admin] El jugador se desconectó"
+
+ERROR - Cantidad inválida:
+  "[Admin] Debes ingresar una cantidad válida (mayor a 0)"
+
+PROMPT - Cantidad personalizada:
+  "[Admin] Escribe en el chat la cantidad de puntos a dar (ejemplo: !givecustom 500)"
+  "[Admin] Jugador objetivo: %s"
+
+
+═════════════════════════════════════════════════════════════════════════════
+LLAMADAS A FUNCIONES - DIAGRAMA DE FLUJO
+═════════════════════════════════════════════════════════════════════════════
+
+!givecurrency
+    ↓
+Command_GiveCurrency()
+    ├─ [Validaciones]
+    │  ├─ GetConVarBool(cvar_AdminCurrencyEnabled)
+    │  ├─ IsClientInGame(client)
+    │  └─ CheckCommandAccess()
+    │
+    └─ ShowPlayerSelectionMenu(client)
+        ├─ Itera 1..MaxClients
+        ├─ GetClientUserId(i)
+        ├─ GetClientName(i)
+        ├─ menu.AddItem()
+        └─ menu.Display()
+            └─ [Espera selección]
+                │
+                ↓
+            MenuHandler_SelectPlayer()
+                ├─ GetClientOfUserId()
+                ├─ [Validaciones]
+                └─ ShowAmountSelectionMenu(admin, target)
+                    ├─ GetClientName(target)
+                    ├─ g_iAdminCurrencyTarget[admin] = target
+                    ├─ menu.AddItem() x 7 (6 + custom)
+                    └─ menu.Display()
+                        └─ [Espera selección]
+                            │
+                            ├─ [Si cantidad fija]
+                            │  ↓
+                            │  MenuHandler_SelectAmount()
+                            │  └─ GivePlayerCurrency(admin, target, amount)
+                            │      ├─ GetPlayerCurrency(target)
+                            │      ├─ SetPlayerCurrency(target, newCurrency)
+                            │      ├─ GetClientName(admin)
+                            │      ├─ GetClientName(target)
+                            │      ├─ PrintToChat(admin, ...)
+                            │      ├─ PrintToChat(target, ...)
+                            │      └─ LogMessage(...)
+                            │
+                            └─ [Si personalizada]
+                               ↓
+                               MenuHandler_SelectAmount()
+                               └─ ShowCustomAmountPrompt(admin, target)
+                                   ├─ g_iAdminCurrencyTarget[admin] = target
+                                   └─ PrintToChat() [Instrucciones]
+                                       │
+                                       ↓
+                                   !givecustom <n>
+                                       ↓
+                                   Command_GiveCustom()
+                                   ├─ GetCmdArg(1)
+                                   ├─ [Validaciones]
+                                   ├─ g_iAdminCurrencyTarget[client]
+                                   └─ GivePlayerCurrency()
+                                       ├─ GetPlayerCurrency(target)
+                                       ├─ SetPlayerCurrency(target, newCurrency)
+                                       ├─ PrintToChat(admin, ...)
+                                       ├─ PrintToChat(target, ...)
+                                       └─ LogMessage(...)
+
+
+═════════════════════════════════════════════════════════════════════════════
+COMPILACIÓN Y DISTRIBUCIÓN
+═════════════════════════════════════════════════════════════════════════════
+
+Archivos necesarios para compilar:
+  ├─ scripting/Eclipse Management System.sp (archivo principal)
+  ├─ scripting/modules/buy module/buy-menu.module.sp
+  ├─ scripting/modules/buy module/features/0-menu/admin-currency.feature.sp
+  └─ Todos los includes y helpers requeridos
+
+Comando de compilación:
+  "C:\Program Files (x86)\Steam\steamapps\common\Left 4 Dead 2 Dedicated Server\
+  left4dead2\addons\sourcemod\scripting\spcomp.exe" \
+  "scripting/Eclipse Management System.sp" \
+  -o "scripting/compiled/Eclipse Management System.smx"
+
+Resultado esperado:
+  ✓ scripting/compiled/Eclipse Management System.smx
+
+Instalación:
+  Copiar .smx a: addons/sourcemod/plugins/
+
+═════════════════════════════════════════════════════════════════════════════
+
+                    IMPLEMENTACIÓN COMPLETADA
+
+═════════════════════════════════════════════════════════════════════════════

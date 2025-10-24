@@ -1,0 +1,67 @@
+// =============================================================
+// ECLIPSE MANAGEMENT SYSTEM - CURRENCY EVENTS CONFIGURATION
+// =============================================================
+// Configurar recompensas de currency por diferentes eventos del juego
+// Estos valores se cargan desde ConVars generados automáticamente
+
+// ----- EVENTOS BÁSICOS -----
+// Puntos por matar infectados comunes (zombies)
+currency_common_kill "1"
+
+// Puntos por matar infectados especiales (Smoker, Hunter, etc)
+currency_special_kill "5"
+
+// Puntos por matar Tank
+currency_tank_kill "20"
+
+// Puntos por matar Witch
+currency_witch_kill "15"
+
+// Puntos bonus por matar con headshot
+currency_headshot "2"
+
+// ----- EVENTOS DE CURACIÓN Y REVIVE -----
+// Puntos por revivir a un compañero caído
+currency_revive "3"
+
+// Puntos por curar a un compañero con medkit
+currency_heal "1"
+
+// Puntos por usar desfibrilador (L4D2 only)
+currency_defibrillator "5"
+
+// ----- EVENTOS AVANZADOS / SAVES -----
+// Puntos por salvar a alguien que está incapacitado
+currency_incap_save "2"
+
+// Puntos por liberarse del agarre de Smoker
+currency_smoker_save "3"
+
+// Puntos por escapar del ataque de Hunter
+currency_hunter_save "3"
+
+// Puntos por escapar/detener a Charger
+currency_charger_save "3"
+
+// Puntos por bajarse del Jockey
+currency_jockey_save "3"
+
+// Puntos por evitar/escapar de Spitter
+currency_spitter_save "2"
+
+// Puntos por completar una ronda de Survival
+currency_survival_round "10"
+
+// =============================================================
+// NOTAS:
+// - Estos valores se pueden cambiar en tiempo de ejecución con:
+//   sm_cvar <nombre_cvar> <valor>
+//
+// - Los cambios se aplican inmediatamente sin recargar el plugin
+//
+// - Recomendación: Ajustar estos valores según la dificultad
+//   y el balance del servidor
+//
+// - Valores sugeridos para "Easy" difficulty: +50% más puntos
+// - Valores sugeridos para "Hard" difficulty: -25% menos puntos
+// =============================================================

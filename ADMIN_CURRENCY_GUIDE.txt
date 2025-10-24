@@ -1,0 +1,414 @@
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║               ADMIN CURRENCY SYSTEM - GUÍA DE USO                          ║
+║                                                                             ║
+║              Sistema para que admins den currency a jugadores               ║
+║                    desde un menú interactivo                               ║
+║                                                                             ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+
+═════════════════════════════════════════════════════════════════════════════
+¿QUÉ ES?
+═════════════════════════════════════════════════════════════════════════════
+
+El Admin Currency System es una feature que permite a administradores dar puntos
+de currency (moneda) a jugadores de forma fácil e interactiva.
+
+Características:
+  ✓ Menú interactivo para seleccionar jugadores
+  ✓ Montos preestablecidos (25, 50, 100, 250, 500, 1000 puntos)
+  ✓ Opción de cantidad personalizada
+  ✓ Solo para admins (requiere permiso ADMFLAG_GENERIC)
+  ✓ Logs de todas las transacciones
+  ✓ Configurable con ConVar
+
+
+═════════════════════════════════════════════════════════════════════════════
+REQUISITOS
+═════════════════════════════════════════════════════════════════════════════
+
+✓ SourceMod instalado
+✓ Acceso admin en el servidor
+✓ Plugin Eclipse Management System compilado e instalado
+✓ Left 4 Dead 1 o Left 4 Dead 2
+
+
+═════════════════════════════════════════════════════════════════════════════
+INSTALACIÓN
+═════════════════════════════════════════════════════════════════════════════
+
+1. El archivo ya está creado en:
+   scripting/modules/buy module/features/0-menu/admin-currency.feature.sp
+
+2. Se debe compilar el plugin principal:
+   Eclipse Management System.sp
+
+3. Copiar el archivo .smx compilado a:
+   addons/sourcemod/plugins/
+
+4. Hacer reload del plugin en el servidor:
+   sm_reload "Eclipse Management System"
+
+   O si el servidor está reiniciando:
+   - Se cargará automáticamente
+
+
+═════════════════════════════════════════════════════════════════════════════
+COMANDOS DISPONIBLES
+═════════════════════════════════════════════════════════════════════════════
+
+COMANDO PRINCIPAL:
+──────────────────
+!givecurrency   - Abre el menú para dar currency a jugadores
+!currency       - Alias del comando anterior
+sm_givecurrency - Comando de consola
+
+COMANDO PARA CANTIDAD PERSONALIZADA:
+─────────────────────────────────────
+!givecustom <cantidad>
+
+Ejemplo:
+  !givecustom 500  - Da 500 puntos al jugador objetivo
+
+
+═════════════════════════════════════════════════════════════════════════════
+CÓMO USAR
+═════════════════════════════════════════════════════════════════════════════
+
+PASO 1: Abrir el menú
+────────────────────
+1. Escribe en chat: !givecurrency
+   O desde consola: sm_givecurrency
+
+2. El sistema verificará:
+   ✓ Que tengas permiso de admin
+   ✓ Que el sistema esté habilitado (cvar admin_currency_enabled = 1)
+
+
+PASO 2: Seleccionar jugador
+──────────────────────────
+1. Se abrirá un menú mostrando todos los sobrevivientes conectados
+2. Selecciona el jugador a quien quieres dar currency
+3. Si no hay jugadores, verás un mensaje de "No hay jugadores disponibles"
+
+
+PASO 3: Elegir cantidad
+──────────────────────
+Se abrirá un menú con opciones:
+  • 25 puntos
+  • 50 puntos
+  • 100 puntos
+  • 250 puntos
+  • 500 puntos
+  • 1000 puntos
+  • Cantidad personalizada
+
+Si seleccionas "Cantidad personalizada":
+  1. El sistema pedirá que escribas: !givecustom <número>
+  2. Ejemplo: !givecustom 750
+
+
+PASO 4: Confirmación
+───────────────────
+El sistema mostrará:
+  ✓ Al admin: "[Admin] Diste 500 puntos a PlayerName (Total: 1500)"
+  ✓ Al jugador: "[Admin] El admin AdminName te dio 500 puntos (Total: 1500)"
+  ✓ En logs del servidor: "ADMIN_CURRENCY: AdminName gave 500 points to PlayerName..."
+
+
+═════════════════════════════════════════════════════════════════════════════
+CONVARS (CONFIGURACIÓN)
+═════════════════════════════════════════════════════════════════════════════
+
+admin_currency_enabled
+  Descripción: Habilita o deshabilita el sistema de admin currency
+  Valor por defecto: 1 (habilitado)
+  Rango: 0 = deshabilitado, 1 = habilitado
+
+  Ejemplo:
+    sm_cvar admin_currency_enabled 0   // Desactivar el sistema
+    sm_cvar admin_currency_enabled 1   // Activar el sistema
+
+Nota: Los cambios de ConVar se aplican inmediatamente sin necesidad de restart.
+
+
+═════════════════════════════════════════════════════════════════════════════
+PERMISOS REQUERIDOS
+═════════════════════════════════════════════════════════════════════════════
+
+ADMFLAG_GENERIC
+  - Este es el permiso mínimo requerido para usar el comando
+  - Otros permisos que incluyen GENERIC:
+    ✓ ADMFLAG_RESERVATION
+    ✓ ADMFLAG_GENERIC
+    ✓ ADMFLAG_KICK
+    ✓ ADMFLAG_BAN
+    ✓ ADMFLAG_UNBAN
+    ✓ ADMFLAG_SLAY
+    ✓ ADMFLAG_CHANGEMAP
+    ✓ ADMFLAG_CONVARS
+    ✓ ADMFLAG_CONFIG
+    ✓ ADMFLAG_CUSTOM1-6
+    ✓ ADMFLAG_ROOT
+
+Configurar en: addons/sourcemod/configs/admin_overrides.cfg
+
+
+═════════════════════════════════════════════════════════════════════════════
+EJEMPLOS DE USO
+═════════════════════════════════════════════════════════════════════════════
+
+CASO 1: Dar 100 puntos a un jugador como recompensa
+─────────────────────────────────────────────────────
+1. Admin escribe: !givecurrency
+2. Selecciona al jugador "PlayerName"
+3. Selecciona "100 puntos"
+4. Listo, el jugador recibe 100 puntos
+
+Chat:
+  [Admin] ✓ Diste 100 puntos a PlayerName (Total: 250)
+  [Admin] El admin AdminName te dio 100 puntos (Total: 250)
+
+
+CASO 2: Dar cantidad personalizada (500 puntos)
+────────────────────────────────────────────────
+1. Admin escribe: !givecurrency
+2. Selecciona al jugador "PlayerName"
+3. Selecciona "Cantidad personalizada"
+4. El sistema responde: "Escribe en el chat la cantidad de puntos a dar"
+5. Admin escribe: !givecustom 500
+6. El jugador recibe 500 puntos
+
+Chat (paso 4):
+  [Admin] Escribe en el chat la cantidad de puntos a dar (ejemplo: !givecustom 500)
+  [Admin] Jugador objetivo: PlayerName
+
+Chat (paso 6):
+  [Admin] ✓ Diste 500 puntos a PlayerName (Total: 750)
+  [Admin] El admin AdminName te dio 500 puntos (Total: 750)
+
+
+CASO 3: Regresar al menú anterior
+──────────────────────────────────
+Si durante la selección presionas el botón de atrás:
+  - Se regresa al menú de selección de jugadores
+  - Puedes elegir otro jugador
+
+
+═════════════════════════════════════════════════════════════════════════════
+VALIDACIONES Y MANEJO DE ERRORES
+═════════════════════════════════════════════════════════════════════════════
+
+El sistema valida automáticamente:
+
+✓ Permiso de admin
+  Mensaje si falla: "[Admin] No tienes permisos para usar este comando"
+
+✓ Sistema habilitado
+  Mensaje si falla: "[Admin] El sistema de currency para admins está deshabilitado"
+
+✓ Jugador conectado
+  Mensaje si falla: "[Admin] El jugador se desconectó"
+
+✓ Cliente válido
+  Mensaje si falla: No se ejecuta el comando
+
+✓ Cantidad válida (solo para custom)
+  Mensaje si falla: "[Admin] Debes ingresar una cantidad válida (mayor a 0)"
+
+✓ Solo sobrevivientes
+  El menú solo muestra jugadores del equipo de sobrevivientes
+
+
+═════════════════════════════════════════════════════════════════════════════
+LOGS Y AUDITORÍA
+═════════════════════════════════════════════════════════════════════════════
+
+Todas las transacciones se registran en:
+  logs/Eclipse_Management_System.log
+
+Formato del log:
+  ADMIN_CURRENCY: [AdminName] gave [amount] points to [PlayerName] (new total: [new_total])
+
+Ejemplo:
+  ADMIN_CURRENCY: AdminName gave 500 points to PlayerName (new total: 1500)
+
+Esto permite auditar todas las transacciones de currency hechas por admins.
+
+
+═════════════════════════════════════════════════════════════════════════════
+INTEGRACIÓN CON OTROS SISTEMAS
+═════════════════════════════════════════════════════════════════════════════
+
+El Admin Currency System usa las funciones estándar del sistema:
+
+GetPlayerCurrency(client)
+  - Obtiene el currency actual del jugador
+
+SetPlayerCurrency(client, amount)
+  - Establece el currency del jugador (usado internamente)
+
+AwardCurrency(client, amount, reason)
+  - Otorga puntos adicionales al jugador
+
+Todas estas funciones están disponibles en:
+  scripting/modules/buy module/buy-menu.module.sp
+
+Línea 320: stock void SetPlayerCurrency(int client, int amount)
+
+
+═════════════════════════════════════════════════════════════════════════════
+MENSAJES DEL SISTEMA
+═════════════════════════════════════════════════════════════════════════════
+
+Colores utilizados (L4D2):
+  \x01 = Blanco (normal)
+  \x04 = Rojo (énfasis)
+
+Formato de mensajes:
+  [Admin] = Prefijo del sistema
+  ✓ = Indicador de éxito
+
+Ejemplos:
+  "[Admin] ✓ Diste X puntos a PlayerName (Total: Y)"
+  "[Admin] El admin AdminName te dio X puntos (Total: Y)"
+  "[Admin] El jugador se desconectó"
+
+
+═════════════════════════════════════════════════════════════════════════════
+SOLUCIÓN DE PROBLEMAS
+═════════════════════════════════════════════════════════════════════════════
+
+PROBLEMA: "No tienes permisos para usar este comando"
+SOLUCIÓN:
+  1. Verifica que el admin esté en: addons/sourcemod/configs/admins.cfg
+  2. Asegúrate de que tengan ADMFLAG_GENERIC o superior
+  3. Reload del plugin: sm_reload "Eclipse Management System"
+
+PROBLEMA: "El sistema de currency para admins está deshabilitado"
+SOLUCIÓN:
+  1. Habilita el cvar: sm_cvar admin_currency_enabled 1
+  2. Verifica que no esté sobrescrito en server.cfg o similares
+
+PROBLEMA: El menú no muestra ningún jugador
+SOLUCIÓN:
+  1. Verifica que hay jugadores conectados
+  2. El menú solo muestra sobrevivientes (no especiales ni infected)
+  3. Los spectators no cuentan
+
+PROBLEMA: El comando !givecustom no funciona
+SOLUCIÓN:
+  1. Primero abre el menú con !givecurrency
+  2. Selecciona un jugador
+  3. Elige "Cantidad personalizada" en el segundo menú
+  4. Luego sí podrás usar !givecustom <número>
+
+PROBLEMA: Los logs no se crean
+SOLUCIÓN:
+  1. Verifica que exists: logs/
+  2. Verifica permisos de escritura
+  3. Comprueba en Eclipse_Management_System.log
+
+
+═════════════════════════════════════════════════════════════════════════════
+LÍMITES Y RESTRICCIONES
+═════════════════════════════════════════════════════════════════════════════
+
+✓ Solo funciona en sobrevivientes (no en infected ni witch)
+✓ Solo para admins con ADMFLAG_GENERIC
+✓ Requiere que el jugador esté en game
+✓ Se reinicia el currency en cada desconexión del jugador
+✓ Máximo de cantidad: 2,147,483,647 (int máximo)
+✓ Mínimo de cantidad: 1 (para custom)
+
+
+═════════════════════════════════════════════════════════════════════════════
+DETALLES TÉCNICOS
+═════════════════════════════════════════════════════════════════════════════
+
+Archivos involucrados:
+  1. scripting/modules/buy module/features/0-menu/admin-currency.feature.sp
+     └─ Feature principal (nuevo archivo creado)
+
+  2. scripting/modules/buy module/buy-menu.module.sp
+     └─ Modificado para incluir la feature
+
+  3. scripting/Eclipse Management System.sp (main)
+     └─ Modificado para inicializar el sistema
+
+Variables globales:
+  int g_iAdminCurrencyTarget[MAXPLAYERS + 1];
+    └─ Almacena el jugador objetivo para cada admin
+
+Handles de ConVar:
+  Handle cvar_AdminCurrencyEnabled
+    └─ Controla si el sistema está habilitado
+
+Funciones principales:
+  AdminCurrency_OnPluginStart()
+    └─ Inicializa el sistema
+
+  Command_GiveCurrency(int client, int args)
+    └─ Comando principal (!givecurrency)
+
+  ShowPlayerSelectionMenu(int client)
+    └─ Menú de selección de jugadores
+
+  ShowAmountSelectionMenu(int admin, int target)
+    └─ Menú de selección de cantidad
+
+  GivePlayerCurrency(int admin, int target, int amount)
+    └─ Otorga los puntos al jugador
+
+
+═════════════════════════════════════════════════════════════════════════════
+REFERENCIAS Y FUNCIONES RELACIONADAS
+═════════════════════════════════════════════════════════════════════════════
+
+Función: GetPlayerCurrency(int client)
+  Ubicación: scripting/modules/buy module/buy-menu.module.sp:309
+  Uso: int currency = GetPlayerCurrency(client);
+
+Función: SetPlayerCurrency(int client, int amount)
+  Ubicación: scripting/modules/buy module/buy-menu.module.sp:320
+  Uso: SetPlayerCurrency(client, 1000);
+
+Función: AwardCurrency(int client, int amount, reason)
+  Ubicación: scripting/modules/buy module/buy-menu.module.sp:290
+  Uso: AwardCurrency(client, 100, "Boss Kill");
+
+
+═════════════════════════════════════════════════════════════════════════════
+FUTUROS DESARROLLOS
+═════════════════════════════════════════════════════════════════════════════
+
+Posibles mejoras:
+  ☐ Historial de transacciones
+  ☐ Limite máximo de currency para jugadores
+  ☐ Límite de cantidad que un admin puede dar
+  ☐ Confirmación de transacción
+  ☐ Exportación de estadísticas
+  ☐ Puntos de penalidad (quitar currency)
+  ☐ Descuentos automáticos por inactividad
+
+
+═════════════════════════════════════════════════════════════════════════════
+SOPORTE Y AYUDA
+═════════════════════════════════════════════════════════════════════════════
+
+Para más información sobre el sistema de currency en general:
+  📖 CURRENCY_SYSTEM_SUMMARY.txt
+  📖 README_CURRENCY_SYSTEM.txt
+  📖 QUICK_REFERENCE.txt
+
+Para errores de compilación:
+  1. Verifica que todos los archivos estén presentes
+  2. Verifica que EMS_MAIN_FILE esté definido
+  3. Consulta los mensajes de error del compilador
+
+═════════════════════════════════════════════════════════════════════════════
+
+                    ¡SISTEMA ADMIN CURRENCY LISTO!
+
+═════════════════════════════════════════════════════════════════════════════

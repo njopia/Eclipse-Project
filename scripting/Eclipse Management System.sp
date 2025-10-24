@@ -23,6 +23,12 @@
 #tryinclude "modules/buy module/buy-menu.module.sp"
 //////////////////////////////////////////////
 
+/////// CURRENCY EVENTS MODULE ///////////////
+#tryinclude "modules/currency/currency-events.module.sp"
+#tryinclude "modules/currency/currency-advanced-events.module.sp"
+#tryinclude "modules/currency/currency-stats.module.sp"
+//////////////////////////////////////////////
+
 /////// SERVER MANAGEMENT UTILS ////////////
 #tryinclude "utils/server-management.utils.sp"
 //////////////////////////////////////////////
@@ -65,8 +71,11 @@ public void OnPluginStart()
 		doSqlConnection(ADMIN_DB_NAME);
 	}
 	buyMenuOnPluginStart();
+	AdminMoney_OnPluginStart();
+	CurrencyEvents_OnPluginStart();
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
+	RegConsoleCmd("sm_givemoney", Command_GiveMoneySub);
 
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
