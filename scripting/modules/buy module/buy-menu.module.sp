@@ -53,6 +53,9 @@
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
 //////////////////////////////////////////////
+///// COST VERIFICATION WRAPPERS (L4D STATS INTEGRATION)
+#tryinclude "features/buy-cost-wrapper.inc"
+//////////////////////////////////////////////
 
 static bool	  bMenuOn			   = false;
 static Handle hMenuOn			   = INVALID_HANDLE;
