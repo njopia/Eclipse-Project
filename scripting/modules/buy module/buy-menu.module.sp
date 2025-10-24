@@ -2,6 +2,33 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+
+//==================================================
+// === CENTRALIZED COOLDOWN CONFIGURATION ===
+//==================================================
+
+// --- Long Actions Cooldowns ---
+#define CONFIG_SURV_SPEEDBOOST_DURATION 30.0		// Duración del speed boost de sobreviviente (segundos)
+
+// --- Deployables Cooldowns ---
+#define CONFIG_AMMO_PILE_COOLDOWN		180.0	// Cooldown para usar Ammo Pile (segundos)
+#define CONFIG_AMMO_PILE_LIFETIME		30.0	// Tiempo de vida de la entidad Ammo Pile (segundos)
+#define CONFIG_UVLIGHT_DURATION			300		// Duración de la UV Light (segundos)
+#define CONFIG_HEALINGSTATION_DURATION	300		// Duración de la Healing Station (segundos)
+#define CONFIG_IONCANNON_BUY_COOLDOWN	5.0		// Cooldown de compra para Ion Cannon (segundos)
+
+// --- Team Bonuses Cooldowns ---
+#define CONFIG_TEAM_HEAL_COOLDOWN			60.0	// Cooldown entre activaciones de Team Heal (segundos)
+#define CONFIG_TEAM_HEAL_TICK_INTERVAL		0.25	// Intervalo entre ticks de sanación (segundos)
+#define CONFIG_TEAM_HEAL_PER_TICK			5		// HP curados por tick
+
+#define CONFIG_TEAM_SPEEDBOOST_COOLDOWN		60.0	// Cooldown entre activaciones de Team Speed Boost (segundos)
+#define CONFIG_TEAM_SPEEDBOOST_DURATION		300.0	// Duración del efecto Team Speed Boost (segundos)
+#define CONFIG_TEAM_SPEEDBOOST_AMOUNT		1.40	// Multiplicador de velocidad (1.0 = normal, 1.40 = 40% más)
+#define CONFIG_TEAM_SPEEDBOOST_TICK_INTERVAL 0.1	// Intervalo para mantener el boost (segundos)
+
+//==================================================
+
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/beacons.helpers.sp"
 //////////////////////////////////////////////

@@ -77,10 +77,23 @@ public void OnPluginStart()
 
 public void OnMapStart()
 {
+	LogToFile(logfilepath, "|               MAP START                   |");
+
+	// Limpiar todos los timers de mapas anteriores
+	CleanupAllTimers();
+
 	DelegateBuyMenuModule();
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_OnMapStart();
 #endif
+}
+
+public void OnMapEnd()
+{
+	LogToFile(logfilepath, "|               MAP END                     |");
+
+	// Limpiar todos los timers antes de cambiar de mapa
+	CleanupAllTimers();
 }
 
 public void PrecacheAll()
@@ -99,4 +112,61 @@ public Action EMS_CmdPrecacheReload(int client, int args)
 	if (client > 0) PrintToChat(client, "[EMS] Precache recargado.");
 #endif
 	return Plugin_Handled;
+}
+
+//==================================================
+// === CENTRALIZED TIMER CLEANUP SYSTEM ===
+//==================================================
+
+/**
+ * Limpia todos los timers del sistema al cambiar de mapa
+ * Esta función debe ser llamada en OnMapStart() y OnMapEnd()
+ */
+stock void CleanupAllTimers()
+{
+	LogToFile(logfilepath, "[CLEANUP] Iniciando limpieza de timers del sistema...");
+
+	// Team Heal timers
+	CleanupTeamHealTimers();
+
+	// Team Speed Boost timers
+	CleanupTeamSpeedBoostTimers();
+
+	// Buy Menu timers (incluyendo timers de actualización dinámica)
+	CleanupBuyMenuTimers();
+
+	// Resetear estado de los jugadores
+	ResetAllPlayersState();
+
+	LogToFile(logfilepath, "[CLEANUP] Limpieza de timers completada");
+}
+
+/**
+ * Limpia timers asociados al Buy Menu
+ */
+stock void CleanupBuyMenuTimers()
+{
+	LogToFile(logfilepath, "[CLEANUP] Limpiando Buy Menu timers...");
+	// El TimerUpdate1 continúa en el nuevo mapa (TIMER_REPEAT)
+	// No es necesario matarlo, simplemente continúa funcionando
+}
+
+/**
+ * Resetea el estado de todos los jugadores (cooldowns, variables, etc.)
+ */
+stock void ResetAllPlayersState()
+{
+	LogToFile(logfilepath, "[CLEANUP] Reseteando estado de todos los jugadores...");
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			// Resetear cooldowns de Team Heal
+			ResetTeamHealCooldown(i);
+
+			// Resetear cooldowns de Team Speed Boost
+			ResetTeamSpeedBoostCooldown(i);
+		}
+	}
 }

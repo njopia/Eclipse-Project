@@ -2,6 +2,8 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+
+
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
@@ -110,16 +112,27 @@ public void InstantsMenu(int client)
 
 public void LongActionsMenu(int client)
 {
-	char text[40];
+	char text[128];
 	char title[40];
+	char baseText[64];
 
 	// Create Submenu
 	g_LongActionsMenu = new Menu(MenuHandler_LongActions, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Submenu Title", client);
 	g_LongActionsMenu.SetTitle(title);
 
-	// Add Submenu Items
-	Format(text, sizeof(text), "%T", BM_CHOICE_2_1, client);
+	// Add Survivor Speed Boost Item with remaining time
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_2_1, client);
+	float speedBoostRemaining = GetSurvSpeedBoostRemaining(client);
+	if (speedBoostRemaining > 0.0)
+	{
+		int seconds = RoundToFloor(speedBoostRemaining);
+		Format(text, sizeof(text), "%s [Activo: %ds]", baseText, seconds);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s", baseText);
+	}
 	g_LongActionsMenu.AddItem(BM_CHOICE_2_1, text);
 
 	g_LongActionsMenu.ExitBackButton = true;
@@ -128,25 +141,46 @@ public void LongActionsMenu(int client)
 // Function to Create Submenu
 public void DeployablesMenu(int client)
 {
-	char text[40];
+	char text[128];
 	char title[40];
+	char baseText[64];
 
 	// Create Submenu
 	g_DeployablesMenu = new Menu(MenuHandler_Deployables, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Submenu Title", client);
 	g_DeployablesMenu.SetTitle(title);
 
-	// Add Submenu Items
+	// Add Ammo Pile Item
 	Format(text, sizeof(text), "%T", BM_CHOICE_3_1, client);
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_1, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_3_2, client);
+	// Add UV Light Item with remaining time
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_2, client);
+	if (UVLightTimer[client] > 0)
+	{
+		Format(text, sizeof(text), "%s [%ds]", baseText, UVLightTimer[client]);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s", baseText);
+	}
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_3_3, client);
+	// Add Healing Station Item with remaining time
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_3, client);
+	if (HSTimer[client] > 0)
+	{
+		Format(text, sizeof(text), "%s [%ds]", baseText, HSTimer[client]);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s", baseText);
+	}
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_3_4, client);
+	// Add Ion Cannon Item with remaining cooldown/charges info
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_4, client);
+	GetIonCannonInfo(client, text, sizeof(text));
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
 
 	g_DeployablesMenu.ExitBackButton = true;
@@ -156,19 +190,51 @@ public void DeployablesMenu(int client)
 // Function to Create Team Bonuses Submenu
 public void TeamBonusesMenu(int client)
 {
-	char text[40];
+	char text[128];
 	char title[40];
+	char baseText[64];
 
 	// Create Submenu
 	g_TeamBonusesMenu = new Menu(MenuHandler_TeamBonuses, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Submenu Title", client);
 	g_TeamBonusesMenu.SetTitle(title);
 
-	// Add Submenu Items
-	Format(text, sizeof(text), "%T", BM_CHOICE_4_1, client);
+	// Add Team Speed Boost Item with remaining time
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_1, client);
+	float speedBoostRemaining = GetTeamSpeedBoostRemaining(client);
+	if (speedBoostRemaining > 0.0)
+	{
+		int minutes = RoundToFloor(speedBoostRemaining / 60.0);
+		int seconds = RoundToFloor(speedBoostRemaining - (minutes * 60));
+		Format(text, sizeof(text), "%s [Activo: %dm %ds]", baseText, minutes, seconds);
+	}
+	else
+	{
+		float speedBoostCooldown = GetTeamSpeedBoostCooldown(client);
+		if (speedBoostCooldown > 0.0)
+		{
+			int cdSeconds = RoundToFloor(speedBoostCooldown);
+			Format(text, sizeof(text), "%s [CD: %ds]", baseText, cdSeconds);
+		}
+		else
+		{
+			Format(text, sizeof(text), "%s", baseText);
+		}
+	}
 	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_1, text);
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_4_2, client);
+	// Add Team Heal Item with remaining cooldown
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_2, client);
+	float teamHealCooldown = GetTeamHealCooldown(client);
+	if (teamHealCooldown > 0.0)
+	{
+		int cdSeconds = RoundToFloor(teamHealCooldown);
+		Format(text, sizeof(text), "%s [CD: %ds]", baseText, cdSeconds);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s", baseText);
+	}
 	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_2, text);
 
 	g_TeamBonusesMenu.ExitBackButton = true;
@@ -315,22 +381,12 @@ public Action Cmd_Buy(int client, int args)
 	g_MainMenu.AddItem(BM_CHOICE_0_4, text);
 	g_MainMenu.ExitButton = true;
 	g_MainMenu.Display(client, 20);
-	// Initialize Submenu if it doesn't exist
-	if (g_InstantsMenu == null)
-	{
-		InstantsMenu(client);
-	}
-	if (g_LongActionsMenu == null)
-	{
-		LongActionsMenu(client);
-	}
-	if (g_DeployablesMenu == null)
-	{
-		DeployablesMenu(client);
-	}
-	if (g_TeamBonusesMenu == null)
-	{
-		TeamBonusesMenu(client);
-	}
+
+	// Recreate all submenus to show current timers
+	InstantsMenu(client);
+	LongActionsMenu(client);
+	DeployablesMenu(client);
+	TeamBonusesMenu(client);
+
 	return Plugin_Handled;
 }

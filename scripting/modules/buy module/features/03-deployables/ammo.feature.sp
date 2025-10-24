@@ -11,8 +11,6 @@
 
 // ===== Config =====
 #define RAYCAST_MAXDIST 1200.0
-#define AMMO_LIFETIME	30.0	// seg vida entidad
-#define AMMO_COOLDOWN	10.0	// seg cd por jugador/tipo
 
 ConVar g_cvarDebug;
 
@@ -138,7 +136,7 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 	// Cooldown
 	float now  = GetGameTime();
 	float last = g_LastUse[client][kind];
-	float left = (AMMO_COOLDOWN - (now - last));
+	float left = (CONFIG_AMMO_PILE_COOLDOWN - (now - last));
 	if (left > 0.0)
 	{
 		PrintToChat(client, "[Ammo] Espera %.1fs para %s.", left, g_AmmoAlias[kind]);
@@ -163,10 +161,10 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 	}
 
 	// Vida y cooldown
-	CreateTimer(AMMO_LIFETIME, Timer_KillEntity, EntIndexToEntRef(ent));
+	CreateTimer(CONFIG_AMMO_PILE_LIFETIME, Timer_KillEntity, EntIndexToEntRef(ent));
 	g_LastUse[client][kind] = now;
 
-	PrintToChat(client, "[Ammo] %s creado. (vida %.0fs, cd %.0fs)", g_AmmoAlias[kind], AMMO_LIFETIME, AMMO_COOLDOWN);
+	PrintToChat(client, "[Ammo] %s creado. (vida %.0fs, cd %.0fs)", g_AmmoAlias[kind], CONFIG_AMMO_PILE_LIFETIME, CONFIG_AMMO_PILE_COOLDOWN);
 }
 
 // ======================================================================

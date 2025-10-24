@@ -8,9 +8,6 @@
 
 // --- Defines ---
 #define TEAM_HEAL_RADIUS 9999.0              // Radio infinito (todo el mapa)
-#define TEAM_HEAL_TICK_INTERVAL 0.25         // Intervalo entre ticks de sanación (0.25s)
-#define TEAM_HEAL_PER_TICK 5                 // HP curados por tick
-#define TEAM_HEAL_COOLDOWN 60.0              // Cooldown entre activaciones
 #define GLOW_COLOR_LIME_GREEN RGB_TO_INT(50, 205, 50) // Verde lima
 #define BOT_GLOW_BLINK_INTERVAL 0.5          // Intervalo de parpadeo (0.5s)
 
@@ -60,7 +57,7 @@ stock void Activate_TeamHeal(int client)
 	PrintToChatAll("\x05[Eclipse]\x01 \x04%N\x01 ha activado \x04Team Heal\x01. ¡Todos están siendo curados!", client);
 
 	// 7. Establecer cooldown
-	g_fNextTeamHeal[client] = GetGameTime() + TEAM_HEAL_COOLDOWN;
+	g_fNextTeamHeal[client] = GetGameTime() + CONFIG_TEAM_HEAL_COOLDOWN;
 }
 
 /**
@@ -155,7 +152,7 @@ static int HealAllSurvivors()
 
 			// Crear timer para curación gradual
 			g_hTeamHealTimer[i] = CreateTimer(
-				TEAM_HEAL_TICK_INTERVAL,
+				CONFIG_TEAM_HEAL_TICK_INTERVAL,
 				Timer_HealTick,
 				i,
 				TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE
@@ -199,7 +196,7 @@ public Action Timer_HealTick(Handle timer, int client)
 	}
 
 	// Curar con tick
-	int newHealth = currentHealth + TEAM_HEAL_PER_TICK;
+	int newHealth = currentHealth + CONFIG_TEAM_HEAL_PER_TICK;
 	if (newHealth > maxHealth)
 	{
 		newHealth = maxHealth;
@@ -371,4 +368,29 @@ stock void TeamHeal_OnClientDisconnect(int client)
 
 	g_fNextTeamHeal[client] = 0.0;
 	g_bBotGlowVisible[client] = false;
+}
+
+/**
+ * Limpieza de todos los timers de Team Heal al cambiar de mapa
+ * Llamada por CleanupAllTimers() en Eclipse Management System.sp
+ */
+stock void CleanupTeamHealTimers()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (g_hTeamHealTimer[i] != INVALID_HANDLE)
+		{
+			KillTimer(g_hTeamHealTimer[i]);
+			g_hTeamHealTimer[i] = INVALID_HANDLE;
+		}
+
+		if (g_hBotGlowBlinkTimer[i] != INVALID_HANDLE)
+		{
+			KillTimer(g_hBotGlowBlinkTimer[i]);
+			g_hBotGlowBlinkTimer[i] = INVALID_HANDLE;
+		}
+
+		g_fNextTeamHeal[i] = 0.0;
+		g_bBotGlowVisible[i] = false;
+	}
 }

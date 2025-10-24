@@ -4,8 +4,10 @@
 #include <left4dhooks>
 #define SPEED_BASE	1.0
 #define SPEED_BOOST 1.5
-#define SPEED_TIME	30.0	// Duration in seconds
 #define SOUND_PATH	"player/heartbeatloop.wav"
+
+// --- Variables para tracking de tiempo ---
+static float g_fSpeedBoostEnd[MAXPLAYERS + 1];
 
 public Action Surv_SpeedBoost(int client)
 {
@@ -16,8 +18,9 @@ public Action Surv_SpeedBoost(int client)
 	EmitSoundToAll("player/survivor/voice/gambler/battlecry01.wav", client);
 	L4D_ScreenFade(client, 255, 255, 255, 100, 0.5, FADE_IN);
 	L4D_SetPlayerSpeed(client, SPEED_BOOST);
-	PrintToChat(client, "\x05[Eclipse]\x01 ¡Velocidad aumentada a %.1fx por %.0f segundos!", SPEED_BOOST, SPEED_TIME);
-	CreateTimer(SPEED_TIME, Timer_AutoStop, GetClientUserId(client));
+	PrintToChat(client, "\x05[Eclipse]\x01 ¡Velocidad aumentada a %.1fx por %.0f segundos!", SPEED_BOOST, CONFIG_SURV_SPEEDBOOST_DURATION);
+	g_fSpeedBoostEnd[client] = GetGameTime() + CONFIG_SURV_SPEEDBOOST_DURATION;
+	CreateTimer(CONFIG_SURV_SPEEDBOOST_DURATION, Timer_AutoStop, GetClientUserId(client));
 
 	return Plugin_Handled;
 }
@@ -33,6 +36,19 @@ public Action Timer_AutoStop(Handle timer, int userid)
 	// Detener el sonido automáticamente
 	StopSound(client, SNDCHAN_AUTO, SOUND_PATH);
 	PrintToChat(client, "[SM] Sonido detenido automáticamente.");
+	g_fSpeedBoostEnd[client] = 0.0;
 
 	return Plugin_Stop;
+}
+
+/**
+ * Obtiene el tiempo restante del speed boost de sobreviviente
+ */
+stock float GetSurvSpeedBoostRemaining(int client)
+{
+	if (g_fSpeedBoostEnd[client] <= 0.0)
+		return 0.0;
+
+	float remaining = g_fSpeedBoostEnd[client] - GetGameTime();
+	return (remaining > 0.0) ? remaining : 0.0;
 }

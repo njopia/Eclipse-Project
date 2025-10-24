@@ -5,7 +5,6 @@
 int UVLightModel[33];
 int UVLightGlow[33];
 int UVLightTimer[33];
-#define COOLDOWN_TIME 2.0
 
 stock void SpawnUVLight(int client)
 {
@@ -60,7 +59,7 @@ stock void SpawnUVLight(int client)
 	{
 		if (UVLightModel[client] > 0 && UVLightGlow[client] > 0)
 		{
-			UVLightTimer[client] = TIME_UV_LIGHT - 1;
+			UVLightTimer[client] = CONFIG_UVLIGHT_DURATION - 1;
 		}
 		else if (UVLightModel[client] > 0)
 		{

@@ -7,11 +7,7 @@
 //////////////////////////////////////////
 
 // --- Defines ---
-#define TEAM_SPEED_BOOST_AMOUNT	  1.40						 // 40% velocidad adicional (multiplicador: 1.0 base + 0.40)
-#define TEAM_SPEED_BOOST_DURATION 300.0						 // 5 minutos (300 segundos)
-#define TEAM_SPEED_BOOST_COOLDOWN 60.0						 // Cooldown entre activaciones
 #define GLOW_COLOR_BLUE			  RGB_TO_INT(0, 100, 255)	 // Azul brillante
-#define SPEED_EFFECT_INTERVAL	  0.1						 // Intervalo para mantener el boost
 #define TSB_SPEED_BASE			  1.0						 // Velocidad base normal
 
 // --- Variables ---
@@ -50,7 +46,7 @@ stock void	  Activate_TeamSpeedBoost(int client)
 	PrintToChatAll("\x05[Eclipse]\x01 \x04Team Speed Boost activado!");
 
 	// Establecer cooldown
-	g_fNextTeamSpeedBoost[client] = GetGameTime() + TEAM_SPEED_BOOST_COOLDOWN;
+	g_fNextTeamSpeedBoost[client] = GetGameTime() + CONFIG_TEAM_SPEEDBOOST_COOLDOWN;
 }
 
 /**
@@ -138,11 +134,11 @@ static int ApplySpeedBoost()
 			KillTimer(g_hTeamSpeedBoostTimer[i]);
 
 		// Guardar tiempo de finalización (5 minutos desde ahora)
-		g_fSpeedBoostEnd[i]		  = currentTime + TEAM_SPEED_BOOST_DURATION;
+		g_fSpeedBoostEnd[i]		  = currentTime + CONFIG_TEAM_SPEEDBOOST_DURATION;
 
 		// Crear timer para mantener el boost (funciona con jugadores reales y bots)
 		g_hTeamSpeedBoostTimer[i] = CreateTimer(
-			SPEED_EFFECT_INTERVAL,
+			CONFIG_TEAM_SPEEDBOOST_TICK_INTERVAL,
 			Timer_MaintainSpeedBoost,
 			i,
 			TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
@@ -172,7 +168,7 @@ static void ApplySpeedToClient(int client)
 		g_fOriginalLaggedMovement[client] = TSB_SPEED_BASE;
 
 	// Aplicar boost usando el multiplicador correcto (1.40 = 40% más)
-	L4D_SetPlayerSpeed(client, TEAM_SPEED_BOOST_AMOUNT);
+	L4D_SetPlayerSpeed(client, CONFIG_TEAM_SPEEDBOOST_AMOUNT);
 }
 
 /**
@@ -307,4 +303,24 @@ stock void TeamSpeedBoost_OnClientDisconnect(int client)
 	g_fNextTeamSpeedBoost[client] = 0.0;
 	g_fSpeedBoostEnd[client]	  = 0.0;
 	g_fOriginalLaggedMovement[client]	  = 0.0;
+}
+
+/**
+ * Limpieza de todos los timers de Team Speed Boost al cambiar de mapa
+ * Llamada por CleanupAllTimers() en Eclipse Management System.sp
+ */
+stock void CleanupTeamSpeedBoostTimers()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (g_hTeamSpeedBoostTimer[i] != INVALID_HANDLE)
+		{
+			KillTimer(g_hTeamSpeedBoostTimer[i]);
+			g_hTeamSpeedBoostTimer[i] = INVALID_HANDLE;
+		}
+
+		g_fNextTeamSpeedBoost[i] = 0.0;
+		g_fSpeedBoostEnd[i] = 0.0;
+		g_fOriginalLaggedMovement[i] = 0.0;
+	}
 }

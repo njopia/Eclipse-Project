@@ -9,9 +9,6 @@
 // Include Ion Cannon API
 #include <ion_cannon>
 
-// Cooldown por jugador (además del cooldown interno del Ion)
-#define ION_BUY_COOLDOWN 5.0
-
 float g_LastIonPurchase[MAXPLAYERS + 1];
 
 /**
@@ -40,9 +37,9 @@ stock bool BuyIonCannon(int client)
 	float now = GetGameTime();
 	float timeSinceLastPurchase = now - g_LastIonPurchase[client];
 
-	if (timeSinceLastPurchase < ION_BUY_COOLDOWN)
+	if (timeSinceLastPurchase < CONFIG_IONCANNON_BUY_COOLDOWN)
 	{
-		float remaining = ION_BUY_COOLDOWN - timeSinceLastPurchase;
+		float remaining = CONFIG_IONCANNON_BUY_COOLDOWN - timeSinceLastPurchase;
 		PrintToChat(client, "\x04[Eclipse]\x01 Espera \x05%.1f\x01 segundos antes de comprar Ion Cannon nuevamente.", remaining);
 		return false;
 	}
@@ -123,7 +120,7 @@ stock bool CanBuyIonCannon(int client)
 	float now = GetGameTime();
 	float timeSinceLastPurchase = now - g_LastIonPurchase[client];
 
-	if (timeSinceLastPurchase < ION_BUY_COOLDOWN)
+	if (timeSinceLastPurchase < CONFIG_IONCANNON_BUY_COOLDOWN)
 		return false;
 
 	// Verificar si tiene cargas y no está en cooldown

@@ -10,6 +10,9 @@ int	  HSTimer[33];
 float g_fNextHint[MAXPLAYERS + 1];		 // próximo momento permitido para mostrar hint
 bool  g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxima
 
+// --- Define local para anti-spam (basado en CONFIG_HEALINGSTATION_DURATION) ---
+#define COOLDOWN_TIME 2.0
+
 stock void SpawnHealingStation(int client)
 {
 	float Origin[3];
@@ -68,7 +71,7 @@ stock void SpawnHealingStation(int client)
 	{
 		if (HSModel[client] > 0 && HSTrigger[client] > 0)
 		{
-			HSTimer[client] = TIME_HEALING_STATION;
+			HSTimer[client] = CONFIG_HEALINGSTATION_DURATION;
 		}
 		else if (HSModel[client] > 0)
 		{
