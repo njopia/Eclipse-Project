@@ -9148,6 +9148,13 @@ public AddScore(Client, Score)
 	// ToDo: use cvar_MaxPoints to check if the score is within the map limits
 	CurrentPoints[Client] += Score;
 
+	// ===== ECLIPSE BUY SYSTEM INTEGRATION =====
+	// Synchronize points with Eclipse buy currency if available
+	#if defined AwardCurrency
+		AwardCurrency(Client, Score, "matar infected");  // or appropriate reason
+	#endif
+	// ==========================================
+
 	//if (GetConVarBool(cvar_AnnounceRankChange))
 	//{
 	//}

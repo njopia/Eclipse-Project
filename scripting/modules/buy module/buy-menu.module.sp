@@ -57,6 +57,23 @@
 static bool	  bMenuOn			   = false;
 static Handle hMenuOn			   = INVALID_HANDLE;
 
+// ================== CURRENCY SYSTEM (L4D STATS INTEGRATION) ==================
+static int g_iPlayerCurrency[MAXPLAYERS + 1];			// Player currency for buying items
+
+// Buy Cost ConVars
+static Handle cvar_CostConvertHP = INVALID_HANDLE;
+static Handle cvar_CostFireYell = INVALID_HANDLE;
+static Handle cvar_CostPowerYell = INVALID_HANDLE;
+static Handle cvar_CostLeap = INVALID_HANDLE;
+static Handle cvar_CostSurvSpeed = INVALID_HANDLE;
+static Handle cvar_CostAmmo = INVALID_HANDLE;
+static Handle cvar_CostUVLight = INVALID_HANDLE;
+static Handle cvar_CostHealingStation = INVALID_HANDLE;
+static Handle cvar_CostIonCannon = INVALID_HANDLE;
+static Handle cvar_CostTeamHeal = INVALID_HANDLE;
+static Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
+// ==============================================================================
+
 const int	  TIME_UV_LIGHT		   = 300;
 const int	  TIME_HEALING_STATION = 300;
 
@@ -69,6 +86,27 @@ public void buyMenuOnPluginStart()
 	hMenuOn = CreateConVar("menu_on", "1", "Level menu on or off?", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	bMenuOn = GetConVarBool(hMenuOn);
 
+	// ============ INITIALIZE BUY COSTS ============
+	// These costs are in points from l4d_stats
+	cvar_CostConvertHP = CreateConVar("buy_cost_convert_hp", "25", "Cost in points to buy Convert HP", FCVAR_PLUGIN);
+	cvar_CostFireYell = CreateConVar("buy_cost_fire_yell", "20", "Cost in points to buy Fire Yell", FCVAR_PLUGIN);
+	cvar_CostPowerYell = CreateConVar("buy_cost_power_yell", "30", "Cost in points to buy Power Yell", FCVAR_PLUGIN);
+	cvar_CostLeap = CreateConVar("buy_cost_leap", "35", "Cost in points to buy Leap of Desperation", FCVAR_PLUGIN);
+	cvar_CostSurvSpeed = CreateConVar("buy_cost_surv_speed", "40", "Cost in points to buy Survivor Speed Boost", FCVAR_PLUGIN);
+	cvar_CostAmmo = CreateConVar("buy_cost_ammo", "30", "Cost in points to buy Ammo Pile", FCVAR_PLUGIN);
+	cvar_CostUVLight = CreateConVar("buy_cost_uv_light", "45", "Cost in points to buy UV Light", FCVAR_PLUGIN);
+	cvar_CostHealingStation = CreateConVar("buy_cost_healing_station", "50", "Cost in points to buy Healing Station", FCVAR_PLUGIN);
+	cvar_CostIonCannon = CreateConVar("buy_cost_ion_cannon", "75", "Cost in points to buy Ion Cannon", FCVAR_PLUGIN);
+	cvar_CostTeamHeal = CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
+	cvar_CostTeamSpeedBoost = CreateConVar("buy_cost_team_speed_boost", "60", "Cost in points to buy Team Speed Boost", FCVAR_PLUGIN);
+	// ============================================
+
+	// Initialize player currency
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		g_iPlayerCurrency[i] = 0;
+	}
+
 	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);
 
 }
@@ -77,6 +115,7 @@ public void OnClientDisconnect(int client)
 {
 	g_fNextHint[client]		= 0.0;
 	g_bHadMaxHealth[client] = false;
+	g_iPlayerCurrency[client] = 0;  // Reset currency on disconnect
 	IonCannon_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
 }
@@ -213,3 +252,73 @@ stock void UpdateTimers(int client)
 		}
 	}
 }
+
+// ==================== CURRENCY SYSTEM HELPER FUNCTIONS ====================
+/**
+ * Check if player can afford a purchase
+ */
+stock bool CanAffordPurchase(int client, int cost)
+{
+	if (client <= 0 || !IsClientInGame(client))
+		return false;
+
+	return g_iPlayerCurrency[client] >= cost;
+}
+
+/**
+ * Attempt to purchase an item
+ * Returns true if purchase was successful, false otherwise
+ */
+stock bool PurchaseItem(int client, int cost, const char[] itemName)
+{
+	if (!CanAffordPurchase(client, cost))
+	{
+		PrintToChat(client, "[Buy] Necesitas %d puntos, tienes %d", cost, g_iPlayerCurrency[client]);
+		return false;
+	}
+
+	// Deduct currency
+	g_iPlayerCurrency[client] -= cost;
+	PrintToChat(client, "[Buy] \x04¡Compraste %s!\x01 Puntos restantes: %d", itemName, g_iPlayerCurrency[client]);
+	return true;
+}
+
+/**
+ * Award currency to player (from l4d_stats points)
+ */
+stock void AwardCurrency(int client, int amount, const char[] reason = "")
+{
+	if (client <= 0 || !IsClientInGame(client))
+		return;
+
+	g_iPlayerCurrency[client] += amount;
+
+	if (strlen(reason) > 0)
+		PrintToChat(client, "[Ranking] Ganaste %d puntos (%s). Balance: %d", amount, reason, g_iPlayerCurrency[client]);
+	else
+		PrintToChat(client, "[Ranking] Ganaste %d puntos. Balance: %d", amount, g_iPlayerCurrency[client]);
+}
+
+/**
+ * Get player's current currency balance
+ */
+stock int GetPlayerCurrency(int client)
+{
+	if (client <= 0 || !IsClientInGame(client))
+		return 0;
+
+	return g_iPlayerCurrency[client];
+}
+
+/**
+ * Set player's currency directly (for admin commands, etc.)
+ */
+stock void SetPlayerCurrency(int client, int amount)
+{
+	if (client <= 0 || !IsClientInGame(client))
+		return;
+
+	g_iPlayerCurrency[client] = amount;
+	PrintToChat(client, "[Admin] Tu balance se estableció en %d puntos", amount);
+}
+// ============================================================================

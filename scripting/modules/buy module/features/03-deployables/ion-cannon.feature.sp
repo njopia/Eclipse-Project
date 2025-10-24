@@ -33,6 +33,16 @@ stock bool BuyIonCannon(int client)
 		return false;
 	}
 
+	// ========== ECLIPSE BUY COST VERIFICATION ==========
+	// Check if player can afford the purchase
+	int cost = GetConVarInt(cvar_CostIonCannon);
+	if (!PurchaseItem(client, cost, "Ion Cannon"))
+	{
+		// PurchaseItem already prints error message
+		return false;
+	}
+	// ===================================================
+
 	// Verificar cooldown de compra
 	float now = GetGameTime();
 	float timeSinceLastPurchase = now - g_LastIonPurchase[client];
