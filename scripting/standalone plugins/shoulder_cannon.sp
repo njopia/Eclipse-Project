@@ -152,6 +152,26 @@ public OnMapStart()
 	PrecacheParticle(PARTICLE_RIFLE_FLASH);
 }
 
+// =========================
+// Map End
+// =========================
+public OnMapEnd()
+{
+	// Limpiar los índices de entidades al cambiar de mapa
+	// Esto previene que índices viejos apunten a entidades nuevas en el nuevo mapa
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		CannonEnt[i] = 0;
+
+		// Matar timers activos
+		if (hViewTimer[i] != INVALID_HANDLE)
+		{
+			KillTimer(hViewTimer[i], false);
+			hViewTimer[i] = INVALID_HANDLE;
+		}
+	}
+}
+
 stock PrecacheParticle(const String:ParticleName[])
 {
 	// Los efectos de partículas se cargan automáticamente en L4D2
@@ -212,12 +232,18 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 {
 	iRound++;
 
-	// Resetear munición de todos los jugadores
+	// Resetear munición de todos los jugadores y auto-equipar si está habilitado
 	for (new i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && !IsFakeClient(i))
 		{
 			CannonAmmo[i] = 500;
+
+			// Auto-equipar si está habilitado y el jugador está vivo
+			if (CannonEquip[i] == 1 && GetClientTeam(i) == 2 && IsPlayerAlive(i))
+			{
+				CreateTimer(1.5, Timer_AutoEquip, i, TIMER_FLAG_NO_MAPCHANGE);
+			}
 		}
 	}
 }
