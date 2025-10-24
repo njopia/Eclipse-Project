@@ -7,7 +7,8 @@
       "Read(//c//**)",
       "Read(//c/Users/Socius/**)",
       "Read(//c/**)",
-      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\l4d2_scripted_hud.sp\")"
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\l4d2_scripted_hud.sp\")",
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\standalone plugins\\shoulder_cannon.sp\")"
     ],
     "deny": [
       "Bash(git add:*)",

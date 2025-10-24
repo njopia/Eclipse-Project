@@ -17,6 +17,7 @@
 #tryinclude "helpers/entities.helpers.sp"
 #tryinclude "helpers/commands.helpers.sp"
 #tryinclude "helpers/sdks.helpers.sp"
+#tryinclude "helpers/beacons.helpers.sp"
 //////////////////////////////////////////////
 #tryinclude "utils/includes/precache.inc"
 /////// BUY MENU /////////////////////////////
@@ -31,6 +32,14 @@
 
 /////// SERVER MANAGEMENT UTILS ////////////
 #tryinclude "utils/server-management.utils.sp"
+//////////////////////////////////////////////
+
+/////// LEVELING SYSTEM MODULE ///////////////
+#define LEVELING_DB_NAME "players"  // Reutiliza la BD de players
+#tryinclude "modules/leveling/leveling-system.module.sp"
+#tryinclude "modules/leveling/leveling-xp-events.module.sp"
+#tryinclude "modules/leveling/leveling-rewards.module.sp"
+#tryinclude "modules/leveling/leveling-ui.module.sp"
 //////////////////////////////////////////////
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
@@ -64,15 +73,22 @@ public void OnPluginStart()
 	HandleSdk();
 	if (checkDBFile(PLAYERS_DB_NAME))
 	{
-		doSqlConnection(PLAYERS_DB_NAME);
+		doSqlConnectionPlayers(PLAYERS_DB_NAME);  // Usar handle separado para players
 	}
 	if (checkDBFile(ADMIN_DB_NAME))
 	{
-		doSqlConnection(ADMIN_DB_NAME);
+		doSqlConnection(ADMIN_DB_NAME);  // Handle para admins
 	}
 	buyMenuOnPluginStart();
 	AdminMoney_OnPluginStart();
 	CurrencyEvents_OnPluginStart();
+
+	// Inicializar sistema de leveling
+	Leveling_OnPluginStart();
+	LevelingXPEvents_OnPluginStart();
+	LevelingRewards_OnPluginStart();
+	LevelingUI_OnPluginStart();
+
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
 	RegConsoleCmd("sm_givemoney", Command_GiveMoneySub);
@@ -103,6 +119,19 @@ public void OnMapEnd()
 
 	// Limpiar todos los timers antes de cambiar de mapa
 	CleanupAllTimers();
+}
+
+public void OnClientPostAdminCheck(int client)
+{
+	// Cargar datos de leveling cuando el cliente se conecta
+	Leveling_OnClientPostAdminCheck(client);
+}
+
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
+{
+	// Manejar doble salto del sistema de leveling
+	LevelingRewards_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
+	return Plugin_Continue;
 }
 
 public void PrecacheAll()
