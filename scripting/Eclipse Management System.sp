@@ -41,6 +41,7 @@
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
 #tryinclude "modules/leveling/leveling-ui.module.sp"
 #tryinclude "modules/leveling/leveling-info.module.sp"
+#tryinclude "modules/leveling/active-abilities.module.sp"
 //////////////////////////////////////////////
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
@@ -90,6 +91,7 @@ public void OnPluginStart()
 	LevelingRewards_OnPluginStart();
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
+	ActiveAbilities_OnPluginStart();
 
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
@@ -124,6 +126,13 @@ public void OnMapEnd()
 	CleanupAllTimers();
 }
 
+public void OnClientPutInServer(int client)
+{
+	// Hook de daño para habilidades activas
+	ActiveAbilities_OnClientPutInServer(client);
+	ActiveAbilities_OnClientConnect(client);
+}
+
 public void OnClientPostAdminCheck(int client)
 {
 	// Cargar datos de leveling cuando el cliente se conecta
@@ -137,6 +146,13 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 {
 	// Manejar doble salto del sistema de leveling
 	LevelingRewards_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
+
+	// Manejar weapon fire para habilidades activas
+	if (buttons & IN_ATTACK)
+	{
+		ActiveAbilities_OnWeaponFire(client);
+	}
+
 	return Plugin_Continue;
 }
 

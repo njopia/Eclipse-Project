@@ -126,6 +126,7 @@ public void OnClientDisconnect(int client)
 	ResetPlayerCurrencyStats(client);  // Reset currency stats on disconnect
 	AdminMoney_OnClientDisconnect(client);  // Reset admin money data on disconnect
 	LevelingRewards_OnClientDisconnect(client);  // Reset leveling rewards on disconnect
+	ActiveAbilities_OnClientDisconnect(client);  // Cleanup active abilities
 }
 
 public void DelegateBuyMenuModule()
