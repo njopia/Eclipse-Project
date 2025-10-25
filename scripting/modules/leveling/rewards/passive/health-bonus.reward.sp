@@ -32,6 +32,9 @@ public void HealthBonus_OnPluginStart()
 		"Cantidad de HP adicional otorgado",
 		FCVAR_PLUGIN
 	);
+
+	// Timer para verificar y mantener el HP máximo cada segundo
+	CreateTimer(1.0, Timer_CheckMaxHealth, _, TIMER_REPEAT);
 }
 
 /**
@@ -102,8 +105,23 @@ stock void HealthBonus_ApplyHealth(int client)
 		return;
 
 	int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
+	int newMaxHealth = 100 + bonusAmount; // HP base (100) + bonus (25) = 125
+
+	// Establecer el HP máximo
+	SetEntProp(client, Prop_Send, "m_iMaxHealth", newMaxHealth);
+
+	// Si el jugador está a HP completo (100), subirlo a 125
 	int currentHealth = GetClientHealth(client);
-	SetEntityHealth(client, currentHealth + bonusAmount);
+	if (currentHealth == 100)
+	{
+		SetEntityHealth(client, newMaxHealth);
+	}
+	// Si tiene menos de 100, mantener su HP actual pero permitir que se cure hasta 125
+	else if (currentHealth < newMaxHealth)
+	{
+		// No hacer nada, el HP actual se mantiene
+		// Cuando se cure, podrá llegar hasta el nuevo máximo (125)
+	}
 }
 
 /**
@@ -115,4 +133,61 @@ public bool HealthBonus_IsEnabled(int client)
 		return false;
 
 	return g_bHealthBonus_Enabled[client];
+}
+
+/**
+ * Remueve el bonus de HP (restaura HP máximo a 100)
+ */
+stock void HealthBonus_RemoveHealth(int client)
+{
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return;
+
+	// Restaurar HP máximo a 100
+	SetEntProp(client, Prop_Send, "m_iMaxHealth", 100);
+
+	// Si el jugador tiene más de 100 HP, reducirlo a 100
+	int currentHealth = GetClientHealth(client);
+	if (currentHealth > 100)
+	{
+		SetEntityHealth(client, 100);
+	}
+}
+
+/**
+ * Verifica y re-aplica el bonus de HP si es necesario
+ * Útil para asegurar que el HP máximo persista después de eventos del juego
+ */
+stock void HealthBonus_EnsureMaxHealth(int client)
+{
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return;
+
+	if (!g_bHealthBonus_Enabled[client])
+		return;
+
+	int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
+	int expectedMaxHealth = 100 + bonusAmount;
+	int currentMaxHealth = GetEntProp(client, Prop_Send, "m_iMaxHealth");
+
+	// Si el HP máximo no es el esperado, corregirlo
+	if (currentMaxHealth != expectedMaxHealth)
+	{
+		SetEntProp(client, Prop_Send, "m_iMaxHealth", expectedMaxHealth);
+	}
+}
+
+/**
+ * Timer que verifica el HP máximo de todos los jugadores cada segundo
+ */
+public Action Timer_CheckMaxHealth(Handle timer)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && !IsFakeClient(i))
+		{
+			HealthBonus_EnsureMaxHealth(i);
+		}
+	}
+	return Plugin_Continue;
 }
