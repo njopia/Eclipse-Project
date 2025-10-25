@@ -4,21 +4,42 @@
 
 //==================================================
 // === LEVELING REWARDS MODULE ===
-// Beneficios/Rewards según el nivel alcanzado
+// Gestor central de todas las recompensas del sistema
 //==================================================
 
-// --- ConVars para configurar rewards ---
-Handle cvar_RewardDoubleJumpLevel = INVALID_HANDLE;
-Handle cvar_RewardSpeedBoostLevel = INVALID_HANDLE;
-Handle cvar_RewardSpeedBoostValue = INVALID_HANDLE;
-Handle cvar_RewardHealthLevel = INVALID_HANDLE;
-Handle cvar_RewardHealthValue = INVALID_HANDLE;
-Handle cvar_RewardDamageReductionLevel = INVALID_HANDLE;
+// Incluir la interfaz base
+#include "rewards/reward-base.inc"
 
-// --- Array para tracking de double jump por jugador ---
-bool g_bPlayerDoubleJumpEnabled[MAXPLAYERS + 1];
-int g_iPlayerJumpsUsed[MAXPLAYERS + 1];
-bool g_bPlayerLastButtonJump[MAXPLAYERS + 1];  // Para detectar cuando se presiona el salto
+// Incluir todos los rewards pasivos (ordenados por nivel de desbloqueo)
+#include "rewards/passive/double-jump.reward.sp"          // Nivel 1
+#include "rewards/passive/acrobatics.reward.sp"           // Nivel 2
+#include "rewards/passive/health-bonus.reward.sp"         // Nivel 3
+#include "rewards/passive/medic.reward.sp"                // Nivel 4
+#include "rewards/passive/pack-rat.reward.sp"             // Nivel 6
+#include "rewards/passive/desert-cobra.reward.sp"         // Nivel 8
+#include "rewards/passive/damage-reduction.reward.sp"     // Nivel 9
+#include "rewards/passive/gene-mutations.reward.sp"       // Niveles 10, 20, 30, 40
+#include "rewards/passive/self-revive.reward.sp"          // Nivel 11
+#include "rewards/passive/sleight-of-hand.reward.sp"      // Nivel 13
+#include "rewards/passive/knife.reward.sp"                // Nivel 15
+#include "rewards/passive/hard-to-kill.reward.sp"         // Nivel 17
+#include "rewards/passive/arms-dealer.reward.sp"          // Nivel 19
+#include "rewards/passive/surgeon.reward.sp"              // Nivel 22
+#include "rewards/passive/extreme-conditioning.reward.sp" // Nivel 24
+#include "rewards/passive/bulls-eye.reward.sp"            // Nivel 26
+#include "rewards/passive/size-matters.reward.sp"         // Nivel 29
+#include "rewards/passive/master-at-arms.reward.sp"       // Nivel 32
+#include "rewards/passive/hardened-stance.reward.sp"      // Nivel 35
+#include "rewards/passive/critical-hit.reward.sp"         // Nivel 38
+#include "rewards/passive/commando.reward.sp"             // Nivel 41
+#include "rewards/passive/second-chance.reward.sp"        // Nivel 44
+#include "rewards/passive/laser-rounds.reward.sp"         // Nivel 47
+
+// TODO: Incluir rewards activos cuando se implementen
+// #include "rewards/active/..."
+
+// Incluir módulo de debug
+#include "leveling-debug.module.sp"
 
 /**
  * Inicializa el módulo de rewards
@@ -26,175 +47,195 @@ bool g_bPlayerLastButtonJump[MAXPLAYERS + 1];  // Para detectar cuando se presio
  */
 public void LevelingRewards_OnPluginStart()
 {
-	// Configurar en qué nivel se obtiene cada reward
-	cvar_RewardDoubleJumpLevel = CreateConVar(
-		"reward_double_jump_level",
-		"1",
-		"Nivel requerido para obtener doble salto",
-		FCVAR_PLUGIN
-	);
+	// Inicializar todos los rewards pasivos
+	Acrobatics_OnPluginStart();
+	HealthBonus_OnPluginStart();
+	Medic_OnPluginStart();
+	PackRat_OnPluginStart();
+	DesertCobra_OnPluginStart();
+	GeneMutations_OnPluginStart();
+	SelfRevive_OnPluginStart();
+	SleightOfHand_OnPluginStart();
+	Knife_OnPluginStart();
+	HardToKill_OnPluginStart();
+	ArmsDealer_OnPluginStart();
+	Surgeon_OnPluginStart();
+	ExtremeConditioning_OnPluginStart();
+	BullsEye_OnPluginStart();
+	SizeMatters_OnPluginStart();
+	MasterAtArms_OnPluginStart();
+	HardenedStance_OnPluginStart();
+	CriticalHit_OnPluginStart();
+	Commando_OnPluginStart();
+	SecondChance_OnPluginStart();
+	LaserRounds_OnPluginStart();
+	DoubleJump_OnPluginStart();
+	DamageReduction_OnPluginStart();
 
-	cvar_RewardSpeedBoostLevel = CreateConVar(
-		"reward_speed_boost_level",
-		"2",
-		"Nivel requerido para obtener +10% velocidad",
-		FCVAR_PLUGIN
-	);
+	// Inicializar módulo de debug
+	LevelingDebug_OnPluginStart();
 
-	cvar_RewardSpeedBoostValue = CreateConVar(
-		"reward_speed_boost_value",
-		"1.1",
-		"Multiplicador de velocidad (1.1 = +10%)",
-		FCVAR_PLUGIN
-	);
-
-	cvar_RewardHealthLevel = CreateConVar(
-		"reward_health_level",
-		"3",
-		"Nivel requerido para obtener +25 HP",
-		FCVAR_PLUGIN
-	);
-
-	cvar_RewardHealthValue = CreateConVar(
-		"reward_health_value",
-		"25",
-		"HP adicional a obtener",
-		FCVAR_PLUGIN
-	);
-
-	cvar_RewardDamageReductionLevel = CreateConVar(
-		"reward_damage_reduction_level",
-		"4",
-		"Nivel requerido para obtener resistencia a daño (placeholder)",
-		FCVAR_PLUGIN
-	);
-
-	// Registrar hook para cuando el jugador spawn (aplicar rewards)
+	// Registrar hook para cuando el jugador spawn
 	HookEvent("player_spawn", Event_PlayerSpawn_Rewards, EventHookMode_Post);
 }
 
 /**
- * OnPlayerRunCmd - Se llama cada tick para detectar input del jugador
- * Usado para implementar el doble salto
+ * OnPlayerRunCmd - Se llama cada tick para procesar input del jugador
+ * Delega a los rewards que necesiten procesamiento por tick
  */
 public Action LevelingRewards_OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 {
-	if (!IsClientInGame(client) || !IsPlayerAlive(client) || IsFakeClient(client))
-		return Plugin_Continue;
+	// Delegar a rewards que necesiten procesamiento por tick
+	Acrobatics_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
+	ExtremeConditioning_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
+	DoubleJump_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 
-	// Solo procesar survivors
-	if (GetClientTeam(client) != 2)
-		return Plugin_Continue;
-
-	// Solo procesar si el jugador tiene doble salto habilitado
-	if (!g_bPlayerDoubleJumpEnabled[client])
-		return Plugin_Continue;
-
-	int flags = GetEntityFlags(client);
-
-	// Si está en el suelo, resetear contador de saltos
-	if (flags & FL_ONGROUND)
-	{
-		g_iPlayerJumpsUsed[client] = 0;
-		g_bPlayerLastButtonJump[client] = false;
-	}
-	else  // Está en el aire
-	{
-		// Detectar cuando el jugador presiona SALTO (rising edge)
-		bool isPressingJump = (buttons & IN_JUMP) != 0;
-
-		if (isPressingJump && !g_bPlayerLastButtonJump[client])
-		{
-			// El jugador acaba de presionar salto
-			g_iPlayerJumpsUsed[client]++;
-
-			// Si es el segundo salto, aplicar impulso
-			if (g_iPlayerJumpsUsed[client] == 2)
-			{
-				float velocity[3];
-				GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-				velocity[2] = 300.0;  // Impulso vertical
-				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
-
-				// Efecto de sonido (opcional, si quieres agregar feedback)
-				// EmitSoundToAll("player/suit_sprint.wav", client);
-
-				// Incrementar para evitar múltiples saltos
-				g_iPlayerJumpsUsed[client]++;
-			}
-		}
-
-		g_bPlayerLastButtonJump[client] = isPressingJump;
-	}
+	// Otros rewards activos que necesiten procesamiento por tick se agregarían aquí
 
 	return Plugin_Continue;
 }
 
 /**
- * Aplica los rewards del nivel actual (con mensajes - llamado al subir de nivel)
+ * Se llama cuando un cliente se conecta
+ */
+public void LevelingRewards_OnClientConnect(int client)
+{
+	Acrobatics_OnClientConnect(client);
+	HealthBonus_OnClientConnect(client);
+	Medic_OnClientConnect(client);
+	PackRat_OnClientConnect(client);
+	DesertCobra_OnClientConnect(client);
+	GeneMutations_OnClientConnect(client);
+	SelfRevive_OnClientConnect(client);
+	SleightOfHand_OnClientConnect(client);
+	Knife_OnClientConnect(client);
+	HardToKill_OnClientConnect(client);
+	ArmsDealer_OnClientConnect(client);
+	Surgeon_OnClientConnect(client);
+	ExtremeConditioning_OnClientConnect(client);
+	BullsEye_OnClientConnect(client);
+	SizeMatters_OnClientConnect(client);
+	MasterAtArms_OnClientConnect(client);
+	HardenedStance_OnClientConnect(client);
+	CriticalHit_OnClientConnect(client);
+	Commando_OnClientConnect(client);
+	SecondChance_OnClientConnect(client);
+	LaserRounds_OnClientConnect(client);
+	DoubleJump_OnClientConnect(client);
+	DamageReduction_OnClientConnect(client);
+
+	// Debug
+	LevelingDebug_OnClientConnect(client);
+}
+
+/**
+ * Se llama cuando un cliente se desconecta
+ */
+public void LevelingRewards_OnClientDisconnect(int client)
+{
+	Acrobatics_OnClientDisconnect(client);
+	HealthBonus_OnClientDisconnect(client);
+	Medic_OnClientDisconnect(client);
+	PackRat_OnClientDisconnect(client);
+	DesertCobra_OnClientDisconnect(client);
+	GeneMutations_OnClientDisconnect(client);
+	SelfRevive_OnClientDisconnect(client);
+	SleightOfHand_OnClientDisconnect(client);
+	Knife_OnClientDisconnect(client);
+	HardToKill_OnClientDisconnect(client);
+	ArmsDealer_OnClientDisconnect(client);
+	Surgeon_OnClientDisconnect(client);
+	ExtremeConditioning_OnClientDisconnect(client);
+	BullsEye_OnClientDisconnect(client);
+	SizeMatters_OnClientDisconnect(client);
+	MasterAtArms_OnClientDisconnect(client);
+	HardenedStance_OnClientDisconnect(client);
+	CriticalHit_OnClientDisconnect(client);
+	Commando_OnClientDisconnect(client);
+	SecondChance_OnClientDisconnect(client);
+	LaserRounds_OnClientDisconnect(client);
+	DoubleJump_OnClientDisconnect(client);
+	DamageReduction_OnClientDisconnect(client);
+
+	// Debug
+	LevelingDebug_OnClientDisconnect(client);
+}
+
+/**
+ * Aplica todos los rewards al subir de nivel (con mensajes)
  * @param client - ID del cliente
  * @param level - Nivel alcanzado
  */
 public void LevelingRewards_ApplyRewards(int client, int level)
 {
-	LevelingRewards_ApplyRewardsInternal(client, level, true);
+	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+		return;
+
+	// Aplicar cada reward (mostrará mensaje si se desbloquea)
+	Acrobatics_OnLevelUp(client, level);
+	HealthBonus_OnLevelUp(client, level);
+	Medic_OnLevelUp(client, level);
+	PackRat_OnLevelUp(client, level);
+	DesertCobra_OnLevelUp(client, level);
+	GeneMutations_OnLevelUp(client, level);
+	SelfRevive_OnLevelUp(client, level);
+	SleightOfHand_OnLevelUp(client, level);
+	Knife_OnLevelUp(client, level);
+	HardToKill_OnLevelUp(client, level);
+	ArmsDealer_OnLevelUp(client, level);
+	Surgeon_OnLevelUp(client, level);
+	ExtremeConditioning_OnLevelUp(client, level);
+	BullsEye_OnLevelUp(client, level);
+	SizeMatters_OnLevelUp(client, level);
+	MasterAtArms_OnLevelUp(client, level);
+	HardenedStance_OnLevelUp(client, level);
+	CriticalHit_OnLevelUp(client, level);
+	Commando_OnLevelUp(client, level);
+	SecondChance_OnLevelUp(client, level);
+	LaserRounds_OnLevelUp(client, level);
+	DoubleJump_OnLevelUp(client, level);
+	DamageReduction_OnLevelUp(client, level);
 }
 
 /**
- * Aplica los rewards del nivel actual silenciosamente (sin mensajes - llamado en spawn)
+ * Aplica todos los rewards silenciosamente (sin mensajes - usado en spawn)
  * @param client - ID del cliente
- * @param level - Nivel alcanzado
+ * @param level - Nivel actual del jugador
  */
 public void LevelingRewards_ApplyRewardsSilent(int client, int level)
-{
-	LevelingRewards_ApplyRewardsInternal(client, level, false);
-}
-
-/**
- * Función interna que aplica los rewards
- */
-stock void LevelingRewards_ApplyRewardsInternal(int client, int level, bool showMessages)
 {
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return;
 
-	// Nivel 1: Doble salto
-	if (level >= GetConVarInt(cvar_RewardDoubleJumpLevel))
-	{
-		g_bPlayerDoubleJumpEnabled[client] = true;
-		if (showMessages)
-			PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste el \x05Doble Salto\x01!");
-	}
-
-	// Nivel 2: +10% velocidad
-	if (level >= GetConVarInt(cvar_RewardSpeedBoostLevel))
-	{
-		float speedBoost = GetConVarFloat(cvar_RewardSpeedBoostValue);
-		SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 250.0 * speedBoost);
-		if (showMessages)
-			PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05+10%% Velocidad\x01!");
-	}
-
-	// Nivel 3: +25 HP
-	if (level >= GetConVarInt(cvar_RewardHealthLevel))
-	{
-		int healthBonus = GetConVarInt(cvar_RewardHealthValue);
-		int currentHealth = GetClientHealth(client);
-		SetEntityHealth(client, currentHealth + healthBonus);
-		if (showMessages)
-			PrintToChat(client, "\x04[REWARD]\x01 ¡Ganaste \x05+%d HP\x01!", healthBonus);
-	}
-
-	// Nivel 4+: Resistencia a daño (-5%)
-	if (level >= GetConVarInt(cvar_RewardDamageReductionLevel))
-	{
-		if (showMessages)
-			PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Resistencia a Daño (-5%%)\x01!");
-	}
+	// Aplicar cada reward silenciosamente
+	Acrobatics_OnPlayerSpawn(client, level);
+	HealthBonus_OnPlayerSpawn(client, level);
+	Medic_OnPlayerSpawn(client, level);
+	PackRat_OnPlayerSpawn(client, level);
+	DesertCobra_OnPlayerSpawn(client, level);
+	GeneMutations_OnPlayerSpawn(client, level);
+	SelfRevive_OnPlayerSpawn(client, level);
+	SleightOfHand_OnPlayerSpawn(client, level);
+	Knife_OnPlayerSpawn(client, level);
+	HardToKill_OnPlayerSpawn(client, level);
+	ArmsDealer_OnPlayerSpawn(client, level);
+	Surgeon_OnPlayerSpawn(client, level);
+	ExtremeConditioning_OnPlayerSpawn(client, level);
+	BullsEye_OnPlayerSpawn(client, level);
+	SizeMatters_OnPlayerSpawn(client, level);
+	MasterAtArms_OnPlayerSpawn(client, level);
+	HardenedStance_OnPlayerSpawn(client, level);
+	CriticalHit_OnPlayerSpawn(client, level);
+	Commando_OnPlayerSpawn(client, level);
+	SecondChance_OnPlayerSpawn(client, level);
+	LaserRounds_OnPlayerSpawn(client, level);
+	DoubleJump_OnPlayerSpawn(client, level);
+	DamageReduction_OnPlayerSpawn(client, level);
 }
 
 /**
- * Evento: Player Spawn (aplicar rewards al aparecer)
+ * Evento: Player Spawn
+ * Aplica todos los rewards al aparecer
  */
 public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool dontBroadcast)
 {
@@ -202,9 +243,6 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return Plugin_Continue;
-
-	// Resetear contador de saltos
-	g_iPlayerJumpsUsed[client] = 0;
 
 	// Aplicar rewards según nivel (sin mostrar mensajes en spawn)
 	int playerLevel = Leveling_GetPlayerLevel(client);
@@ -220,22 +258,10 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 }
 
 /**
- * Obtiene el status del doble salto
+ * Verifica si un jugador tiene el doble salto habilitado
+ * (Wrapper para mantener compatibilidad con código existente)
  */
 public bool LevelingRewards_IsDoubleJumpEnabled(int client)
 {
-	if (client <= 0 || client > MaxClients)
-		return false;
-
-	return g_bPlayerDoubleJumpEnabled[client];
-}
-
-/**
- * Resetear rewards al desconectar
- */
-public void LevelingRewards_OnClientDisconnect(int client)
-{
-	g_bPlayerDoubleJumpEnabled[client] = false;
-	g_iPlayerJumpsUsed[client] = 0;
-	g_bPlayerLastButtonJump[client] = false;
+	return DoubleJump_IsEnabled(client);
 }
