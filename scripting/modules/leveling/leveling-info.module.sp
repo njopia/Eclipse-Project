@@ -56,7 +56,7 @@ public Action Command_ShowRewards(int client, int args)
 void ShowRewardsMainMenu(int client)
 {
 	int level = GetPlayerLevel(client);
-	int activeCount = GetActiveRewardsCount(client, level);
+	int activeCount = GetActiveRewardsCount(level);
 
 	Menu menu = new Menu(RewardsMainMenu_Handler);
 
@@ -806,9 +806,9 @@ void GetRewardInfo(int level, char[] name, int nameLen, char[] description, int 
  */
 int GetNextRewardLevel(int currentLevel)
 {
-	int[] rewardLevels = {1, 2, 3, 4, 6, 8, 9, 10, 11, 13, 15, 17, 19, 20, 22, 24, 26, 29, 30, 32, 35, 38, 40, 41, 44, 47};
+	int rewardLevels[26] = {1, 2, 3, 4, 6, 8, 9, 10, 11, 13, 15, 17, 19, 20, 22, 24, 26, 29, 30, 32, 35, 38, 40, 41, 44, 47};
 
-	for (int i = 0; i < sizeof(rewardLevels); i++)
+	for (int i = 0; i < 26; i++)
 	{
 		if (rewardLevels[i] > currentLevel)
 		{
@@ -822,12 +822,12 @@ int GetNextRewardLevel(int currentLevel)
 /**
  * Cuenta cuántos rewards activos tiene el jugador
  */
-int GetActiveRewardsCount(int client, int level)
+int GetActiveRewardsCount(int level)
 {
 	int count = 0;
-	int[] rewardLevels = {1, 2, 3, 4, 6, 8, 9, 10, 11, 13, 15, 17, 19, 20, 22, 24, 26, 29, 30, 32, 35, 38, 40, 41, 44, 47};
+	int rewardLevels[26] = {1, 2, 3, 4, 6, 8, 9, 10, 11, 13, 15, 17, 19, 20, 22, 24, 26, 29, 30, 32, 35, 38, 40, 41, 44, 47};
 
-	for (int i = 0; i < sizeof(rewardLevels); i++)
+	for (int i = 0; i < 26; i++)
 	{
 		if (level >= rewardLevels[i])
 		{
@@ -839,7 +839,7 @@ int GetActiveRewardsCount(int client, int level)
 }
 
 /**
- * Obtiene el nivel del jugador (placeholder - debe integrarse con el sistema real)
+ * Obtiene el nivel del jugador del sistema de leveling real
  */
 int GetPlayerLevel(int client)
 {
@@ -848,9 +848,8 @@ int GetPlayerLevel(int client)
 	if (debugLevel >= 0)
 		return debugLevel;
 
-	// Aquí debería obtener el nivel real del sistema de leveling
-	// TODO: Integrar con el sistema de leveling real (cLevel[client])
-	return 1;
+	// Obtener el nivel real del sistema de leveling
+	return Leveling_GetPlayerLevel(client);
 }
 
 /**

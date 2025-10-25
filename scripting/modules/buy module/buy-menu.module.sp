@@ -42,6 +42,7 @@ Handle cvar_CostAmmo = INVALID_HANDLE;
 Handle cvar_CostUVLight = INVALID_HANDLE;
 Handle cvar_CostHealingStation = INVALID_HANDLE;
 Handle cvar_CostIonCannon = INVALID_HANDLE;
+Handle cvar_CostDefenseGrid = INVALID_HANDLE;
 Handle cvar_CostTeamHeal = INVALID_HANDLE;
 Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 // ======================================================
@@ -63,6 +64,7 @@ Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
 #tryinclude "features/03-deployables/ion-cannon.feature.sp"
+#tryinclude "features/03-deployables/defense-grid.feature.sp"
 //////////////////////////////////////////////
 ////// TEAM BONUSES ///////////////////////////
 #tryinclude "features/04-team-bonuses/team-speed-boost.feature.sp"
@@ -98,6 +100,7 @@ public void buyMenuOnPluginStart()
 	cvar_CostUVLight = CreateConVar("buy_cost_uv_light", "45", "Cost in points to buy UV Light", FCVAR_PLUGIN);
 	cvar_CostHealingStation = CreateConVar("buy_cost_healing_station", "50", "Cost in points to buy Healing Station", FCVAR_PLUGIN);
 	cvar_CostIonCannon = CreateConVar("buy_cost_ion_cannon", "75", "Cost in points to buy Ion Cannon", FCVAR_PLUGIN);
+	cvar_CostDefenseGrid = CreateConVar("buy_cost_defense_grid", "65", "Cost in points to buy Defense Grid", FCVAR_PLUGIN);
 	cvar_CostTeamHeal = CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
 	cvar_CostTeamSpeedBoost = CreateConVar("buy_cost_team_speed_boost", "60", "Cost in points to buy Team Speed Boost", FCVAR_PLUGIN);
 	// ============================================
@@ -118,6 +121,7 @@ public void OnClientDisconnect(int client)
 	g_bHadMaxHealth[client] = false;
 	g_iPlayerCurrency[client] = 0;  // Reset currency on disconnect
 	IonCannon_OnClientDisconnect(client);
+	DefenseGrid_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
 	ResetPlayerCurrencyStats(client);  // Reset currency stats on disconnect
 	AdminMoney_OnClientDisconnect(client);  // Reset admin money data on disconnect
@@ -253,6 +257,12 @@ stock void UpdateTimers(int client)
 		else if (HSTimer[client] == 0)
 		{
 			DestroyHealingStation(client);
+		}
+
+		// --- Defense Grid Timer ---
+		if (DefenseGrid_IsActive(client))
+		{
+			DefenseGrid_Update(client);
 		}
 	}
 }

@@ -26,6 +26,7 @@ Menu g_TeamBonusesMenu;
 #define BM_CHOICE_3_2 "BM_Deployables_UV_Light"
 #define BM_CHOICE_3_3 "BM_Deployables_Healing_Station"
 #define BM_CHOICE_3_4 "BM_Deployables_Ion_Cannon"
+#define BM_CHOICE_3_5 "BM_Deployables_Defense_Grid"
 /// Team Bonuses Choices ///
 #define BM_CHOICE_4_1 "BM_TeamBonuses_TeamSpeedBoost"
 #define BM_CHOICE_4_2 "BM_TeamBonuses_TeamHeal"
@@ -207,6 +208,25 @@ public void DeployablesMenu(int client)
 	GetIonCannonInfo(client, ionCannonInfo, sizeof(ionCannonInfo));
 	Format(text, sizeof(text), "%s (%d) %s", baseText, costIC, ionCannonInfo);
 	g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
+
+	// Add Defense Grid Item with remaining time/cooldown and cost
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_5, client);
+	int costDG = GetConVarInt(cvar_CostDefenseGrid);
+	int dgCooldown = DefenseGrid_GetCooldown(client);
+	int dgTime = DefenseGrid_GetTimeRemaining(client);
+	if (dgTime > 0)
+	{
+		Format(text, sizeof(text), "%s (%d) [Activo: %ds]", baseText, costDG, dgTime);
+	}
+	else if (dgCooldown > 0)
+	{
+		Format(text, sizeof(text), "%s (%d) [CD: %ds]", baseText, costDG, dgCooldown);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s (%d) [Listo]", baseText, costDG);
+	}
+	g_DeployablesMenu.AddItem(BM_CHOICE_3_5, text);
 
 	g_DeployablesMenu.ExitBackButton = true;
 	g_DeployablesMenu.ExitButton	 = true;
@@ -415,6 +435,14 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 			if (PurchaseItem(client, cost, "Ion Cannon") && BuyIonCannon(client))
 			{
 				PrintToChat(client, "\x04[Deployables]\x01 Deploying Ion Cannon");
+			}
+		}
+		else if (StrEqual(info, BM_CHOICE_3_5))
+		{
+			int cost = GetConVarInt(cvar_CostDefenseGrid);
+			if (PurchaseItem(client, cost, "Defense Grid"))
+			{
+				DefenseGrid_Deploy(client);
 			}
 		}
 	}

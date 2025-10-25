@@ -75,7 +75,7 @@ ConVar g_cvChargeRestoreRound;  // Cargas restauradas por ronda
 
 // String buffers
 char g_sModelFlare[PLATFORM_MAX_PATH];
-char g_sSoundCrackle[PLATFORM_MAX_PATH];
+char SOUND_IONCANNON[PLATFORM_MAX_PATH];
 char g_sSoundIon[PLATFORM_MAX_PATH];
 char g_sParticleFlare[128];
 char g_sParticleFuse[128];
@@ -97,9 +97,9 @@ public void OnPluginStart()
 	RegConsoleCmd("say_team", Cmd_Say);
 
 	// ConVars
-	g_cvModelFlare	  = CreateConVar("ic_model_flare", "models/props_unique/hospital/iv_pole.mdl");
-	g_cvSoundCrackle  = CreateConVar("ic_sound_crackle", "ambient/energy/zap9.wav");
-	g_cvSoundIon	  = CreateConVar("ic_sound_ion", "vehicles/airboat/fan_blade_fullthrottle_loop1.wav");
+	g_cvModelFlare	  = CreateConVar("ic_model_flare", "models/props_lighting/light_flares.mdl");
+	g_cvSoundCrackle  = CreateConVar("ic_sound_crackle", "ambient/spacial_loops/lights_flicker.wav");
+	g_cvSoundIon	  = CreateConVar("ic_sound_ion", "ambient/spacial_loops/lights_flicker.wav");
 	g_cvParticleFlare = CreateConVar("ic_particle_flare", "weapon_pipebomb");
 	g_cvParticleFuse  = CreateConVar("ic_particle_fuse", "weapon_pipebomb");
 	g_cvSpriteBeam	  = CreateConVar("ic_sprite_beam", "materials/sprites/laserbeam.vmt");
@@ -201,7 +201,7 @@ public void OnClientPutInServer(int client)
 void RefreshAssetStrings()
 {
 	g_cvModelFlare.GetString(g_sModelFlare, sizeof(g_sModelFlare));
-	g_cvSoundCrackle.GetString(g_sSoundCrackle, sizeof(g_sSoundCrackle));
+	g_cvSoundCrackle.GetString(SOUND_IONCANNON, sizeof(SOUND_IONCANNON));
 	g_cvSoundIon.GetString(g_sSoundIon, sizeof(g_sSoundIon));
 	g_cvParticleFlare.GetString(g_sParticleFlare, sizeof(g_sParticleFlare));
 	g_cvParticleFuse.GetString(g_sParticleFuse, sizeof(g_sParticleFuse));
@@ -216,7 +216,7 @@ public void OnMapStart()
 
 	// Precache UNA VEZ
 	PrecacheModel(g_sModelFlare, true);
-	PrecacheSound(g_sSoundCrackle, true);
+	PrecacheSound(SOUND_IONCANNON, true);
 	PrecacheSound(g_sSoundIon, true);
 
 	// NUEVO: Sonidos de explosión variados de L4D2
@@ -429,7 +429,8 @@ void CreateIonFlare(int client)
 		GetEntPropVector(prop, Prop_Send, "m_vecOrigin", g_IonOrigin[client]);
 
 		// OPTIMIZADO: Solo emitir sonido UNA VEZ aquÃ­
-		EmitSoundToAll(g_sSoundCrackle, prop, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.8);
+		EmitSoundToAll(SOUND_IONCANNON, prop, SNDCHAN_AUTO, SNDLEVEL_HELICOPTER, SND_NOFLAGS, 0.8);
+
 	}
 
 	// Spotlight
@@ -838,7 +839,7 @@ void SmashIonFlare(int client)
 	int ent = g_IonEnts[client][1];
 	if (ent > MaxClients && IsValidEntity(ent))
 	{
-		StopSound(ent, SNDCHAN_AUTO, g_sSoundCrackle);
+		//StopSound(ent, SNDCHAN_AUTO, SOUND_IONCANNON);
 		SetEntityRenderMode(ent, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(ent, 100, 100, 100, 0);
 	}
@@ -865,7 +866,7 @@ void CleanupClientIon(int client)
 	int flare = g_IonEnts[client][1];
 	if (flare > MaxClients && IsValidEntity(flare))
 	{
-		StopSound(flare, SNDCHAN_AUTO, g_sSoundCrackle);
+		StopSound(flare, SNDCHAN_AUTO, SOUND_IONCANNON);
 		StopSound(flare, SNDCHAN_AUTO, g_sSoundIon);
 		AcceptEntityInput(flare, "Kill");
 	}
@@ -887,7 +888,7 @@ void CleanupClientIon(int client)
 		if (IsClientInGame(i))
 		{
 			StopSound(i, SNDCHAN_AUTO, g_sSoundIon);
-			StopSound(i, SNDCHAN_AUTO, g_sSoundCrackle);
+			StopSound(i, SNDCHAN_AUTO, SOUND_IONCANNON);
 		}
 	}
 

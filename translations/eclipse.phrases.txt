@@ -61,6 +61,11 @@
     "en"  "Ion Cannon"
     "es"  "Cañón de Iones"
   }
+  "BM_Deployables_Defense_Grid"
+  {
+    "en"  "Defense Grid"
+    "es"  "Rejilla Defensiva"
+  }
   "BM_TeamBonuses"
   {
     "en"  "Team Bonuses"

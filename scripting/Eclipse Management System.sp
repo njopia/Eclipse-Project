@@ -40,6 +40,7 @@
 #tryinclude "modules/leveling/leveling-xp-events.module.sp"
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
 #tryinclude "modules/leveling/leveling-ui.module.sp"
+#tryinclude "modules/leveling/leveling-info.module.sp"
 //////////////////////////////////////////////
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
@@ -88,6 +89,7 @@ public void OnPluginStart()
 	LevelingXPEvents_OnPluginStart();
 	LevelingRewards_OnPluginStart();
 	LevelingUI_OnPluginStart();
+	LevelingInfo_OnPluginStart();
 
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
@@ -108,6 +110,7 @@ public void OnMapStart()
 	CleanupAllTimers();
 
 	DelegateBuyMenuModule();
+	DefenseGrid_OnMapStart();
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_OnMapStart();
 #endif
@@ -125,6 +128,9 @@ public void OnClientPostAdminCheck(int client)
 {
 	// Cargar datos de leveling cuando el cliente se conecta
 	Leveling_OnClientPostAdminCheck(client);
+
+	// Inicializar Defense Grid
+	DefenseGrid_OnClientConnect(client);
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
