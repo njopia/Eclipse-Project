@@ -17,10 +17,12 @@ Handle cvar_SpeedFreak_Cooldown = INVALID_HANDLE;
 Handle cvar_SpeedFreak_SpeedMultiplier = INVALID_HANDLE;
 
 // --- Estado del jugador ---
-bool g_bSpeedFreak_Active[MAXPLAYERS + 1];
-int  g_iSpeedFreak_TimeRemaining[MAXPLAYERS + 1];
-int  g_iSpeedFreak_Cooldown[MAXPLAYERS + 1];
-int  g_iSpeedFreak_PreviousMaxHealth[MAXPLAYERS + 1];
+bool   g_bSpeedFreak_Active[MAXPLAYERS + 1];
+int    g_iSpeedFreak_TimeRemaining[MAXPLAYERS + 1];
+int    g_iSpeedFreak_Cooldown[MAXPLAYERS + 1];
+int    g_iSpeedFreak_PreviousMaxHealth[MAXPLAYERS + 1];
+Handle g_hSpeedFreak_Timer[MAXPLAYERS + 1];
+float  g_fSpeedFreak_EndTime[MAXPLAYERS + 1];
 
 /**
  * Inicializa el módulo de Speed Freak
@@ -50,7 +52,7 @@ public void SpeedFreak_OnPluginStart()
 
 	cvar_SpeedFreak_SpeedMultiplier = CreateConVar(
 		"ability_speedfreak_speed",
-		"2.0",
+		"3.0",
 		"Multiplicador de velocidad de Speed Freak",
 		FCVAR_PLUGIN
 	);
@@ -65,6 +67,8 @@ public void SpeedFreak_OnClientConnect(int client)
 	g_iSpeedFreak_TimeRemaining[client] = 0;
 	g_iSpeedFreak_Cooldown[client] = 0;
 	g_iSpeedFreak_PreviousMaxHealth[client] = 100;
+	g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+	g_fSpeedFreak_EndTime[client] = 0.0;
 }
 
 /**
@@ -72,8 +76,16 @@ public void SpeedFreak_OnClientConnect(int client)
  */
 public void SpeedFreak_OnClientDisconnect(int client)
 {
+	// Matar timer si existe
+	if (g_hSpeedFreak_Timer[client] != INVALID_HANDLE)
+	{
+		KillTimer(g_hSpeedFreak_Timer[client]);
+		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+	}
+
 	SpeedFreak_Deactivate(client);
 	g_iSpeedFreak_Cooldown[client] = 0;
+	g_fSpeedFreak_EndTime[client] = 0.0;
 }
 
 /**
@@ -87,21 +99,17 @@ public void SpeedFreak_OnSecondTick(int client)
 		g_iSpeedFreak_Cooldown[client]--;
 	}
 
-	// Actualizar habilidad activa
+	// Actualizar tiempo restante para display
 	if (g_bSpeedFreak_Active[client])
 	{
-		g_iSpeedFreak_TimeRemaining[client]--;
+		float currentTime = GetGameTime();
+		float remaining = g_fSpeedFreak_EndTime[client] - currentTime;
+		g_iSpeedFreak_TimeRemaining[client] = RoundToFloor(remaining);
 
 		// Mantener night vision
 		if (g_iSpeedFreak_TimeRemaining[client] > 0 && g_iSpeedFreak_TimeRemaining[client] <= 50)
 		{
 			SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
-		}
-
-		// Desactivar si se acabó el tiempo
-		if (g_iSpeedFreak_TimeRemaining[client] <= 0)
-		{
-			SpeedFreak_Deactivate(client);
 		}
 	}
 }
@@ -111,20 +119,33 @@ public void SpeedFreak_OnSecondTick(int client)
  */
 public bool SpeedFreak_CanUse(int client, int level)
 {
-	int requiredLevel = GetConVarInt(cvar_SpeedFreak_RequiredLevel);
+/* 	int requiredLevel = GetConVarInt(cvar_SpeedFreak_RequiredLevel);
 
 	if (level < requiredLevel)
+	{
+		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
 		return false;
+	}
 
 	if (g_iSpeedFreak_Cooldown[client] > 0)
+	{
+		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 Cooldown activo: %ds", g_iSpeedFreak_Cooldown[client]);
 		return false;
+	}
 
 	if (g_bSpeedFreak_Active[client])
+	{
+		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 Ya está activo");
 		return false;
+	}
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 No estás en juego o no estás vivo");
 		return false;
+	} */
 
+	PrintToChat(client, "\x04[DEBUG Speed Freak]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 
@@ -143,6 +164,10 @@ public void SpeedFreak_Activate(int client)
 	g_iSpeedFreak_TimeRemaining[client] = duration;
 	g_iSpeedFreak_Cooldown[client] = cooldown;
 
+	// Guardar tiempo de finalización
+	float currentTime = GetGameTime();
+	g_fSpeedFreak_EndTime[client] = currentTime + float(duration);
+
 	// Guardar HP máximo actual
 	g_iSpeedFreak_PreviousMaxHealth[client] = GetEntProp(client, Prop_Send, "m_iMaxHealth");
 
@@ -154,6 +179,21 @@ public void SpeedFreak_Activate(int client)
 	{
 		SetEntProp(client, Prop_Send, "m_iHealth", 50);
 	}
+
+	// Cancelar timer anterior si existe
+	if (g_hSpeedFreak_Timer[client] != INVALID_HANDLE)
+		KillTimer(g_hSpeedFreak_Timer[client]);
+
+	// Crear timer para mantener la velocidad (cada 0.1 segundos como team bonus)
+	g_hSpeedFreak_Timer[client] = CreateTimer(
+		0.1,
+		Timer_SpeedFreak_MaintainSpeed,
+		client,
+		TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE
+	);
+
+	// Aplicar velocidad inicial
+	SpeedFreak_ApplySpeed(client);
 
 	// Activar night vision
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
@@ -171,11 +211,22 @@ public void SpeedFreak_Deactivate(int client)
 
 	g_bSpeedFreak_Active[client] = false;
 	g_iSpeedFreak_TimeRemaining[client] = 0;
+	g_fSpeedFreak_EndTime[client] = 0.0;
+
+	// Matar timer si existe
+	if (g_hSpeedFreak_Timer[client] != INVALID_HANDLE)
+	{
+		KillTimer(g_hSpeedFreak_Timer[client]);
+		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+	}
 
 	if (IsClientInGame(client))
 	{
 		// Restaurar HP máximo
 		SetEntProp(client, Prop_Send, "m_iMaxHealth", g_iSpeedFreak_PreviousMaxHealth[client]);
+
+		// Restaurar velocidad normal
+		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
 
 		SetEntProp(client, Prop_Send, "m_bNightVisionOn", 0);
 		PrintToChat(client, "\x04[Ability]\x01 Speed Freak Deactivated - Health restored");
@@ -256,4 +307,53 @@ public int SpeedFreak_GetTimeRemaining(int client)
 		return 0;
 
 	return g_iSpeedFreak_TimeRemaining[client];
+}
+
+/**
+ * Aplica la velocidad aumentada al cliente
+ */
+static void SpeedFreak_ApplySpeed(int client)
+{
+	if (!IsClientInGame(client))
+		return;
+
+	if (!IsPlayerAlive(client))
+		return;
+
+	float speedMultiplier = GetConVarFloat(cvar_SpeedFreak_SpeedMultiplier);
+	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", speedMultiplier);
+}
+
+/**
+ * Timer para mantener la velocidad aumentada
+ */
+public Action Timer_SpeedFreak_MaintainSpeed(Handle timer, int client)
+{
+	float currentTime = GetGameTime();
+
+	if (!IsClientInGame(client))
+	{
+		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+		g_fSpeedFreak_EndTime[client] = 0.0;
+		return Plugin_Stop;
+	}
+
+	if (!IsPlayerAlive(client))
+	{
+		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+		g_fSpeedFreak_EndTime[client] = 0.0;
+		return Plugin_Stop;
+	}
+
+	// Verificar si el boost ha expirado
+	if (currentTime >= g_fSpeedFreak_EndTime[client])
+	{
+		SpeedFreak_Deactivate(client);
+		return Plugin_Stop;
+	}
+
+	// Mantener el boost aplicado
+	SpeedFreak_ApplySpeed(client);
+
+	return Plugin_Continue;
 }

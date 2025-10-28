@@ -154,36 +154,44 @@ public void LongActionsMenu(int client)
 
 	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
 
-	// Berserker (Nivel 5)
-	if (playerLevel >= 5)
+	// Berserker (Nivel 1)
+	if (playerLevel >= 1)
 	{
 		char abilityText[128];
 		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Berserker");
 		g_LongActionsMenu.AddItem("ability_berserker", abilityText);
 	}
 
-	// Acid Bath (Nivel 9)
-	if (playerLevel >= 9)
+	// Acid Bath (Nivel 1)
+	if (playerLevel >= 1)
 	{
 		char abilityText[128];
 		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Acid Bath");
 		g_LongActionsMenu.AddItem("ability_acidbath", abilityText);
 	}
 
-	// LifeStealer (Nivel 12)
-	if (playerLevel >= 12)
+	// LifeStealer (Nivel 1)
+	if (playerLevel >= 1)
 	{
 		char abilityText[128];
 		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "LifeStealer");
 		g_LongActionsMenu.AddItem("ability_lifestealer", abilityText);
 	}
 
-	// Speed Freak (Nivel 31)
-	if (playerLevel >= 31)
+	// Speed Freak (Nivel 1)
+	if (playerLevel >= 1)
 	{
 		char abilityText[128];
 		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Speed Freak");
 		g_LongActionsMenu.AddItem("ability_speedfreak", abilityText);
+	}
+
+	// Shoulder Cannon (Nivel 1)
+	if (playerLevel >= 1)
+	{
+		char abilityText[128];
+		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Shoulder Cannon");
+		g_LongActionsMenu.AddItem("ability_shouldercannon", abilityText);
 	}
 
 	g_LongActionsMenu.ExitBackButton = true;
@@ -402,25 +410,46 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		else if (StrEqual(info, "ability_berserker"))
 		{
 			int playerLevel = Leveling_GetPlayerLevel(client);
-			ActiveAbilities_ActivateAbility(client, playerLevel, "Berserker");
+			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Berserker"))
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Berserker. Verifica los requisitos.");
+			}
 		}
 		// Acid Bath Ability
 		else if (StrEqual(info, "ability_acidbath"))
 		{
 			int playerLevel = Leveling_GetPlayerLevel(client);
-			ActiveAbilities_ActivateAbility(client, playerLevel, "Acid Bath");
+			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Acid Bath"))
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Acid Bath. Verifica los requisitos.");
+			}
 		}
 		// LifeStealer Ability
 		else if (StrEqual(info, "ability_lifestealer"))
 		{
 			int playerLevel = Leveling_GetPlayerLevel(client);
-			ActiveAbilities_ActivateAbility(client, playerLevel, "LifeStealer");
+			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "LifeStealer"))
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar LifeStealer. Verifica los requisitos.");
+			}
 		}
 		// Speed Freak Ability
 		else if (StrEqual(info, "ability_speedfreak"))
 		{
 			int playerLevel = Leveling_GetPlayerLevel(client);
-			ActiveAbilities_ActivateAbility(client, playerLevel, "Speed Freak");
+			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Speed Freak"))
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Speed Freak. Verifica los requisitos.");
+			}
+		}
+		// Shoulder Cannon Ability
+		else if (StrEqual(info, "ability_shouldercannon"))
+		{
+			int playerLevel = Leveling_GetPlayerLevel(client);
+			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Shoulder Cannon"))
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Shoulder Cannon. Verifica los requisitos.");
+			}
 		}
 	}
 	return 0;

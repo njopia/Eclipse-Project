@@ -28,7 +28,7 @@ public void AcidBath_OnPluginStart()
 {
 	cvar_AcidBath_RequiredLevel = CreateConVar(
 		"ability_acidbath_level",
-		"9",
+		"1",
 		"Nivel requerido para desbloquear Acid Bath",
 		FCVAR_PLUGIN
 	);
@@ -112,17 +112,30 @@ public bool AcidBath_CanUse(int client, int level)
 	int requiredLevel = GetConVarInt(cvar_AcidBath_RequiredLevel);
 
 	if (level < requiredLevel)
+	{
+		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
 		return false;
+	}
 
 	if (g_iAcidBath_Cooldown[client] > 0)
+	{
+		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 Cooldown activo: %ds", g_iAcidBath_Cooldown[client]);
 		return false;
+	}
 
 	if (g_bAcidBath_Active[client])
+	{
+		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 Ya está activo");
 		return false;
+	}
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 No estás en juego o no estás vivo");
 		return false;
+	}
 
+	PrintToChat(client, "\x04[DEBUG Acid Bath]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 
@@ -179,8 +192,9 @@ public Action AcidBath_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 	if (!IsClientInGame(victim))
 		return Plugin_Continue;
 
-	// Verificar si es daño de ácido de Spitter (insect_swarm)
-	if (damagetype & DMG_RADIATION) // El ácido usa DMG_RADIATION en L4D2
+	// Verificar si es daño de ácido de Spitter usando los damagetypes exactos
+	// 263168 y 265216 son los tipos de daño del ácido en L4D2
+	if (damagetype == 263168 || damagetype == 265216)
 	{
 		// Convertir daño en curación
 		float healAmount = damage * GetConVarFloat(cvar_AcidBath_HealMultiplier);

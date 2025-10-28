@@ -30,55 +30,59 @@
 #include <sdktools>
 #include <sdkhooks>
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION		  "1.0.0"
 
 // =========================
 // Models and Sounds
 // =========================
-#define MODEL_M60 "models/w_models/weapons/w_m60.mdl"
-#define SOUND_M60_FIRE "weapons/machinegun_m60/gunfire/machinegun_fire_1.wav"
+#define MODEL_M60			  "models/w_models/weapons/w_m60.mdl"
+#define SOUND_M60_FIRE		  "weapons/machinegun_m60/gunfire/machinegun_fire_1.wav"
 
 // =========================
 // Particles
 // =========================
-#define PARTICLE_BLOOD "blood_impact_red_01"
+#define PARTICLE_BLOOD		  "blood_impact_red_01"
 #define PARTICLE_50CAL_TRACER "weapon_tracers_50cal"
-#define PARTICLE_RIFLE_FLASH "weapon_muzzle_flash_assaultrifle"
+#define PARTICLE_RIFLE_FLASH  "weapon_muzzle_flash_assaultrifle"
 
 // =========================
 // Plugin Info
 // =========================
-public Plugin:myinfo =
+public Plugin myinfo =
 {
-	name = "[L4D2] Shoulder Cannon",
-	author = "Unknown (Extracted by Claude Code)",
+	name		= "[L4D2] Shoulder Cannon",
+	author		= "Unknown (Extracted by Claude Code)",
 	description = "Shoulder-mounted auto-cannon for survivors",
-	version = PLUGIN_VERSION,
-	url = ""
+	version		= PLUGIN_VERSION,
+	url			= ""
 };
 
 // =========================
 // Global Variables
 // =========================
-static CannonEnt[33];           // Entity index del cañón
-static CannonAmmo[33];          // Munición disponible
-static CannonOn[33];            // 0 = encendido, 1 = deshabilitado
-static CannonNeverTarget[33];  // Tipos de enemigos que nunca atacará
-static CannonTargetFirst[33];  // Prioridad de objetivos
-static Float:CannonRate[33];   // Velocidad de disparo
-static CannonEquip[33];         // Auto-equipar al respawn
-
-static iRound = 0;
-static Handle:hViewTimer[33];
-
+static int		  CannonEnt[33];			// Entity index del cañón
+static int		  CannonAmmo[33];			// Munición disponible
+static int		  CannonOn[33];				// 0 = encendido, 1 = deshabilitado
+static int		  CannonNeverTarget[33];	// Tipos de enemigos que nunca atacará
+static int		  CannonTargetFirst[33];	// Prioridad de objetivos
+static float	  CannonRate[33];			// Velocidad de disparo
+static int		  CannonEquip[33];			// Auto-equipar al respawn
+static const char AMMO_CLASSES[][] = {
+	"weapon_ammo_spawn",		  // pila verde (refill de munición)
+	"upgrade_ammo_incendiary",	  // caja de balas incendiarias
+	"upgrade_ammo_explosive"	  // caja de balas explosivas
+};
+static int		 iRound = 0;
+static Handle	 hViewTimer[33];
+static const int MAX_CANNON_AMMO = 500;
 // ConVars para debug
-new Handle:g_hDebugMode = INVALID_HANDLE;
-new bool:g_bDebugMode = true;
+Handle			 g_hDebugMode	 = INVALID_HANDLE;
+bool			 g_bDebugMode	 = true;
 
 // =========================
 // Plugin Start
 // =========================
-public OnPluginStart()
+public void OnPluginStart()
 {
 	// ConVar de debug
 	g_hDebugMode = CreateConVar("sc_debug", "0", "Enable debug logging (0=off, 1=on)", FCVAR_NOTIFY);
@@ -99,37 +103,38 @@ public OnPluginStart()
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_death", Event_PlayerDeath);
 	HookEvent("player_disconnect", Event_PlayerDisconnect);
+	HookEvent("player_use", Event_PlayerUse, EventHookMode_Post);
 
 	// Inicializar arrays
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
-		CannonEnt[i] = 0;
-		CannonAmmo[i] = 500;
-		CannonOn[i] = 0;
+		CannonEnt[i]		 = 0;
+		CannonAmmo[i]		 = 500;
+		CannonOn[i]			 = 0;
 		CannonNeverTarget[i] = 0;
 		CannonTargetFirst[i] = 0;
-		CannonRate[i] = 0.15;
-		CannonEquip[i] = 0;
-		hViewTimer[i] = INVALID_HANDLE;
+		CannonRate[i]		 = 0.15;
+		CannonEquip[i]		 = 0;
+		hViewTimer[i]		 = INVALID_HANDLE;
 	}
 
 	LogMessage("[Shoulder Cannon] Plugin loaded v%s - Debug mode: %s", PLUGIN_VERSION, g_bDebugMode ? "ENABLED" : "DISABLED");
 	PrintToServer("[Shoulder Cannon] Plugin loaded v%s - Debug mode: %s", PLUGIN_VERSION, g_bDebugMode ? "ENABLED" : "DISABLED");
 }
 
-public OnDebugModeChanged(Handle:convar, const String:oldValue[], const String:newValue[])
+public void OnDebugModeChanged(Handle convar, const char[] oldValue, const char[] newValue)
 {
 	g_bDebugMode = GetConVarBool(g_hDebugMode);
 	LogMessage("[Shoulder Cannon] Debug mode changed to: %s", g_bDebugMode ? "ENABLED" : "DISABLED");
 }
 
 // Función de debug logging
-stock DebugLog(const String:format[], any:...)
+stock void DebugLog(const char[] format, any...)
 {
 	if (!g_bDebugMode)
 		return;
 
-	decl String:buffer[512];
+	char buffer[512];
 	VFormat(buffer, sizeof(buffer), format, 2);
 	LogMessage("[SC_DEBUG] %s", buffer);
 	PrintToServer("[SC_DEBUG] %s", buffer);
@@ -138,7 +143,7 @@ stock DebugLog(const String:format[], any:...)
 // =========================
 // Map Start
 // =========================
-public OnMapStart()
+public void OnMapStart()
 {
 	// Precache models
 	PrecacheModel(MODEL_M60, true);
@@ -155,11 +160,11 @@ public OnMapStart()
 // =========================
 // Map End
 // =========================
-public OnMapEnd()
+public void OnMapEnd()
 {
 	// Limpiar los índices de entidades al cambiar de mapa
 	// Esto previene que índices viejos apunten a entidades nuevas en el nuevo mapa
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		CannonEnt[i] = 0;
 
@@ -172,31 +177,31 @@ public OnMapEnd()
 	}
 }
 
-stock PrecacheParticle(const String:ParticleName[])
+stock void PrecacheParticle(const char[] ParticleName)
 {
-	// Los efectos de partículas se cargan automáticamente en L4D2
-	// Esta función es por compatibilidad
-	#pragma unused ParticleName
+// Los efectos de partículas se cargan automáticamente en L4D2
+// Esta función es por compatibilidad
+#pragma unused ParticleName
 }
 
 // =========================
 // Chat Command Listener
 // =========================
-public Action:Command_Say(client, const String:command[], argc)
+public Action Command_Say(int client, const char[] command, int argc)
 {
 	if (client == 0 || !IsClientInGame(client))
 		return Plugin_Continue;
 
-	decl String:text[192];
+	char text[192];
 	if (GetCmdArgString(text, sizeof(text)) < 1)
 		return Plugin_Continue;
 
 	// Remover comillas
-	new startidx = 0;
-	if (text[strlen(text)-1] == '"')
+	int startidx = 0;
+	if (text[strlen(text) - 1] == '"')
 	{
-		text[strlen(text)-1] = '\0';
-		startidx = 1;
+		text[strlen(text) - 1] = '\0';
+		startidx			   = 1;
 	}
 
 	// DEBUG: Mostrar el texto capturado
@@ -228,12 +233,12 @@ public Action:Command_Say(client, const String:command[], argc)
 // =========================
 // Events
 // =========================
-public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	iRound++;
 
 	// Resetear munición de todos los jugadores y auto-equipar si está habilitado
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && !IsFakeClient(i))
 		{
@@ -246,20 +251,22 @@ public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroad
 			}
 		}
 	}
+	return Plugin_Continue;
 }
 
-public Action:Event_RoundEnd(Handle:event, const String:name[], bool:dontBroadcast)
+public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
 	// Remover todos los cañones
-	for (new i = 1; i <= MaxClients; i++)
+	for (int i = 1; i <= MaxClients; i++)
 	{
 		RemoveShoulderCannon(i);
 	}
+	return Plugin_Continue;
 }
 
-public Action:Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
+public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	if (client > 0 && IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) == 2)
 	{
@@ -269,29 +276,32 @@ public Action:Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroa
 			CreateTimer(1.0, Timer_AutoEquip, client, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
+	return Plugin_Continue;
 }
 
-public Action:Timer_AutoEquip(Handle:timer, any:client)
+public Action Timer_AutoEquip(Handle timer, any client)
 {
 	if (client > 0 && IsClientInGame(client) && IsPlayerAlive(client))
 	{
 		EquipShoulderCannon(client);
 	}
+	return Plugin_Continue;
 }
 
-public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
+public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	if (client > 0)
 	{
 		RemoveShoulderCannon(client);
 	}
+	return Plugin_Continue;
 }
 
-public Action:Event_PlayerDisconnect(Handle:event, const String:name[], bool:dontBroadcast)
+public Action Event_PlayerDisconnect(Event event, const char[] name, bool dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	if (client > 0)
 	{
@@ -304,12 +314,13 @@ public Action:Event_PlayerDisconnect(Handle:event, const String:name[], bool:don
 			hViewTimer[client] = INVALID_HANDLE;
 		}
 	}
+	return Plugin_Continue;
 }
 
 // =========================
 // Main Functions
 // =========================
-stock bool:HasCannon(client)
+stock bool HasCannon(int client)
 {
 	if (client > 0 && IsClientInGame(client))
 	{
@@ -321,7 +332,7 @@ stock bool:HasCannon(client)
 	return false;
 }
 
-stock EquipShoulderCannon(client)
+stock void EquipShoulderCannon(int client)
 {
 	DebugLog("EquipShoulderCannon called for client %d", client);
 
@@ -338,7 +349,7 @@ stock EquipShoulderCannon(client)
 				CannonRate[client] = 0.15;
 			}
 
-			new entity = CreateEntityByName("prop_dynamic_override");
+			int entity = CreateEntityByName("prop_dynamic_override");
 			DebugLog("CreateEntityByName('prop_dynamic_override') returned: %d", entity);
 
 			if (entity == -1)
@@ -357,7 +368,7 @@ stock EquipShoulderCannon(client)
 				DebugLog("Model set to: %s", MODEL_M60);
 
 				// Set spawnflags for client visibility
-				DispatchKeyValue(entity, "spawnflags", "2");  // 2 = Start with collision on
+				DispatchKeyValue(entity, "spawnflags", "2");	// 2 = Start with collision on
 				DebugLog("Spawnflags set");
 
 				DispatchSpawn(entity);
@@ -383,8 +394,8 @@ stock EquipShoulderCannon(client)
 
 				CannonEnt[client] = entity;
 
-				new Float:Origin[3] = {-5.0, -5.0, -6.0};
-				new Float:Angles[3] = {-15.0, 0.0, 90.0};
+				float Origin[3]	  = { -5.0, -5.0, -6.0 };
+				float Angles[3]	  = { -15.0, 0.0, 90.0 };
 				TeleportEntity(entity, Origin, Angles, NULL_VECTOR);
 				DebugLog("Entity %d teleported to offset position", entity);
 
@@ -410,24 +421,24 @@ stock EquipShoulderCannon(client)
 	else
 	{
 		DebugLog("Client %d failed validation - InGame: %d, IsBot: %d, Alive: %d, Team: %d",
-			client,
-			IsClientInGame(client),
-			IsFakeClient(client),
-			IsPlayerAlive(client),
-			GetClientTeam(client));
+				 client,
+				 IsClientInGame(client),
+				 IsFakeClient(client),
+				 IsPlayerAlive(client),
+				 GetClientTeam(client));
 	}
 }
 
-stock RemoveShoulderCannon(client)
+stock void RemoveShoulderCannon(int client)
 {
-	new entity = CannonEnt[client];
+	int entity = CannonEnt[client];
 	if (entity > 0 && IsValidEntity(entity))
 	{
-		new String:classname[16];
+		char classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
 		if (StrEqual(classname, "prop_dynamic", false))
 		{
-			decl String:model[34];
+			char model[34];
 			GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
 			if (StrEqual(model, MODEL_M60, false))
 			{
@@ -439,13 +450,13 @@ stock RemoveShoulderCannon(client)
 	}
 }
 
-public Action:Transmit_ShoulderCannon(entity, client)
+public Action Transmit_ShoulderCannon(int entity, int client)
 {
 	if (entity > 32 && IsValidEntity(entity))
 	{
 		if (client > 0 && IsClientInGame(client) && !IsFakeClient(client))
 		{
-			for (new i = 1; i <= MaxClients; i++)
+			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (CannonEnt[i] == entity)
 				{
@@ -462,7 +473,7 @@ public Action:Transmit_ShoulderCannon(entity, client)
 // =========================
 // Targeting System
 // =========================
-stock RunRepeater(client)
+stock void RunRepeater(int client)
 {
 	if (CannonRate[client] <= 0.0)
 	{
@@ -492,17 +503,17 @@ stock RunRepeater(client)
 	}
 }
 
-public Action:CannonRepeater(Handle:timer, any:client)
+public Action CannonRepeater(Handle timer, any client)
 {
 	// OPTIMIZATION: No DataPack needed, client passed directly as data
-	new cannon = CannonEnt[client];
+	int cannon = CannonEnt[client];
 
 	DebugLog("CannonRepeater: client=%d, cannon=%d, iRound=%d", client, cannon, iRound);
 
 	if (!IsServerProcessing())
 	{
 		DebugLog("CannonRepeater: Stopping - server not processing");
-		return Plugin_Stop;  // Stop timer when server stops
+		return Plugin_Stop;	   // Stop timer when server stops
 	}
 
 	if (client > 0 && IsClientInGame(client) && IsPlayerAlive(client))
@@ -513,20 +524,20 @@ public Action:CannonRepeater(Handle:timer, any:client)
 		{
 			DebugLog("CannonRepeater: Cannon entity %d is valid", cannon);
 
-			new String:classname[16];
+			char classname[16];
 			GetEdictClassname(cannon, classname, sizeof(classname));
 			DebugLog("CannonRepeater: Entity classname: %s", classname);
 
 			if (StrEqual(classname, "prop_dynamic", false))
 			{
-				decl String:model[34];
+				char model[34];
 				GetEntPropString(cannon, Prop_Data, "m_ModelName", model, sizeof(model));
 				DebugLog("CannonRepeater: Model name: %s", model);
 
 				if (StrEqual(model, MODEL_M60, false))
 				{
-					new targetfirst = CannonTargetFirst[client];
-					new nevertarget = CannonNeverTarget[client];
+					int targetfirst = CannonTargetFirst[client];
+					int nevertarget = CannonNeverTarget[client];
 
 					DebugLog("CannonRepeater: CannonOn=%d, Incap=%d, Held=%d", CannonOn[client], IsPlayerIncap(client), IsPlayerHeld(client));
 
@@ -537,27 +548,27 @@ public Action:CannonRepeater(Handle:timer, any:client)
 						return Plugin_Continue;
 					}
 
-					new ammo = CannonAmmo[client];
-					new Float:Origin[3], Float:TOrigin[3], Float:storeddist = 0.0, Float:distance = 0.0;
-					new zombie = 0, special = 0, tank = 0, witch = 0;
+					int	  ammo = CannonAmmo[client];
+					float Origin[3], TOrigin[3], storeddist = 0.0, distance = 0.0;
+					int	  zombie = 0, special = 0, tank = 0, witch = 0;
 
 					DebugLog("CannonRepeater: Searching for targets - Ammo: %d", ammo);
 
 					if (ammo > 0)
 					{
-						new zombieCount = 0, specialCount = 0, tankCount = 0, witchCount = 0;
+						int zombieCount = 0, specialCount = 0, tankCount = 0, witchCount = 0;
 
 						// OPTIMIZATION: Get client position ONCE instead of in every iteration
 						GetEntPropVector(client, Prop_Send, "m_vecOrigin", Origin);
 
 						// Buscar zombies comunes
-						new entity = -1;
+						int entity = -1;
 						while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
 						{
 							zombieCount++;
 							if (nevertarget != 1 && nevertarget != 5 && nevertarget != 6)
 							{
-								new ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
+								int ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
 								if (ragdoll == 0)
 								{
 									GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
@@ -569,7 +580,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 											if (IsClientViewing(client, entity))
 											{
 												storeddist = distance;
-												zombie = entity;
+												zombie	   = entity;
 											}
 										}
 									}
@@ -585,7 +596,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 							witchCount++;
 							if (nevertarget != 3 && nevertarget != 6 && nevertarget != 7)
 							{
-								new ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
+								int ragdoll = GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll");
 								if (ragdoll == 0)
 								{
 									GetEntPropVector(entity, Prop_Send, "m_vecOrigin", TOrigin);
@@ -597,7 +608,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 											if (IsClientViewing(client, entity))
 											{
 												storeddist = distance;
-												witch = entity;
+												witch	   = entity;
 											}
 										}
 									}
@@ -624,7 +635,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 											if (IsClientViewing(client, entity))
 											{
 												storeddist = distance;
-												tank = entity;
+												tank	   = entity;
 											}
 										}
 									}
@@ -641,7 +652,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 											if (IsClientViewing(client, entity))
 											{
 												storeddist = distance;
-												special = entity;
+												special	   = entity;
 											}
 										}
 									}
@@ -652,9 +663,9 @@ public Action:CannonRepeater(Handle:timer, any:client)
 						DebugLog("Target selection - zombie:%d special:%d witch:%d tank:%d, priority:%d", zombie, special, witch, tank, targetfirst);
 
 						// Seleccionar objetivo basado en prioridad
-						switch(targetfirst)
+						switch (targetfirst)
 						{
-							case 0: // Commons first
+							case 0:	   // Commons first
 							{
 								if (zombie > 0)
 								{
@@ -685,7 +696,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 									return Plugin_Continue;
 								}
 							}
-							case 1: // Specials first
+							case 1:	   // Specials first
 							{
 								if (special > 0)
 								{
@@ -716,7 +727,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 									return Plugin_Continue;
 								}
 							}
-							case 2: // Witches first
+							case 2:	   // Witches first
 							{
 								if (witch > 0)
 								{
@@ -747,7 +758,7 @@ public Action:CannonRepeater(Handle:timer, any:client)
 									return Plugin_Continue;
 								}
 							}
-							case 3: // Tanks first
+							case 3:	   // Tanks first
 							{
 								if (tank > 0)
 								{
@@ -823,11 +834,11 @@ public Action:CannonRepeater(Handle:timer, any:client)
 	return Plugin_Continue;
 }
 
-stock DestroyTarget(client, target, entitytype)
+stock void DestroyTarget(int client, int target, int entitytype)
 {
 	DebugLog("DestroyTarget called - client:%d, target:%d, type:%d", client, target, entitytype);
 
-	new cannon = CannonEnt[client];
+	int cannon = CannonEnt[client];
 	if (cannon > 0 && IsValidEntity(cannon))
 	{
 		DebugLog("Cannon %d is valid, firing at target %d", cannon, target);
@@ -839,7 +850,7 @@ stock DestroyTarget(client, target, entitytype)
 
 		DebugLog("Effects created, dealing damage...");
 
-		switch(entitytype)
+		switch (entitytype)
 		{
 			case 1:
 			{
@@ -864,17 +875,17 @@ stock DestroyTarget(client, target, entitytype)
 // =========================
 // Particle Effects
 // =========================
-stock CreateTracerParticles(entity, target)
+stock void CreateTracerParticles(int entity, int target)
 {
 	if (entity > 32 && IsValidEntity(entity) && target > 0 && IsValidEntity(target))
 	{
-		decl String:name[8];
-		decl Float:Origin[3], Float:TOrigin[3];
+		char  name[8];
+		float Origin[3], TOrigin[3];
 		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", Origin);
 		GetEntPropVector(target, Prop_Send, "m_vecOrigin", TOrigin);
 		TOrigin[2] += 30.0;
 
-		new endpoint = CreateEntityByName("info_particle_target");
+		int endpoint = CreateEntityByName("info_particle_target");
 		if (endpoint > 0 && IsValidEntity(endpoint))
 		{
 			Format(name, sizeof(name), "cpt%i", endpoint);
@@ -887,7 +898,7 @@ stock CreateTracerParticles(entity, target)
 			AcceptEntityInput(endpoint, "FireUser1");
 		}
 
-		new particle = CreateEntityByName("info_particle_system");
+		int particle = CreateEntityByName("info_particle_system");
 		if (particle > 0 && IsValidEntity(particle))
 		{
 			DispatchKeyValue(particle, "effect_name", PARTICLE_50CAL_TRACER);
@@ -908,14 +919,14 @@ stock CreateTracerParticles(entity, target)
 	}
 }
 
-stock ShowMuzzleFlash(target, const String:ParticleName[])
+stock void ShowMuzzleFlash(int target, const char[] ParticleName)
 {
 	if (target > 0 && IsValidEntity(target))
 	{
-		new particle = CreateEntityByName("info_particle_system");
+		int particle = CreateEntityByName("info_particle_system");
 		if (particle > 0 && IsValidEntity(particle))
 		{
-			new Float:Origin[3], Float:Angles[3];
+			float Origin[3], Angles[3];
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", Origin);
 			DispatchKeyValue(particle, "effect_name", ParticleName);
 			DispatchKeyValueVector(particle, "origin", Origin);
@@ -940,15 +951,15 @@ stock ShowMuzzleFlash(target, const String:ParticleName[])
 	}
 }
 
-stock AttachParticle(target, const String:ParticleName[], Float:time, Float:x, Float:y, Float:z)
+stock void AttachParticle(int target, const char[] ParticleName, float time, float x, float y, float z)
 {
 	if (target > 0 && IsValidEntity(target))
 	{
-		new particle = CreateEntityByName("info_particle_system");
+		int particle = CreateEntityByName("info_particle_system");
 		if (IsValidEntity(particle))
 		{
-			new String:text[28];
-			new Float:Origin[3];
+			char  text[28];
+			float Origin[3];
 			GetEntPropVector(target, Prop_Send, "m_vecOrigin", Origin);
 			Origin[0] += x;
 			Origin[1] += y;
@@ -973,18 +984,18 @@ stock AttachParticle(target, const String:ParticleName[], Float:time, Float:x, F
 // =========================
 // Damage Functions
 // =========================
-stock DealDamagePlayer(target, attacker, dmgtype, dmg)
+stock void DealDamagePlayer(int target, int attacker, int dmgtype, int dmg)
 {
 	if (target > 0 && target <= 32)
 	{
 		if (IsClientInGame(target) && IsPlayerAlive(target))
 		{
 			// OPTIMIZATION: Simplified point_hurt creation for faster damage application
-			decl String:damage[16], String:type[16];
+			char damage[16], type[16];
 			IntToString(dmg, damage, sizeof(damage));
 			IntToString(dmgtype, type, sizeof(type));
 
-			new pointHurt = CreateEntityByName("point_hurt");
+			int pointHurt = CreateEntityByName("point_hurt");
 			if (pointHurt > 0)
 			{
 				DispatchKeyValue(target, "targetname", "hurtme");
@@ -992,40 +1003,40 @@ stock DealDamagePlayer(target, attacker, dmgtype, dmg)
 				DispatchKeyValue(pointHurt, "DamageTarget", "hurtme");
 				DispatchKeyValue(pointHurt, "DamageType", type);
 				DispatchSpawn(pointHurt);
-				AcceptEntityInput(pointHurt, "Hurt", (attacker > 0 && IsClientInGame(attacker))?attacker:-1);
+				AcceptEntityInput(pointHurt, "Hurt", (attacker > 0 && IsClientInGame(attacker)) ? attacker : -1);
 				AcceptEntityInput(pointHurt, "Kill");
-				DispatchKeyValue(target, "targetname", "");  // Clear targetname
+				DispatchKeyValue(target, "targetname", "");	   // Clear targetname
 			}
 		}
 	}
 }
 
-stock DealDamageEntity2(target, attacker, dmgtype, dmg)
+stock void DealDamageEntity2(int target, int attacker, int dmgtype, int dmg)
 {
 	if (target > 32 && IsValidEntity(target))
 	{
 		if (IsInfected(target) || IsWitch(target))
 		{
-			new ragdoll = GetEntProp(target, Prop_Data, "m_bClientSideRagdoll");
+			int ragdoll = GetEntProp(target, Prop_Data, "m_bClientSideRagdoll");
 			if (ragdoll == 0)
 			{
 				// OPTIMIZATION: Set wound state for common infected before dealing damage
 				if (IsInfected(target))
 				{
-					new health = GetEntProp(target, Prop_Data, "m_iHealth");
+					int health = GetEntProp(target, Prop_Data, "m_iHealth");
 					if (health <= dmg)
 					{
-						SetEntProp(target, Prop_Send, "m_iRequestedWound1", GetRandomInt(21,25));
+						SetEntProp(target, Prop_Send, "m_iRequestedWound1", GetRandomInt(21, 25));
 						SetEntProp(target, Prop_Data, "m_bClientSideRagdoll", 1);
 					}
 				}
 
 				// OPTIMIZATION: Simplified point_hurt creation
-				decl String:damage[16], String:type[16];
+				char damage[16], type[16];
 				IntToString(dmg, damage, sizeof(damage));
 				IntToString(dmgtype, type, sizeof(type));
 
-				new pointHurt = CreateEntityByName("point_hurt");
+				int pointHurt = CreateEntityByName("point_hurt");
 				if (pointHurt > 0)
 				{
 					DispatchKeyValue(target, "targetname", "hurtme");
@@ -1038,7 +1049,7 @@ stock DealDamageEntity2(target, attacker, dmgtype, dmg)
 						AcceptEntityInput(pointHurt, "Hurt", attacker);
 					}
 					AcceptEntityInput(pointHurt, "Kill");
-					DispatchKeyValue(target, "targetname", "");  // Clear targetname
+					DispatchKeyValue(target, "targetname", "");	   // Clear targetname
 				}
 			}
 		}
@@ -1048,45 +1059,40 @@ stock DealDamageEntity2(target, attacker, dmgtype, dmg)
 // =========================
 // Helper Functions
 // =========================
-stock bool:IsPlayerGhost(client)
+stock bool IsPlayerGhost(int client)
 {
 	if (GetEntProp(client, Prop_Send, "m_isGhost", 1)) return true;
 	return false;
 }
 
-stock bool:IsPlayerIncap(client)
+stock bool IsPlayerIncap(int client)
 {
 	if (GetEntProp(client, Prop_Send, "m_isIncapacitated", 1)) return true;
 	return false;
 }
 
-stock bool:IsPlayerHeld(client)
+stock bool IsPlayerHeld(int client)
 {
-	new jockey = GetEntPropEnt(client, Prop_Send, "m_jockeyAttacker");
-	new charger = GetEntPropEnt(client, Prop_Send, "m_pummelAttacker");
-	new hunter = GetEntPropEnt(client, Prop_Send, "m_pounceAttacker");
-	new smoker = GetEntPropEnt(client, Prop_Send, "m_tongueOwner");
+	int jockey	= GetEntPropEnt(client, Prop_Send, "m_jockeyAttacker");
+	int charger = GetEntPropEnt(client, Prop_Send, "m_pummelAttacker");
+	int hunter	= GetEntPropEnt(client, Prop_Send, "m_pounceAttacker");
+	int smoker	= GetEntPropEnt(client, Prop_Send, "m_tongueOwner");
 
 	// Valid entity check: Must be > 0 and <= MaxClients
-	if ((jockey > 0 && jockey <= MaxClients) ||
-		(charger > 0 && charger <= MaxClients) ||
-		(hunter > 0 && hunter <= MaxClients) ||
-		(smoker > 0 && smoker <= MaxClients))
+	if ((jockey > 0 && jockey <= MaxClients) || (charger > 0 && charger <= MaxClients) || (hunter > 0 && hunter <= MaxClients) || (smoker > 0 && smoker <= MaxClients))
 	{
 		return true;
 	}
 	return false;
 }
 
-stock bool:IsSpecialInfected(client)
+stock bool IsSpecialInfected(int client)
 {
 	if (client > 0 && client <= MaxClients && IsClientInGame(client) && IsPlayerAlive(client) && GetClientTeam(client) == 3)
 	{
-		decl String:classname[16];
+		char classname[16];
 		GetEntityNetClass(client, classname, sizeof(classname));
-		if (StrEqual(classname, "Smoker", false) || StrEqual(classname, "Boomer", false) ||
-			StrEqual(classname, "Hunter", false) || StrEqual(classname, "Spitter", false) ||
-			StrEqual(classname, "Jockey", false) || StrEqual(classname, "Charger", false))
+		if (StrEqual(classname, "Smoker", false) || StrEqual(classname, "Boomer", false) || StrEqual(classname, "Hunter", false) || StrEqual(classname, "Spitter", false) || StrEqual(classname, "Jockey", false) || StrEqual(classname, "Charger", false))
 		{
 			return true;
 		}
@@ -1094,11 +1100,11 @@ stock bool:IsSpecialInfected(client)
 	return false;
 }
 
-stock bool:IsTank(client)
+stock bool IsTank(int client)
 {
 	if (client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) == 3)
 	{
-		decl String:classname[16];
+		char classname[16];
 		GetEntityNetClass(client, classname, sizeof(classname));
 		if (StrEqual(classname, "Tank", false))
 		{
@@ -1108,11 +1114,11 @@ stock bool:IsTank(client)
 	return false;
 }
 
-stock bool:IsInfected(entity)
+stock bool IsInfected(int entity)
 {
 	if (entity > 32 && IsValidEntity(entity))
 	{
-		decl String:classname[16];
+		char classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
 		if (StrEqual(classname, "infected", false))
 		{
@@ -1122,11 +1128,11 @@ stock bool:IsInfected(entity)
 	return false;
 }
 
-stock bool:IsWitch(entity)
+stock bool IsWitch(int entity)
 {
 	if (entity > 32 && IsValidEntity(entity))
 	{
-		decl String:classname[16];
+		char classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
 		if (StrEqual(classname, "witch", false))
 			return true;
@@ -1135,17 +1141,17 @@ stock bool:IsWitch(entity)
 	return false;
 }
 
-stock bool:IsClientViewing(client, target)
+stock bool IsClientViewing(int client, int target)
 {
 	// Visibility check: FOV + Line of Sight
 	// Use actual player view angles and full 3D distance calculation
 
-	decl Float:fViewPos[3];
-	decl Float:fViewAng[3];
-	decl Float:fTargetPos[3];
-	decl Float:fViewDir[3];
-	decl Float:fTargetDir[3];
-	decl Float:fDistance[3];
+	float fViewPos[3];
+	float fViewAng[3];
+	float fTargetPos[3];
+	float fViewDir[3];
+	float fTargetDir[3];
+	float fDistance[3];
 
 	GetClientEyePosition(client, fViewPos);
 	GetClientEyeAngles(client, fViewAng);
@@ -1156,12 +1162,12 @@ stock bool:IsClientViewing(client, target)
 	GetAngleVectors(fViewAng, fViewDir, NULL_VECTOR, NULL_VECTOR);
 
 	// Calculate full 3D vector to target (not just horizontal)
-	fDistance[0] = fTargetPos[0] - fViewPos[0];
-	fDistance[1] = fTargetPos[1] - fViewPos[1];
-	fDistance[2] = fTargetPos[2] - fViewPos[2];
+	fDistance[0]		   = fTargetPos[0] - fViewPos[0];
+	fDistance[1]		   = fTargetPos[1] - fViewPos[1];
+	fDistance[2]		   = fTargetPos[2] - fViewPos[2];
 
 	// OPTIMIZATION: Check distance first (cheaper than raycast)
-	new Float:fDistance_Length = GetVectorLength(fDistance);
+	float fDistance_Length = GetVectorLength(fDistance);
 	if (fDistance_Length > 600.0)
 	{
 		DebugLog("IsClientViewing: Target too far (%.0f > 600)", fDistance_Length);
@@ -1171,7 +1177,7 @@ stock bool:IsClientViewing(client, target)
 	// Check if target is within reasonable FOV
 	// 0.5 = ~60 degree cone (good balance between too strict and too permissive)
 	NormalizeVector(fDistance, fTargetDir);
-	new Float:dotProduct = GetVectorDotProduct(fViewDir, fTargetDir);
+	float dotProduct = GetVectorDotProduct(fViewDir, fTargetDir);
 
 	if (dotProduct < 0.5)
 	{
@@ -1181,13 +1187,13 @@ stock bool:IsClientViewing(client, target)
 
 	// Check line of sight - only block on actual walls/brushes
 	// Use MASK_SOLID to only check against solid geometry, not props or players
-	new Handle:hTrace = TR_TraceRayFilterEx(fViewPos, fTargetPos, MASK_SOLID, RayType_EndPoint, ClientViewsFilter);
-	new bool:bBlocked = TR_DidHit(hTrace);
+	Handle hTrace	= TR_TraceRayFilterEx(fViewPos, fTargetPos, MASK_SOLID, RayType_EndPoint, ClientViewsFilter);
+	bool   bBlocked = TR_DidHit(hTrace);
 
 	if (bBlocked)
 	{
-		decl String:hitEntity[64];
-		new entity = TR_GetEntityIndex(hTrace);
+		char hitEntity[64];
+		int	 entity = TR_GetEntityIndex(hTrace);
 		if (entity > 0)
 		{
 			GetEdictClassname(entity, hitEntity, sizeof(hitEntity));
@@ -1197,24 +1203,24 @@ stock bool:IsClientViewing(client, target)
 		{
 			DebugLog("IsClientViewing: Line of sight blocked by world geometry");
 		}
-		CloseHandle(hTrace);
+		delete hTrace;
 		return false;
 	}
 
-	CloseHandle(hTrace);
+	delete hTrace;
 
 	DebugLog("IsClientViewing: Target is valid (dot=%.2f)", dotProduct);
 	return true;
 }
 
-public bool:ClientViewsFilter(Entity, Mask, any:Junk)
+public bool ClientViewsFilter(int Entity, int Mask, any Junk)
 {
 	// OPTIMIZATION: Exclude players and infected entities without string comparisons
 	// We want to shoot THROUGH infected to hit other infected behind them
 
 	if (Entity <= MaxClients)
 	{
-		return false;  // Exclude players
+		return false;	 // Exclude players
 	}
 
 	// Fast check: infected/witch entities have health prop
@@ -1223,19 +1229,19 @@ public bool:ClientViewsFilter(Entity, Mask, any:Junk)
 	{
 		// Likely infected entity, exclude it
 		// This is faster than GetEdictClassname + StrEqual
-		new String:classname[16];
+		char classname[16];
 		GetEdictClassname(Entity, classname, sizeof(classname));
 
 		if (StrEqual(classname, "infected") || StrEqual(classname, "witch"))
 		{
-			return false;  // Exclude infected/witch - we want to shoot them!
+			return false;	 // Exclude infected/witch - we want to shoot them!
 		}
 	}
 
-	return true;  // Allow walls, brushes, etc. to block
+	return true;	// Allow walls, brushes, etc. to block
 }
 
-stock ExternalView(client, Float:time)
+stock void ExternalView(int client, float time)
 {
 	if (client > 0 && IsClientInGame(client))
 	{
@@ -1246,7 +1252,7 @@ stock ExternalView(client, Float:time)
 // =========================
 // Menu System
 // =========================
-public Action:ShoulderCannonMenu(client, args)
+public Action ShoulderCannonMenu(int client, int args)
 {
 	if (client > 0 && IsClientInGame(client) && GetClientTeam(client) == 2)
 	{
@@ -1255,161 +1261,158 @@ public Action:ShoulderCannonMenu(client, args)
 	return Plugin_Handled;
 }
 
-public Action:ShoulderCannonMenuFunc(client)
+public Action ShoulderCannonMenuFunc(int client)
 {
 	DebugLog("ShoulderCannonMenuFunc called for client %d", client);
 
 	if (client > 0)
 	{
-		decl String:name[34];
-		decl String:text[84];
-		new cannon = HasCannon(client);
-		new enabled = CannonOn[client];
-		new equip = CannonEquip[client];
-		new nevertarget = CannonNeverTarget[client];
-		new targetfirst = CannonTargetFirst[client];
-		new Float:cRate = CannonRate[client];
+		char  name[34];
+		char  text[84];
+		bool  cannon	  = HasCannon(client);
+		int	  enabled	  = CannonOn[client];
+		int	  equip		  = CannonEquip[client];
+		int	  nevertarget = CannonNeverTarget[client];
+		int	  targetfirst = CannonTargetFirst[client];
+		float cRate		  = CannonRate[client];
 
 		DebugLog("Creating menu - HasCannon: %d, Ammo: %d", cannon, CannonAmmo[client]);
 
-		new Handle:menu = CreateMenu(SCMHandler);
+		Handle menu = CreateMenu(SCMHandler);
 		Format(text, sizeof(text), "Shoulder Cannon Menu\n====================\nAmmo Count: %i\n====================", CannonAmmo[client]);
 		SetMenuTitle(menu, text);
 		DebugLog("Menu title set");
 
-		switch(cannon)
+		if (!cannon)
 		{
-			case 0:
+			Format(name, sizeof(name), "[ ] Equip Shoulder Cannon");
+			AddMenuItem(menu, name, name);
+		}
+		else
+		{
+			Format(name, sizeof(name), "[X] Equip Shoulder Cannon");
+			AddMenuItem(menu, name, name);
+
+			switch (equip)
 			{
-				Format(name, sizeof(name), "[ ] Equip Shoulder Cannon");
+				case 0:
+				{
+					Format(name, sizeof(name), "[ ] Auto Equip Cannon");
+					AddMenuItem(menu, name, name);
+				}
+				case 1:
+				{
+					Format(name, sizeof(name), "[X] Auto Equip Cannon");
+					AddMenuItem(menu, name, name);
+				}
+			}
+
+			switch (enabled)
+			{
+				case 0:
+				{
+					Format(name, sizeof(name), "[ ] Disable Cannon");
+					AddMenuItem(menu, name, name);
+				}
+				case 1:
+				{
+					Format(name, sizeof(name), "[X] Disable Cannon");
+					AddMenuItem(menu, name, name);
+				}
+			}
+
+			switch (nevertarget)
+			{
+				case 0:
+				{
+					Format(name, sizeof(name), "[None] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 1:
+				{
+					Format(name, sizeof(name), "[Commons] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 2:
+				{
+					Format(name, sizeof(name), "[Specials] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 3:
+				{
+					Format(name, sizeof(name), "[Witches] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 4:
+				{
+					Format(name, sizeof(name), "[Tanks] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 5:
+				{
+					Format(name, sizeof(name), "[Commons/Specials] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 6:
+				{
+					Format(name, sizeof(name), "[Commons/Witches] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+				case 7:
+				{
+					Format(name, sizeof(name), "[Witches/Tanks] Never Target");
+					AddMenuItem(menu, name, name);
+				}
+			}
+
+			switch (targetfirst)
+			{
+				case 0:
+				{
+					Format(name, sizeof(name), "[Commons] Target First");
+					AddMenuItem(menu, name, name);
+				}
+				case 1:
+				{
+					Format(name, sizeof(name), "[Specials] Target First");
+					AddMenuItem(menu, name, name);
+				}
+				case 2:
+				{
+					Format(name, sizeof(name), "[Witches] Target First");
+					AddMenuItem(menu, name, name);
+				}
+				case 3:
+				{
+					Format(name, sizeof(name), "[Tanks] Target First");
+					AddMenuItem(menu, name, name);
+				}
+			}
+
+			if (cRate == 0.05)
+			{
+				Format(name, sizeof(name), "[+0.05] Fastest Fire Rate");
 				AddMenuItem(menu, name, name);
 			}
-			case 1:
+			else if (cRate == 0.10)
 			{
-				Format(name, sizeof(name), "[X] Equip Shoulder Cannon");
+				Format(name, sizeof(name), "[+0.10] Faster Fire Rate");
 				AddMenuItem(menu, name, name);
-
-				switch(equip)
-				{
-					case 0:
-					{
-						Format(name, sizeof(name), "[ ] Auto Equip Cannon");
-						AddMenuItem(menu, name, name);
-					}
-					case 1:
-					{
-						Format(name, sizeof(name), "[X] Auto Equip Cannon");
-						AddMenuItem(menu, name, name);
-					}
-				}
-
-				switch(enabled)
-				{
-					case 0:
-					{
-						Format(name, sizeof(name), "[ ] Disable Cannon");
-						AddMenuItem(menu, name, name);
-					}
-					case 1:
-					{
-						Format(name, sizeof(name), "[X] Disable Cannon");
-						AddMenuItem(menu, name, name);
-					}
-				}
-
-				switch(nevertarget)
-				{
-					case 0:
-					{
-						Format(name, sizeof(name), "[None] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 1:
-					{
-						Format(name, sizeof(name), "[Commons] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 2:
-					{
-						Format(name, sizeof(name), "[Specials] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 3:
-					{
-						Format(name, sizeof(name), "[Witches] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 4:
-					{
-						Format(name, sizeof(name), "[Tanks] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 5:
-					{
-						Format(name, sizeof(name), "[Commons/Specials] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 6:
-					{
-						Format(name, sizeof(name), "[Commons/Witches] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-					case 7:
-					{
-						Format(name, sizeof(name), "[Witches/Tanks] Never Target");
-						AddMenuItem(menu, name, name);
-					}
-				}
-
-				switch(targetfirst)
-				{
-					case 0:
-					{
-						Format(name, sizeof(name), "[Commons] Target First");
-						AddMenuItem(menu, name, name);
-					}
-					case 1:
-					{
-						Format(name, sizeof(name), "[Specials] Target First");
-						AddMenuItem(menu, name, name);
-					}
-					case 2:
-					{
-						Format(name, sizeof(name), "[Witches] Target First");
-						AddMenuItem(menu, name, name);
-					}
-					case 3:
-					{
-						Format(name, sizeof(name), "[Tanks] Target First");
-						AddMenuItem(menu, name, name);
-					}
-				}
-
-				if (cRate == 0.05)
-				{
-					Format(name, sizeof(name), "[+0.05] Fastest Fire Rate");
-					AddMenuItem(menu, name, name);
-				}
-				else if (cRate == 0.10)
-				{
-					Format(name, sizeof(name), "[+0.10] Faster Fire Rate");
-					AddMenuItem(menu, name, name);
-				}
-				else if (cRate == 0.15)
-				{
-					Format(name, sizeof(name), "[+0.15] Default Fire Rate");
-					AddMenuItem(menu, name, name);
-				}
-				else if (cRate == 0.20)
-				{
-					Format(name, sizeof(name), "[+0.20] Slower Fire Rate");
-					AddMenuItem(menu, name, name);
-				}
-				else if (cRate == 0.25)
-				{
-					Format(name, sizeof(name), "[+0.25] Slowest Fire Rate");
-					AddMenuItem(menu, name, name);
-				}
+			}
+			else if (cRate == 0.15)
+			{
+				Format(name, sizeof(name), "[+0.15] Default Fire Rate");
+				AddMenuItem(menu, name, name);
+			}
+			else if (cRate == 0.20)
+			{
+				Format(name, sizeof(name), "[+0.20] Slower Fire Rate");
+				AddMenuItem(menu, name, name);
+			}
+			else if (cRate == 0.25)
+			{
+				Format(name, sizeof(name), "[+0.25] Slowest Fire Rate");
+				AddMenuItem(menu, name, name);
 			}
 		}
 
@@ -1424,11 +1427,11 @@ public Action:ShoulderCannonMenuFunc(client)
 	return Plugin_Handled;
 }
 
-public SCMHandler(Handle:menu, MenuAction:action, client, param1)
+public int SCMHandler(Handle menu, MenuAction action, int client, int param1)
 {
 	DebugLog("SCMHandler called - action:%d, client:%d, param1:%d", action, client, param1);
 
-	decl String:name[34];
+	char name[34];
 	if (action == MenuAction_Select || action == MenuAction_DrawItem)
 	{
 		GetMenuItem(menu, param1, name, sizeof(name), _, name, sizeof(name));
@@ -1438,7 +1441,7 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 	if (action == MenuAction_End)
 	{
 		DebugLog("Menu ended");
-		CloseHandle(menu);
+		delete menu;
 	}
 	else if (action == MenuAction_Cancel)
 	{
@@ -1464,7 +1467,7 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 				else
 				{
 					DebugLog("Client %d is dead, cannot equip", client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't equip this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't equip this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
@@ -1476,11 +1479,11 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 				if (IsPlayerAlive(client))
 				{
 					RemoveShoulderCannon(client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 Unequipped.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 Unequipped.");
 				}
 				else
 				{
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't unequip this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't unequip this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
@@ -1488,97 +1491,97 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 		else if (StrEqual(name, "[ ] Auto Equip Cannon", false))
 		{
 			CannonEquip[client] = 1;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Auto-equip \x05enabled\x01.");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto-equip \x05enabled\x01.");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[X] Auto Equip Cannon", false))
 		{
 			CannonEquip[client] = 0;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Auto-equip \x03disabled\x01.");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto-equip \x03disabled\x01.");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[ ] Disable Cannon", false))
 		{
 			CannonOn[client] = 1;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Cannon \x03disabled\x01.");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon \x03disabled\x01.");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[X] Disable Cannon", false))
 		{
 			CannonOn[client] = 0;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Cannon \x05enabled\x01.");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon \x05enabled\x01.");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[None] Never Target", false))
 		{
 			CannonNeverTarget[client] = 1;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Commons\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Commons\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Commons] Never Target", false))
 		{
 			CannonNeverTarget[client] = 2;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Specials\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Specials\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Specials] Never Target", false))
 		{
 			CannonNeverTarget[client] = 3;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Witches\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Witches\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Witches] Never Target", false))
 		{
 			CannonNeverTarget[client] = 4;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Tanks\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Tanks\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Tanks] Never Target", false))
 		{
 			CannonNeverTarget[client] = 5;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Commons/Specials\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Commons/Specials\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Commons/Specials] Never Target", false))
 		{
 			CannonNeverTarget[client] = 6;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Commons/Witches\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Commons/Witches\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Commons/Witches] Never Target", false))
 		{
 			CannonNeverTarget[client] = 7;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05Witches/Tanks\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05Witches/Tanks\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Witches/Tanks] Never Target", false))
 		{
 			CannonNeverTarget[client] = 0;
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Never target: \x05None\x01");
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never target: \x05None\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Commons] Target First", false))
 		{
-			CannonTargetFirst[client] = 0;  // FIX: case 0 = Commons first
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Commons\x01");
+			CannonTargetFirst[client] = 0;	  // FIX: case 0 = Commons first
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Target priority: \x05Commons\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Specials] Target First", false))
 		{
-			CannonTargetFirst[client] = 1;  // FIX: case 1 = Specials first
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Specials\x01");
+			CannonTargetFirst[client] = 1;	  // FIX: case 1 = Specials first
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Target priority: \x05Specials\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Witches] Target First", false))
 		{
-			CannonTargetFirst[client] = 2;  // FIX: case 2 = Witches first
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Witches\x01");
+			CannonTargetFirst[client] = 2;	  // FIX: case 2 = Witches first
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Target priority: \x05Witches\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[Tanks] Target First", false))
 		{
-			CannonTargetFirst[client] = 3;  // FIX: case 3 = Tanks first
-			PrintToChat(client,"\x04[Shoulder Cannon]\x01 Target priority: \x05Tanks\x01");
+			CannonTargetFirst[client] = 3;	  // FIX: case 3 = Tanks first
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Target priority: \x05Tanks\x01");
 			FakeClientCommand(client, "shouldercannon");
 		}
 		else if (StrEqual(name, "[+0.05] Fastest Fire Rate", false))
@@ -1590,11 +1593,11 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 					CannonRate[client] = 0.25;
 					RemoveShoulderCannon(client);
 					EquipShoulderCannon(client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 Fire rate: \x05Slowest\x01");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 Fire rate: \x05Slowest\x01");
 				}
 				else
 				{
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
@@ -1608,11 +1611,11 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 					CannonRate[client] = 0.05;
 					RemoveShoulderCannon(client);
 					EquipShoulderCannon(client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 Fire rate: \x05Fastest\x01");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 Fire rate: \x05Fastest\x01");
 				}
 				else
 				{
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
@@ -1626,11 +1629,11 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 					CannonRate[client] = 0.10;
 					RemoveShoulderCannon(client);
 					EquipShoulderCannon(client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 Fire rate: \x05Faster\x01");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 Fire rate: \x05Faster\x01");
 				}
 				else
 				{
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
@@ -1644,11 +1647,11 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 					CannonRate[client] = 0.15;
 					RemoveShoulderCannon(client);
 					EquipShoulderCannon(client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 Fire rate: \x05Default\x01");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 Fire rate: \x05Default\x01");
 				}
 				else
 				{
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
@@ -1662,14 +1665,52 @@ public SCMHandler(Handle:menu, MenuAction:action, client, param1)
 					CannonRate[client] = 0.20;
 					RemoveShoulderCannon(client);
 					EquipShoulderCannon(client);
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 Fire rate: \x05Slower\x01");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 Fire rate: \x05Slower\x01");
 				}
 				else
 				{
-					PrintToChat(client,"\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
+					PrintToChat(client, "\x04[Shoulder Cannon]\x01 You can't adjust this while you are dead.");
 				}
 				FakeClientCommand(client, "shouldercannon");
 			}
 		}
 	}
+	return 0;
+}
+/* -----------------------------------------------------------
+ * 4) Evento player_use -> leer targetid y classname
+ * ---------------------------------------------------------*/
+public Action Event_PlayerUse(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client <= 0 || !IsClientInGame(client)) return Plugin_Continue;
+
+	int target = event.GetInt("targetid");
+	if (!IsValidEntity(target)) return Plugin_Continue;
+
+	char cls[64];
+	GetEntityClassname(target, cls, sizeof(cls));
+
+	if (IsAmmoClass(cls) || StrContains(cls, "ammo", false) != -1 || StrContains(cls, "upgrade", false) != -1)
+	{
+		PrintToChat(client, "💥 pepe1 Has usado una pila de munición (%s).", cls);
+		DebugLog("player_use: %N usó %s (ent=%d)", client, cls, target);
+		CannonAmmo[client] = MAX_CANNON_AMMO;
+		// GiveFullAmmo(client);
+	}
+	else
+	{
+		DebugLog("player_use: %N usó %s (ignorado)", client, cls);
+	}
+
+	return Plugin_Continue;
+}
+bool IsAmmoClass(const char[] classname)
+{
+	for (int i = 0; i < sizeof(AMMO_CLASSES); i++)
+	{
+		if (StrEqual(classname, AMMO_CLASSES[i], false))
+			return true;
+	}
+	return false;
 }

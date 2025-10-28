@@ -28,7 +28,7 @@ public void LifeStealer_OnPluginStart()
 {
 	cvar_LifeStealer_RequiredLevel = CreateConVar(
 		"ability_lifestealer_level",
-		"12",
+		"1",
 		"Nivel requerido para desbloquear LifeStealer",
 		FCVAR_PLUGIN
 	);
@@ -112,17 +112,30 @@ public bool LifeStealer_CanUse(int client, int level)
 	int requiredLevel = GetConVarInt(cvar_LifeStealer_RequiredLevel);
 
 	if (level < requiredLevel)
+	{
+		PrintToChat(client, "\x05[DEBUG LifeStealer]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
 		return false;
+	}
 
 	if (g_iLifeStealer_Cooldown[client] > 0)
+	{
+		PrintToChat(client, "\x05[DEBUG LifeStealer]\x01 Cooldown activo: %ds", g_iLifeStealer_Cooldown[client]);
 		return false;
+	}
 
 	if (g_bLifeStealer_Active[client])
+	{
+		PrintToChat(client, "\x05[DEBUG LifeStealer]\x01 Ya está activo");
 		return false;
+	}
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		PrintToChat(client, "\x05[DEBUG LifeStealer]\x01 No estás en juego o no estás vivo");
 		return false;
+	}
 
+	PrintToChat(client, "\x04[DEBUG LifeStealer]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 

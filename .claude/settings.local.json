@@ -1,24 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)",
-      "Bash(where:*)",
-      "Read(//c/Program Files/**)",
-      "Read(//c//**)",
-      "Read(//c/Users/Socius/**)",
-      "Read(//c/**)",
-      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\l4d2_scripted_hud.sp\")",
-      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\standalone plugins\\shoulder_cannon.sp\")",
-      "Bash(mkdir:*)",
       "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\Eclipse Management System.sp\")"
     ],
-    "deny": [
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Write(*.md)",
-      "Write(**/*.md)"
-    ],
+    "deny": [],
     "ask": []
   }
 }

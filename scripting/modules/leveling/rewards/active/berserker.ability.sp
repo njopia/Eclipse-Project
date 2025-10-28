@@ -31,7 +31,7 @@ public void Berserker_OnPluginStart()
 {
 	cvar_Berserker_RequiredLevel = CreateConVar(
 		"ability_berserker_level",
-		"5",
+		"1",
 		"Nivel requerido para desbloquear Berserker",
 		FCVAR_PLUGIN
 	);
@@ -115,21 +115,37 @@ public bool Berserker_CanUse(int client, int level)
 	int requiredLevel = GetConVarInt(cvar_Berserker_RequiredLevel);
 
 	if (level < requiredLevel)
+	{
+		PrintToChat(client, "\x05[DEBUG Berserker]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
 		return false;
+	}
 
 	if (g_iBerserker_Cooldown[client] > 0)
+	{
+		PrintToChat(client, "\x05[DEBUG Berserker]\x01 Cooldown activo: %ds", g_iBerserker_Cooldown[client]);
 		return false;
+	}
 
 	if (g_bBerserker_Active[client])
+	{
+		PrintToChat(client, "\x05[DEBUG Berserker]\x01 Ya está activo");
 		return false;
+	}
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		PrintToChat(client, "\x05[DEBUG Berserker]\x01 No estás en juego o no estás vivo");
 		return false;
+	}
 
 	// Verificar que tenga un melee equipado
 	if (!Berserker_HasMeleeEquipped(client))
+	{
+		PrintToChat(client, "\x05[DEBUG Berserker]\x01 No tienes un arma cuerpo a cuerpo equipada");
 		return false;
+	}
 
+	PrintToChat(client, "\x04[DEBUG Berserker]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 

@@ -12,6 +12,7 @@
 #include "rewards/active/acid-bath.ability.sp"
 #include "rewards/active/lifestealer.ability.sp"
 #include "rewards/active/speed-freak.ability.sp"
+#include "rewards/active/shoulder-cannon.ability.sp"
 
 /**
  * Inicializa el módulo de habilidades activas
@@ -23,9 +24,13 @@ public void ActiveAbilities_OnPluginStart()
 	AcidBath_OnPluginStart();
 	LifeStealer_OnPluginStart();
 	SpeedFreak_OnPluginStart();
+	ShoulderCannon_OnPluginStart();
 
 	// Crear timer para actualizar habilidades cada segundo
 	CreateTimer(1.0, Timer_ActiveAbilities_SecondTick, _, TIMER_REPEAT);
+
+	// Hook de eventos
+	HookEvent("player_death", Event_ActiveAbilities_PlayerDeath, EventHookMode_Post);
 
 	// Hook para daño
 	for (int i = 1; i <= MaxClients; i++)
@@ -46,6 +51,7 @@ public void ActiveAbilities_OnClientConnect(int client)
 	AcidBath_OnClientConnect(client);
 	LifeStealer_OnClientConnect(client);
 	SpeedFreak_OnClientConnect(client);
+	ShoulderCannon_OnClientConnect(client);
 }
 
 /**
@@ -67,6 +73,20 @@ public void ActiveAbilities_OnClientDisconnect(int client)
 	AcidBath_OnClientDisconnect(client);
 	LifeStealer_OnClientDisconnect(client);
 	SpeedFreak_OnClientDisconnect(client);
+	ShoulderCannon_OnClientDisconnect(client);
+}
+
+/**
+ * Hook cuando un jugador muere
+ */
+public Action Event_ActiveAbilities_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client > 0 && client <= MaxClients)
+	{
+		ShoulderCannon_OnPlayerDeath(client);
+	}
+	return Plugin_Continue;
 }
 
 /**
@@ -240,6 +260,18 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 			Format(buffer, maxlen, "Speed Freak [Ready]");
 		}
 	}
+	else if (StrEqual(abilityName, "Shoulder Cannon", false))
+	{
+		if (ShoulderCannon_IsActive(client))
+		{
+			int ammo = ShoulderCannon_GetAmmo(client);
+			Format(buffer, maxlen, "Shoulder Cannon [Ammo: %i]", ammo);
+		}
+		else
+		{
+			Format(buffer, maxlen, "Shoulder Cannon [Equip]");
+		}
+	}
 }
 
 /**
@@ -303,6 +335,25 @@ public bool ActiveAbilities_ActivateAbility(int client, int level, const char[] 
 		SpeedFreak_Activate(client);
 		return true;
 	}
+	else if (StrEqual(abilityName, "Shoulder Cannon", false))
+	{
+		if (!ShoulderCannon_CanUse(client, level))
+		{
+			return false;
+		}
+
+		// Toggle: equipar o desequipar
+		if (ShoulderCannon_IsActive(client))
+		{
+			ShoulderCannon_Remove(client);
+			PrintToChat(client, "\x05[Ability]\x01 Shoulder Cannon unequipped.");
+		}
+		else
+		{
+			ShoulderCannon_Activate(client);
+		}
+		return true;
+	}
 
 	return false;
 }
@@ -327,6 +378,10 @@ public bool ActiveAbilities_CanUseAbility(int client, int level, const char[] ab
 	else if (StrEqual(abilityName, "Speed Freak", false))
 	{
 		return SpeedFreak_CanUse(client, level);
+	}
+	else if (StrEqual(abilityName, "Shoulder Cannon", false))
+	{
+		return ShoulderCannon_CanUse(client, level);
 	}
 
 	return false;
