@@ -36,6 +36,96 @@
     "es"  "Velocidad aumentada"
   }
 
+  // === ACTIVE ABILITIES ===
+  "BM_Ability_Berserker"
+  {
+    "en"  "Berserker"
+    "es"  "Berserker"
+  }
+  "BM_Ability_Berserker_Desc"
+  {
+    "en"  "Increases melee damage and resistance"
+    "es"  "Aumenta el daño cuerpo a cuerpo y la resistencia"
+  }
+  "BM_Ability_AcidBath"
+  {
+    "en"  "Acid Bath"
+    "es"  "Baño de Ácido"
+  }
+  "BM_Ability_AcidBath_Desc"
+  {
+    "en"  "Creates an acid pool that damages infected"
+    "es"  "Crea un charco de ácido que daña a los infectados"
+  }
+  "BM_Ability_LifeStealer"
+  {
+    "en"  "LifeStealer"
+    "es"  "Ladrón de Vida"
+  }
+  "BM_Ability_LifeStealer_Desc"
+  {
+    "en"  "Steals life from enemies with each hit"
+    "es"  "Roba vida de los enemigos con cada golpe"
+  }
+  "BM_Ability_SpeedFreak"
+  {
+    "en"  "Speed Freak"
+    "es"  "Maniático de Velocidad"
+  }
+  "BM_Ability_SpeedFreak_Desc"
+  {
+    "en"  "Drastically increases movement and attack speed"
+    "es"  "Aumenta drásticamente la velocidad de movimiento y ataque"
+  }
+  "BM_Ability_ShoulderCannon"
+  {
+    "en"  "Shoulder Cannon"
+    "es"  "Cañón de Hombro"
+  }
+  "BM_Ability_ShoulderCannon_Desc"
+  {
+    "en"  "Deploys a shoulder cannon that auto-fires at infected"
+    "es"  "Despliega un cañón de hombro que dispara automáticamente a infectados"
+  }
+
+  // Ability Status Messages
+  "Ability_NotUnlocked"
+  {
+    "#format" "{1:s},{2:i}"
+    "en"  "{1} is not unlocked yet. Required level: {2}"
+    "es"  "{1} aún no está desbloqueada. Nivel requerido: {2}"
+  }
+  "Ability_OnCooldown"
+  {
+    "#format" "{1:s},{2:i}"
+    "en"  "{1} is on cooldown. Wait {2} seconds."
+    "es"  "{1} está en cooldown. Espera {2} segundos."
+  }
+  "Ability_NotEnoughPoints"
+  {
+    "#format" "{1:s},{2:i},{3:i}"
+    "en"  "Not enough points for {1}. Cost: {2}, You have: {3}"
+    "es"  "No tienes suficientes puntos para {1}. Costo: {2}, Tienes: {3}"
+  }
+  "Ability_Activated"
+  {
+    "#format" "{1:s}"
+    "en"  "{1} activated!"
+    "es"  "¡{1} activada!"
+  }
+  "Ability_Deactivated"
+  {
+    "#format" "{1:s}"
+    "en"  "{1} deactivated."
+    "es"  "{1} desactivada."
+  }
+  "Ability_AlreadyActive"
+  {
+    "#format" "{1:s}"
+    "en"  "{1} is already active."
+    "es"  "{1} ya está activa."
+  }
+
   "BM_Deployables"
   {
     "en"  "Deployables"
@@ -140,4 +230,34 @@
   {
     "en"  "Option 2"
     "es"  "Opción 2"
+  }
+
+  // === BLOODMOON MODE ===
+  "Bloodmoon_Activated"
+  {
+    "#format" "{1:.2f}"
+    "en"  "Blood Moon ACTIVATED! Hordes and damage increased (mult={1})"
+    "es"  "¡Luna de Sangre ACTIVADA! Hordas y daño incrementados (mult={1})"
+  }
+  "Bloodmoon_Deactivated"
+  {
+    "en"  "Blood Moon DEACTIVATED. Director restored"
+    "es"  "Luna de Sangre DESACTIVADA. Director restaurado"
+  }
+  "Bloodmoon_Status"
+  {
+    "#format" "{1:s},{2:.2f},{3:s}"
+    "en"  "Bloodmoon - Active: {1} | Damage Mult: {2} | Difficulty: {3}"
+    "es"  "Bloodmoon - Activo: {1} | Multiplicador: {2} | Dificultad: {3}"
+  }
+  "Bloodmoon_Disabled"
+  {
+    "en"  "Bloodmoon system is disabled"
+    "es"  "Sistema de Bloodmoon deshabilitado"
+  }
+  "Bloodmoon_MobForced"
+  {
+    "en"  "Horde forced"
+    "es"  "Horda forzada"
+  }
 }}

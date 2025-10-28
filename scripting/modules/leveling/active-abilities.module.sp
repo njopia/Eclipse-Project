@@ -188,7 +188,7 @@ public void ActiveAbilities_OnWeaponFire(int client)
 }
 
 /**
- * Obtiene información de habilidad para el menú de compra
+ * Obtiene información de habilidad para el menú de compra (solo estado)
  */
 public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer, int maxlen, const char[] abilityName)
 {
@@ -197,16 +197,16 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 		int cooldown = Berserker_GetCooldown(client);
 		if (cooldown > 0)
 		{
-			Format(buffer, maxlen, "Berserker [%is]", cooldown);
+			Format(buffer, maxlen, "[CD: %is]", cooldown);
 		}
 		else if (Berserker_IsActive(client))
 		{
 			int remaining = Berserker_GetTimeRemaining(client);
-			Format(buffer, maxlen, "Berserker [ACTIVE: %is]", remaining);
+			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
 		}
 		else
 		{
-			Format(buffer, maxlen, "Berserker [Ready]");
+			Format(buffer, maxlen, "[Listo]");
 		}
 	}
 	else if (StrEqual(abilityName, "Acid Bath", false))
@@ -214,16 +214,16 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 		int cooldown = AcidBath_GetCooldown(client);
 		if (cooldown > 0)
 		{
-			Format(buffer, maxlen, "Acid Bath [%is]", cooldown);
+			Format(buffer, maxlen, "[CD: %is]", cooldown);
 		}
 		else if (AcidBath_IsActive(client))
 		{
 			int remaining = AcidBath_GetTimeRemaining(client);
-			Format(buffer, maxlen, "Acid Bath [ACTIVE: %is]", remaining);
+			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
 		}
 		else
 		{
-			Format(buffer, maxlen, "Acid Bath [Ready]");
+			Format(buffer, maxlen, "[Listo]");
 		}
 	}
 	else if (StrEqual(abilityName, "LifeStealer", false))
@@ -231,16 +231,16 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 		int cooldown = LifeStealer_GetCooldown(client);
 		if (cooldown > 0)
 		{
-			Format(buffer, maxlen, "LifeStealer [%is]", cooldown);
+			Format(buffer, maxlen, "[CD: %is]", cooldown);
 		}
 		else if (LifeStealer_IsActive(client))
 		{
 			int remaining = LifeStealer_GetTimeRemaining(client);
-			Format(buffer, maxlen, "LifeStealer [ACTIVE: %is]", remaining);
+			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
 		}
 		else
 		{
-			Format(buffer, maxlen, "LifeStealer [Ready]");
+			Format(buffer, maxlen, "[Listo]");
 		}
 	}
 	else if (StrEqual(abilityName, "Speed Freak", false))
@@ -248,16 +248,16 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 		int cooldown = SpeedFreak_GetCooldown(client);
 		if (cooldown > 0)
 		{
-			Format(buffer, maxlen, "Speed Freak [%is]", cooldown);
+			Format(buffer, maxlen, "[CD: %is]", cooldown);
 		}
 		else if (SpeedFreak_IsActive(client))
 		{
 			int remaining = SpeedFreak_GetTimeRemaining(client);
-			Format(buffer, maxlen, "Speed Freak [ACTIVE: %is]", remaining);
+			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
 		}
 		else
 		{
-			Format(buffer, maxlen, "Speed Freak [Ready]");
+			Format(buffer, maxlen, "[Listo]");
 		}
 	}
 	else if (StrEqual(abilityName, "Shoulder Cannon", false))
@@ -265,11 +265,11 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 		if (ShoulderCannon_IsActive(client))
 		{
 			int ammo = ShoulderCannon_GetAmmo(client);
-			Format(buffer, maxlen, "Shoulder Cannon [Ammo: %i]", ammo);
+			Format(buffer, maxlen, "[Munición: %i]", ammo);
 		}
 		else
 		{
-			Format(buffer, maxlen, "Shoulder Cannon [Equip]");
+			Format(buffer, maxlen, "[Equipar]");
 		}
 	}
 }

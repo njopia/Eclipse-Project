@@ -6,9 +6,7 @@
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
 
-// Include Ion Cannon API
-#include <ion_cannon>
-
+// Ion Cannon ahora está integrado - NO necesita include externo
 float g_LastIonPurchase[MAXPLAYERS + 1];
 
 /**
@@ -55,10 +53,10 @@ stock bool BuyIonCannon(int client)
 	}
 
 	// Verificar si puede usar Ion Cannon (cooldown interno + cargas)
-	if (!Ion_CanUse(client))
+	if (!IonCannon_CanUse(client))
 	{
-		float cooldown = Ion_GetCooldown(client);
-		int charges = Ion_GetCharges(client);
+		float cooldown = IonCannon_GetCooldown(client);
+		int charges = IonCannon_GetCharges(client);
 
 		if (cooldown > 0.0)
 		{
@@ -73,10 +71,10 @@ stock bool BuyIonCannon(int client)
 	}
 
 	// Activar Ion Cannon
-	if (Ion_Activate(client))
+	if (IonCannon_Activate(client))
 	{
 		g_LastIonPurchase[client] = now;
-		PrintToChat(client, "\x04[Eclipse]\x01 ⚡ \x05Ion Cannon\x01 activado! Cargas restantes: \x05%d", Ion_GetCharges(client));
+		PrintToChat(client, "\x04[Eclipse]\x01 ⚡ \x05Ion Cannon\x01 activado! Cargas restantes: \x05%d", IonCannon_GetCharges(client));
 		return true;
 	}
 	else
@@ -95,8 +93,8 @@ stock bool BuyIonCannon(int client)
  */
 stock void GetIonCannonInfo(int client, char[] buffer, int maxlen)
 {
-	int charges = Ion_GetCharges(client);
-	float cooldown = Ion_GetCooldown(client);
+	int charges = IonCannon_GetCharges(client);
+	float cooldown = IonCannon_GetCooldown(client);
 
 	if (cooldown > 0.0)
 	{
@@ -134,29 +132,13 @@ stock bool CanBuyIonCannon(int client)
 		return false;
 
 	// Verificar si tiene cargas y no está en cooldown
-	return Ion_CanUse(client);
+	return IonCannon_CanUse(client);
 }
 
 /**
  * Reset del sistema cuando el cliente se desconecta
  */
-public void IonCannon_OnClientDisconnect(int client)
+public void IonCannonFeature_OnClientDisconnect(int client)
 {
 	g_LastIonPurchase[client] = 0.0;
-}
-
-// Forward del Ion Cannon cuando se completa
-public void Ion_OnComplete(int client, int kills)
-{
-	if (client > 0 && IsClientInGame(client))
-	{
-		if (kills > 0)
-		{
-			PrintToChat(client, "\x04[Eclipse]\x01 Ion Cannon completado: \x05%d\x01 kills", kills);
-		}
-		else
-		{
-			PrintToChat(client, "\x04[Eclipse]\x01 Ion Cannon completado (sin kills).");
-		}
-	}
 }

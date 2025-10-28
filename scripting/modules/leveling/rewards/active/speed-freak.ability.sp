@@ -11,7 +11,6 @@
 //==================================================
 
 // --- ConVars ---
-Handle cvar_SpeedFreak_RequiredLevel = INVALID_HANDLE;
 Handle cvar_SpeedFreak_Duration = INVALID_HANDLE;
 Handle cvar_SpeedFreak_Cooldown = INVALID_HANDLE;
 Handle cvar_SpeedFreak_SpeedMultiplier = INVALID_HANDLE;
@@ -29,13 +28,6 @@ float  g_fSpeedFreak_EndTime[MAXPLAYERS + 1];
  */
 public void SpeedFreak_OnPluginStart()
 {
-	cvar_SpeedFreak_RequiredLevel = CreateConVar(
-		"ability_speedfreak_level",
-		"1",
-		"Nivel requerido para desbloquear Speed Freak",
-		FCVAR_PLUGIN
-	);
-
 	cvar_SpeedFreak_Duration = CreateConVar(
 		"ability_speedfreak_duration",
 		"60",

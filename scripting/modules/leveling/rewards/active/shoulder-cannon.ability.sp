@@ -851,3 +851,96 @@ public bool ShoulderCannon_IsActive(int client)
 {
 	return ShoulderCannon_HasCannon(client);
 }
+
+/**
+ * Abre el menú de configuración del Shoulder Cannon
+ */
+public void ShoulderCannon_OpenMenu(int client)
+{
+	if (!IsClientInGame(client))
+		return;
+
+	Menu menu = new Menu(ShoulderCannon_MenuHandler);
+
+	char title[128];
+	Format(title, sizeof(title), "Shoulder Cannon\n====================\nMunición: %d\n====================",
+		g_iShoulderCannon_Ammo[client]);
+	menu.SetTitle(title);
+
+	// Opción de equipar/desequipar
+	if (ShoulderCannon_HasCannon(client))
+	{
+		menu.AddItem("unequip", "[X] Equipado - Desequipar");
+
+		// Opciones adicionales cuando está equipado
+		if (g_bShoulderCannon_Disabled[client])
+			menu.AddItem("enable", "[ ] Habilitar disparo");
+		else
+			menu.AddItem("disable", "[X] Deshabilitar disparo");
+
+		// Opción de recargar munición
+		char reloadText[64];
+		Format(reloadText, sizeof(reloadText), "Recargar munición (Actual: %d)", g_iShoulderCannon_Ammo[client]);
+		menu.AddItem("reload", reloadText);
+	}
+	else
+	{
+		menu.AddItem("equip", "[ ] Equipar Shoulder Cannon");
+	}
+
+	menu.ExitButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+/**
+ * Handler del menú de Shoulder Cannon
+ */
+public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[32];
+		menu.GetItem(param, info, sizeof(info));
+
+		if (StrEqual(info, "equip"))
+		{
+			if (!ShoulderCannon_HasCannon(client))
+			{
+				ShoulderCannon_Activate(client);
+			}
+			ShoulderCannon_OpenMenu(client); // Reabrir menú
+		}
+		else if (StrEqual(info, "unequip"))
+		{
+			ShoulderCannon_Remove(client);
+			PrintToChat(client, "\x05[Shoulder Cannon]\x01 Desequipado.");
+			ShoulderCannon_OpenMenu(client); // Reabrir menú
+		}
+		else if (StrEqual(info, "enable"))
+		{
+			g_bShoulderCannon_Disabled[client] = false;
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Disparo habilitado.");
+			ShoulderCannon_OpenMenu(client); // Reabrir menú
+		}
+		else if (StrEqual(info, "disable"))
+		{
+			g_bShoulderCannon_Disabled[client] = true;
+			PrintToChat(client, "\x05[Shoulder Cannon]\x01 Disparo deshabilitado.");
+			ShoulderCannon_OpenMenu(client); // Reabrir menú
+		}
+		else if (StrEqual(info, "reload"))
+		{
+			// Recargar munición a máximo
+			int maxAmmo = GetConVarInt(cvar_ShoulderCannon_MaxAmmo);
+			g_iShoulderCannon_Ammo[client] = maxAmmo;
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Munición recargada: \x05%d\x01", maxAmmo);
+			ShoulderCannon_OpenMenu(client); // Reabrir menú
+		}
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
+}

@@ -44,6 +44,10 @@
 #tryinclude "modules/leveling/active-abilities.module.sp"
 //////////////////////////////////////////////
 
+/////// GAME MODES MODULE ///////////////////
+#tryinclude "modules/modes/bloodmoon.module.sp"
+//////////////////////////////////////////////
+
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
 
@@ -93,6 +97,9 @@ public void OnPluginStart()
 	LevelingInfo_OnPluginStart();
 	ActiveAbilities_OnPluginStart();
 
+	// Inicializar módulos de modos de juego
+	Bloodmoon_OnPluginStart();
+
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
 	RegConsoleCmd("sm_givemoney", Command_GiveMoneySub);
@@ -113,6 +120,7 @@ public void OnMapStart()
 
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
+	Bloodmoon_OnMapStart();
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_OnMapStart();
 #endif
@@ -131,6 +139,9 @@ public void OnClientPutInServer(int client)
 	// Hook de daño para habilidades activas
 	ActiveAbilities_OnClientPutInServer(client);
 	ActiveAbilities_OnClientConnect(client);
+
+	// Hook de Bloodmoon
+	Bloodmoon_OnClientPutInServer(client);
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -140,6 +151,9 @@ public void OnClientPostAdminCheck(int client)
 
 	// Inicializar Defense Grid
 	DefenseGrid_OnClientConnect(client);
+
+	// Inicializar Ion Cannon
+	IonCannon_OnClientPutInServer(client);
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])

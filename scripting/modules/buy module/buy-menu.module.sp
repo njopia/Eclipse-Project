@@ -63,6 +63,7 @@ Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 #tryinclude "features/03-deployables/ammo.feature.sp"
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
+#tryinclude "features/03-deployables/ion-cannon/ion-cannon.module.sp"
 #tryinclude "features/03-deployables/ion-cannon.feature.sp"
 #tryinclude "features/03-deployables/defense-grid.feature.sp"
 //////////////////////////////////////////////
@@ -111,8 +112,22 @@ public void buyMenuOnPluginStart()
 		g_iPlayerCurrency[i] = 0;
 	}
 
+	// Initialize Ion Cannon module
+	IonCannon_OnPluginStart();
+
+	// Hook events
+	HookEvent("round_start", Event_RoundStart_IonCannon, EventHookMode_PostNoCopy);
+
 	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);
 
+}
+
+/**
+ * Evento de inicio de ronda - Restaurar cargas de Ion Cannon
+ */
+public void Event_RoundStart_IonCannon(Event event, const char[] name, bool dontBroadcast)
+{
+	IonCannon_OnRoundStart();
 }
 
 public void OnClientDisconnect(int client)
@@ -121,17 +136,22 @@ public void OnClientDisconnect(int client)
 	g_bHadMaxHealth[client] = false;
 	g_iPlayerCurrency[client] = 0;  // Reset currency on disconnect
 	IonCannon_OnClientDisconnect(client);
+	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
 	ResetPlayerCurrencyStats(client);  // Reset currency stats on disconnect
 	AdminMoney_OnClientDisconnect(client);  // Reset admin money data on disconnect
 	LevelingRewards_OnClientDisconnect(client);  // Reset leveling rewards on disconnect
 	ActiveAbilities_OnClientDisconnect(client);  // Cleanup active abilities
+	Bloodmoon_OnClientDisconnect(client);  // Cleanup bloodmoon hooks
 }
 
 public void DelegateBuyMenuModule()
 {
 	g_iBeaconBeamModel = PrecacheModel("materials/sprites/laserbeam.vmt", true);
+
+	// Initialize Ion Cannon resources
+	IonCannon_OnMapStart();
 
 	for (int i = 1; i <= MaxClients; i++)
 	{

@@ -21,6 +21,11 @@ Menu g_TeamBonusesMenu;
 #define BM_CHOICE_1_4 "BM_Instant_LeapOfDesperation"
 /// Long Action Choices ///
 #define BM_CHOICE_2_1 "BM_LongAction_SurvSpeedUp"
+#define BM_CHOICE_2_2 "BM_Ability_Berserker"
+#define BM_CHOICE_2_3 "BM_Ability_AcidBath"
+#define BM_CHOICE_2_4 "BM_Ability_LifeStealer"
+#define BM_CHOICE_2_5 "BM_Ability_SpeedFreak"
+#define BM_CHOICE_2_6 "BM_Ability_ShoulderCannon"
 /// Deployables Choices ///
 #define BM_CHOICE_3_1 "BM_Deployables_Ammo_Pile"
 #define BM_CHOICE_3_2 "BM_Deployables_UV_Light"
@@ -46,17 +51,29 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			if (StrEqual(info, BM_CHOICE_0_1))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 Instants");
-				g_InstantsMenu.Display(client, 20);
+				InstantsMenu(client);
+				if (g_InstantsMenu != null)
+				{
+					g_InstantsMenu.Display(client, 20);
+				}
 			}
 			if (StrEqual(info, BM_CHOICE_0_2))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 Long Action");
-				g_LongActionsMenu.Display(client, 20);
+				LongActionsMenu(client);
+				if (g_LongActionsMenu != null)
+				{
+					g_LongActionsMenu.Display(client, 20);
+				}
 			}
 			if (StrEqual(info, BM_CHOICE_0_3))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01  Deployables Menu");
-				g_DeployablesMenu.Display(client, 20);
+				DeployablesMenu(client);
+				if (g_DeployablesMenu != null)
+				{
+					g_DeployablesMenu.Display(client, 20);
+				}
 			}
 			if (StrEqual(info, BM_CHOICE_0_4))
 			{
@@ -158,7 +175,10 @@ public void LongActionsMenu(int client)
 	if (playerLevel >= 1)
 	{
 		char abilityText[128];
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Berserker");
+		char abilityName[64];
+		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_2, client);
+		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Berserker");
+		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
 		g_LongActionsMenu.AddItem("ability_berserker", abilityText);
 	}
 
@@ -166,7 +186,10 @@ public void LongActionsMenu(int client)
 	if (playerLevel >= 1)
 	{
 		char abilityText[128];
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Acid Bath");
+		char abilityName[64];
+		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_3, client);
+		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Acid Bath");
+		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
 		g_LongActionsMenu.AddItem("ability_acidbath", abilityText);
 	}
 
@@ -174,7 +197,10 @@ public void LongActionsMenu(int client)
 	if (playerLevel >= 1)
 	{
 		char abilityText[128];
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "LifeStealer");
+		char abilityName[64];
+		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_4, client);
+		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "LifeStealer");
+		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
 		g_LongActionsMenu.AddItem("ability_lifestealer", abilityText);
 	}
 
@@ -182,7 +208,10 @@ public void LongActionsMenu(int client)
 	if (playerLevel >= 1)
 	{
 		char abilityText[128];
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Speed Freak");
+		char abilityName[64];
+		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_5, client);
+		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Speed Freak");
+		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
 		g_LongActionsMenu.AddItem("ability_speedfreak", abilityText);
 	}
 
@@ -190,7 +219,10 @@ public void LongActionsMenu(int client)
 	if (playerLevel >= 1)
 	{
 		char abilityText[128];
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, abilityText, sizeof(abilityText), "Shoulder Cannon");
+		char abilityName[64];
+		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_6, client);
+		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Shoulder Cannon");
+		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
 		g_LongActionsMenu.AddItem("ability_shouldercannon", abilityText);
 	}
 
@@ -442,13 +474,17 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Speed Freak. Verifica los requisitos.");
 			}
 		}
-		// Shoulder Cannon Ability
+		// Shoulder Cannon Ability - Abrir menú
 		else if (StrEqual(info, "ability_shouldercannon"))
 		{
 			int playerLevel = Leveling_GetPlayerLevel(client);
-			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Shoulder Cannon"))
+			if (ShoulderCannon_CanUse(client, playerLevel))
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Shoulder Cannon. Verifica los requisitos.");
+				ShoulderCannon_OpenMenu(client);
+			}
+			else
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 No tienes acceso al Shoulder Cannon.");
 			}
 		}
 	}
