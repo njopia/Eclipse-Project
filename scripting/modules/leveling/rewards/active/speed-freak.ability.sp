@@ -111,33 +111,26 @@ public void SpeedFreak_OnSecondTick(int client)
  */
 public bool SpeedFreak_CanUse(int client, int level)
 {
-/* 	int requiredLevel = GetConVarInt(cvar_SpeedFreak_RequiredLevel);
-
-	if (level < requiredLevel)
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 	{
-		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
-		return false;
-	}
-
-	if (g_iSpeedFreak_Cooldown[client] > 0)
-	{
-		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 Cooldown activo: %ds", g_iSpeedFreak_Cooldown[client]);
+		PrintToChat(client, "\x05[Eclipse]\x01 Debes estar vivo para usar Speed Freak");
 		return false;
 	}
 
 	if (g_bSpeedFreak_Active[client])
 	{
-		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 Ya está activo");
+		PrintToChat(client, "\x05[Eclipse]\x01 Speed Freak ya está activo");
 		return false;
 	}
 
-	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	if (g_iSpeedFreak_Cooldown[client] > 0)
 	{
-		PrintToChat(client, "\x05[DEBUG Speed Freak]\x01 No estás en juego o no estás vivo");
+		int minutes = g_iSpeedFreak_Cooldown[client] / 60;
+		int seconds = g_iSpeedFreak_Cooldown[client] % 60;
+		PrintToChat(client, "\x05[Eclipse]\x01 Speed Freak en cooldown: %dm %ds", minutes, seconds);
 		return false;
-	} */
+	}
 
-	PrintToChat(client, "\x04[DEBUG Speed Freak]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 
@@ -190,7 +183,7 @@ public void SpeedFreak_Activate(int client)
 	// Activar night vision
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
-	PrintToChat(client, "\x04[Ability]\x01 Speed Freak Activated! (\x05%ds\x01) - Health limited to \x0350 HP\x01", duration);
+	PrintToChat(client, "\x04[Eclipse]\x01 ¡Speed Freak activado! Velocidad \x05x3.0\x01 por \x05%ds\x01 - HP máximo reducido a \x0350 HP\x01", duration);
 }
 
 /**
@@ -221,7 +214,7 @@ public void SpeedFreak_Deactivate(int client)
 		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
 
 		SetEntProp(client, Prop_Send, "m_bNightVisionOn", 0);
-		PrintToChat(client, "\x04[Ability]\x01 Speed Freak Deactivated - Health restored");
+		PrintToChat(client, "\x04[Eclipse]\x01 Speed Freak desactivado - HP máximo restaurado");
 	}
 }
 

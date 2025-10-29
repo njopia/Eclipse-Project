@@ -38,6 +38,7 @@ Handle cvar_ShoulderCannon_Range = INVALID_HANDLE;
 int   g_iShoulderCannon_Entity[MAXPLAYERS + 1];
 int   g_iShoulderCannon_Ammo[MAXPLAYERS + 1];
 bool  g_bShoulderCannon_Disabled[MAXPLAYERS + 1];
+bool  g_bShoulderCannon_AutoEquip[MAXPLAYERS + 1];
 int   g_iShoulderCannon_NeverTarget[MAXPLAYERS + 1];
 int   g_iShoulderCannon_TargetFirst[MAXPLAYERS + 1];
 float g_fShoulderCannon_FireRate[MAXPLAYERS + 1];
@@ -107,9 +108,10 @@ public void ShoulderCannon_OnClientConnect(int client)
 	g_iShoulderCannon_Entity[client] = 0;
 	g_iShoulderCannon_Ammo[client] = GetConVarInt(cvar_ShoulderCannon_MaxAmmo);
 	g_bShoulderCannon_Disabled[client] = false;
+	g_bShoulderCannon_AutoEquip[client] = false;
 	g_iShoulderCannon_NeverTarget[client] = 0;
 	g_iShoulderCannon_TargetFirst[client] = 0;
-	g_fShoulderCannon_FireRate[client] = GetConVarFloat(cvar_ShoulderCannon_FireRate);
+	g_fShoulderCannon_FireRate[client] = 0.15; // Default fire rate
 	g_hShoulderCannon_Timer[client] = INVALID_HANDLE;
 }
 
@@ -860,35 +862,86 @@ public void ShoulderCannon_OpenMenu(int client)
 	if (!IsClientInGame(client))
 		return;
 
+	char name[64];
+	char text[128];
+	bool hasCannon = ShoulderCannon_HasCannon(client);
+	bool disabled = g_bShoulderCannon_Disabled[client];
+	bool autoEquip = g_bShoulderCannon_AutoEquip[client];
+	int neverTarget = g_iShoulderCannon_NeverTarget[client];
+	int targetFirst = g_iShoulderCannon_TargetFirst[client];
+	float fireRate = g_fShoulderCannon_FireRate[client];
+
 	Menu menu = new Menu(ShoulderCannon_MenuHandler);
+	Format(text, sizeof(text), "Shoulder Cannon Menu\n====================\nMunición: %i\n====================", g_iShoulderCannon_Ammo[client]);
+	menu.SetTitle(text);
 
-	char title[128];
-	Format(title, sizeof(title), "Shoulder Cannon\n====================\nMunición: %d\n====================",
-		g_iShoulderCannon_Ammo[client]);
-	menu.SetTitle(title);
-
-	// Opción de equipar/desequipar
-	if (ShoulderCannon_HasCannon(client))
+	// 1. Opción de equipar/desequipar
+	if (!hasCannon)
 	{
-		menu.AddItem("unequip", "[X] Equipado - Desequipar");
-
-		// Opciones adicionales cuando está equipado
-		if (g_bShoulderCannon_Disabled[client])
-			menu.AddItem("enable", "[ ] Habilitar disparo");
-		else
-			menu.AddItem("disable", "[X] Deshabilitar disparo");
-
-		// Opción de recargar munición
-		char reloadText[64];
-		Format(reloadText, sizeof(reloadText), "Recargar munición (Actual: %d)", g_iShoulderCannon_Ammo[client]);
-		menu.AddItem("reload", reloadText);
+		Format(name, sizeof(name), "[ ] Equipar Shoulder Cannon");
+		menu.AddItem("equip", name);
 	}
 	else
 	{
-		menu.AddItem("equip", "[ ] Equipar Shoulder Cannon");
+		Format(name, sizeof(name), "[X] Equipar Shoulder Cannon");
+		menu.AddItem("unequip", name);
+
+		// 2. Auto Equip
+		if (autoEquip)
+			Format(name, sizeof(name), "[X] Auto Equip Cannon");
+		else
+			Format(name, sizeof(name), "[ ] Auto Equip Cannon");
+		menu.AddItem("autoequip", name);
+
+		// 3. Disable Cannon
+		if (disabled)
+			Format(name, sizeof(name), "[X] Disable Cannon");
+		else
+			Format(name, sizeof(name), "[ ] Disable Cannon");
+		menu.AddItem("disable", name);
+
+		// 4. Never Target
+		switch(neverTarget)
+		{
+			case 0: Format(name, sizeof(name), "[None] Never Target");
+			case 1: Format(name, sizeof(name), "[Commons] Never Target");
+			case 2: Format(name, sizeof(name), "[Specials] Never Target");
+			case 3: Format(name, sizeof(name), "[Witches] Never Target");
+			case 4: Format(name, sizeof(name), "[Tanks] Never Target");
+			case 5: Format(name, sizeof(name), "[Commons/Specials] Never Target");
+			case 6: Format(name, sizeof(name), "[Commons/Witches] Never Target");
+			case 7: Format(name, sizeof(name), "[Witches/Tanks] Never Target");
+		}
+		menu.AddItem("nevertarget", name);
+
+		// 5. Target First
+		switch(targetFirst)
+		{
+			case 0: Format(name, sizeof(name), "[Commons] Target First");
+			case 1: Format(name, sizeof(name), "[Specials] Target First");
+			case 2: Format(name, sizeof(name), "[Witches] Target First");
+			case 3: Format(name, sizeof(name), "[Tanks] Target First");
+		}
+		menu.AddItem("targetfirst", name);
+
+		// 6. Fire Rate
+		if (fireRate == 0.05)
+			Format(name, sizeof(name), "[+0.05] Fastest Fire Rate");
+		else if (fireRate == 0.10)
+			Format(name, sizeof(name), "[+0.10] Faster Fire Rate");
+		else if (fireRate == 0.15)
+			Format(name, sizeof(name), "[+0.15] Default Fire Rate");
+		else if (fireRate == 0.20)
+			Format(name, sizeof(name), "[+0.20] Slower Fire Rate");
+		else if (fireRate == 0.25)
+			Format(name, sizeof(name), "[+0.25] Slowest Fire Rate");
+		else
+			Format(name, sizeof(name), "[+%.2f] Fire Rate", fireRate);
+		menu.AddItem("firerate", name);
 	}
 
 	menu.ExitButton = true;
+	menu.ExitBackButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
@@ -904,38 +957,70 @@ public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, 
 
 		if (StrEqual(info, "equip"))
 		{
-			if (!ShoulderCannon_HasCannon(client))
+			if (!ShoulderCannon_HasCannon(client) && IsPlayerAlive(client))
 			{
 				ShoulderCannon_Activate(client);
 			}
-			ShoulderCannon_OpenMenu(client); // Reabrir menú
+			ShoulderCannon_OpenMenu(client);
 		}
 		else if (StrEqual(info, "unequip"))
 		{
 			ShoulderCannon_Remove(client);
 			PrintToChat(client, "\x05[Shoulder Cannon]\x01 Desequipado.");
-			ShoulderCannon_OpenMenu(client); // Reabrir menú
+			ShoulderCannon_OpenMenu(client);
 		}
-		else if (StrEqual(info, "enable"))
+		else if (StrEqual(info, "autoequip"))
 		{
-			g_bShoulderCannon_Disabled[client] = false;
-			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Disparo habilitado.");
-			ShoulderCannon_OpenMenu(client); // Reabrir menú
+			g_bShoulderCannon_AutoEquip[client] = !g_bShoulderCannon_AutoEquip[client];
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto Equip: %s", g_bShoulderCannon_AutoEquip[client] ? "Activado" : "Desactivado");
+			ShoulderCannon_OpenMenu(client);
 		}
 		else if (StrEqual(info, "disable"))
 		{
-			g_bShoulderCannon_Disabled[client] = true;
-			PrintToChat(client, "\x05[Shoulder Cannon]\x01 Disparo deshabilitado.");
-			ShoulderCannon_OpenMenu(client); // Reabrir menú
+			g_bShoulderCannon_Disabled[client] = !g_bShoulderCannon_Disabled[client];
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Disparo: %s", g_bShoulderCannon_Disabled[client] ? "Deshabilitado" : "Habilitado");
+			ShoulderCannon_OpenMenu(client);
 		}
-		else if (StrEqual(info, "reload"))
+		else if (StrEqual(info, "nevertarget"))
 		{
-			// Recargar munición a máximo
-			int maxAmmo = GetConVarInt(cvar_ShoulderCannon_MaxAmmo);
-			g_iShoulderCannon_Ammo[client] = maxAmmo;
-			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Munición recargada: \x05%d\x01", maxAmmo);
-			ShoulderCannon_OpenMenu(client); // Reabrir menú
+			// Cycle through never target options
+			g_iShoulderCannon_NeverTarget[client]++;
+			if (g_iShoulderCannon_NeverTarget[client] > 7)
+				g_iShoulderCannon_NeverTarget[client] = 0;
+			ShoulderCannon_OpenMenu(client);
 		}
+		else if (StrEqual(info, "targetfirst"))
+		{
+			// Cycle through target first options
+			g_iShoulderCannon_TargetFirst[client]++;
+			if (g_iShoulderCannon_TargetFirst[client] > 3)
+				g_iShoulderCannon_TargetFirst[client] = 0;
+			ShoulderCannon_OpenMenu(client);
+		}
+		else if (StrEqual(info, "firerate"))
+		{
+			// Cycle through fire rates
+			if (g_fShoulderCannon_FireRate[client] == 0.05)
+				g_fShoulderCannon_FireRate[client] = 0.10;
+			else if (g_fShoulderCannon_FireRate[client] == 0.10)
+				g_fShoulderCannon_FireRate[client] = 0.15;
+			else if (g_fShoulderCannon_FireRate[client] == 0.15)
+				g_fShoulderCannon_FireRate[client] = 0.20;
+			else if (g_fShoulderCannon_FireRate[client] == 0.20)
+				g_fShoulderCannon_FireRate[client] = 0.25;
+			else
+				g_fShoulderCannon_FireRate[client] = 0.05;
+
+			// Restart timer with new fire rate
+			if (ShoulderCannon_HasCannon(client))
+				ShoulderCannon_StartRepeater(client);
+
+			ShoulderCannon_OpenMenu(client);
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		// Si presionan Exit Back, podrían regresar al menú de habilidades
 	}
 	else if (action == MenuAction_End)
 	{

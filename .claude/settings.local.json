@@ -3,7 +3,9 @@
     "allow": [
       "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\Eclipse Management System.sp\")",
       "Bash(cat:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nIntegrate Ion Cannon and Bloodmoon modules into Eclipse core system\n\nMajor integrations:\n- Ion Cannon: Fully integrated from standalone plugin (1551 lines) to module (680 lines)\n  - Eliminated external API (5 natives, 2 forwards)\n  - Removed 20+ ConVars, replaced with fixed defines\n  - Removed 6 console commands\n  - Maintained 100% visual effects and gameplay functionality\n  - Added charge system (3 max) with 45s cooldown\n  \n- Bloodmoon Mode: Integrated as core module (680 lines)\n  - Visual effects (screen fade, fog controller, particles)\n  - Director difficulty modifications\n  - Manual and automatic activation support\n\nActive abilities:\n- Added Shoulder Cannon menu system for configuration\n- Fixed compilation warnings in Speed Freak and Bloodmoon modules\n\nBuy menu fixes:\n- Fixed Deployables menu not opening from !buy command\n- Ensured all submenus recreate before display for updated state\n- Added null checks for menu safety\n\nDocumentation:\n- Created COMANDOS_ECLIPSE.md with comprehensive system documentation\n- Created INTEGRACION_ION_CANNON.md with detailed integration report\n\nCleanup:\n- Removed obsolete standalone plugins (ion.sp, bloodmoon.sp, shoulder_cannon.sp)\n- Removed unused workshop files\n- Plugin size: 517,352 bytes (increased ~50KB from integrations)\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push)"
     ],
     "deny": [],
     "ask": []

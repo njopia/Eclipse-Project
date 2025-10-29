@@ -37,7 +37,6 @@ Handle cvar_CostConvertHP = INVALID_HANDLE;
 Handle cvar_CostFireYell = INVALID_HANDLE;
 Handle cvar_CostPowerYell = INVALID_HANDLE;
 Handle cvar_CostLeap = INVALID_HANDLE;
-Handle cvar_CostSurvSpeed = INVALID_HANDLE;
 Handle cvar_CostAmmo = INVALID_HANDLE;
 Handle cvar_CostUVLight = INVALID_HANDLE;
 Handle cvar_CostHealingStation = INVALID_HANDLE;
@@ -96,7 +95,6 @@ public void buyMenuOnPluginStart()
 	cvar_CostFireYell = CreateConVar("buy_cost_fire_yell", "20", "Cost in points to buy Fire Yell", FCVAR_PLUGIN);
 	cvar_CostPowerYell = CreateConVar("buy_cost_power_yell", "30", "Cost in points to buy Power Yell", FCVAR_PLUGIN);
 	cvar_CostLeap = CreateConVar("buy_cost_leap", "35", "Cost in points to buy Leap of Desperation", FCVAR_PLUGIN);
-	cvar_CostSurvSpeed = CreateConVar("buy_cost_surv_speed", "40", "Cost in points to buy Survivor Speed Boost", FCVAR_PLUGIN);
 	cvar_CostAmmo = CreateConVar("buy_cost_ammo", "30", "Cost in points to buy Ammo Pile", FCVAR_PLUGIN);
 	cvar_CostUVLight = CreateConVar("buy_cost_uv_light", "45", "Cost in points to buy UV Light", FCVAR_PLUGIN);
 	cvar_CostHealingStation = CreateConVar("buy_cost_healing_station", "50", "Cost in points to buy Healing Station", FCVAR_PLUGIN);

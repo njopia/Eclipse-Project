@@ -141,7 +141,6 @@ public void InstantsMenu(int client)
 
 public void LongActionsMenu(int client)
 {
-	char text[128];
 	char title[128];
 	char baseText[64];
 
@@ -153,21 +152,6 @@ public void LongActionsMenu(int client)
 	int playerLevel = Leveling_GetPlayerLevel(client);
 	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
 	g_LongActionsMenu.SetTitle(title);
-
-	// Add Survivor Speed Boost Item with remaining time and cost
-	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_2_1, client);
-	int cost = GetConVarInt(cvar_CostSurvSpeed);
-	float speedBoostRemaining = GetSurvSpeedBoostRemaining(client);
-	if (speedBoostRemaining > 0.0)
-	{
-		int seconds = RoundToFloor(speedBoostRemaining);
-		Format(text, sizeof(text), "%s (%d) [Activo: %ds]", baseText, cost, seconds);
-	}
-	else
-	{
-		Format(text, sizeof(text), "%s (%d)", baseText, cost);
-	}
-	g_LongActionsMenu.AddItem(BM_CHOICE_2_1, text);
 
 	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
 
@@ -430,16 +414,8 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		char info[64];
 		menu.GetItem(param, info, sizeof(info));
 
-		// Survivor Speed Boost
-		if (StrEqual(info, BM_CHOICE_2_1))
-		{
-			PrintToChatAll("Activating Speed Boost for client %d", client);
-			int cost = GetConVarInt(cvar_CostSurvSpeed);
-			if (PurchaseItem(client, cost, "Survivor Speed Boost"))
-				Surv_SpeedBoost(client);
-		}
 		// Berserker Ability
-		else if (StrEqual(info, "ability_berserker"))
+		if (StrEqual(info, "ability_berserker"))
 		{
 			int playerLevel = Leveling_GetPlayerLevel(client);
 			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Berserker"))
