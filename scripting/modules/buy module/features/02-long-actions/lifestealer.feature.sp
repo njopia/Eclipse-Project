@@ -265,19 +265,11 @@ stock void LifeStealer_StealLife(int client, int healAmount)
 		}
 	}
 
-	// Curar normalmente
+	// Curar normalmente - partir de la vida actual (incluye bonos de nivel/mutaciones)
 	int currentHealth = GetClientHealth(client);
-	int maxHealth = GetEntProp(client, Prop_Send, "m_iMaxHealth");
 	int newHealth = currentHealth + healAmount;
 
-	// Calcular HP real ganado (puede estar en el máximo)
-	int actualHealAmount = healAmount;
-	if (newHealth > maxHealth)
-	{
-		actualHealAmount = maxHealth - currentHealth;
-		newHealth = maxHealth;
-	}
-
+	// No limitar al m_iMaxHealth base - permitir curar respetando el HP actual modificado por nivel/mutaciones
 	SetEntProp(client, Prop_Data, "m_iHealth", newHealth);
 
 	// Efecto de curación en el jugador
@@ -287,10 +279,7 @@ stock void LifeStealer_StealLife(int client, int healAmount)
 	EmitSoundToClient(client, SOUND_LIFESTEAL, SOUND_FROM_PLAYER, SNDCHAN_VOICE, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.3);
 
 	// Feedback por chat mostrando HP ganado
-	if (actualHealAmount > 0)
-	{
-		PrintToChat(client, "\x04[LifeStealer]\x01 +\x05%d HP\x01 robado (Total: \x05%d HP\x01)", actualHealAmount, g_iLifeStealer_TotalHealed[client]);
-	}
+	PrintToChat(client, "\x04[LifeStealer]\x01 +\x05%d HP\x01 robado (Total: \x05%d HP\x01)", healAmount, g_iLifeStealer_TotalHealed[client]);
 }
 
 /**
