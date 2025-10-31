@@ -12,6 +12,10 @@ Handle cvar_UIShowOnSpawn = INVALID_HANDLE;
 Handle cvar_UIShowOnKill = INVALID_HANDLE;
 Handle cvar_UIShowProgressBar = INVALID_HANDLE;
 
+// --- Flag para evitar mostrar duplicado en spawn ---
+bool g_bShownOnSpawn[MAXPLAYERS + 1];
+float g_fLastSpawnTime[MAXPLAYERS + 1];
+
 /**
  * Inicializa el módulo de UI
  */
@@ -45,6 +49,24 @@ public void LevelingUI_OnPluginStart()
 }
 
 /**
+ * Resetea flags al conectar cliente
+ */
+public void LevelingUI_OnClientConnect(int client)
+{
+	g_bShownOnSpawn[client] = false;
+	g_fLastSpawnTime[client] = 0.0;
+}
+
+/**
+ * Resetea flags al desconectar cliente
+ */
+public void LevelingUI_OnClientDisconnect(int client)
+{
+	g_bShownOnSpawn[client] = false;
+	g_fLastSpawnTime[client] = 0.0;
+}
+
+/**
  * Muestra la información de nivel en chat al spawn (llamado desde rewards)
  * @param client - ID del cliente
  */
@@ -55,6 +77,15 @@ public void LevelingUI_ShowOnSpawn(int client)
 
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return;
+
+	// Evitar mostrar duplicado en el mismo spawn (ventana de 2 segundos)
+	float currentTime = GetGameTime();
+	if (currentTime - g_fLastSpawnTime[client] < 2.0)
+	{
+		return; // Ya se mostró recientemente
+	}
+
+	g_fLastSpawnTime[client] = currentTime;
 
 	// Mostrar info con pequeño delay
 	CreateTimer(0.5, Timer_ShowSpawnInfo, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);

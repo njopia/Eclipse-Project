@@ -37,14 +37,14 @@ public void SpeedFreak_OnPluginStart()
 
 	cvar_SpeedFreak_Cooldown = CreateConVar(
 		"ability_speedfreak_cooldown",
-		"300",
+		"30",
 		"Cooldown de Speed Freak en segundos",
 		FCVAR_PLUGIN
 	);
 
 	cvar_SpeedFreak_SpeedMultiplier = CreateConVar(
 		"ability_speedfreak_speed",
-		"3.0",
+		"2.5",
 		"Multiplicador de velocidad de Speed Freak",
 		FCVAR_PLUGIN
 	);
@@ -98,12 +98,35 @@ public void SpeedFreak_OnSecondTick(int client)
 		float remaining = g_fSpeedFreak_EndTime[client] - currentTime;
 		g_iSpeedFreak_TimeRemaining[client] = RoundToFloor(remaining);
 
-		// Mantener night vision
-		if (g_iSpeedFreak_TimeRemaining[client] > 0 && g_iSpeedFreak_TimeRemaining[client] <= 50)
+		// Mantener night vision durante toda la duración
+		if (g_iSpeedFreak_TimeRemaining[client] > 0)
 		{
 			SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
+
+			// Mostrar hint con tiempo restante
+			char hintText[128];
+			Format(hintText, sizeof(hintText), "⚡ Speed Freak: %ds restantes | Velocidad x2.5", g_iSpeedFreak_TimeRemaining[client]);
+			PrintHintText(client, hintText);
 		}
 	}
+}
+
+/**
+ * Hook OnPlayerRunCmd para mantener velocidad constante
+ * Se ejecuta cada tick del servidor
+ */
+public Action SpeedFreak_OnPlayerRunCmd(int client)
+{
+	if (!g_bSpeedFreak_Active[client])
+		return Plugin_Continue;
+
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return Plugin_Continue;
+
+	// Reaplicar velocidad constantemente para evitar que otros sistemas la sobrescriban
+	SpeedFreak_ApplySpeed(client);
+
+	return Plugin_Continue;
 }
 
 /**
@@ -153,6 +176,9 @@ public void SpeedFreak_Activate(int client)
 	float currentTime = GetGameTime();
 	g_fSpeedFreak_EndTime[client] = currentTime + float(duration);
 
+	// DEBUG: Notificar activación
+	PrintToChat(client, "\x04[ABILITY ACTIVATED]\x01 Speed Freak - Duration: %ds, Speed: 1.5x", duration);
+
 	// Guardar HP máximo actual
 	g_iSpeedFreak_PreviousMaxHealth[client] = GetEntProp(client, Prop_Send, "m_iMaxHealth");
 
@@ -183,7 +209,7 @@ public void SpeedFreak_Activate(int client)
 	// Activar night vision
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
-	PrintToChat(client, "\x04[Eclipse]\x01 ¡Speed Freak activado! Velocidad \x05x3.0\x01 por \x05%ds\x01 - HP máximo reducido a \x0350 HP\x01", duration);
+	PrintToChat(client, "\x04[Eclipse]\x01 ¡Speed Freak activado! Velocidad \x05x2.5\x01 por \x05%ds\x01 - HP máximo reducido a \x0350 HP\x01", duration);
 }
 
 /**
@@ -205,16 +231,34 @@ public void SpeedFreak_Deactivate(int client)
 		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
 	}
 
-	if (IsClientInGame(client))
+	if (IsClientInGame(client) && IsPlayerAlive(client))
 	{
-		// Restaurar HP máximo
+		// Obtener HP actual antes de restaurar
+		int currentHealth = GetClientHealth(client);
+
+		// Restaurar HP máximo al valor previo
 		SetEntProp(client, Prop_Send, "m_iMaxHealth", g_iSpeedFreak_PreviousMaxHealth[client]);
 
-		// Restaurar velocidad normal
-		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+		// Si el jugador estaba a HP completo (50/50), restaurarlo proporcionalmente
+		if (currentHealth >= 50)
+		{
+			SetEntityHealth(client, g_iSpeedFreak_PreviousMaxHealth[client]);
+		}
+		// Si tenía HP parcial, mantener ese HP (puede curarse hasta el nuevo máximo)
+
+		// Reaplicar Health Bonus si corresponde (el timer lo hará automáticamente después)
+		// Al desactivar Speed Freak, Health Bonus_EnsureMaxHealth volverá a funcionar
+
+		// Restaurar velocidad normal (usar Prop_Send)
+		SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 1.0);
 
 		SetEntProp(client, Prop_Send, "m_bNightVisionOn", 0);
-		PrintToChat(client, "\x04[Eclipse]\x01 Speed Freak desactivado - HP máximo restaurado");
+		PrintToChat(client, "\x04[Eclipse]\x01 Speed Freak desactivado - HP máximo restaurado a \x05%d HP\x01", g_iSpeedFreak_PreviousMaxHealth[client]);
+	}
+	else if (IsClientInGame(client))
+	{
+		// Cliente no está vivo, solo limpiar efectos visuales
+		SetEntProp(client, Prop_Send, "m_bNightVisionOn", 0);
 	}
 }
 
@@ -306,7 +350,8 @@ static void SpeedFreak_ApplySpeed(int client)
 		return;
 
 	float speedMultiplier = GetConVarFloat(cvar_SpeedFreak_SpeedMultiplier);
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", speedMultiplier);
+	// Usar Prop_Send en lugar de Prop_Data para consistencia con el sistema
+	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", speedMultiplier);
 }
 
 /**

@@ -41,7 +41,6 @@
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
 #tryinclude "modules/leveling/leveling-ui.module.sp"
 #tryinclude "modules/leveling/leveling-info.module.sp"
-#tryinclude "modules/leveling/active-abilities.module.sp"
 //////////////////////////////////////////////
 
 /////// GAME MODES MODULE ///////////////////
@@ -95,7 +94,6 @@ public void OnPluginStart()
 	LevelingRewards_OnPluginStart();
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
-	ActiveAbilities_OnPluginStart();
 
 	// Inicializar módulos de modos de juego
 	Bloodmoon_OnPluginStart();
@@ -136,12 +134,14 @@ public void OnMapEnd()
 
 public void OnClientPutInServer(int client)
 {
-	// Hook de daño para habilidades activas
-	ActiveAbilities_OnClientPutInServer(client);
-	ActiveAbilities_OnClientConnect(client);
+	// Hook de daño para habilidades activas (ahora en buy module)
+	BuyMenu_OnClientPutInServer(client);
 
 	// Hook de Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
+
+	// Inicializar UI de leveling
+	LevelingUI_OnClientConnect(client);
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -161,10 +161,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	// Manejar doble salto del sistema de leveling
 	LevelingRewards_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 
-	// Manejar weapon fire para habilidades activas
+	// Manejar weapon fire para habilidades activas (Berserker swing speed)
 	if (buttons & IN_ATTACK)
 	{
-		ActiveAbilities_OnWeaponFire(client);
+		Berserker_OnWeaponSwing(client);
 	}
 
 	return Plugin_Continue;

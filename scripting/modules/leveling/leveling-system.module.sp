@@ -290,11 +290,15 @@ public void Leveling_OnLevelUp(int client)
 	// Mostrar mensaje en chat
 	PrintToChat(client, "\x04[LEVELING]\x01 ¡Felicitaciones! Ahora eres \x05Nivel %d\x01!", g_iPlayerLevel[client]);
 
+	// Log antes de aplicar rewards
+	LogMessage("[LEVELING DEBUG] OnLevelUp - %N alcanzó nivel %d, aplicando rewards...", client, g_iPlayerLevel[client]);
+
 	// Aplicar beneficios del nuevo nivel
 	Leveling_ApplyLevelRewards(client, g_iPlayerLevel[client]);
 
 	// Log
 	LogToFile(g_szLevelingLogPath, "[LEVELUP] %N alcanzó Nivel %d", client, g_iPlayerLevel[client]);
+	LogMessage("[LEVELING DEBUG] OnLevelUp completado para %N", client);
 }
 
 /**

@@ -18,6 +18,7 @@ Handle cvar_GeneMutations_BonusHP1 = INVALID_HANDLE;
 Handle cvar_GeneMutations_BonusHP2 = INVALID_HANDLE;
 Handle cvar_GeneMutations_BonusHP3 = INVALID_HANDLE;
 Handle cvar_GeneMutations_BonusHP4 = INVALID_HANDLE;
+Handle cvar_GeneMutations_ShowRegen = INVALID_HANDLE;
 
 // --- Estado del jugador ---
 int g_iGeneMutations_Level[MAXPLAYERS + 1]; // 0 = sin, 1-4 = nivel de mutación
@@ -80,6 +81,13 @@ public void GeneMutations_OnPluginStart()
 		"reward_genemutations4_hp",
 		"400",
 		"HP adicional de Gene Mutations IV",
+		FCVAR_PLUGIN
+	);
+
+	cvar_GeneMutations_ShowRegen = CreateConVar(
+		"reward_genemutations_show_regen",
+		"1",
+		"Show regeneration messages (0=Off, 1=On)",
 		FCVAR_PLUGIN
 	);
 
@@ -242,7 +250,10 @@ public Action Timer_GeneMutations_Regeneration(Handle timer)
 stock void GeneMutations_RegenerateHealth(int client, int mutationLevel)
 {
 	int currentHealth = GetClientHealth(client);
-	int currentTemp = RoundToFloor(GeneMutations_GetTempHealth(client));
+
+	// Obtener temp health ACTUAL (sin decay calculado)
+	float rawTempHealth = GetEntPropFloat(client, Prop_Send, "m_healthBuffer");
+	int currentTemp = RoundToFloor(rawTempHealth);
 	int totalHealth = currentHealth + currentTemp;
 
 	// Calcular HP máximo
@@ -253,11 +264,32 @@ stock void GeneMutations_RegenerateHealth(int client, int mutationLevel)
 		return;
 
 	// Regenerar según el nivel de mutación
-	int regenAmount = mutationLevel;
+	float regenAmount = float(mutationLevel);
 
-	// Aplicar regeneración como salud temporal
+	// IMPORTANTE: Añadir directamente sobre el valor RAW, resetear el timer
+	// Esto evita que el decay previo afecte la regeneración
+	float newTempHealth = rawTempHealth + regenAmount;
+
+	// Limitar para no exceder HP máximo
+	float maxTempHealth = float(maxHealth - currentHealth);
+	if (newTempHealth > maxTempHealth)
+		newTempHealth = maxTempHealth;
+
+	// Aplicar regeneración y resetear timer de decay
+	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", newTempHealth);
 	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
-	SetEntProp(client, Prop_Send, "m_healthBuffer", currentTemp + regenAmount);
+
+	int newTotalHealth = currentHealth + RoundToFloor(newTempHealth);
+
+	// Mostrar mensaje si está habilitado
+	if (GetConVarBool(cvar_GeneMutations_ShowRegen))
+	{
+		PrintToChat(client, "\x04[Gene Mutations Lv%d]\x01 +%d HP regenerated (\x05%d\x01/\x03%d\x01)",
+			mutationLevel,
+			RoundToFloor(regenAmount),
+			newTotalHealth,
+			maxHealth);
+	}
 }
 
 /**

@@ -5,7 +5,7 @@
 //==================================================
 // === ACID BATH ACTIVE ABILITY ===
 // El ácido de Spitter cura en lugar de dañar
-// Nivel: 9
+// Nivel: 1
 // Duración: 60 segundos
 // Cooldown: 5 minutos (300 segundos)
 //==================================================
@@ -113,29 +113,24 @@ public bool AcidBath_CanUse(int client, int level)
 
 	if (level < requiredLevel)
 	{
-		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
 		return false;
 	}
 
 	if (g_iAcidBath_Cooldown[client] > 0)
 	{
-		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 Cooldown activo: %ds", g_iAcidBath_Cooldown[client]);
 		return false;
 	}
 
 	if (g_bAcidBath_Active[client])
 	{
-		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 Ya está activo");
 		return false;
 	}
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 	{
-		PrintToChat(client, "\x05[DEBUG Acid Bath]\x01 No estás en juego o no estás vivo");
 		return false;
 	}
 
-	PrintToChat(client, "\x04[DEBUG Acid Bath]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 
@@ -157,7 +152,7 @@ public void AcidBath_Activate(int client)
 	// Activar night vision
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
-	PrintToChat(client, "\x04[Ability]\x01 Acid Bath Activated! (\x05%ds\x01)", duration);
+	PrintToChat(client, "\x04[ABILITY ACTIVATED]\x01 Acid Bath - Duration: %ds, Acid heals you!", duration);
 }
 
 /**

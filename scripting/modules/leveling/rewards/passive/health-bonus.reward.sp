@@ -58,10 +58,18 @@ public void HealthBonus_OnClientDisconnect(int client)
  */
 public void HealthBonus_OnPlayerSpawn(int client, int level)
 {
+	int requiredLevel = GetConVarInt(cvar_HealthBonus_RequiredLevel);
+	LogMessage("[HEALTH BONUS DEBUG] OnPlayerSpawn - %N (Nivel %d, Requerido: %d)", client, level, requiredLevel);
+
 	if (HealthBonus_IsUnlocked(client, level))
 	{
 		g_bHealthBonus_Enabled[client] = true;
 		HealthBonus_ApplyHealth(client);
+		LogMessage("[HEALTH BONUS DEBUG] Health bonus APLICADO a %N", client);
+	}
+	else
+	{
+		LogMessage("[HEALTH BONUS DEBUG] Health bonus NO aplicado a %N - nivel insuficiente", client);
 	}
 }
 
@@ -71,6 +79,7 @@ public void HealthBonus_OnPlayerSpawn(int client, int level)
 public void HealthBonus_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_HealthBonus_RequiredLevel);
+	LogMessage("[HEALTH BONUS DEBUG] OnLevelUp - %N (Nivel %d, Requerido: %d)", client, level, requiredLevel);
 
 	// Solo mostrar mensaje si justo alcanzó el nivel requerido
 	if (level == requiredLevel)
@@ -80,11 +89,17 @@ public void HealthBonus_OnLevelUp(int client, int level)
 
 		int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
 		PrintToChat(client, "\x04[REWARD]\x01 ¡Ganaste \x05+%d HP\x01!", bonusAmount);
+		LogMessage("[HEALTH BONUS DEBUG] Health bonus DESBLOQUEADO para %N (nivel exacto)", client);
 	}
 	else if (level > requiredLevel)
 	{
 		g_bHealthBonus_Enabled[client] = true;
 		HealthBonus_ApplyHealth(client);
+		LogMessage("[HEALTH BONUS DEBUG] Health bonus aplicado a %N (nivel superior)", client);
+	}
+	else
+	{
+		LogMessage("[HEALTH BONUS DEBUG] Health bonus NO aplicado a %N (nivel %d < %d)", client, level, requiredLevel);
 	}
 }
 
@@ -102,25 +117,36 @@ public bool HealthBonus_IsUnlocked(int client, int level)
 stock void HealthBonus_ApplyHealth(int client)
 {
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+	{
+		LogMessage("[HEALTH BONUS DEBUG] ApplyHealth - %N no está vivo o en juego", client);
 		return;
+	}
 
 	int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
 	int newMaxHealth = 100 + bonusAmount; // HP base (100) + bonus (25) = 125
+
+	int currentHealth = GetClientHealth(client);
+	int currentMaxHealth = GetEntProp(client, Prop_Send, "m_iMaxHealth");
+
+	LogMessage("[HEALTH BONUS DEBUG] ApplyHealth - %N: HP actual=%d, MaxHP actual=%d, Nuevo MaxHP=%d",
+		client, currentHealth, currentMaxHealth, newMaxHealth);
 
 	// Establecer el HP máximo
 	SetEntProp(client, Prop_Send, "m_iMaxHealth", newMaxHealth);
 
 	// Si el jugador está a HP completo (100), subirlo a 125
-	int currentHealth = GetClientHealth(client);
 	if (currentHealth == 100)
 	{
 		SetEntityHealth(client, newMaxHealth);
+		LogMessage("[HEALTH BONUS DEBUG] HP ajustado de 100 a %d para %N", newMaxHealth, client);
 	}
 	// Si tiene menos de 100, mantener su HP actual pero permitir que se cure hasta 125
 	else if (currentHealth < newMaxHealth)
 	{
 		// No hacer nada, el HP actual se mantiene
 		// Cuando se cure, podrá llegar hasta el nuevo máximo (125)
+		LogMessage("[HEALTH BONUS DEBUG] HP mantenido en %d para %N (puede curarse hasta %d)",
+			currentHealth, client, newMaxHealth);
 	}
 }
 
@@ -164,6 +190,11 @@ stock void HealthBonus_EnsureMaxHealth(int client)
 		return;
 
 	if (!g_bHealthBonus_Enabled[client])
+		return;
+
+	// NO aplicar Health Bonus si Speed Freak está activo
+	// Speed Freak tiene prioridad y maneja el HP máximo temporalmente
+	if (SpeedFreak_IsActive(client))
 		return;
 
 	int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);

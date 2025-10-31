@@ -41,12 +41,23 @@
 // Incluir módulo de debug
 #include "leveling-debug.module.sp"
 
+// --- ConVar para debug de rewards ---
+Handle cvar_Rewards_Debug = INVALID_HANDLE;
+
 /**
  * Inicializa el módulo de rewards
  * Debe ser llamado desde OnPluginStart()
  */
 public void LevelingRewards_OnPluginStart()
 {
+	// ConVar de debug
+	cvar_Rewards_Debug = CreateConVar(
+		"leveling_rewards_debug",
+		"1",
+		"Show debug messages when rewards are applied (0=Off, 1=On)",
+		FCVAR_PLUGIN
+	);
+
 	// Inicializar todos los rewards pasivos
 	Acrobatics_OnPluginStart();
 	HealthBonus_OnPluginStart();
@@ -90,7 +101,12 @@ public Action LevelingRewards_OnPlayerRunCmd(int client, int &buttons, int &impu
 	ExtremeConditioning_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 	DoubleJump_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 
-	// Otros rewards activos que necesiten procesamiento por tick se agregarían aquí
+	// Rewards pasivos que necesitan procesar input
+	int playerLevel = Leveling_GetPlayerLevel(client);
+	Knife_Process(client, buttons, playerLevel);
+
+	// Habilidades activas que necesiten procesamiento por tick
+	SpeedFreak_OnPlayerRunCmd(client);
 
 	return Plugin_Continue;
 }
@@ -171,6 +187,9 @@ public void LevelingRewards_ApplyRewards(int client, int level)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return;
 
+	// DEBUG: Log cuando se apliquen rewards
+	LogMessage("[REWARDS DEBUG] Aplicando rewards para %N (Nivel %d)", client, level);
+
 	// Aplicar cada reward (mostrará mensaje si se desbloquea)
 	Acrobatics_OnLevelUp(client, level);
 	HealthBonus_OnLevelUp(client, level);
@@ -195,6 +214,8 @@ public void LevelingRewards_ApplyRewards(int client, int level)
 	LaserRounds_OnLevelUp(client, level);
 	DoubleJump_OnLevelUp(client, level);
 	DamageReduction_OnLevelUp(client, level);
+
+	LogMessage("[REWARDS DEBUG] Rewards aplicados completamente para %N", client);
 }
 
 /**
@@ -207,30 +228,108 @@ public void LevelingRewards_ApplyRewardsSilent(int client, int level)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return;
 
-	// Aplicar cada reward silenciosamente
+	// DEBUG: Log cuando se apliquen rewards silenciosamente
+	LogMessage("[REWARDS DEBUG] Aplicando rewards SILENCIOSAMENTE para %N (Nivel %d)", client, level);
+
+	bool debugEnabled = GetConVarBool(cvar_Rewards_Debug);
+
+	// Aplicar cada reward silenciosamente con debug
 	Acrobatics_OnPlayerSpawn(client, level);
+	if (debugEnabled && Acrobatics_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Acrobatics applied (No fall damage)");
+
 	HealthBonus_OnPlayerSpawn(client, level);
+	if (debugEnabled && HealthBonus_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Health Bonus applied (+25 HP)");
+
 	Medic_OnPlayerSpawn(client, level);
+	if (debugEnabled && Medic_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Medic applied (Heal bonus)");
+
 	PackRat_OnPlayerSpawn(client, level);
+	if (debugEnabled && PackRat_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Pack Rat applied (Extra ammo)");
+
 	DesertCobra_OnPlayerSpawn(client, level);
+	if (debugEnabled && DesertCobra_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Desert Cobra applied (Pistol buff)");
+
 	GeneMutations_OnPlayerSpawn(client, level);
+	if (debugEnabled && GeneMutations_IsUnlocked(client, level))
+	{
+		int mutLevel = GeneMutations_GetMutationLevel(level);
+		PrintToChat(client, "\x04[DEBUG]\x01 Gene Mutations Lv%d applied (+%d HP/s regen)", mutLevel, mutLevel);
+	}
+
 	SelfRevive_OnPlayerSpawn(client, level);
+	if (debugEnabled && SelfRevive_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Self-Revive applied (Can revive when down)");
+
 	SleightOfHand_OnPlayerSpawn(client, level);
+	if (debugEnabled && SleightOfHand_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Sleight of Hand applied (Fast reload)");
+
 	Knife_OnPlayerSpawn(client, level);
+	if (debugEnabled && Knife_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Knife applied (Can backstab when grabbed)");
+
 	HardToKill_OnPlayerSpawn(client, level);
+	if (debugEnabled && HardToKill_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Hard to Kill applied (Extra lives)");
+
 	ArmsDealer_OnPlayerSpawn(client, level);
+	if (debugEnabled && ArmsDealer_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Arms Dealer applied (Weapon upgrades)");
+
 	Surgeon_OnPlayerSpawn(client, level);
+	if (debugEnabled && Surgeon_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Surgeon applied (Revive HP bonus)");
+
 	ExtremeConditioning_OnPlayerSpawn(client, level);
+	if (debugEnabled && ExtremeConditioning_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Extreme Conditioning applied (Sprint boost)");
+
 	BullsEye_OnPlayerSpawn(client, level);
+	if (debugEnabled && BullsEye_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Bulls Eye applied (Headshot damage)");
+
 	SizeMatters_OnPlayerSpawn(client, level);
+	if (debugEnabled && SizeMatters_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Size Matters applied (Melee damage)");
+
 	MasterAtArms_OnPlayerSpawn(client, level);
+	if (debugEnabled && MasterAtArms_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Master at Arms applied (Weapon switch speed)");
+
 	HardenedStance_OnPlayerSpawn(client, level);
+	if (debugEnabled && HardenedStance_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Hardened Stance applied (Stagger resistance)");
+
 	CriticalHit_OnPlayerSpawn(client, level);
+	if (debugEnabled && CriticalHit_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Critical Hit applied (Crit chance)");
+
 	Commando_OnPlayerSpawn(client, level);
+	if (debugEnabled && Commando_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Commando applied (Reload while sprinting)");
+
 	SecondChance_OnPlayerSpawn(client, level);
+	if (debugEnabled && SecondChance_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Second Chance applied (Survive lethal damage)");
+
 	LaserRounds_OnPlayerSpawn(client, level);
+	if (debugEnabled && LaserRounds_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Laser Rounds applied (Piercing bullets)");
+
 	DoubleJump_OnPlayerSpawn(client, level);
+	if (debugEnabled && DoubleJump_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Double Jump applied (Jump in air)");
+
 	DamageReduction_OnPlayerSpawn(client, level);
+	if (debugEnabled && DamageReduction_IsUnlocked(client, level))
+		PrintToChat(client, "\x04[DEBUG]\x01 Damage Reduction applied (Take less damage)");
+
+	LogMessage("[REWARDS DEBUG] Rewards silenciosos aplicados para %N", client);
 }
 
 /**
@@ -246,9 +345,15 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 
 	// Aplicar rewards según nivel (sin mostrar mensajes en spawn)
 	int playerLevel = Leveling_GetPlayerLevel(client);
+	LogMessage("[REWARDS DEBUG] Player_Spawn evento - %N con nivel %d", client, playerLevel);
+
 	if (playerLevel > 0)
 	{
 		LevelingRewards_ApplyRewardsSilent(client, playerLevel);
+	}
+	else
+	{
+		LogMessage("[REWARDS DEBUG] %N tiene nivel 0, no se aplicarán rewards", client);
 	}
 
 	// Mostrar UI de nivel/XP

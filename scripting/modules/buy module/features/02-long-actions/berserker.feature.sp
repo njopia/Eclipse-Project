@@ -5,7 +5,7 @@
 //==================================================
 // === BERSERKER ACTIVE ABILITY ===
 // Aumenta velocidad de ataque y da doble daño con melee
-// Nivel: 5
+// Nivel: 1
 // Duración: 60 segundos
 // Cooldown: 5 minutos (300 segundos)
 //==================================================
@@ -116,36 +116,30 @@ public bool Berserker_CanUse(int client, int level)
 
 	if (level < requiredLevel)
 	{
-		PrintToChat(client, "\x05[DEBUG Berserker]\x01 Nivel insuficiente: %d/%d", level, requiredLevel);
 		return false;
 	}
 
 	if (g_iBerserker_Cooldown[client] > 0)
 	{
-		PrintToChat(client, "\x05[DEBUG Berserker]\x01 Cooldown activo: %ds", g_iBerserker_Cooldown[client]);
 		return false;
 	}
 
 	if (g_bBerserker_Active[client])
 	{
-		PrintToChat(client, "\x05[DEBUG Berserker]\x01 Ya está activo");
 		return false;
 	}
 
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 	{
-		PrintToChat(client, "\x05[DEBUG Berserker]\x01 No estás en juego o no estás vivo");
 		return false;
 	}
 
 	// Verificar que tenga un melee equipado
 	if (!Berserker_HasMeleeEquipped(client))
 	{
-		PrintToChat(client, "\x05[DEBUG Berserker]\x01 No tienes un arma cuerpo a cuerpo equipada");
 		return false;
 	}
 
-	PrintToChat(client, "\x04[DEBUG Berserker]\x01 Todos los requisitos cumplidos!");
 	return true;
 }
 
@@ -167,7 +161,7 @@ public void Berserker_Activate(int client)
 	// Activar night vision
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
-	PrintToChat(client, "\x04[Ability]\x01 Berserker Activated! (\x05%ds\x01)", duration);
+	PrintToChat(client, "\x04[ABILITY ACTIVATED]\x01 Berserker - Duration: %ds, Damage: 2x", duration);
 }
 
 /**
