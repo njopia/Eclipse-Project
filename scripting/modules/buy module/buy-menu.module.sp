@@ -44,6 +44,7 @@ Handle cvar_CostIonCannon = INVALID_HANDLE;
 Handle cvar_CostDefenseGrid = INVALID_HANDLE;
 Handle cvar_CostTeamHeal = INVALID_HANDLE;
 Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
+Handle cvar_CostNuclearStrike = INVALID_HANDLE;
 // ======================================================
 
 /////// HELPERS /////////////////////////////
@@ -74,6 +75,7 @@ Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 ////// TEAM BONUSES ///////////////////////////
 #tryinclude "features/04-team-bonuses/team-speed-boost.feature.sp"
 #tryinclude "features/04-team-bonuses/team-heal.feature.sp"
+#tryinclude "features/04-team-bonuses/nuclear-strike.feature.sp"
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
 #tryinclude "features/0-menu/admin-currency.feature.sp"
@@ -107,6 +109,7 @@ public void buyMenuOnPluginStart()
 	cvar_CostDefenseGrid = CreateConVar("buy_cost_defense_grid", "65", "Cost in points to buy Defense Grid", FCVAR_PLUGIN);
 	cvar_CostTeamHeal = CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
 	cvar_CostTeamSpeedBoost = CreateConVar("buy_cost_team_speed_boost", "60", "Cost in points to buy Team Speed Boost", FCVAR_PLUGIN);
+	cvar_CostNuclearStrike = CreateConVar("buy_cost_nuclear_strike", "100", "Cost in points to buy Nuclear Strike", FCVAR_PLUGIN);
 	// ============================================
 
 	// Initialize player currency
@@ -172,6 +175,7 @@ public void OnClientDisconnect(int client)
 	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
+	NuclearStrike_OnClientDisconnect(client);
 	ResetPlayerCurrencyStats(client);  // Reset currency stats on disconnect
 	AdminMoney_OnClientDisconnect(client);  // Reset admin money data on disconnect
 	LevelingRewards_OnClientDisconnect(client);  // Reset leveling rewards on disconnect

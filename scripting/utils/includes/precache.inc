@@ -50,7 +50,13 @@ static const char g_DefaultSounds[][] = {
 	"weapons/grenade_launcher/grenade_launcher_reload.wav",
 	"vehicles/airboat/fan_blade_fullthrottle_loop1.wav",
 	"ambient/energy/zap7.wav",
-	"ambient/energy/zap9.wav"
+	"ambient/energy/zap9.wav",
+	// Nuclear Strike sounds
+	"ambient/fire/fire_small_loop2.wav",
+	"ambient/levels/caves/rumble3.wav",
+	"weapons/grenade_launcher/grenadefire/grenade_launcher_explode_1.wav",
+	"ambient/alarms/klaxon1.wav",
+	"ambient/wind/wind_hit1.wav"
 
 	// agrega más si quieres…
 };
@@ -79,12 +85,28 @@ static const char g_DefaultParticles[][] = {
 	"impact_explosive_ammo_large",
 	"flare_burning",
 	"smoke_campfire",
+	// Nuclear Strike particles
+	"gen_hit_up",
+	"gas_explosion_ground_wave",
+	"gas_explosion_firesmoke",
+	"gen_hit1_edynamicBillow",
+	"gas_explosion_debris_parents",
+	"gen_hit1_b",
+	"gas_fireball",
+	"gas_explosion_fireball",
+	"gas_explosion_fireball2",
+	"explosion_huge",
+	"fire_large_01",
+	"smoke_large_01",
+	"fire_small_smoke",
 	// agrega más si quieres…
 };
 
 // Modelos por defecto
 static const char g_DefaultModels[][] = {
-	"models/props_unique/spawn_apartment/coffeeammo.mdl"
+	"models/props_unique/spawn_apartment/coffeeammo.mdl",
+	// Nuclear Strike model
+	"models/props_lighting/light_flares.mdl"
 	// agrega más si quieres…
 };
 

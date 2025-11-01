@@ -171,6 +171,11 @@
     "en"  "Team Speed Boost"
     "es"  "Aceleración de Equipo"
   }
+  "BM_TeamBonuses_NuclearStrike"
+  {
+    "en"  "Nuclear Strike"
+    "es"  "Ataque Nuclear"
+  }
   "TSB_OnlyForSurvivors"
   {
     "en"  "Only survivors can use this ability."

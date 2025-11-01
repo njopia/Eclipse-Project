@@ -35,7 +35,7 @@
 //////////////////////////////////////////////
 
 /////// LEVELING SYSTEM MODULE ///////////////
-#define LEVELING_DB_NAME "players"  // Reutiliza la BD de players
+#define LEVELING_DB_NAME "players"	  // Reutiliza la BD de players
 #tryinclude "modules/leveling/leveling-system.module.sp"
 #tryinclude "modules/leveling/leveling-xp-events.module.sp"
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
@@ -50,6 +50,12 @@
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
 
+//Snow
+ConVar cvar_preciptype;
+ConVar cvar_density;
+ConVar cvar_color;
+ConVar cvar_render;
+char sMap[96];
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -78,11 +84,11 @@ public void OnPluginStart()
 	HandleSdk();
 	if (checkDBFile(PLAYERS_DB_NAME))
 	{
-		doSqlConnectionPlayers(PLAYERS_DB_NAME);  // Usar handle separado para players
+		doSqlConnectionPlayers(PLAYERS_DB_NAME);	// Usar handle separado para players
 	}
 	if (checkDBFile(ADMIN_DB_NAME))
 	{
-		doSqlConnection(ADMIN_DB_NAME);  // Handle para admins
+		doSqlConnection(ADMIN_DB_NAME);	   // Handle para admins
 	}
 	buyMenuOnPluginStart();
 	AdminMoney_OnPluginStart();
@@ -106,6 +112,12 @@ public void OnPluginStart()
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
 	g_cvarDebug = CreateConVar("sm_spawnammo_debug", "0", "Activa debug verboso (0/1).", 0, true, 0.0, true, 1.0);
 	LoadTranslations("eclipse.phrases");
+	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
+
+	cvar_preciptype = CreateConVar("snow_type", "3", "Type of the precipitation (https://developer.valvesoftware.com/wiki/Func_precipitation)");
+	cvar_density	= CreateConVar("snow_density", "75", "Density of the precipitation");
+	cvar_color		= CreateConVar("snow_color", "255 255 255", "Color of the precipitation");
+	cvar_render		= CreateConVar("snow_renderamt", "5", "Render of the precipitation");
 	PrecacheAll();
 }
 
@@ -119,9 +131,13 @@ public void OnMapStart()
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
 	Bloodmoon_OnMapStart();
+	NuclearStrike_OnMapStart();
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_OnMapStart();
 #endif
+	GetCurrentMap(sMap, 64);
+	Format(sMap, sizeof(sMap), "maps/%s.bsp", sMap);
+	PrecacheModel(sMap, true);
 }
 
 public void OnMapEnd()
@@ -175,7 +191,7 @@ public void PrecacheAll()
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_Init();
 	// (opcional) activar logs:
-	//EMS_Precache_SetDebug(true);
+	// EMS_Precache_SetDebug(true);
 #endif
 }
 
@@ -205,6 +221,9 @@ stock void CleanupAllTimers()
 
 	// Team Speed Boost timers
 	CleanupTeamSpeedBoostTimers();
+
+	// Nuclear Strike timers
+	CleanupNuclearStrikeTimers();
 
 	// Buy Menu timers (incluyendo timers de actualización dinámica)
 	CleanupBuyMenuTimers();
@@ -243,4 +262,51 @@ stock void ResetAllPlayersState()
 			ResetTeamSpeedBoostCooldown(i);
 		}
 	}
+}
+
+// Snowing
+public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+	CreateTimer(0.3, CreateSnowFall);
+}
+
+public Action CreateSnowFall(Handle timer)
+{
+	int iEnt = -1;
+	while ((iEnt = FindEntityByClassname(iEnt, "func_precipitation")) != -1)
+		AcceptEntityInput(iEnt, "Kill");
+
+	iEnt = CreateEntityByName("func_precipitation");
+
+	if (iEnt != -1)
+	{
+		char  preciptype[5], density[5], color[16], render[5];
+		float vMins[3], vMax[3], vBuff[3];
+
+		cvar_preciptype.GetString(preciptype, sizeof(preciptype));
+		cvar_density.GetString(density, sizeof(density));
+		cvar_color.GetString(color, sizeof(color));
+		cvar_render.GetString(render, sizeof(render));
+
+		DispatchKeyValue(iEnt, "model", sMap);
+		DispatchKeyValue(iEnt, "preciptype", preciptype);
+		DispatchKeyValue(iEnt, "renderamt", render);
+		DispatchKeyValue(iEnt, "density", density);
+		DispatchKeyValue(iEnt, "rendercolor", color);
+
+		GetEntPropVector(0, Prop_Data, "m_WorldMaxs", vMax);
+		GetEntPropVector(0, Prop_Data, "m_WorldMins", vMins);
+
+		SetEntPropVector(iEnt, Prop_Send, "m_vecMins", vMins);
+		SetEntPropVector(iEnt, Prop_Send, "m_vecMaxs", vMax);
+
+		vBuff[0] = vMins[0] + vMax[0];
+		vBuff[1] = vMins[1] + vMax[1];
+		vBuff[2] = vMins[2] + vMax[2];
+
+		TeleportEntity(iEnt, vBuff, NULL_VECTOR, NULL_VECTOR);
+		DispatchSpawn(iEnt);
+		ActivateEntity(iEnt);
+	}
+	return Plugin_Continue;
 }

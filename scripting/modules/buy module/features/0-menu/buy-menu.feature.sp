@@ -35,6 +35,7 @@ Menu g_TeamBonusesMenu;
 /// Team Bonuses Choices ///
 #define BM_CHOICE_4_1 "BM_TeamBonuses_TeamSpeedBoost"
 #define BM_CHOICE_4_2 "BM_TeamBonuses_TeamHeal"
+#define BM_CHOICE_4_3 "BM_TeamBonuses_NuclearStrike"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -346,6 +347,19 @@ public void TeamBonusesMenu(int client)
 	}
 	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_2, text);
 
+	// Add Nuclear Strike Item with usage status and cost
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_3, client);
+	int costNS = GetConVarInt(cvar_CostNuclearStrike);
+	if (NuclearStrike_HasUsedThisMap(client))
+	{
+		Format(text, sizeof(text), "%s (%d) [USADO]", baseText, costNS);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s (%d) [1 uso/mapa]", baseText, costNS);
+	}
+	g_TeamBonusesMenu.AddItem(BM_CHOICE_4_3, text);
+
 	g_TeamBonusesMenu.ExitBackButton = true;
 	g_TeamBonusesMenu.ExitButton	 = true;
 }
@@ -367,6 +381,12 @@ public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int
 			int cost = GetConVarInt(cvar_CostTeamHeal);
 			if (PurchaseItem(client, cost, "Team Heal"))
 				Activate_TeamHeal(client);
+		}
+		if (StrEqual(info, BM_CHOICE_4_3))
+		{
+			int cost = GetConVarInt(cvar_CostNuclearStrike);
+			if (PurchaseItem(client, cost, "Nuclear Strike"))
+				Activate_NuclearStrike(client);
 		}
 	}
 	return 0;
