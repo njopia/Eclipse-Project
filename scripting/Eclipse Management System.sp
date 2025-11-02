@@ -65,6 +65,11 @@ ConVar		cvar_color;
 ConVar		cvar_render;
 char		sMap[96];
 
+// Hostname dinámico
+#define UPDATE_INTERVAL 5.0							   // segundos entre actualizaciones
+#define BASE_HOSTNAME	"Server under construction"	   // nombre base del servidor
+Handle g_hTimer = INVALID_HANDLE;
+
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -210,6 +215,10 @@ public void OnPluginStart()
 	cvar_color		= CreateConVar("snow_color", "255 255 255", "Color of the precipitation");
 	cvar_render		= CreateConVar("snow_renderamt", "5", "Render of the precipitation");
 	PrecacheAll();
+	// timer para hostname dinamico
+	if (g_hTimer != INVALID_HANDLE)
+		CloseHandle(g_hTimer);
+	g_hTimer = CreateTimer(UPDATE_INTERVAL, Timer_UpdateHostname, _, TIMER_REPEAT);
 }
 
 public void OnMapStart()
@@ -408,5 +417,26 @@ public Action CreateSnowFall(Handle timer)
 		DispatchSpawn(iEnt);
 		ActivateEntity(iEnt);
 	}
+	return Plugin_Continue;
+}
+
+public Action Timer_UpdateHostname(Handle timer)
+{
+	int maxplayers = GetMaxHumanPlayers();
+	int humans	   = 0;
+	for (int i = 1; i <= maxplayers; i++)
+	{
+		if (!IsClientInGame(i))
+			continue;
+
+		if (IsFakeClient(i))
+			continue;
+		else
+			humans++;
+	}
+	char newHostname[128];
+	Format(newHostname, sizeof(newHostname), "%s [%d/%d]", BASE_HOSTNAME, humans, maxplayers);
+	SetConVarString(FindConVar("hostname"), newHostname);
+
 	return Plugin_Continue;
 }
