@@ -131,10 +131,10 @@ public void Leveling_LoadPlayerData(int client)
 		return;
 	}
 
-	// Query para obtener datos del jugador
+	// Query para obtener datos del jugador (incluyendo currency)
 	char query[512];
 	Format(query, sizeof(query),
-		"SELECT current_level, current_xp, total_xp FROM player_levels WHERE steamid = '%s'",
+		"SELECT current_level, current_xp, total_xp, current_currency FROM player_levels WHERE steamid = '%s'",
 		steamid);
 
 	if (GetConVarBool(cvar_LevelingDebug))
@@ -174,9 +174,13 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerXP[client] = results.FetchInt(1);
 		g_iTotalPlayerXP[client] = results.FetchInt(2);
 
-		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d",
+		// Cargar currency también (asumimos que la columna existe después de migración)
+		// Si la columna no existe, esto devolverá 0 o producirá error que se manejará
+		g_iPlayerCurrency[client] = results.FetchInt(3);
+
+		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, Currency: %d",
 			client, g_iPlayerLevel[client], g_iPlayerXP[client],
-			Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client]);
+			Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client], g_iPlayerCurrency[client]);
 	}
 	else
 	{
@@ -184,6 +188,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerLevel[client] = 0;
 		g_iPlayerXP[client] = 0;
 		g_iTotalPlayerXP[client] = 0;
+		g_iPlayerCurrency[client] = 0;  // Inicializar currency también
 
 		char steamid[32];
 		GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
@@ -195,10 +200,10 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		char escapedName[MAX_NAME_LENGTH * 2];
 		SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-		// Insertar nuevo registro
+		// Insertar nuevo registro (incluyendo currency)
 		char insertQuery[512];
 		Format(insertQuery, sizeof(insertQuery),
-			"INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp) VALUES ('%s', '%s', 0, 0, 0)",
+			"INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency) VALUES ('%s', '%s', 0, 0, 0, 0)",
 			steamid, escapedName);
 
 		LogToFile(g_szLevelingLogPath, "[NEW] Creando nuevo jugador: %N (%s)", client, steamid);
@@ -376,12 +381,12 @@ public void Leveling_UpdatePlayerDatabase(int client)
 	char escapedName[MAX_NAME_LENGTH * 2];
 	SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-	// Query de inserción/actualización (INSERT ... ON DUPLICATE KEY UPDATE)
-	char query[768];
+	// Query de inserción/actualización (INSERT ... ON DUPLICATE KEY UPDATE) incluyendo currency
+	char query[1024];
 	Format(query, sizeof(query),
-		"INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, last_update) VALUES ('%s', '%s', %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
-		steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client],
-		g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], escapedName);
+		"INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency, last_update) VALUES ('%s', '%s', %d, %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, current_currency = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
+		steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client],
+		g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client], escapedName);
 
 	if (GetConVarBool(cvar_LevelingDebug))
 	{

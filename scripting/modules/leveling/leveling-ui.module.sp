@@ -138,11 +138,11 @@ public void LevelingUI_DisplayLevelInfo(int client)
 	{
 		char progressBar[256];
 		LevelingUI_CreateProgressBar(progress, progressBar, sizeof(progressBar));
-		PrintToChat(client, "\x04Progreso:\x01 %s \x03%d%%%%", progressBar, progress);
+		PrintToChat(client, "\x04Progreso:\x01 %s \x03%d%%%", progressBar, progress);
 	}
 	else
 	{
-		PrintToChat(client, "\x04Progreso:\x01 \x03%d%%%%", progress);
+		PrintToChat(client, "\x04Progreso:\x01 \x03%d%%%", progress);
 	}
 }
 

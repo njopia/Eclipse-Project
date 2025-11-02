@@ -11,7 +11,8 @@
       "Bash(\"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\l4d_stats_temp.sp\")",
       "Bash(\"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\l4d_stats_fixed.sp\")",
       "Bash(\"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\l4d_stats.sp\")",
-      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\l4d_stats.sp\")"
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\l4d_stats.sp\")",
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\frags_system.sp\")"
     ],
     "deny": [],
     "ask": []

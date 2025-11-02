@@ -24,9 +24,7 @@
 #tryinclude "modules/buy module/buy-menu.module.sp"
 //////////////////////////////////////////////
 
-/////// CURRENCY EVENTS MODULE ///////////////
-#tryinclude "modules/currency/currency-events.module.sp"
-#tryinclude "modules/currency/currency-advanced-events.module.sp"
+/////// CURRENCY STATS MODULE (mantener para estadísticas) ///
 #tryinclude "modules/currency/currency-stats.module.sp"
 //////////////////////////////////////////////
 
@@ -37,25 +35,36 @@
 /////// LEVELING SYSTEM MODULE ///////////////
 #define LEVELING_DB_NAME "players"	  // Reutiliza la BD de players
 #tryinclude "modules/leveling/leveling-system.module.sp"
-#tryinclude "modules/leveling/leveling-xp-events.module.sp"
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
 #tryinclude "modules/leveling/leveling-ui.module.sp"
 #tryinclude "modules/leveling/leveling-info.module.sp"
+//////////////////////////////////////////////
+
+/////// ECLIPSE POINTS UNIFIED MODULE ///////////////
+#include "modules/eclipse-points-unified.module.sp"
 //////////////////////////////////////////////
 
 /////// GAME MODES MODULE ///////////////////
 #tryinclude "modules/modes/bloodmoon.module.sp"
 //////////////////////////////////////////////
 
+/////// FRAGS SYSTEM MODULE ///////////////////
+#include "modules/frags-system.module.sp"
+//////////////////////////////////////////////
+
+/////// SERVER MANAGEMENT SYSTEM CORE /////////
+#include "modules/management/afk-join.sp"
+
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
 
-//Snow
-ConVar cvar_preciptype;
-ConVar cvar_density;
-ConVar cvar_color;
-ConVar cvar_render;
-char sMap[96];
+// Snow
+ConVar		cvar_preciptype;
+ConVar		cvar_density;
+ConVar		cvar_color;
+ConVar		cvar_render;
+char		sMap[96];
+
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -65,15 +74,90 @@ public Plugin myinfo =
 	url			= "https://gitlab.com/sourcepawn1/sm-win"
 };
 
+// Agregar esto después de la línea 66 (después de AskPluginLoad2)
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	switch (GetEngineVersion())
 	{
 		case Engine_Left4Dead2, Engine_Left4Dead:
+		{
+			// ===== CREAR NATIVES PARA OTROS PLUGINS =====
+			CreateNative("EMS_GetPlayerLevel", Native_GetPlayerLevel);
+			CreateNative("EMS_GetPlayerCurrentXP", Native_GetPlayerCurrentXP);
+			CreateNative("EMS_GetPlayerTotalXP", Native_GetPlayerTotalXP);
+			CreateNative("EMS_GetXPForNextLevel", Native_GetXPForNextLevel);
+			CreateNative("EMS_GetLevelProgress", Native_GetLevelProgress);
+			CreateNative("EMS_GetPlayerCurrency", Native_GetPlayerCurrency);
+
+			RegPluginLibrary("eclipse_ms");
+
 			return APLRes_Success;
+		}
 		default:
 			return APLRes_Failure;
 	}
+}
+
+//==================================================
+// === NATIVES IMPLEMENTATION ===
+//==================================================
+
+/**
+ * Native: Obtiene el nivel actual del jugador
+ */
+public int Native_GetPlayerLevel(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	return Leveling_GetPlayerLevel(client);
+}
+
+/**
+ * Native: Obtiene el XP actual del jugador en su nivel
+ */
+public int Native_GetPlayerCurrentXP(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	return Leveling_GetPlayerCurrentXP(client);
+}
+
+/**
+ * Native: Obtiene el XP total acumulado del jugador
+ */
+public int Native_GetPlayerTotalXP(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	return Leveling_GetPlayerTotalXP(client);
+}
+
+/**
+ * Native: Obtiene el XP requerido para el siguiente nivel
+ */
+public int Native_GetXPForNextLevel(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	return Leveling_GetXPRequiredForNextLevel(client);
+}
+
+/**
+ * Native: Obtiene el progreso en porcentaje (0-100)
+ */
+public int Native_GetLevelProgress(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+	return Leveling_GetLevelProgress(client);
+}
+
+/**
+ * Native: Obtiene la moneda/puntos del jugador
+ */
+public int Native_GetPlayerCurrency(Handle plugin, int numParams)
+{
+	int client = GetNativeCell(1);
+
+	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
+		return 0;
+
+	return g_iPlayerCurrency[client];
 }
 
 public void OnPluginStart()
@@ -92,17 +176,24 @@ public void OnPluginStart()
 	}
 	buyMenuOnPluginStart();
 	AdminMoney_OnPluginStart();
-	CurrencyEvents_OnPluginStart();
 
-	// Inicializar sistema de leveling
+	// Inicializar sistema de leveling (DEBE ir ANTES del sistema de puntos unificado)
 	Leveling_OnPluginStart();
-	LevelingXPEvents_OnPluginStart();
 	LevelingRewards_OnPluginStart();
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
 
+	// ===== SISTEMA UNIFICADO DE PUNTOS =====
+	EclipsePointsUnified_OnPluginStart();
+
 	// Inicializar módulos de modos de juego
 	Bloodmoon_OnPluginStart();
+
+	// Inicializar sistema de frags
+	FragsSystem_OnPluginStart();
+
+	// ===== SISTEMA DE GESTIÓN DEL SERVIDOR =====
+	Afk_Join_OnPluginStart();
 
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
@@ -127,6 +218,12 @@ public void OnMapStart()
 
 	// Limpiar todos los timers de mapas anteriores
 	CleanupAllTimers();
+
+	// Reset tracking flags del sistema de puntos unificado
+	EclipsePointsUnified_OnMapStart();
+
+	// Reset frags system
+	FragsSystem_OnMapStart();
 
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
@@ -158,6 +255,9 @@ public void OnClientPutInServer(int client)
 
 	// Inicializar UI de leveling
 	LevelingUI_OnClientConnect(client);
+
+	// Inicializar frags system
+	FragsSystem_OnClientPutInServer(client);
 }
 
 public void OnClientPostAdminCheck(int client)

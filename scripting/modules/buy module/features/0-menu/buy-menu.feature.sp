@@ -3,7 +3,6 @@
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
 
-
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
@@ -41,17 +40,17 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
 	switch (action)
 	{
-		case MenuAction_Start:
+		/* case MenuAction_Start:
 		{
 			PrintToChatAll("Displaying menu");
-		}
+		} */
 		case MenuAction_Select:
 		{
 			char info[32];
 			menu.GetItem(param2, info, sizeof(info));
 			if (StrEqual(info, BM_CHOICE_0_1))
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Instants");
+				// PrintToChat(client, "\x05[Eclipse]\x01 Instants");
 				InstantsMenu(client);
 				if (g_InstantsMenu != null)
 				{
@@ -69,7 +68,7 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			}
 			if (StrEqual(info, BM_CHOICE_0_3))
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01  Deployables Menu");
+				// PrintToChat(client, "\x05[Eclipse]\x01  Deployables Menu");
 				DeployablesMenu(client);
 				if (g_DeployablesMenu != null)
 				{
@@ -78,7 +77,7 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			}
 			if (StrEqual(info, BM_CHOICE_0_4))
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Team Bonuses");
+				// PrintToChat(client, "\x05[Eclipse]\x01 Team Bonuses");
 				TeamBonusesMenu(client);
 				if (g_TeamBonusesMenu != null)
 				{
@@ -87,10 +86,10 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			}
 		}
 
-		case MenuAction_Cancel:
-		{
-			PrintToChatAll("Client %d's menu was cancelled for reason %d", client, param2);
-		}
+			/* case MenuAction_Cancel:
+			{
+				PrintToChatAll("Client %d's menu was cancelled for reason %d", client, param2);
+			} */
 
 		case MenuAction_End:
 		{
@@ -112,7 +111,8 @@ public void InstantsMenu(int client)
 	char mainTitle[40];
 	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
 	int playerPoints = g_iPlayerCurrency[client];
-	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
+	int playerLevel	 = Leveling_GetPlayerLevel(client);
+	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
 	g_InstantsMenu.SetTitle(title);
 
 	// Add Submenu Items with costs
@@ -150,66 +150,46 @@ public void LongActionsMenu(int client)
 	char mainTitle[40];
 	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
 	int playerPoints = g_iPlayerCurrency[client];
-	int playerLevel = Leveling_GetPlayerLevel(client);
+	int playerLevel	 = Leveling_GetPlayerLevel(client);
 	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
 	g_LongActionsMenu.SetTitle(title);
 
 	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
 
-	// Berserker (Nivel 1)
-	if (playerLevel >= 1)
-	{
-		char abilityText[128];
-		char abilityName[64];
-		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_2, client);
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Berserker");
-		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-		g_LongActionsMenu.AddItem("ability_berserker", abilityText);
-	}
+	char abilityText[128];
+	char abilityName[64];
+	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_2, client);
+	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Berserker");
+	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
+	g_LongActionsMenu.AddItem("ability_berserker", abilityText);
 
-	// Acid Bath (Nivel 1)
-	if (playerLevel >= 1)
-	{
-		char abilityText[128];
-		char abilityName[64];
-		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_3, client);
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Acid Bath");
-		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-		g_LongActionsMenu.AddItem("ability_acidbath", abilityText);
-	}
+	// char abilityText[128];
+	// char abilityName[64];
+	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_3, client);
+	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Acid Bath");
+	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
+	g_LongActionsMenu.AddItem("ability_acidbath", abilityText);
 
-	// LifeStealer (Nivel 1)
-	if (playerLevel >= 1)
-	{
-		char abilityText[128];
-		char abilityName[64];
-		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_4, client);
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "LifeStealer");
-		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-		g_LongActionsMenu.AddItem("ability_lifestealer", abilityText);
-	}
+	// char abilityText[128];
+	// char abilityName[64];
+	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_4, client);
+	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "LifeStealer");
+	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
+	g_LongActionsMenu.AddItem("ability_lifestealer", abilityText);
 
-	// Speed Freak (Nivel 1)
-	if (playerLevel >= 1)
-	{
-		char abilityText[128];
-		char abilityName[64];
-		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_5, client);
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Speed Freak");
-		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-		g_LongActionsMenu.AddItem("ability_speedfreak", abilityText);
-	}
+	// char abilityText[128];
+	// char abilityName[64];
+	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_5, client);
+	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Speed Freak");
+	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
+	g_LongActionsMenu.AddItem("ability_speedfreak", abilityText);
 
-	// Shoulder Cannon (Nivel 1)
-	if (playerLevel >= 1)
-	{
-		char abilityText[128];
-		char abilityName[64];
-		Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_6, client);
-		ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Shoulder Cannon");
-		Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-		g_LongActionsMenu.AddItem("ability_shouldercannon", abilityText);
-	}
+	// char abilityText[128];
+	// char abilityName[64];
+	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_6, client);
+	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Shoulder Cannon");
+	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
+	g_LongActionsMenu.AddItem("ability_shouldercannon", abilityText);
 
 	g_LongActionsMenu.ExitBackButton = true;
 	g_LongActionsMenu.ExitButton	 = true;
@@ -226,67 +206,115 @@ public void DeployablesMenu(int client)
 	char mainTitle[40];
 	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
 	int playerPoints = g_iPlayerCurrency[client];
-	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
+	int playerLevel	 = Leveling_GetPlayerLevel(client);
+	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
 	g_DeployablesMenu.SetTitle(title);
 
-	// Add Ammo Pile Item with cost
+	// === DEPLOYABLES CON RESTRICCIONES DE NIVEL ===
+
+	// Ammo Pile (Nivel 1)
+	int requiredLevelAmmo = 1;
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_1, client);
 	int costAmmo = GetConVarInt(cvar_CostAmmo);
-	Format(text, sizeof(text), "%s (%d)", baseText, costAmmo);
-	g_DeployablesMenu.AddItem(BM_CHOICE_3_1, text);
+	if (playerLevel >= requiredLevelAmmo)
+	{
+		Format(text, sizeof(text), "%s (%d)", baseText, costAmmo);
+		g_DeployablesMenu.AddItem(BM_CHOICE_3_1, text);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s [BLOQUEADO - Nivel %d]", baseText, requiredLevelAmmo);
+		g_DeployablesMenu.AddItem("locked_ammo", text, ITEMDRAW_DEFAULT);
+	}
 
-	// Add UV Light Item with remaining time and cost
+	// UV Light (Nivel 3)
+	int requiredLevelUV = 3;
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_2, client);
 	int costUV = GetConVarInt(cvar_CostUVLight);
-	if (UVLightTimer[client] > 0)
+	if (playerLevel >= requiredLevelUV)
 	{
-		Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costUV, UVLightTimer[client]);
+		if (UVLightTimer[client] > 0)
+		{
+			Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costUV, UVLightTimer[client]);
+		}
+		else
+		{
+			Format(text, sizeof(text), "%s (%d)", baseText, costUV);
+		}
+		g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s (%d)", baseText, costUV);
+		Format(text, sizeof(text), "%s [BLOQUEADO - Nivel %d]", baseText, requiredLevelUV);
+		g_DeployablesMenu.AddItem("locked_uvlight", text, ITEMDRAW_DEFAULT);
 	}
-	g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
 
-	// Add Healing Station Item with remaining time and cost
+	// Healing Station (Nivel 5)
+	int requiredLevelHS = 5;
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_3, client);
 	int costHS = GetConVarInt(cvar_CostHealingStation);
-	if (HSTimer[client] > 0)
+	if (playerLevel >= requiredLevelHS)
 	{
-		Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costHS, HSTimer[client]);
+		if (HSTimer[client] > 0)
+		{
+			Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costHS, HSTimer[client]);
+		}
+		else
+		{
+			Format(text, sizeof(text), "%s (%d)", baseText, costHS);
+		}
+		g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s (%d)", baseText, costHS);
+		Format(text, sizeof(text), "%s [BLOQUEADO - Nivel %d]", baseText, requiredLevelHS);
+		g_DeployablesMenu.AddItem("locked_healingstation", text, ITEMDRAW_DEFAULT);
 	}
-	g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
 
-	// Add Ion Cannon Item with remaining cooldown/charges info and cost
+	// Ion Cannon (Nivel 7)
+	int requiredLevelIC = 7;
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_4, client);
 	int costIC = GetConVarInt(cvar_CostIonCannon);
-	char ionCannonInfo[128];
-	GetIonCannonInfo(client, ionCannonInfo, sizeof(ionCannonInfo));
-	Format(text, sizeof(text), "%s (%d) %s", baseText, costIC, ionCannonInfo);
-	g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
-
-	// Add Defense Grid Item with remaining time/cooldown and cost
-	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_5, client);
-	int costDG = GetConVarInt(cvar_CostDefenseGrid);
-	int dgCooldown = DefenseGrid_GetCooldown(client);
-	int dgTime = DefenseGrid_GetTimeRemaining(client);
-	if (dgTime > 0)
+	if (playerLevel >= requiredLevelIC)
 	{
-		Format(text, sizeof(text), "%s (%d) [Activo: %ds]", baseText, costDG, dgTime);
-	}
-	else if (dgCooldown > 0)
-	{
-		Format(text, sizeof(text), "%s (%d) [CD: %ds]", baseText, costDG, dgCooldown);
+		char ionCannonInfo[128];
+		GetIonCannonInfo(client, ionCannonInfo, sizeof(ionCannonInfo));
+		Format(text, sizeof(text), "%s (%d) %s", baseText, costIC, ionCannonInfo);
+		g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
 	}
 	else
 	{
-		Format(text, sizeof(text), "%s (%d) [Listo]", baseText, costDG);
+		Format(text, sizeof(text), "%s [BLOQUEADO - Nivel %d]", baseText, requiredLevelIC);
+		g_DeployablesMenu.AddItem("locked_ioncannon", text, ITEMDRAW_DEFAULT);
 	}
-	g_DeployablesMenu.AddItem(BM_CHOICE_3_5, text);
+
+	// Defense Grid (Nivel 10)
+	int requiredLevelDG = 10;
+	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_5, client);
+	int costDG = GetConVarInt(cvar_CostDefenseGrid);
+	if (playerLevel >= requiredLevelDG)
+	{
+		int dgCooldown = DefenseGrid_GetCooldown(client);
+		int dgTime	   = DefenseGrid_GetTimeRemaining(client);
+		if (dgTime > 0)
+		{
+			Format(text, sizeof(text), "%s (%d) [Activo: %ds]", baseText, costDG, dgTime);
+		}
+		else if (dgCooldown > 0)
+		{
+			Format(text, sizeof(text), "%s (%d) [CD: %ds]", baseText, costDG, dgCooldown);
+		}
+		else
+		{
+			Format(text, sizeof(text), "%s (%d) [Listo]", baseText, costDG);
+		}
+		g_DeployablesMenu.AddItem(BM_CHOICE_3_5, text);
+	}
+	else
+	{
+		Format(text, sizeof(text), "%s [BLOQUEADO - Nivel %d]", baseText, requiredLevelDG);
+		g_DeployablesMenu.AddItem("locked_defensegrid", text, ITEMDRAW_DEFAULT);
+	}
 
 	g_DeployablesMenu.ExitBackButton = true;
 	g_DeployablesMenu.ExitButton	 = true;
@@ -304,12 +332,13 @@ public void TeamBonusesMenu(int client)
 	char mainTitle[40];
 	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
 	int playerPoints = g_iPlayerCurrency[client];
-	Format(title, sizeof(title), "%s\nTus puntos: %d", mainTitle, playerPoints);
+	int playerLevel	 = Leveling_GetPlayerLevel(client);
+	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
 	g_TeamBonusesMenu.SetTitle(title);
 
 	// Add Team Speed Boost Item with remaining time and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_1, client);
-	int costTSB = GetConVarInt(cvar_CostTeamSpeedBoost);
+	int	  costTSB			  = GetConVarInt(cvar_CostTeamSpeedBoost);
 	float speedBoostRemaining = GetTeamSpeedBoostRemaining(client);
 	if (speedBoostRemaining > 0.0)
 	{
@@ -334,7 +363,7 @@ public void TeamBonusesMenu(int client)
 
 	// Add Team Heal Item with remaining cooldown and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_2, client);
-	int costTH = GetConVarInt(cvar_CostTeamHeal);
+	int	  costTH		   = GetConVarInt(cvar_CostTeamHeal);
 	float teamHealCooldown = GetTeamHealCooldown(client);
 	if (teamHealCooldown > 0.0)
 	{
@@ -394,7 +423,7 @@ public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int
 
 public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int param)
 {
-	PrintToChatAll("action: %i", action);
+	// PrintToChatAll("action: %i", action);
 	if (action == MenuAction_Select)
 	{
 		char info[32];
@@ -437,8 +466,7 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		// Berserker Ability
 		if (StrEqual(info, "ability_berserker"))
 		{
-			int playerLevel = Leveling_GetPlayerLevel(client);
-			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Berserker"))
+			if (!ActiveAbilities_ActivateAbility(client, "Berserker"))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Berserker. Verifica los requisitos.");
 			}
@@ -446,8 +474,7 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		// Acid Bath Ability
 		else if (StrEqual(info, "ability_acidbath"))
 		{
-			int playerLevel = Leveling_GetPlayerLevel(client);
-			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Acid Bath"))
+			if (!ActiveAbilities_ActivateAbility(client, "Acid Bath"))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Acid Bath. Verifica los requisitos.");
 			}
@@ -455,8 +482,7 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		// LifeStealer Ability
 		else if (StrEqual(info, "ability_lifestealer"))
 		{
-			int playerLevel = Leveling_GetPlayerLevel(client);
-			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "LifeStealer"))
+			if (!ActiveAbilities_ActivateAbility(client, "LifeStealer"))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar LifeStealer. Verifica los requisitos.");
 			}
@@ -464,8 +490,7 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 		// Speed Freak Ability
 		else if (StrEqual(info, "ability_speedfreak"))
 		{
-			int playerLevel = Leveling_GetPlayerLevel(client);
-			if (!ActiveAbilities_ActivateAbility(client, playerLevel, "Speed Freak"))
+			if (!ActiveAbilities_ActivateAbility(client, "Speed Freak"))
 			{
 				PrintToChat(client, "\x05[Eclipse]\x01 No se pudo activar Speed Freak. Verifica los requisitos.");
 			}
@@ -493,8 +518,18 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 	{
 		char info[32];
 		menu.GetItem(param, info, sizeof(info));
+		int playerLevel = Leveling_GetPlayerLevel(client);
+
+		// Ammo Pile (Nivel 1)
 		if (StrEqual(info, BM_CHOICE_3_1))
 		{
+			PrintToChatAll("Player level: %d", playerLevel);
+			if (playerLevel < 1)
+			{
+				PrintToChatAll("Player level: %d", playerLevel);
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 1 para usar Ammo Pile.");
+				return 0;
+			}
 			int cost = GetConVarInt(cvar_CostAmmo);
 			if (PurchaseItem(client, cost, "Ammo Pile"))
 			{
@@ -502,9 +537,14 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				PrintToChat(client, "\x04[Deployables]\x01 Deploying Ammo Pile");
 			}
 		}
-		else
-		if (StrEqual(info, BM_CHOICE_3_2))
+		// UV Light (Nivel 3)
+		else if (StrEqual(info, BM_CHOICE_3_2))
 		{
+			if (playerLevel < 3)
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 3 para usar UV Light.");
+				return 0;
+			}
 			if (UVLightTimer[client] <= 0)
 			{
 				int flags = GetEntityFlags(client);
@@ -528,7 +568,14 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", UVLightTimer[client]);
 			}
 		}
-		else if (StrEqual(info, BM_CHOICE_3_3)) {
+		// Healing Station (Nivel 5)
+		else if (StrEqual(info, BM_CHOICE_3_3))
+		{
+			if (playerLevel < 5)
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 5 para usar Healing Station.");
+				return 0;
+			}
 			if (HSTimer[client] <= 0)
 			{
 				int flags = GetEntityFlags(client);
@@ -551,16 +598,28 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				PrintToChat(client, "\x05[Eclipse]\x01 You have to wait %i seconds to use this again.", HSTimer[client]);
 			}
 		}
+		// Ion Cannon (Nivel 7)
 		else if (StrEqual(info, BM_CHOICE_3_4))
 		{
+			if (playerLevel < 7)
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 7 para usar Ion Cannon.");
+				return 0;
+			}
 			int cost = GetConVarInt(cvar_CostIonCannon);
 			if (PurchaseItem(client, cost, "Ion Cannon") && BuyIonCannon(client))
 			{
 				PrintToChat(client, "\x04[Deployables]\x01 Deploying Ion Cannon");
 			}
 		}
+		// Defense Grid (Nivel 10)
 		else if (StrEqual(info, BM_CHOICE_3_5))
 		{
+			if (playerLevel < 10)
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 10 para usar Defense Grid.");
+				return 0;
+			}
 			int cost = GetConVarInt(cvar_CostDefenseGrid);
 			if (PurchaseItem(client, cost, "Defense Grid"))
 			{
@@ -573,15 +632,21 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 
 public Action Cmd_Buy(int client, int args)
 {
+	if (IsSurvivor(client) == false)
+	{
+		PrintToChat(client, "\x05[Eclipse]\x01 Solo los sobrevivientes pueden usar el menú de compra.");
+		return Plugin_Handled;
+	}
 	char text[40];
 	char title[128];
 	g_MainMenu = new Menu(MenuHandler1, MENU_ACTIONS_ALL);
 	Format(title, sizeof(title), "%T", "Menu Title", client);
 
-	// Agregar "Tus puntos" al título principal
-	int playerPoints = g_iPlayerCurrency[client];
+	// Agregar "Tus puntos" y nivel al título principal
+	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
-	Format(fullTitle, sizeof(fullTitle), "%s\nTus puntos: %d", title, playerPoints);
+	Format(fullTitle, sizeof(fullTitle), "%s\nPuntos: %d | Nivel: %d", title, playerPoints, playerLevel);
 	g_MainMenu.SetTitle(fullTitle, LANG_SERVER);
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);

@@ -11,15 +11,15 @@
 //==================================================
 
 // --- ConVars ---
-Handle cvar_SpeedFreak_Duration = INVALID_HANDLE;
-Handle cvar_SpeedFreak_Cooldown = INVALID_HANDLE;
+Handle cvar_SpeedFreak_Duration		   = INVALID_HANDLE;
+Handle cvar_SpeedFreak_Cooldown		   = INVALID_HANDLE;
 Handle cvar_SpeedFreak_SpeedMultiplier = INVALID_HANDLE;
 
 // --- Estado del jugador ---
 bool   g_bSpeedFreak_Active[MAXPLAYERS + 1];
-int    g_iSpeedFreak_TimeRemaining[MAXPLAYERS + 1];
-int    g_iSpeedFreak_Cooldown[MAXPLAYERS + 1];
-int    g_iSpeedFreak_PreviousMaxHealth[MAXPLAYERS + 1];
+int	   g_iSpeedFreak_TimeRemaining[MAXPLAYERS + 1];
+int	   g_iSpeedFreak_Cooldown[MAXPLAYERS + 1];
+int	   g_iSpeedFreak_PreviousMaxHealth[MAXPLAYERS + 1];
 Handle g_hSpeedFreak_Timer[MAXPLAYERS + 1];
 float  g_fSpeedFreak_EndTime[MAXPLAYERS + 1];
 
@@ -32,22 +32,19 @@ public void SpeedFreak_OnPluginStart()
 		"ability_speedfreak_duration",
 		"60",
 		"Duración de Speed Freak en segundos",
-		FCVAR_PLUGIN
-	);
+		FCVAR_PLUGIN);
 
 	cvar_SpeedFreak_Cooldown = CreateConVar(
 		"ability_speedfreak_cooldown",
 		"30",
 		"Cooldown de Speed Freak en segundos",
-		FCVAR_PLUGIN
-	);
+		FCVAR_PLUGIN);
 
 	cvar_SpeedFreak_SpeedMultiplier = CreateConVar(
 		"ability_speedfreak_speed",
 		"2.5",
 		"Multiplicador de velocidad de Speed Freak",
-		FCVAR_PLUGIN
-	);
+		FCVAR_PLUGIN);
 }
 
 /**
@@ -55,12 +52,12 @@ public void SpeedFreak_OnPluginStart()
  */
 public void SpeedFreak_OnClientConnect(int client)
 {
-	g_bSpeedFreak_Active[client] = false;
-	g_iSpeedFreak_TimeRemaining[client] = 0;
-	g_iSpeedFreak_Cooldown[client] = 0;
+	g_bSpeedFreak_Active[client]			= false;
+	g_iSpeedFreak_TimeRemaining[client]		= 0;
+	g_iSpeedFreak_Cooldown[client]			= 0;
 	g_iSpeedFreak_PreviousMaxHealth[client] = 100;
-	g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
-	g_fSpeedFreak_EndTime[client] = 0.0;
+	g_hSpeedFreak_Timer[client]				= INVALID_HANDLE;
+	g_fSpeedFreak_EndTime[client]			= 0.0;
 }
 
 /**
@@ -77,7 +74,7 @@ public void SpeedFreak_OnClientDisconnect(int client)
 
 	SpeedFreak_Deactivate(client);
 	g_iSpeedFreak_Cooldown[client] = 0;
-	g_fSpeedFreak_EndTime[client] = 0.0;
+	g_fSpeedFreak_EndTime[client]  = 0.0;
 }
 
 /**
@@ -94,8 +91,8 @@ public void SpeedFreak_OnSecondTick(int client)
 	// Actualizar tiempo restante para display
 	if (g_bSpeedFreak_Active[client])
 	{
-		float currentTime = GetGameTime();
-		float remaining = g_fSpeedFreak_EndTime[client] - currentTime;
+		float currentTime					= GetGameTime();
+		float remaining						= g_fSpeedFreak_EndTime[client] - currentTime;
 		g_iSpeedFreak_TimeRemaining[client] = RoundToFloor(remaining);
 
 		// Mantener night vision durante toda la duración
@@ -165,16 +162,16 @@ public void SpeedFreak_Activate(int client)
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 		return;
 
-	int duration = GetConVarInt(cvar_SpeedFreak_Duration);
-	int cooldown = GetConVarInt(cvar_SpeedFreak_Cooldown);
+	int duration						= GetConVarInt(cvar_SpeedFreak_Duration);
+	int cooldown						= GetConVarInt(cvar_SpeedFreak_Cooldown);
 
-	g_bSpeedFreak_Active[client] = true;
+	g_bSpeedFreak_Active[client]		= true;
 	g_iSpeedFreak_TimeRemaining[client] = duration;
-	g_iSpeedFreak_Cooldown[client] = cooldown;
+	g_iSpeedFreak_Cooldown[client]		= cooldown;
 
 	// Guardar tiempo de finalización
-	float currentTime = GetGameTime();
-	g_fSpeedFreak_EndTime[client] = currentTime + float(duration);
+	float currentTime					= GetGameTime();
+	g_fSpeedFreak_EndTime[client]		= currentTime + float(duration);
 
 	// DEBUG: Notificar activación
 	PrintToChat(client, "\x04[ABILITY ACTIVATED]\x01 Speed Freak - Duration: %ds, Speed: 1.5x", duration);
@@ -183,7 +180,7 @@ public void SpeedFreak_Activate(int client)
 	g_iSpeedFreak_PreviousMaxHealth[client] = GetEntProp(client, Prop_Send, "m_iMaxHealth");
 
 	// Reducir HP a 50
-	int currentHealth = GetClientHealth(client);
+	int currentHealth						= GetClientHealth(client);
 	SetEntProp(client, Prop_Send, "m_iMaxHealth", 50);
 
 	if (currentHealth > 50)
@@ -200,8 +197,7 @@ public void SpeedFreak_Activate(int client)
 		0.1,
 		Timer_SpeedFreak_MaintainSpeed,
 		client,
-		TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE
-	);
+		TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 
 	// Aplicar velocidad inicial
 	SpeedFreak_ApplySpeed(client);
@@ -220,9 +216,9 @@ public void SpeedFreak_Deactivate(int client)
 	if (!g_bSpeedFreak_Active[client])
 		return;
 
-	g_bSpeedFreak_Active[client] = false;
+	g_bSpeedFreak_Active[client]		= false;
 	g_iSpeedFreak_TimeRemaining[client] = 0;
-	g_fSpeedFreak_EndTime[client] = 0.0;
+	g_fSpeedFreak_EndTime[client]		= 0.0;
 
 	// Matar timer si existe
 	if (g_hSpeedFreak_Timer[client] != INVALID_HANDLE)
@@ -294,10 +290,7 @@ public void SpeedFreak_ModifyHealingSpeed(int client)
 	GetEntityClassname(activeWeapon, weaponName, sizeof(weaponName));
 
 	// Acelerar uso de items de curación
-	if (StrEqual(weaponName, "weapon_first_aid_kit", false) ||
-		StrEqual(weaponName, "weapon_pain_pills", false) ||
-		StrEqual(weaponName, "weapon_adrenaline", false) ||
-		StrEqual(weaponName, "weapon_defibrillator", false))
+	if (StrEqual(weaponName, "weapon_first_aid_kit", false) || StrEqual(weaponName, "weapon_pain_pills", false) || StrEqual(weaponName, "weapon_adrenaline", false) || StrEqual(weaponName, "weapon_defibrillator", false))
 	{
 		// Aumentar velocidad de uso
 		float nextAttack = GetEntPropFloat(activeWeapon, Prop_Send, "m_flNextPrimaryAttack");
@@ -363,14 +356,14 @@ public Action Timer_SpeedFreak_MaintainSpeed(Handle timer, int client)
 
 	if (!IsClientInGame(client))
 	{
-		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+		g_hSpeedFreak_Timer[client]	  = INVALID_HANDLE;
 		g_fSpeedFreak_EndTime[client] = 0.0;
 		return Plugin_Stop;
 	}
 
 	if (!IsPlayerAlive(client))
 	{
-		g_hSpeedFreak_Timer[client] = INVALID_HANDLE;
+		g_hSpeedFreak_Timer[client]	  = INVALID_HANDLE;
 		g_fSpeedFreak_EndTime[client] = 0.0;
 		return Plugin_Stop;
 	}

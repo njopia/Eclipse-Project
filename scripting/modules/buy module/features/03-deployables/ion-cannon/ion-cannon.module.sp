@@ -27,6 +27,11 @@
 #define ION_BLAST_RINGS 3           // Cantidad de anillos en blast
 #define ION_BLAST_GAP 0.3           // Gap entre anillos del blast
 
+// === OPTIMIZACIÓN: Límites de muertes por tick ===
+#define ION_MAX_COMMON_KILLS_PER_TICK   10  // Máximo zombies comunes a matar por tick
+#define ION_MAX_WITCH_KILLS_PER_TICK    2   // Máximo witches a matar por tick
+#define ION_MAX_SPECIAL_KILLS_PER_TICK  3   // Máximo especiales a dañar por tick
+
 // ===================== ESTADO DEL JUGADOR ======================
 bool   g_bIonActive[MAXPLAYERS + 1];
 int    g_iIonToken[MAXPLAYERS + 1];
@@ -200,6 +205,19 @@ public bool IonCannon_Activate(int client)
 {
 	if (!IonCannon_CanUse(client))
 		return false;
+
+	// CONTROL GLOBAL: Verificar si hay algún bombardeo activo (Nuclear Strike u otro Ion Cannon)
+	if (NuclearStrike_IsAnyActive())
+	{
+		PrintToChat(client, "\x04[Eclipse]\x01 Ya hay un bombardeo activo (Nuclear Strike). Espera a que termine.");
+		return false;
+	}
+
+	if (IonCannon_IsAnyActive())
+	{
+		PrintToChat(client, "\x04[Eclipse]\x01 Ya hay un Ion Cannon activo. Espera a que termine.");
+		return false;
+	}
 
 	// Limpiar cualquier Ion previo
 	IonCannon_CleanupClient(client);
@@ -532,23 +550,40 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 	// Quemar infectados en el área
 	IonCannon_IgniteInfectedInRadius(g_vIonOrigin[client], 800.0, 5.0);
 
-	// Daño a infectados comunes
+	// Daño a infectados comunes (LIMITADO a N por tick para evitar sobrecarga)
 	int ent = -1;
+	int commonProcessedThisTick = 0;
 	while ((ent = FindEntityByClassname(ent, "infected")) != INVALID_ENT_REFERENCE)
 	{
-		if (IsValidEntity(ent))
-			SDKHooks_TakeDamage(ent, 0, client, float(ION_DAMAGE_COMMON), DMG_BURN);
+		if (!IsValidEntity(ent))
+			continue;
+
+		// LÍMITE: Solo procesar X zombies comunes por tick
+		if (commonProcessedThisTick >= ION_MAX_COMMON_KILLS_PER_TICK)
+			break;
+
+		SDKHooks_TakeDamage(ent, 0, client, float(ION_DAMAGE_COMMON), DMG_BURN);
+		commonProcessedThisTick++;
 	}
 
-	// Daño a witches
+	// Daño a witches (LIMITADO a N por tick)
 	ent = -1;
+	int witchProcessedThisTick = 0;
 	while ((ent = FindEntityByClassname(ent, "witch")) != INVALID_ENT_REFERENCE)
 	{
-		if (IsValidEntity(ent))
-			SDKHooks_TakeDamage(ent, 0, client, float(ION_DAMAGE_COMMON), DMG_BURN);
+		if (!IsValidEntity(ent))
+			continue;
+
+		// LÍMITE: Solo procesar X witches por tick
+		if (witchProcessedThisTick >= ION_MAX_WITCH_KILLS_PER_TICK)
+			break;
+
+		SDKHooks_TakeDamage(ent, 0, client, float(ION_DAMAGE_COMMON), DMG_BURN);
+		witchProcessedThisTick++;
 	}
 
-	// Daño a infectados especiales
+	// Daño a infectados especiales (LIMITADO a N por tick)
+	int specialProcessedThisTick = 0;
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
@@ -560,7 +595,12 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (GetEntProp(i, Prop_Send, "m_isGhost") != 0)
 			continue;
 
+		// LÍMITE: Solo procesar X especiales por tick
+		if (specialProcessedThisTick >= ION_MAX_SPECIAL_KILLS_PER_TICK)
+			break;
+
 		SDKHooks_TakeDamage(i, 0, client, float(ION_DAMAGE_SI), DMG_BURN);
+		specialProcessedThisTick++;
 	}
 
 	// Screen shake
@@ -876,4 +916,18 @@ void IonCannon_UnpackData(any packed, int &client, int &token)
 {
 	client = (packed & 0xFFFF);
 	token = (packed >> 16) & 0xFFFF;
+}
+
+/**
+ * Verifica si hay algún Ion Cannon activo
+ * Usado por el sistema de control global de bombardeos
+ */
+stock bool IonCannon_IsAnyActive()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (g_bIonActive[i])
+			return true;
+	}
+	return false;
 }

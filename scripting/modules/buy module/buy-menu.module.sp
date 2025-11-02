@@ -8,43 +8,43 @@
 //==================================================
 
 // --- Long Actions Cooldowns ---
-#define CONFIG_SURV_SPEEDBOOST_DURATION 30.0		// Duración del speed boost de sobreviviente (segundos)
+#define CONFIG_SURV_SPEEDBOOST_DURATION		 30.0	 // Duración del speed boost de sobreviviente (segundos)
 
 // --- Deployables Cooldowns ---
-#define CONFIG_AMMO_PILE_COOLDOWN		180.0	// Cooldown para usar Ammo Pile (segundos)
-#define CONFIG_AMMO_PILE_LIFETIME		30.0	// Tiempo de vida de la entidad Ammo Pile (segundos)
-#define CONFIG_UVLIGHT_DURATION			300		// Duración de la UV Light (segundos)
-#define CONFIG_HEALINGSTATION_DURATION	300		// Duración de la Healing Station (segundos)
-#define CONFIG_IONCANNON_BUY_COOLDOWN	5.0		// Cooldown de compra para Ion Cannon (segundos)
+#define CONFIG_AMMO_PILE_COOLDOWN			 180.0	  // Cooldown para usar Ammo Pile (segundos)
+#define CONFIG_AMMO_PILE_LIFETIME			 30.0	  // Tiempo de vida de la entidad Ammo Pile (segundos)
+#define CONFIG_UVLIGHT_DURATION				 300	  // Duración de la UV Light (segundos)
+#define CONFIG_HEALINGSTATION_DURATION		 300	  // Duración de la Healing Station (segundos)
+#define CONFIG_IONCANNON_BUY_COOLDOWN		 5.0	  // Cooldown de compra para Ion Cannon (segundos)
 
 // --- Team Bonuses Cooldowns ---
-#define CONFIG_TEAM_HEAL_COOLDOWN			60.0	// Cooldown entre activaciones de Team Heal (segundos)
-#define CONFIG_TEAM_HEAL_TICK_INTERVAL		0.25	// Intervalo entre ticks de sanación (segundos)
-#define CONFIG_TEAM_HEAL_PER_TICK			5		// HP curados por tick
+#define CONFIG_TEAM_HEAL_COOLDOWN			 60.0	 // Cooldown entre activaciones de Team Heal (segundos)
+#define CONFIG_TEAM_HEAL_TICK_INTERVAL		 0.25	 // Intervalo entre ticks de sanación (segundos)
+#define CONFIG_TEAM_HEAL_PER_TICK			 5		 // HP curados por tick
 
-#define CONFIG_TEAM_SPEEDBOOST_COOLDOWN		60.0	// Cooldown entre activaciones de Team Speed Boost (segundos)
-#define CONFIG_TEAM_SPEEDBOOST_DURATION		300.0	// Duración del efecto Team Speed Boost (segundos)
-#define CONFIG_TEAM_SPEEDBOOST_AMOUNT		1.40	// Multiplicador de velocidad (1.0 = normal, 1.40 = 40% más)
-#define CONFIG_TEAM_SPEEDBOOST_TICK_INTERVAL 0.1	// Intervalo para mantener el boost (segundos)
+#define CONFIG_TEAM_SPEEDBOOST_COOLDOWN		 60.0	  // Cooldown entre activaciones de Team Speed Boost (segundos)
+#define CONFIG_TEAM_SPEEDBOOST_DURATION		 300.0	  // Duración del efecto Team Speed Boost (segundos)
+#define CONFIG_TEAM_SPEEDBOOST_AMOUNT		 1.40	  // Multiplicador de velocidad (1.0 = normal, 1.40 = 40% más)
+#define CONFIG_TEAM_SPEEDBOOST_TICK_INTERVAL 0.1	  // Intervalo para mantener el boost (segundos)
 
 //==================================================
 
 // ================== CURRENCY SYSTEM ==================
-int g_iPlayerCurrency[MAXPLAYERS + 1];			// Player currency for buying items
+int	   g_iPlayerCurrency[MAXPLAYERS + 1];	 // Player currency for buying items
 
 // Buy Cost ConVars
-Handle cvar_CostConvertHP = INVALID_HANDLE;
-Handle cvar_CostFireYell = INVALID_HANDLE;
-Handle cvar_CostPowerYell = INVALID_HANDLE;
-Handle cvar_CostLeap = INVALID_HANDLE;
-Handle cvar_CostAmmo = INVALID_HANDLE;
-Handle cvar_CostUVLight = INVALID_HANDLE;
+Handle cvar_CostConvertHP	   = INVALID_HANDLE;
+Handle cvar_CostFireYell	   = INVALID_HANDLE;
+Handle cvar_CostPowerYell	   = INVALID_HANDLE;
+Handle cvar_CostLeap		   = INVALID_HANDLE;
+Handle cvar_CostAmmo		   = INVALID_HANDLE;
+Handle cvar_CostUVLight		   = INVALID_HANDLE;
 Handle cvar_CostHealingStation = INVALID_HANDLE;
-Handle cvar_CostIonCannon = INVALID_HANDLE;
-Handle cvar_CostDefenseGrid = INVALID_HANDLE;
-Handle cvar_CostTeamHeal = INVALID_HANDLE;
+Handle cvar_CostIonCannon	   = INVALID_HANDLE;
+Handle cvar_CostDefenseGrid	   = INVALID_HANDLE;
+Handle cvar_CostTeamHeal	   = INVALID_HANDLE;
 Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
-Handle cvar_CostNuclearStrike = INVALID_HANDLE;
+Handle cvar_CostNuclearStrike  = INVALID_HANDLE;
 // ======================================================
 
 /////// HELPERS /////////////////////////////
@@ -81,7 +81,6 @@ Handle cvar_CostNuclearStrike = INVALID_HANDLE;
 #tryinclude "features/0-menu/admin-currency.feature.sp"
 //////////////////////////////////////////////
 
-
 static bool	  bMenuOn			   = false;
 static Handle hMenuOn			   = INVALID_HANDLE;
 
@@ -94,22 +93,22 @@ const int	  TIME_HEALING_STATION = 300;
 
 public void buyMenuOnPluginStart()
 {
-	hMenuOn = CreateConVar("menu_on", "1", "Level menu on or off?", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	bMenuOn = GetConVarBool(hMenuOn);
+	hMenuOn					= CreateConVar("menu_on", "1", "Level menu on or off?", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	bMenuOn					= GetConVarBool(hMenuOn);
 
 	// ============ INITIALIZE BUY COSTS ============
-	cvar_CostConvertHP = CreateConVar("buy_cost_convert_hp", "25", "Cost in points to buy Convert HP", FCVAR_PLUGIN);
-	cvar_CostFireYell = CreateConVar("buy_cost_fire_yell", "20", "Cost in points to buy Fire Yell", FCVAR_PLUGIN);
-	cvar_CostPowerYell = CreateConVar("buy_cost_power_yell", "30", "Cost in points to buy Power Yell", FCVAR_PLUGIN);
-	cvar_CostLeap = CreateConVar("buy_cost_leap", "35", "Cost in points to buy Leap of Desperation", FCVAR_PLUGIN);
-	cvar_CostAmmo = CreateConVar("buy_cost_ammo", "30", "Cost in points to buy Ammo Pile", FCVAR_PLUGIN);
-	cvar_CostUVLight = CreateConVar("buy_cost_uv_light", "45", "Cost in points to buy UV Light", FCVAR_PLUGIN);
+	cvar_CostConvertHP		= CreateConVar("buy_cost_convert_hp", "25", "Cost in points to buy Convert HP", FCVAR_PLUGIN);
+	cvar_CostFireYell		= CreateConVar("buy_cost_fire_yell", "20", "Cost in points to buy Fire Yell", FCVAR_PLUGIN);
+	cvar_CostPowerYell		= CreateConVar("buy_cost_power_yell", "30", "Cost in points to buy Power Yell", FCVAR_PLUGIN);
+	cvar_CostLeap			= CreateConVar("buy_cost_leap", "35", "Cost in points to buy Leap of Desperation", FCVAR_PLUGIN);
+	cvar_CostAmmo			= CreateConVar("buy_cost_ammo", "30", "Cost in points to buy Ammo Pile", FCVAR_PLUGIN);
+	cvar_CostUVLight		= CreateConVar("buy_cost_uv_light", "45", "Cost in points to buy UV Light", FCVAR_PLUGIN);
 	cvar_CostHealingStation = CreateConVar("buy_cost_healing_station", "50", "Cost in points to buy Healing Station", FCVAR_PLUGIN);
-	cvar_CostIonCannon = CreateConVar("buy_cost_ion_cannon", "75", "Cost in points to buy Ion Cannon", FCVAR_PLUGIN);
-	cvar_CostDefenseGrid = CreateConVar("buy_cost_defense_grid", "65", "Cost in points to buy Defense Grid", FCVAR_PLUGIN);
-	cvar_CostTeamHeal = CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
+	cvar_CostIonCannon		= CreateConVar("buy_cost_ion_cannon", "75", "Cost in points to buy Ion Cannon", FCVAR_PLUGIN);
+	cvar_CostDefenseGrid	= CreateConVar("buy_cost_defense_grid", "65", "Cost in points to buy Defense Grid", FCVAR_PLUGIN);
+	cvar_CostTeamHeal		= CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
 	cvar_CostTeamSpeedBoost = CreateConVar("buy_cost_team_speed_boost", "60", "Cost in points to buy Team Speed Boost", FCVAR_PLUGIN);
-	cvar_CostNuclearStrike = CreateConVar("buy_cost_nuclear_strike", "100", "Cost in points to buy Nuclear Strike", FCVAR_PLUGIN);
+	cvar_CostNuclearStrike	= CreateConVar("buy_cost_nuclear_strike", "100", "Cost in points to buy Nuclear Strike", FCVAR_PLUGIN);
 	// ============================================
 
 	// Initialize player currency
@@ -127,6 +126,7 @@ public void buyMenuOnPluginStart()
 	LifeStealer_OnPluginStart();
 	SpeedFreak_OnPluginStart();
 	ShoulderCannon_OnPluginStart();
+	//ResetFireYellCooldowns(i);
 
 	// Hook events
 	HookEvent("round_start", Event_RoundStart_IonCannon, EventHookMode_PostNoCopy);
@@ -144,7 +144,6 @@ public void buyMenuOnPluginStart()
 	}
 
 	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);
-
 }
 
 /**
@@ -168,19 +167,20 @@ public void BuyMenu_OnClientPutInServer(int client)
 
 public void OnClientDisconnect(int client)
 {
-	g_fNextHint[client]		= 0.0;
-	g_bHadMaxHealth[client] = false;
-	g_iPlayerCurrency[client] = 0;  // Reset currency on disconnect
+	g_fNextHint[client]		  = 0.0;
+	g_bHadMaxHealth[client]	  = false;
+	g_iPlayerCurrency[client] = 0;	  // Reset currency on disconnect
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
 	NuclearStrike_OnClientDisconnect(client);
-	ResetPlayerCurrencyStats(client);  // Reset currency stats on disconnect
-	AdminMoney_OnClientDisconnect(client);  // Reset admin money data on disconnect
-	LevelingRewards_OnClientDisconnect(client);  // Reset leveling rewards on disconnect
-	Bloodmoon_OnClientDisconnect(client);  // Cleanup bloodmoon hooks
-	LevelingUI_OnClientDisconnect(client);  // Cleanup leveling UI flags
+	ResetPlayerCurrencyStats(client);					// Reset currency stats on disconnect
+	AdminMoney_OnClientDisconnect(client);				// Reset admin money data on disconnect
+	LevelingRewards_OnClientDisconnect(client);			// Reset leveling rewards on disconnect
+	Bloodmoon_OnClientDisconnect(client);				// Cleanup bloodmoon hooks
+	LevelingUI_OnClientDisconnect(client);				// Cleanup leveling UI flags
+	EclipsePointsUnified_OnClientDisconnect(client);	// Reset unified points tracking flags
 
 	// Cleanup active abilities
 	SDKUnhook(client, SDKHook_OnTakeDamage, Hook_BuyMenu_OnTakeDamage);
@@ -368,6 +368,10 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 
 	// Deduct currency
 	g_iPlayerCurrency[client] -= cost;
+
+	// Persistir en base de datos
+	Leveling_UpdatePlayerDatabase(client);
+
 	PrintToChat(client, "[Buy] \x04¡Compraste %s!\x01 Puntos restantes: %d", itemName, g_iPlayerCurrency[client]);
 	return true;
 }
@@ -385,10 +389,36 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 	// Registrar en estadísticas
 	CurrencyStats_AddEarnings(client, amount);
 
-	if (strlen(reason) > 0)
-		PrintToChat(client, "[Eclipse] Ganaste %d puntos (%s). Balance: %d", amount, reason, g_iPlayerCurrency[client]);
+	// Persistir en base de datos
+	Leveling_UpdatePlayerDatabase(client);
+
+// El parámetro 'reason' se usa en llamadas externas para logging/estadísticas
+#pragma unused reason
+}
+
+/**
+ * Mostrar mensaje de evento de frags/muerte con puntos ganados
+ * Esta función centraliza todos los mensajes de kills, frags y puntos
+ */
+stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int topPosition, int pointsGained)
+{
+	if (attacker <= 0 || attacker > MaxClients || !IsClientInGame(attacker))
+		return;
+
+	if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
+		return;
+
+	// Mostrar mensaje con puntos ganados si hay puntos
+	if (pointsGained > 0)
+	{
+		PrintToChatAll("\x04[Eclipse] \x03%N \x01mató a \x04%N \x05- \x04Frags: \x03%d - \x04Top: \x03%d \x05| \x04+%d puntos",
+					   attacker, victim, frags, topPosition, pointsGained);
+	}
 	else
-		PrintToChat(client, "[Eclipse] Ganaste %d puntos. Balance: %d", amount, g_iPlayerCurrency[client]);
+	{
+		PrintToChatAll("\x04[Eclipse] \x03%N \x01mató a \x04%N \x05- \x04Frags: \x03%d - \x04Top: \x03%d.",
+					   attacker, victim, frags, topPosition);
+	}
 }
 
 /**
@@ -437,7 +467,7 @@ public Action Event_BuyMenu_InfectedHurt(Event event, const char[] name, bool do
 {
 	int attacker = GetClientOfUserId(event.GetInt("attacker"));
 	int entityid = event.GetInt("entityid");
-	int damage = event.GetInt("amount");
+	int damage	 = event.GetInt("amount");
 
 	// Verificar que el atacante es válido y tiene LifeStealer activo
 	if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
@@ -458,8 +488,8 @@ public Action Event_BuyMenu_InfectedHurt(Event event, const char[] name, bool do
 public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	int attacker = GetClientOfUserId(event.GetInt("attacker"));
-	int victim = GetClientOfUserId(event.GetInt("userid"));
-	int damage = event.GetInt("dmg_health");
+	int victim	 = GetClientOfUserId(event.GetInt("userid"));
+	int damage	 = event.GetInt("dmg_health");
 
 	// Verificar que el atacante y víctima son válidos
 	if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
@@ -601,46 +631,40 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 /**
  * Activa una habilidad por nombre
  */
-public bool ActiveAbilities_ActivateAbility(int client, int level, const char[] abilityName)
+public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName)
 {
 	if (StrEqual(abilityName, "Berserker", false))
 	{
-		if (!Berserker_CanUse(client, level))
+		if (!Berserker_HasMeleeEquipped(client))
 		{
-			if (!Berserker_HasMeleeEquipped(client))
-			{
-				PrintToChat(client, "\x05[Ability]\x01 You need a melee weapon to use Berserker!");
-			}
-			else if (Berserker_GetCooldown(client) > 0)
-			{
-				PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", Berserker_GetCooldown(client));
-			}
+			PrintToChat(client, "\x05[Ability]\x01 You need a melee weapon to use Berserker!");
 			return false;
 		}
+		else if (Berserker_GetCooldown(client) > 0)
+		{
+			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", Berserker_GetCooldown(client));
+			return false;
+		}
+
 		Berserker_Activate(client);
 		return true;
 	}
 	else if (StrEqual(abilityName, "Acid Bath", false))
 	{
-		if (!AcidBath_CanUse(client, level))
+		if (AcidBath_GetCooldown(client) > 0)
 		{
-			if (AcidBath_GetCooldown(client) > 0)
-			{
-				PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", AcidBath_GetCooldown(client));
-			}
+			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", AcidBath_GetCooldown(client));
 			return false;
 		}
+
 		AcidBath_Activate(client);
 		return true;
 	}
 	else if (StrEqual(abilityName, "LifeStealer", false))
 	{
-		if (!LifeStealer_CanUse(client, level))
+		if (LifeStealer_GetCooldown(client) > 0)
 		{
-			if (LifeStealer_GetCooldown(client) > 0)
-			{
-				PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", LifeStealer_GetCooldown(client));
-			}
+			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", LifeStealer_GetCooldown(client));
 			return false;
 		}
 		LifeStealer_Activate(client);
@@ -648,12 +672,9 @@ public bool ActiveAbilities_ActivateAbility(int client, int level, const char[] 
 	}
 	else if (StrEqual(abilityName, "Speed Freak", false))
 	{
-		if (!SpeedFreak_CanUse(client, level))
+		if (SpeedFreak_GetCooldown(client) > 0)
 		{
-			if (SpeedFreak_GetCooldown(client) > 0)
-			{
-				PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", SpeedFreak_GetCooldown(client));
-			}
+			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", SpeedFreak_GetCooldown(client));
 			return false;
 		}
 		SpeedFreak_Activate(client);
@@ -661,11 +682,6 @@ public bool ActiveAbilities_ActivateAbility(int client, int level, const char[] 
 	}
 	else if (StrEqual(abilityName, "Shoulder Cannon", false))
 	{
-		if (!ShoulderCannon_CanUse(client, level))
-		{
-			return false;
-		}
-
 		// Toggle: equipar o desequipar
 		if (ShoulderCannon_IsActive(client))
 		{

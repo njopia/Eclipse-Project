@@ -21,12 +21,18 @@
 #define NUKE_SMOKE_COLUMN_HEIGHT	2000.0		// Altura de la columna de humo persistente
 #define NUKE_SMOKE_COLUMN_DURATION	30.0		// Duración de la columna de humo (segundos)
 
-// === OPTIMIZACIÓN: Límites de partículas ===
-#define NUKE_MAX_PARTICLES_PER_WAVE		3		// Máximo 3 partículas por onda
-#define NUKE_MAX_FIREBALLS				5		// Reducido de 8 a 5 bolas de fuego
-#define NUKE_MAX_DEBRIS					3		// Reducido de 5 a 3 escombros
-#define NUKE_VISUAL_TICK_RATE			0.25	// Aumentado de 0.15 a 0.25 (menos frecuente)
-#define NUKE_SECONDARY_EXPLOSION_RATE	2.0		// Aumentado de 1.0 a 2.0 (menos frecuente)
+// === OPTIMIZACIÓN ULTRA: Mínimas partículas ===
+#define NUKE_MAX_PARTICLES_PER_WAVE		1		// MÍNIMO: 1 partícula por onda
+#define NUKE_MAX_FIREBALLS				1		// MÍNIMO: 1 bola de fuego
+#define NUKE_MAX_DEBRIS					1		// MÍNIMO: 1 escombro
+#define NUKE_VISUAL_TICK_RATE			1.0		// MÍNIMO: 1 segundo (muy lento)
+#define NUKE_SECONDARY_EXPLOSION_RATE	5.0		// MÍNIMO: 5 segundos (muy espaciado)
+#define NUKE_LOG_FILE					"logs/nuclear_strike.log"	// Archivo de logs
+
+// === OPTIMIZACIÓN: Límites de muertes por tick ===
+#define NUKE_MAX_COMMON_KILLS_PER_TICK	5		// Máximo zombies comunes a matar por tick
+#define NUKE_MAX_WITCH_KILLS_PER_TICK	1		// Máximo witches a matar por tick
+#define NUKE_MAX_SPECIAL_KILLS_PER_TICK	2		// Máximo especiales a dañar por tick
 
 // Colores para efectos
 #define GLOW_COLOR_RED				RGB_TO_INT(255, 50, 50)
@@ -71,6 +77,21 @@ static const char PARTICLE_NUKE_SMOKE_LARGE[] = "smoke_large_01";
 static const char PARTICLE_NUKE_EMBERS[] = "fire_small_smoke";
 static const char PARTICLE_NUKE_SHOCKWAVE[] = "weapon_pipebomb_child_sparks2";
 
+// === SISTEMA DE LOGGING ===
+/**
+ * Escribe un log detallado en el archivo de Nuclear Strike
+ */
+stock void NukeLog(const char[] format, any ...)
+{
+	char buffer[512];
+	VFormat(buffer, sizeof(buffer), format, 2);
+
+	char logPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, logPath, sizeof(logPath), NUKE_LOG_FILE);
+
+	LogToFileEx(logPath, "[NUKE] %s", buffer);
+}
+
 /**
  * Activa Nuclear Strike para un jugador.
  * Crea una bengala en el suelo, countdown de 5 segundos, y explosión masiva.
@@ -79,9 +100,12 @@ static const char PARTICLE_NUKE_SHOCKWAVE[] = "weapon_pipebomb_child_sparks2";
  */
 stock void Activate_NuclearStrike(int client)
 {
+	NukeLog("=== INICIO NUCLEAR STRIKE - Cliente: %N (%d) ===", client, client);
+
 	// 1. Verificar si es survivor
 	if (!IsSurvivor(client))
 	{
+		NukeLog("ABORTADO: Cliente %N no es survivor", client);
 		PrintToChat(client, "\x05[Eclipse]\x01 Solo los sobrevivientes pueden usar esta habilidad.");
 		return;
 	}
@@ -89,6 +113,7 @@ stock void Activate_NuclearStrike(int client)
 	// 2. Verificar si está vivo
 	if (!IsPlayerAlive(client))
 	{
+		NukeLog("ABORTADO: Cliente %N no está vivo", client);
 		PrintToChat(client, "\x05[Eclipse]\x01 Debes estar vivo para usar Nuclear Strike.");
 		return;
 	}
@@ -97,6 +122,7 @@ stock void Activate_NuclearStrike(int client)
 	int flags = GetEntityFlags(client);
 	if (!(flags & FL_ONGROUND))
 	{
+		NukeLog("ABORTADO: Cliente %N no está en el suelo (flags: %d)", client, flags);
 		PrintToChat(client, "\x05[Eclipse]\x01 Debes estar en el suelo para lanzar Nuclear Strike.");
 		return;
 	}
@@ -104,6 +130,7 @@ stock void Activate_NuclearStrike(int client)
 	// 4. Verificar límite de usos (1 por mapa)
 	if (g_iNukeUsedThisMap[client] > 0)
 	{
+		NukeLog("ABORTADO: Cliente %N ya usó Nuclear Strike este mapa", client);
 		PrintToChat(client, "\x05[Eclipse]\x01 Solo puedes usar Nuclear Strike \x04una vez por mapa\x01.");
 		return;
 	}
@@ -111,19 +138,23 @@ stock void Activate_NuclearStrike(int client)
 	// 5. Verificar si hay bombardeo activo
 	if (IsAnyBombardmentActive())
 	{
+		NukeLog("ABORTADO: Ya hay un bombardeo activo");
 		PrintToChat(client, "\x05[Eclipse]\x01 Ya hay un bombardeo activo. Espera a que termine.");
 		return;
 	}
 
 	// 6. Obtener posición del jugador
 	GetClientAbsOrigin(client, g_fNukeOrigin[client]);
+	NukeLog("Posición de origen: [%.1f, %.1f, %.1f]", g_fNukeOrigin[client][0], g_fNukeOrigin[client][1], g_fNukeOrigin[client][2]);
 
 	// 7. Marcar como usado
 	g_iNukeUsedThisMap[client] = 1;
 	g_bNukeActive[client] = true;
 	g_iNukeCountdown[client] = 5;
+	NukeLog("Nuclear Strike activado - Countdown iniciado");
 
 	// 8. Crear bengala de señal
+	NukeLog("Creando bengala de señal...");
 	CreateNukeFlare(client);
 
 	// 9. Iniciar sistema de alerta (sirena y efectos)
@@ -234,29 +265,42 @@ public Action Timer_NukeCountdown(Handle timer, int client)
  */
 public Action Timer_LaunchNuke(Handle timer, int client)
 {
+	NukeLog("=== TIMER_LAUNCHNUKE - Cliente: %N ===", client);
+
 	if (!g_bNukeActive[client])
+	{
+		NukeLog("ABORTADO: Nuclear Strike no activo para cliente %N", client);
 		return Plugin_Stop;
+	}
 
 	g_fNukeExplosionTime[client] = GetGameTime();
+	NukeLog("Tiempo de explosión: %.2f", g_fNukeExplosionTime[client]);
 
 	// === FASE 1: FLASH CEGADOR ===
+	NukeLog("FASE 1: Aplicando flash cegador a todos los clientes...");
+	int flashCount = 0;
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i))
 		{
 			// Flash blanco masivo (2 segundos)
 			L4D_ScreenFade(i, 255, 255, 255, 255, 2.0, FADE_IN);
+			flashCount++;
 		}
 	}
+	NukeLog("Flash aplicado a %d clientes", flashCount);
 
 	// === FASE 2: SONIDOS APOCALÍPTICOS ===
+	NukeLog("FASE 2: Reproduciendo sonidos de explosión...");
 	EmitSoundToAll(NUKE_SOUND_EXPLODE, client, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, SND_NOFLAGS, 1.0);
 	CreateTimer(0.3, Timer_PlayWindSound, client, TIMER_FLAG_NO_MAPCHANGE);
 
 	// === FASE 3: DESTRUIR BENGALA ===
+	NukeLog("FASE 3: Destruyendo bengala...");
 	DestroyNukeFlare(client);
 
 	// === FASE 4: EFECTOS VISUALES CATACLÍSMICOS ===
+	NukeLog("FASE 4: Creando efectos visuales de explosión...");
 	CreateNukeExplosionEffects(client);
 
 	// === FASE 4B: HUMO DENSO ADICIONAL ESCALONADO (para máxima altura) ===
@@ -433,6 +477,9 @@ static void DestroyNukeFlare(int client)
  */
 static void CreateNukeExplosionEffects(int client)
 {
+	NukeLog("CreateNukeExplosionEffects INICIADO para cliente %N", client);
+	int particleCount = 0;
+
 	float origin[3];
 	origin[0] = g_fNukeOrigin[client][0];
 	origin[1] = g_fNukeOrigin[client][1];
@@ -441,6 +488,8 @@ static void CreateNukeExplosionEffects(int client)
 	// === IMPACTO CENTRAL (OPTIMIZADO: 2 partículas) ===
 	CreateParticleAtPos(origin, PARTICLE_NUKE_HIT, 5.0);
 	CreateParticleAtPos(origin, PARTICLE_NUKE_EXPLOSION, 4.0);
+	particleCount += 2;
+	NukeLog("  -> Partículas impacto central: 2");
 
 	// === ONDAS EXPANSIVAS (OPTIMIZADO: 3 ondas en vez de 6) ===
 	CreateTimer(0.0, Timer_CreateNukeWave, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -452,8 +501,10 @@ static void CreateNukeExplosionEffects(int client)
 	CreateParticleAtPos(origin, PARTICLE_NUKE_FIRE_LARGE, 25.0);
 	CreateParticleAtPos(origin, PARTICLE_NUKE_FIRE_A, 25.0);
 	CreateParticleAtPos(origin, PARTICLE_NUKE_FIRE_B, 25.0);
+	particleCount += 4;
+	NukeLog("  -> Bola de fuego masiva: 4 partículas");
 
-	// === BOLAS DE FUEGO (OPTIMIZADO: 5 en vez de 8, sin doble partícula) ===
+	// === BOLAS DE FUEGO (OPTIMIZADO: %d bolas) ===
 	for (int i = 0; i < NUKE_MAX_FIREBALLS; i++)
 	{
 		float angle = (360.0 / float(NUKE_MAX_FIREBALLS)) * float(i);
@@ -470,12 +521,15 @@ static void CreateNukeExplosionEffects(int client)
 			CreateParticleAtPos(offsetOrigin, PARTICLE_NUKE_FIRE_B, 7.0);
 		else
 			CreateParticleAtPos(offsetOrigin, PARTICLE_NUKE_FIRE_C, 7.0);
+		particleCount++;
 	}
+	NukeLog("  -> Bolas de fuego secundarias: %d", NUKE_MAX_FIREBALLS);
 
 	// === FUEGO CENTRAL ===
 	CreateParticleAtPos(origin, PARTICLE_NUKE_FIRE_LARGE, 12.0);
+	particleCount++;
 
-	// === ESCOMBROS (OPTIMIZADO: 3 en vez de 5, solo 1 partícula por escombro) ===
+	// === ESCOMBROS (OPTIMIZADO: %d escombros) ===
 	for (int i = 0; i < NUKE_MAX_DEBRIS; i++)
 	{
 		float debrisOrigin[3];
@@ -488,7 +542,10 @@ static void CreateNukeExplosionEffects(int client)
 			CreateParticleAtPos(debrisOrigin, PARTICLE_NUKE_DEBRIS_A, 10.0);
 		else
 			CreateParticleAtPos(debrisOrigin, PARTICLE_NUKE_DEBRIS_B, 10.0);
+		particleCount++;
 	}
+	NukeLog("  -> Escombros: %d", NUKE_MAX_DEBRIS);
+	NukeLog("CreateNukeExplosionEffects FINALIZADO - Total partículas iniciales: %d", particleCount);
 }
 
 /**
@@ -715,27 +772,34 @@ public Action Timer_NukeVisualEffects(Handle timer, int client)
 public Action Timer_NukeDamage(Handle timer, int client)
 {
 	float currentTime = GetGameTime();
+	NukeLog("TIMER_NUKEDAMAGE - Cliente: %N, Tiempo actual: %.2f, Tiempo fin: %.2f", client, currentTime, g_fNukeEndTime[client]);
 
 	if (currentTime >= g_fNukeEndTime[client])
 	{
+		NukeLog("Nuclear Strike FINALIZADO para cliente %N", client);
 		// Terminar efectos
 		g_bNukeActive[client] = false;
 		g_hNukeDamageTimer[client] = INVALID_HANDLE;
 
 		// Remover glows
+		int glowsRemoved = 0;
 		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsSurvivor(i))
 			{
 				SetEntProp(i, Prop_Send, "m_iGlowType", 0);
+				glowsRemoved++;
 			}
 		}
+		NukeLog("Glows removidos: %d", glowsRemoved);
 
 		PrintToChatAll("\x05[Eclipse]\x01 \x04Nuclear Strike\x01 ha terminado. \x03Zona devastada.");
+		NukeLog("=== FIN NUCLEAR STRIKE - Cliente: %N ===", client);
 		return Plugin_Stop;
 	}
 
 	// Aplicar daño a todos los infectados en el radio
+	NukeLog("Aplicando daño en tick (tiempo restante: %.2f segundos)", g_fNukeEndTime[client] - currentTime);
 	ApplyNukeDamage(client);
 
 	return Plugin_Continue;
@@ -751,12 +815,21 @@ static void ApplyNukeDamage(int client)
 	nukeOrigin[1] = g_fNukeOrigin[client][1];
 	nukeOrigin[2] = g_fNukeOrigin[client][2];
 
-	// Daño a zombies comunes
+	int commonKilled = 0;
+	int witchesKilled = 0;
+	int specialsKilled = 0;
+
+	// Daño a zombies comunes (LIMITADO a N por tick para evitar sobrecarga)
 	int entity = -1;
+	int commonProcessedThisTick = 0;
 	while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
 	{
 		if (!IsValidEntity(entity))
 			continue;
+
+		// LÍMITE: Solo procesar X zombies comunes por tick
+		if (commonProcessedThisTick >= NUKE_MAX_COMMON_KILLS_PER_TICK)
+			break;
 
 		float entityOrigin[3];
 		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", entityOrigin);
@@ -767,15 +840,24 @@ static void ApplyNukeDamage(int client)
 			// Daño escalado por distancia
 			int damage = RoundToFloor(NUKE_DAMAGE_PER_TICK * (1.0 - (distance / NUKE_RADIUS) * 0.3));
 			DealDamageEntity(entity, client, DMG_BURN | DMG_RADIATION, damage, "nuclear_strike");
+			commonKilled++;
+			commonProcessedThisTick++;
 		}
 	}
+	if (commonKilled > 0)
+		NukeLog("  -> Zombies comunes dañados: %d (límite: %d)", commonKilled, NUKE_MAX_COMMON_KILLS_PER_TICK);
 
-	// Daño a witches
+	// Daño a witches (LIMITADO a N por tick)
 	entity = -1;
+	int witchProcessedThisTick = 0;
 	while ((entity = FindEntityByClassname(entity, "witch")) != INVALID_ENT_REFERENCE)
 	{
 		if (!IsValidEntity(entity))
 			continue;
+
+		// LÍMITE: Solo procesar X witches por tick
+		if (witchProcessedThisTick >= NUKE_MAX_WITCH_KILLS_PER_TICK)
+			break;
 
 		float entityOrigin[3];
 		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", entityOrigin);
@@ -785,10 +867,15 @@ static void ApplyNukeDamage(int client)
 		{
 			int damage = RoundToFloor(NUKE_DAMAGE_PER_TICK * (1.0 - (distance / NUKE_RADIUS) * 0.3));
 			DealDamageEntity(entity, client, DMG_BURN | DMG_RADIATION, damage, "nuclear_strike");
+			witchesKilled++;
+			witchProcessedThisTick++;
 		}
 	}
+	if (witchesKilled > 0)
+		NukeLog("  -> Witches dañadas: %d (límite: %d)", witchesKilled, NUKE_MAX_WITCH_KILLS_PER_TICK);
 
-	// Daño a infectados especiales
+	// Daño a infectados especiales (LIMITADO a N por tick)
+	int specialProcessedThisTick = 0;
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (!IsClientInGame(i) || !IsPlayerAlive(i))
@@ -800,6 +887,10 @@ static void ApplyNukeDamage(int client)
 		if (IsPlayerGhost(i))
 			continue;
 
+		// LÍMITE: Solo procesar X especiales por tick
+		if (specialProcessedThisTick >= NUKE_MAX_SPECIAL_KILLS_PER_TICK)
+			break;
+
 		float playerOrigin[3];
 		GetClientAbsOrigin(i, playerOrigin);
 		float distance = GetVectorDistance(nukeOrigin, playerOrigin);
@@ -807,9 +898,14 @@ static void ApplyNukeDamage(int client)
 		if (distance <= NUKE_RADIUS)
 		{
 			int damage = RoundToFloor(NUKE_DAMAGE_PER_TICK * (1.0 - (distance / NUKE_RADIUS) * 0.3));
+			NukeLog("  -> Dañando infectado especial: %N (cliente %d) - Daño: %d, Distancia: %.1f", i, i, damage, distance);
 			SDKHooks_TakeDamage(i, client, client, float(damage), DMG_BURN | DMG_RADIATION);
+			specialsKilled++;
+			specialProcessedThisTick++;
 		}
 	}
+	if (specialsKilled > 0)
+		NukeLog("  -> Total infectados especiales dañados: %d (límite: %d)", specialsKilled, NUKE_MAX_SPECIAL_KILLS_PER_TICK);
 }
 
 /**
@@ -894,11 +990,17 @@ public Action Timer_NukeRemoveGlow(Handle timer, int client)
  */
 static bool IsAnyBombardmentActive()
 {
+	// Verificar si hay Nuclear Strike activo
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (g_bNukeActive[i])
 			return true;
 	}
+
+	// Verificar si hay Ion Cannon activo
+	if (IonCannon_IsAnyActive())
+		return true;
+
 	return false;
 }
 
@@ -993,4 +1095,18 @@ stock void CleanupNuclearStrikeTimers()
 stock bool NuclearStrike_HasUsedThisMap(int client)
 {
 	return g_iNukeUsedThisMap[client] > 0;
+}
+
+/**
+ * Verifica si hay algún Nuclear Strike activo
+ * Usado por el sistema de control global de bombardeos
+ */
+stock bool NuclearStrike_IsAnyActive()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (g_bNukeActive[i])
+			return true;
+	}
+	return false;
 }
