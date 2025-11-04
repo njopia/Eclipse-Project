@@ -9,6 +9,7 @@
 #define EMS_MAIN_FILE	 // EMS_MAIN_FILE define main file as the current core
 #define ADMIN_DB_NAME	"admins"
 #define PLAYERS_DB_NAME "players"
+#define DB_HUD_MESSAGES PLAYERS_DB_NAME
 #tryinclude "utils/database.utils.sp"
 //////////////////////////////////////////////
 
@@ -54,6 +55,7 @@
 
 /////// SERVER MANAGEMENT SYSTEM CORE /////////
 #include "modules/management/afk-join.sp"
+#tryinclude "modules/management/scripted-hud.module.sp"
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
@@ -179,6 +181,10 @@ public void OnPluginStart()
 	{
 		doSqlConnection(ADMIN_DB_NAME);	   // Handle para admins
 	}
+	if (checkDBFile(DB_HUD_MESSAGES))
+	{
+		doSqlConnection(DB_HUD_MESSAGES); // Handle para HUD messages
+	}
 	buyMenuOnPluginStart();
 	AdminMoney_OnPluginStart();
 
@@ -199,6 +205,11 @@ public void OnPluginStart()
 
 	// ===== SISTEMA DE GESTIÓN DEL SERVIDOR =====
 	Afk_Join_OnPluginStart();
+
+	// ===== SISTEMA DE HUD =====
+#if defined _SCRIPTED_HUD_MODULE_
+	ScriptedHUD_OnPluginStart();
+#endif
 
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
@@ -238,6 +249,10 @@ public void OnMapStart()
 	DefenseGrid_OnMapStart();
 	Bloodmoon_OnMapStart();
 	NuclearStrike_OnMapStart();
+
+#if defined _SCRIPTED_HUD_MODULE_
+	ScriptedHUD_OnMapStart();
+#endif
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_OnMapStart();
 #endif
@@ -250,8 +265,20 @@ public void OnMapEnd()
 {
 	LogToFile(logfilepath, "|               MAP END                     |");
 
+#if defined _SCRIPTED_HUD_MODULE_
+	ScriptedHUD_OnMapEnd();
+#endif
+
 	// Limpiar todos los timers antes de cambiar de mapa
 	CleanupAllTimers();
+}
+
+public void OnConfigsExecuted()
+{
+	// Inicializar configuraciones del HUD
+#if defined _SCRIPTED_HUD_MODULE_
+	ScriptedHUD_OnConfigsExecuted();
+#endif
 }
 
 public void OnClientPutInServer(int client)
@@ -364,13 +391,46 @@ stock void ResetAllPlayersState()
 	{
 		if (IsClientInGame(i))
 		{
+			// === TEAM BONUSES COOLDOWNS ===
 			// Resetear cooldowns de Team Heal
 			ResetTeamHealCooldown(i);
 
 			// Resetear cooldowns de Team Speed Boost
 			ResetTeamSpeedBoostCooldown(i);
+
+			// === INSTANTS COOLDOWNS ===
+			// Resetear cooldowns de Fire Yell
+			ResetFireYellCooldown(i);
+
+			// Resetear cooldowns de Power Yell
+			ResetPowerYellCooldown(i);
+
+			// === LONG ACTIONS COOLDOWNS ===
+			// Resetear cooldowns de Berserker
+			Berserker_ResetCooldown(i);
+
+			// Resetear cooldowns de Acid Bath
+			AcidBath_ResetCooldown(i);
+
+			// Resetear cooldowns de LifeStealer
+			LifeStealer_ResetCooldown(i);
+
+			// Resetear cooldowns de Speed Freak
+			SpeedFreak_ResetCooldown(i);
+
+			// === DEPLOYABLES COOLDOWNS ===
+			// Resetear cooldowns de Defense Grid
+			DefenseGrid_ResetCooldown(i);
+
+			// Resetear cooldowns de Ion Cannon
+			IonCannon_ResetCooldown(i);
+
+			// Resetear cooldowns de Ammo Pile
+			AmmoPile_ResetCooldown(i);
 		}
 	}
+
+	LogToFile(logfilepath, "[CLEANUP] Reseteo de cooldowns completado");
 }
 
 // Snowing

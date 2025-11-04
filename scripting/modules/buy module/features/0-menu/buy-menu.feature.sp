@@ -102,18 +102,21 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 
 public void InstantsMenu(int client)
 {
-	char text[64];
-	char title[128];
-	char baseText[40];
-
-	// Create Submenu
 	g_InstantsMenu = new Menu(MenuHandler_Instants, MENU_ACTIONS_ALL);
-	char mainTitle[40];
-	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
-	int playerPoints = g_iPlayerCurrency[client];
-	int playerLevel	 = Leveling_GetPlayerLevel(client);
-	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
-	g_InstantsMenu.SetTitle(title);
+
+	char text[40];
+	char title[128];
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName))
+		Format(title, sizeof(title), "%T", "BM_Instant", client);
+	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerLevel  = Leveling_GetPlayerLevel(client);
+	char fullTitle[256];
+	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n Jugador: %s \n Puntos: %d \n Nivel: %d \n=================", title, playerName, playerPoints, playerLevel);
+
+	g_InstantsMenu.SetTitle(fullTitle, LANG_SERVER);
+
+	char baseText[40];
 
 	// Add Submenu Items with costs
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_1_1, client);
@@ -142,17 +145,18 @@ public void InstantsMenu(int client)
 
 public void LongActionsMenu(int client)
 {
-	char title[128];
-	char baseText[64];
-
-	// Create Submenu
 	g_LongActionsMenu = new Menu(MenuHandler_LongActions, MENU_ACTIONS_ALL);
-	char mainTitle[40];
-	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
-	int playerPoints = g_iPlayerCurrency[client];
-	int playerLevel	 = Leveling_GetPlayerLevel(client);
-	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
-	g_LongActionsMenu.SetTitle(title);
+	char title[128];
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName))
+		Format(title, sizeof(title), "%T", "BM_LongAction", client);
+	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerLevel  = Leveling_GetPlayerLevel(client);
+	char fullTitle[256];
+	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n Jugador: %s \n Puntos: %d \n Nivel: %d \n=================", title, playerName, playerPoints, playerLevel);
+	g_LongActionsMenu.SetTitle(fullTitle, LANG_SERVER);
+
+	char baseText[40];
 
 	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
 
@@ -197,18 +201,20 @@ public void LongActionsMenu(int client)
 // Function to Create Submenu
 public void DeployablesMenu(int client)
 {
-	char text[128];
-	char title[128];
-	char baseText[64];
-
 	// Create Submenu
 	g_DeployablesMenu = new Menu(MenuHandler_Deployables, MENU_ACTIONS_ALL);
-	char mainTitle[40];
-	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
-	int playerPoints = g_iPlayerCurrency[client];
-	int playerLevel	 = Leveling_GetPlayerLevel(client);
-	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
-	g_DeployablesMenu.SetTitle(title);
+	char baseText[64];
+	char text[40];
+	char title[128];
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName))
+		Format(title, sizeof(title), "%T", "BM_Deployables", client);
+	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerLevel  = Leveling_GetPlayerLevel(client);
+	char fullTitle[256];
+	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n Jugador: %s \n Puntos: %d \n Nivel: %d \n=================", title, playerName, playerPoints, playerLevel);
+
+	g_DeployablesMenu.SetTitle(fullTitle);
 
 	// === DEPLOYABLES CON RESTRICCIONES DE NIVEL ===
 
@@ -323,18 +329,19 @@ public void DeployablesMenu(int client)
 // Function to Create Team Bonuses Submenu
 public void TeamBonusesMenu(int client)
 {
-	char text[128];
-	char title[128];
-	char baseText[64];
-
-	// Create Submenu
 	g_TeamBonusesMenu = new Menu(MenuHandler_TeamBonuses, MENU_ACTIONS_ALL);
-	char mainTitle[40];
-	Format(mainTitle, sizeof(mainTitle), "%T", "Submenu Title", client);
-	int playerPoints = g_iPlayerCurrency[client];
-	int playerLevel	 = Leveling_GetPlayerLevel(client);
-	Format(title, sizeof(title), "%s\nPuntos: %d | Nivel: %d", mainTitle, playerPoints, playerLevel);
-	g_TeamBonusesMenu.SetTitle(title);
+	char baseText[64];
+	char text[40];
+	char title[128];
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName))
+		Format(title, sizeof(title), "%T", "BM_TeamBonuses", client);
+	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerLevel  = Leveling_GetPlayerLevel(client);
+	char fullTitle[256];
+	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n Jugador: %s \n Puntos: %d \n Nivel: %d \n=================", title, playerName, playerPoints, playerLevel);
+
+	g_TeamBonusesMenu.SetTitle(fullTitle);
 
 	// Add Team Speed Boost Item with remaining time and cost
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_4_1, client);
@@ -637,16 +644,17 @@ public Action Cmd_Buy(int client, int args)
 		PrintToChat(client, "\x05[Eclipse]\x01 Solo los sobrevivientes pueden usar el menú de compra.");
 		return Plugin_Handled;
 	}
+	g_MainMenu = new Menu(MenuHandler1, MENU_ACTIONS_ALL);
 	char text[40];
 	char title[128];
-	g_MainMenu = new Menu(MenuHandler1, MENU_ACTIONS_ALL);
-	Format(title, sizeof(title), "%T", "Menu Title", client);
-
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName))
+		Format(title, sizeof(title), "%T", "Menu Title", client);
 	// Agregar "Tus puntos" y nivel al título principal
 	int	 playerPoints = g_iPlayerCurrency[client];
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
-	Format(fullTitle, sizeof(fullTitle), "%s\nPuntos: %d | Nivel: %d", title, playerPoints, playerLevel);
+	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n Jugador: %s \n Puntos: %d \n Nivel: %d \n=================", title, playerName, playerPoints, playerLevel);
 	g_MainMenu.SetTitle(fullTitle, LANG_SERVER);
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);

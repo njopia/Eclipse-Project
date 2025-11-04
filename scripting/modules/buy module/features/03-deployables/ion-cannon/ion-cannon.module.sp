@@ -199,6 +199,14 @@ public int IonCannon_GetCharges(int client)
 }
 
 /**
+ * Resetea el cooldown de Ion Cannon para un jugador
+ */
+stock void IonCannon_ResetCooldown(int client)
+{
+	g_fIonCooldown[client] = 0.0;
+}
+
+/**
  * Activa el Ion Cannon
  */
 public bool IonCannon_Activate(int client)

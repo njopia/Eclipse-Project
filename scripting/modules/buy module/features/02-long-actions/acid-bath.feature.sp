@@ -242,3 +242,13 @@ public int AcidBath_GetTimeRemaining(int client)
 
 	return g_iAcidBath_TimeRemaining[client];
 }
+
+/**
+ * Resetea el cooldown de Acid Bath para un jugador
+ */
+stock void AcidBath_ResetCooldown(int client)
+{
+	g_iAcidBath_Cooldown[client] = 0;
+	g_iAcidBath_TimeRemaining[client] = 0;
+	g_bAcidBath_Active[client] = false;
+}

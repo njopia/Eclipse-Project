@@ -360,6 +360,16 @@ public int LifeStealer_GetTimeRemaining(int client)
 }
 
 /**
+ * Resetea el cooldown de LifeStealer para un jugador
+ */
+stock void LifeStealer_ResetCooldown(int client)
+{
+	g_iLifeStealer_Cooldown[client] = 0;
+	g_iLifeStealer_TimeRemaining[client] = 0;
+	g_bLifeStealer_Active[client] = false;
+}
+
+/**
  * Crea efecto de activación (aura roja)
  */
 stock void LifeStealer_CreateActivationEffect(int client)

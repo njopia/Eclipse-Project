@@ -49,6 +49,17 @@ static const char g_ClassIncendiary[][] = {
 // cooldown por jugador y tipo
 float g_LastUse[MAXPLAYERS + 1][AMMO_KINDS_COUNT];
 
+/**
+ * Resetea el cooldown de Ammo Pile para un jugador
+ */
+stock void AmmoPile_ResetCooldown(int client)
+{
+	for (int i = 0; i < view_as<int>(AMMO_KINDS_COUNT); i++)
+	{
+		g_LastUse[client][i] = 0.0;
+	}
+}
+
 
 // ======================================================================
 // Helpers de debug

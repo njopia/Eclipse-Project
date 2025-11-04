@@ -4,7 +4,6 @@
 #tryinclude < left4dhooks>
 
 Handle PanelTimer[MAXPLAYERS + 1];
-Handle HintTimer[MAXPLAYERS + 1];
 
 #define TEAM_SPECTATOR 1
 #define TEAM_SURVIVOR  2
@@ -15,7 +14,6 @@ public void Afk_Join_OnPluginStart()
 {
 	RegConsoleCmd("sm_afk", CmdAfk);
 	RegConsoleCmd("sm_join", CmdJoin);
-
 
 	g_hCvarSurvivorLimit = FindConVar("sv_maxplayers");
 	if (!g_hCvarSurvivorLimit)
@@ -44,12 +42,11 @@ public Action CmdAfk(int client, int args)
 public Action CmdJoin(int client, int args)
 {
 	if (!IsPlayer(client)) return Plugin_Handled;
-    if (GetClientTeam(client) == TEAM_SURVIVOR) return Plugin_Handled;
+	if (GetClientTeam(client) == TEAM_SURVIVOR) return Plugin_Handled;
 	// Muestra un panel con info y opciones rápidas
 	ShowMainMenu(client);
 	return Plugin_Handled;
 }
-
 
 public Action Timer_ShowPanel(Handle timer, int client)
 {
@@ -119,17 +116,9 @@ public int PanelHandler(Menu menu, MenuAction action, int client, int item)
 		case 3:	   // Cerrar
 		{
 			delete PanelTimer[client];
-			HintTimer[client] = CreateTimer(5.0, Timer_HintHelper, client, TIMER_REPEAT);
-			// No hacer nada
 		}
 	}
 	return 0;
-}
-
-public void Timer_HintHelper(Handle timer, int client)
-{
-	PrintHintText(client, "\x04[Eclipse]\x01 Usa \x10!join\x01 para intentar unirte a \x05Sobrevivientes\x01.");
-	return;
 }
 
 void ToSpectator(int client, bool verbose)
@@ -173,7 +162,7 @@ void TryJoinSurvivors(int client)
 	int	 bot   = FindSurvivorBot();
 	if (bot > 0)
 	{
-		//PrintToChatAll("Taking over bot %d", bot);
+		// PrintToChatAll("Taking over bot %d", bot);
 		taken = L4D_TakeOverBot(client);
 	}
 
@@ -182,7 +171,7 @@ void TryJoinSurvivors(int client)
 		// Fallback general del juego
 		FakeClientCommand(client, "jointeam 2");
 	}
-
+	delete PanelTimer[client];
 	// Verifica tras un frame
 	CreateTimer(0.2, PostJoinCheck, GetClientUserId(client));
 }
@@ -203,7 +192,6 @@ public Action PostJoinCheck(Handle timer, any userid)
 	// PrintToChatAll("client team: %d", GetClientTeam(client));
 	// PrintToChatAll("TEAM_SURVIVOR: %d", TEAM_SURVIVOR);
 	delete PanelTimer[client];
-    delete HintTimer[client];
 	return Plugin_Stop;
 }
 
@@ -255,14 +243,15 @@ int FindSurvivorBot()
 	}
 	return 0;
 }
+
 public int GetMaxPlayers()
 {
-    ConVar cvMaxPlayers = FindConVar("sv_maxplayers");
-    if (cvMaxPlayers == null)
-    {
-        LogError("No se pudo encontrar sv_maxplayers");
-        return -1;
-    }
-    
-    return cvMaxPlayers.IntValue;
+	ConVar cvMaxPlayers = FindConVar("sv_maxplayers");
+	if (cvMaxPlayers == null)
+	{
+		LogError("No se pudo encontrar sv_maxplayers");
+		return -1;
+	}
+
+	return cvMaxPlayers.IntValue;
 }

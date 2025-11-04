@@ -625,6 +625,15 @@ public int DefenseGrid_GetCooldown(int client)
 }
 
 /**
+ * Resetea el cooldown de Defense Grid para un jugador
+ */
+stock void DefenseGrid_ResetCooldown(int client)
+{
+	g_fDefenseGridCooldown[client] = 0.0;
+	g_iDefenseGridTimer[client] = 0;
+}
+
+/**
  * Helper: Adjunta una partícula a una entidad
  */
 void AttachParticle(int target, const char[] particleName, float lifetime, float x, float y, float z)

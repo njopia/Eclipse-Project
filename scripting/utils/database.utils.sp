@@ -1,6 +1,5 @@
-Handle		 g_hDb;	   // Handle global para la conexión a la base de datos
-Handle		 g_hDbPlayers;  // Handle para la base de datos de players/leveling
-
+Handle		 g_hDb;				  // Handle global para la conexión a la base de datos
+Handle		 g_hDbPlayers;		  // Handle para la base de datos de players/leveling
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif

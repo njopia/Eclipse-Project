@@ -277,3 +277,15 @@ static void CreateShockwaveEffect(const float origin[3])
 		AcceptEntityInput(sprite, "FireUser1");
 	}
 }
+
+/**
+ * Resetea el cooldown de Power Yell para un jugador
+ * NOTA: Power Yell actualmente no implementa cooldown, esta función está
+ * aquí para mantener consistencia con otras features
+ */
+stock void ResetPowerYellCooldown(int client)
+{
+	// Power Yell no tiene cooldown implementado actualmente
+	// Esta función existe para compatibilidad con el sistema de reseteo
+	#pragma unused client
+}

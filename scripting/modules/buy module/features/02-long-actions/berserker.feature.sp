@@ -334,3 +334,13 @@ public int Berserker_GetTimeRemaining(int client)
 
 	return g_iBerserker_TimeRemaining[client];
 }
+
+/**
+ * Resetea el cooldown de Berserker para un jugador
+ */
+stock void Berserker_ResetCooldown(int client)
+{
+	g_iBerserker_Cooldown[client] = 0;
+	g_iBerserker_TimeRemaining[client] = 0;
+	g_bBerserker_Active[client] = false;
+}

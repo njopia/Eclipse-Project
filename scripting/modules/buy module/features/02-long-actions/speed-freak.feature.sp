@@ -332,6 +332,16 @@ public int SpeedFreak_GetTimeRemaining(int client)
 }
 
 /**
+ * Resetea el cooldown de Speed Freak para un jugador
+ */
+stock void SpeedFreak_ResetCooldown(int client)
+{
+	g_iSpeedFreak_Cooldown[client] = 0;
+	g_iSpeedFreak_TimeRemaining[client] = 0;
+	g_bSpeedFreak_Active[client] = false;
+}
+
+/**
  * Aplica la velocidad aumentada al cliente
  */
 static void SpeedFreak_ApplySpeed(int client)
