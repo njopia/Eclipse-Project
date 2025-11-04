@@ -56,38 +56,96 @@ public void Language_OnClientPostAdminCheck(int client)
 
 /**
  * Command: sm_lang / sm_language
- * Shows current language or sets a new one
+ * Shows language selection panel or sets a new language by code
  */
 public Action Command_Language(int client, int args)
 {
 	if (client == 0)
 	{
 		ReplyToCommand(client, "[SM] %T", "Command is in-game only", client);
+		return Plugin_Handled;
+	}
+
+	if (args == 0)
+	{
+		// Show language selection panel
+		ShowLanguagePanel(client);
 	}
 	else
 	{
-		char code[4], name[64];
-		if (args == 0)
-		{
-			// Show current language
-			int lang = GetClientLanguage(client);
-			if (lang >= 0)
-			{
-				GetLanguageInfo(lang, code, sizeof(code), name, sizeof(name));
-				char msg[128];
-				Format(msg, sizeof(msg), "%T", "Lang_CurrentLanguage", client, name, code, lang);
-				PrintToChat(client, "\x04[Language]\x01 %s", msg);
-			}
-		}
-		else
-		{
-			// Set new language
-			GetCmdArg(1, code, sizeof(code));
-			ChangeLanguage(client, GetLanguageByCode(code));
-		}
+		// Set new language by code (for advanced users)
+		char code[4];
+		GetCmdArg(1, code, sizeof(code));
+		ChangeLanguage(client, GetLanguageByCode(code));
 	}
 
 	return Plugin_Handled;
+}
+
+/**
+ * Shows the language selection panel
+ */
+void ShowLanguagePanel(int client)
+{
+	Menu langmenu = new Menu(LanguageMenuHandler_Command);
+
+	char title[128];
+	Format(title, sizeof(title), "%T", "Lang_MenuTitle", client);
+	langmenu.SetTitle(title);
+
+	// Get current language
+	int currentLang = GetClientLanguage(client);
+	char currentCode[4];
+	if (currentLang >= 0)
+	{
+		GetLanguageInfo(currentLang, currentCode, sizeof(currentCode));
+	}
+
+	// Add all available languages
+	int num = GetLanguageCount();
+	for (int i = 0; i < num; i++)
+	{
+		char code[4], name[64];
+		GetLanguageInfo(i, code, sizeof(code), name, sizeof(name));
+
+		bool isCurrent = StrEqual(currentCode, code, false);
+		char menuItem[128];
+
+		if (isCurrent)
+		{
+			Format(menuItem, sizeof(menuItem), "%s ☑", name);
+		}
+		else
+		{
+			Format(menuItem, sizeof(menuItem), "%s", name);
+		}
+
+		langmenu.AddItem(code, menuItem);
+	}
+
+	langmenu.ExitButton = true;
+	langmenu.Display(client, MENU_TIME_FOREVER);
+}
+
+/**
+ * Menu handler for !lang command
+ */
+public int LanguageMenuHandler_Command(Menu langmenu, MenuAction action, int client, int item)
+{
+	switch (action)
+	{
+		case MenuAction_Select:
+		{
+			char code[4];
+			langmenu.GetItem(item, code, sizeof(code));
+			ChangeLanguage(client, GetLanguageByCode(code));
+		}
+		case MenuAction_End:
+		{
+			delete langmenu;
+		}
+	}
+	return 0;
 }
 
 /**
