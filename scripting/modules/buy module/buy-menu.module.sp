@@ -362,7 +362,9 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 {
 	if (!CanAffordPurchase(client, cost))
 	{
-		PrintToChat(client, "[Buy] Necesitas %d puntos, tienes %d", cost, g_iPlayerCurrency[client]);
+		char message[128];
+		Format(message, sizeof(message), "%T", "Buy_InsufficientPoints", client, cost, g_iPlayerCurrency[client]);
+		PrintToChat(client, "\x05[Buy]\x01 %s", message);
 		return false;
 	}
 
@@ -372,7 +374,9 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 	// Persistir en base de datos
 	Leveling_UpdatePlayerDatabase(client);
 
-	PrintToChat(client, "[Buy] \x04¡Compraste %s!\x01 Puntos restantes: %d", itemName, g_iPlayerCurrency[client]);
+	char message[128];
+	Format(message, sizeof(message), "%T", "Buy_PurchaseSuccess", client, itemName, g_iPlayerCurrency[client]);
+	PrintToChat(client, "\x04[Buy]\x01 %s", message);
 	return true;
 }
 
@@ -411,13 +415,15 @@ stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int top
 	// Mostrar mensaje con puntos ganados si hay puntos
 	if (pointsGained > 0)
 	{
-		PrintToChatAll("\x04[Eclipse] \x03%N \x01mató a \x04%N \x05- \x04Frags: \x03%d - \x04Top: \x03%d \x05| \x04+%d puntos",
-					   attacker, victim, frags, topPosition, pointsGained);
+		char message[256];
+		Format(message, sizeof(message), "%T", "Buy_KillRewardWithCurrency", LANG_SERVER, attacker, victim, frags, topPosition, pointsGained);
+		PrintToChatAll("\x04[Eclipse]\x01 %s", message);
 	}
 	else
 	{
-		PrintToChatAll("\x04[Eclipse] \x03%N \x01mató a \x04%N \x05- \x04Frags: \x03%d - \x04Top: \x03%d.",
-					   attacker, victim, frags, topPosition);
+		char message[256];
+		Format(message, sizeof(message), "%T", "Buy_KillReward", LANG_SERVER, attacker, victim, frags, topPosition);
+		PrintToChatAll("\x04[Eclipse]\x01 %s", message);
 	}
 }
 
@@ -441,7 +447,10 @@ stock void SetPlayerCurrency(int client, int amount)
 		return;
 
 	g_iPlayerCurrency[client] = amount;
-	PrintToChat(client, "[Admin] Tu balance se estableció en %d puntos", amount);
+
+	char message[128];
+	Format(message, sizeof(message), "%T", "Buy_AdminSetBalance", client, amount);
+	PrintToChat(client, "\x04[Admin]\x01 %s", message);
 }
 // ============================================================================
 
@@ -637,12 +646,16 @@ public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName
 	{
 		if (!Berserker_HasMeleeEquipped(client))
 		{
-			PrintToChat(client, "\x05[Ability]\x01 You need a melee weapon to use Berserker!");
+			char message[128];
+			Format(message, sizeof(message), "%T", "Ability_NeedMeleeWeapon", client, "Berserker");
+			PrintToChat(client, "\x05[Ability]\x01 %s", message);
 			return false;
 		}
 		else if (Berserker_GetCooldown(client) > 0)
 		{
-			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", Berserker_GetCooldown(client));
+			char message[128];
+			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, Berserker_GetCooldown(client));
+			PrintToChat(client, "\x05[Ability]\x01 %s", message);
 			return false;
 		}
 
@@ -653,7 +666,9 @@ public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName
 	{
 		if (AcidBath_GetCooldown(client) > 0)
 		{
-			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", AcidBath_GetCooldown(client));
+			char message[128];
+			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, AcidBath_GetCooldown(client));
+			PrintToChat(client, "\x05[Ability]\x01 %s", message);
 			return false;
 		}
 
@@ -664,7 +679,9 @@ public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName
 	{
 		if (LifeStealer_GetCooldown(client) > 0)
 		{
-			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", LifeStealer_GetCooldown(client));
+			char message[128];
+			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, LifeStealer_GetCooldown(client));
+			PrintToChat(client, "\x05[Ability]\x01 %s", message);
 			return false;
 		}
 		LifeStealer_Activate(client);
@@ -674,7 +691,9 @@ public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName
 	{
 		if (SpeedFreak_GetCooldown(client) > 0)
 		{
-			PrintToChat(client, "\x05[Ability]\x01 You have to wait %i seconds to use this again.", SpeedFreak_GetCooldown(client));
+			char message[128];
+			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, SpeedFreak_GetCooldown(client));
+			PrintToChat(client, "\x05[Ability]\x01 %s", message);
 			return false;
 		}
 		SpeedFreak_Activate(client);
@@ -686,7 +705,9 @@ public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName
 		if (ShoulderCannon_IsActive(client))
 		{
 			ShoulderCannon_Remove(client);
-			PrintToChat(client, "\x05[Ability]\x01 Shoulder Cannon unequipped.");
+			char message[128];
+			Format(message, sizeof(message), "%T", "Ability_Unequipped", client, "Shoulder Cannon");
+			PrintToChat(client, "\x05[Ability]\x01 %s", message);
 		}
 		else
 		{

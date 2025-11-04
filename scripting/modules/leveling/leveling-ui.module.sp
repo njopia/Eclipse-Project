@@ -122,27 +122,39 @@ public void LevelingUI_DisplayLevelInfo(int client)
 	int progress = Leveling_GetLevelProgress(client);
 
 	// Encabezado
-	PrintToChat(client, "\x04=== INFORMACIÓN DE NIVEL ===");
+	char titleMsg[128];
+	Format(titleMsg, sizeof(titleMsg), "%T", "Leveling_InfoTitle", client);
+	PrintToChat(client, "\x04%s", titleMsg);
 
 	// Nivel
-	PrintToChat(client, "\x04Level:\x01 \x05%d", level);
+	char levelMsg[128];
+	Format(levelMsg, sizeof(levelMsg), "%T", "Leveling_InfoLevel", client, level);
+	PrintToChat(client, "\x04%s", levelMsg);
 
 	// XP actual vs requerido
-	PrintToChat(client, "\x04XP Actual:\x01 \x03%d\x01 / \x03%d\x01", currentXP, nextLevelXP);
+	char currentXPMsg[128];
+	Format(currentXPMsg, sizeof(currentXPMsg), "%T", "Leveling_InfoCurrentXP", client, currentXP, nextLevelXP);
+	PrintToChat(client, "\x04%s", currentXPMsg);
 
 	// XP total acumulado
-	PrintToChat(client, "\x04XP Total:\x01 \x03%d", totalXP);
+	char totalXPMsg[128];
+	Format(totalXPMsg, sizeof(totalXPMsg), "%T", "Leveling_InfoTotalXP", client, totalXP);
+	PrintToChat(client, "\x04%s", totalXPMsg);
 
 	// Barra de progreso (si está habilitada)
 	if (GetConVarBool(cvar_UIShowProgressBar))
 	{
 		char progressBar[256];
 		LevelingUI_CreateProgressBar(progress, progressBar, sizeof(progressBar));
-		PrintToChat(client, "\x04Progreso:\x01 %s \x03%d%%%", progressBar, progress);
+		char progressMsg[128];
+		Format(progressMsg, sizeof(progressMsg), "%T", "Leveling_InfoProgress", client, progress);
+		PrintToChat(client, "\x04%s\x01 %s", progressMsg, progressBar);
 	}
 	else
 	{
-		PrintToChat(client, "\x04Progreso:\x01 \x03%d%%%", progress);
+		char progressMsg[128];
+		Format(progressMsg, sizeof(progressMsg), "%T", "Leveling_InfoProgress", client, progress);
+		PrintToChat(client, "\x04%s", progressMsg);
 	}
 }
 
@@ -164,8 +176,9 @@ public void LevelingUI_DisplayXPGain(int client, int xp_gained, const char[] rea
 	int nextLevelXP = Leveling_GetXPRequiredForNextLevel(client);
 	int progress = Leveling_GetLevelProgress(client);
 
-	PrintToChat(client, "\x04[XP]\x01 +\x03%d\x01 XP (\x05%s\x01) - \x03%d\x01/\x03%d\x01 (\x03%d%%%%\x01)",
-		xp_gained, reason, currentXP, nextLevelXP, progress);
+	char message[256];
+	Format(message, sizeof(message), "%T", "Leveling_XPGained", client, xp_gained, reason, currentXP, nextLevelXP, progress);
+	PrintToChat(client, "\x04[XP]\x01 %s", message);
 }
 
 /**

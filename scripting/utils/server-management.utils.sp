@@ -5,14 +5,22 @@
 public Action Cmd_Reload_Plugins(int client, int args)
 {
 	ServerCommand("sm plugins reload");
-	PrintToChat(client, "Plugins Reloaded");
+	char message[128];
+	Format(message, sizeof(message), "%T", "System_PluginsReloaded", client);
+	PrintToChat(client, "\x04[System]\x01 %s", message);
 	return Plugin_Handled;
 }
 
 public Action Cmd_Reload_Translations(int client, int args)
 {
-	PrintToChatAll("Reloading Translations");
+	char reloadingMsg[128];
+	Format(reloadingMsg, sizeof(reloadingMsg), "%T", "System_TranslationsReloading", LANG_SERVER);
+	PrintToChatAll("\x04[System]\x01 %s", reloadingMsg);
+
 	ServerCommand("sm_reload_translations");
-	PrintToChat(client, "Translations Reloaded");
+
+	char reloadedMsg[128];
+	Format(reloadedMsg, sizeof(reloadedMsg), "%T", "System_TranslationsReloaded", client);
+	PrintToChat(client, "\x04[System]\x01 %s", reloadedMsg);
 	return Plugin_Handled;
 }

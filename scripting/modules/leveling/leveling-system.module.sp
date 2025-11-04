@@ -293,7 +293,9 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 public void Leveling_OnLevelUp(int client)
 {
 	// Mostrar mensaje en chat
-	PrintToChat(client, "\x04[LEVELING]\x01 ¡Felicitaciones! Ahora eres \x05Nivel %d\x01!", g_iPlayerLevel[client]);
+	char message[128];
+	Format(message, sizeof(message), "%T", "Leveling_LevelUp", client, g_iPlayerLevel[client]);
+	PrintToChat(client, "\x04[LEVELING]\x01 %s", message);
 
 	// Log antes de aplicar rewards
 	LogMessage("[LEVELING DEBUG] OnLevelUp - %N alcanzó nivel %d, aplicando rewards...", client, g_iPlayerLevel[client]);

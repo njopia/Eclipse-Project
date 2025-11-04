@@ -30,7 +30,9 @@ public Action CmdAfk(int client, int args)
 
 	if (GetClientTeam(client) == TEAM_SPECTATOR)
 	{
-		PrintToChat(client, "\x04[AFK]\x01 Ya estás en \x10Espectadores\x01.");
+		char message[128];
+		Format(message, sizeof(message), "%T", "AFK_AlreadySpectator", client);
+		PrintToChat(client, "\x04[AFK]\x01 %s", message);
 		return Plugin_Handled;
 	}
 
@@ -125,7 +127,12 @@ void ToSpectator(int client, bool verbose)
 {
 	if (GetClientTeam(client) == TEAM_SPECTATOR)
 	{
-		if (verbose) PrintToChat(client, "\x04[AFK]\x01 Ya estás en Espectadores.");
+		if (verbose)
+		{
+			char message[128];
+			Format(message, sizeof(message), "%T", "AFK_AlreadySpectator", client);
+			PrintToChat(client, "\x04[AFK]\x01 %s", message);
+		}
 		return;
 	}
 
@@ -134,14 +141,19 @@ void ToSpectator(int client, bool verbose)
 	// En algunos casos ayuda emitir el comando del juego
 	FakeClientCommand(client, "jointeam 1");
 	ShowMainMenu(client);
-	PrintToChatAll("\x04[AFK]\x01 %N pasó a \x10Espectadores\x01.", client);
+
+	char message[128];
+	Format(message, sizeof(message), "%T", "AFK_MovedToSpectator", LANG_SERVER, client);
+	PrintToChatAll("\x04[AFK]\x01 %s", message);
 }
 
 void TryJoinSurvivors(int client)
 {
 	if (GetClientTeam(client) == TEAM_SURVIVOR)
 	{
-		PrintToChat(client, "\x04[JOIN]\x01 Ya estás en \x05Sobrevivientes\x01.");
+		char message[128];
+		Format(message, sizeof(message), "%T", "Join_AlreadySurvivor", client);
+		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
 		return;
 	}
 
@@ -151,7 +163,9 @@ void TryJoinSurvivors(int client)
 
 	if (survHumans >= maxSurv)
 	{
-		PrintToChat(client, "\x04[JOIN]\x01 Los \x05Sobrevivientes\x01 están llenos (%d/%d). Usa \x10!afk\x01 para esperar en espectadores y vuelve a intentar con \x10!join\x01.", survHumans, maxSurv);
+		char message[256];
+		Format(message, sizeof(message), "%T", "Join_SurvivorsFull", client, survHumans, maxSurv);
+		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
 		return;
 	}
 
@@ -181,13 +195,17 @@ public Action PostJoinCheck(Handle timer, any userid)
 	int client = GetClientOfUserId(userid);
 	if (!IsPlayer(client)) return Plugin_Stop;
 
-	if (GetClientTeam(client) == TEAM_SPECTATOR)
+	if (GetClientTeam(client) == TEAM_SURVIVOR)
 	{
-		PrintToChatAll("\x04[JOIN]\x01 %N se unió a \x05Sobrevivientes\x01.", client);
+		char message[128];
+		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
+		PrintToChatAll("\x04[JOIN]\x01 %s", message);
 	}
 	else
 	{
-		PrintToChat(client, "\x04[JOIN]\x01 No fue posible unirse ahora. Intenta nuevamente cuando haya un slot libre.");
+		char message[256];
+		Format(message, sizeof(message), "%T", "Join_Failed", client);
+		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
 	}
 	// PrintToChatAll("client team: %d", GetClientTeam(client));
 	// PrintToChatAll("TEAM_SURVIVOR: %d", TEAM_SURVIVOR);
