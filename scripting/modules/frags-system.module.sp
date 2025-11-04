@@ -103,23 +103,28 @@ public void FragsSystem_Event_PlayerDeath(Event event, const char[] name, bool d
 		Frags[attacker]++;
 		FragsSystem_UpdateFragsLine();
 
-		// Obtener tipo de infectado y puntos ganados
+		// Obtener tipo de infectado y puntos BASE ganados
 		int zombieClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
-		int pointsGained = 0;
+		int basePoints = 0;
 		bool isHeadshot = event.GetBool("headshot", false);
 
-		// Calcular puntos según tipo (debe coincidir con eclipse-points-unified)
+		// Calcular puntos BASE según tipo (debe coincidir con eclipse-points-unified)
+		// Valores BASE para Easy: Tank=100, Especiales=10
 		if (zombieClass == 8) // Tank
-			pointsGained = 200;
+			basePoints = 100;
 		else if (zombieClass >= 1 && zombieClass <= 7) // Especiales normales
-			pointsGained = 50;
+			basePoints = 10;
 
-		// Agregar bonus por headshot si aplica
+		// Agregar bonus BASE por headshot si aplica
 		if (isHeadshot)
-			pointsGained += 3;
+			basePoints += 3;
 
-		// Usar función centralizada de buy-menu para mostrar el mensaje
-		BuyMenu_PrintKillMessage(attacker, victim, Frags[attacker], FragsSystem_GetFragsPos(attacker), pointsGained);
+		// Aplicar multiplicador de dificultad para mostrar puntos FINALES
+		int difficultyMultiplier = GetDifficultyMultiplier();
+		int finalPoints = basePoints * difficultyMultiplier;
+
+		// Usar función centralizada de buy-menu para mostrar el mensaje con puntos FINALES
+		BuyMenu_PrintKillMessage(attacker, victim, Frags[attacker], FragsSystem_GetFragsPos(attacker), finalPoints);
 	}
 }
 

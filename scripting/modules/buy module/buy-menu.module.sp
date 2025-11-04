@@ -357,6 +357,8 @@ stock bool CanAffordPurchase(int client, int cost)
 /**
  * Attempt to purchase an item
  * Returns true if purchase was successful, false otherwise
+ *
+ * IMPORTANTE: Solo guarda en base de datos si la dificultad es Easy.
  */
 stock bool PurchaseItem(int client, int cost, const char[] itemName)
 {
@@ -371,8 +373,11 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 	// Deduct currency
 	g_iPlayerCurrency[client] -= cost;
 
-	// Persistir en base de datos
-	Leveling_UpdatePlayerDatabase(client);
+	// Persistir en base de datos SOLO si la dificultad es Easy
+	if (IsEasyDifficulty())
+	{
+		Leveling_UpdatePlayerDatabase(client);
+	}
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "Buy_PurchaseSuccess", client, itemName, g_iPlayerCurrency[client]);
@@ -382,6 +387,9 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 
 /**
  * Award currency to player
+ *
+ * IMPORTANTE: Solo guarda en base de datos si la dificultad es Easy.
+ * En otras dificultades (Normal, Advanced, Expert), los puntos son temporales.
  */
 stock void AwardCurrency(int client, int amount, const char[] reason = "")
 {
@@ -393,8 +401,11 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 	// Registrar en estadísticas
 	CurrencyStats_AddEarnings(client, amount);
 
-	// Persistir en base de datos
-	Leveling_UpdatePlayerDatabase(client);
+	// Persistir en base de datos SOLO si la dificultad es Easy
+	if (IsEasyDifficulty())
+	{
+		Leveling_UpdatePlayerDatabase(client);
+	}
 
 // El parámetro 'reason' se usa en llamadas externas para logging/estadísticas
 #pragma unused reason

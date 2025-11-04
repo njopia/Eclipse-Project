@@ -15,6 +15,7 @@
 // --- ConVars para configurar recompensas UNIFICADAS ---
 // Cada evento otorga la MISMA cantidad de puntos para currency Y XP
 ConVar cvar_PointsCommonKill;
+ConVar cvar_PointsUncommonKill;
 ConVar cvar_PointsSpecialKill;
 ConVar cvar_PointsTankKill;
 ConVar cvar_PointsWitchKill;
@@ -32,6 +33,9 @@ ConVar cvar_PointsSurvivalRound;
 bool g_bPlayerLeftSafeArea[MAXPLAYERS + 1];
 bool g_bMapCompleteAwarded[MAXPLAYERS + 1];
 
+// ConVar para detectar dificultad del servidor
+Handle g_hCvarDifficulty = INVALID_HANDLE;
+
 /**
  * Inicializa el módulo de puntos unificados
  * Debe ser llamado desde OnPluginStart()
@@ -45,34 +49,46 @@ public void EclipsePointsUnified_OnPluginStart()
 	// === CONVARS UNIFICADOS ===
 	// Cada ConVar controla AMBOS sistemas (Currency + XP)
 
+	// IMPORTANTE: Los valores configurados aquí son para dificultad EASY
+	// Se multiplican automáticamente según la dificultad:
+	// Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
+
 	cvar_PointsCommonKill = CreateConVar(
 		"eclipse_points_common_kill",
-		"5",
-		"Puntos (Currency + XP) por matar un infectado común",
+		"1",
+		"Puntos BASE (Currency + XP) por matar un infectado común (Easy=1, Normal=2, Advanced=3, Expert=4)",
+		FCVAR_PLUGIN,
+		true, 0.0
+	);
+
+	cvar_PointsUncommonKill = CreateConVar(
+		"eclipse_points_uncommon_kill",
+		"3",
+		"Puntos BASE (Currency + XP) por matar un infectado uncommon como Riot Cop (Easy=3, Normal=6, Advanced=9, Expert=12)",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
 
 	cvar_PointsSpecialKill = CreateConVar(
 		"eclipse_points_special_kill",
-		"50",
-		"Puntos (Currency + XP) por matar un infectado especial",
+		"10",
+		"Puntos BASE (Currency + XP) por matar un infectado especial (Easy=10, Normal=20, Advanced=30, Expert=40)",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
 
 	cvar_PointsTankKill = CreateConVar(
 		"eclipse_points_tank_kill",
-		"200",
-		"Puntos (Currency + XP) por matar un Tank",
+		"100",
+		"Puntos BASE (Currency + XP) por matar un Tank (Easy=100, Normal=200, Advanced=300, Expert=400)",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
 
 	cvar_PointsWitchKill = CreateConVar(
 		"eclipse_points_witch_kill",
-		"150",
-		"Puntos (Currency + XP) por matar una Witch",
+		"5",
+		"Puntos BASE (Currency + XP) por matar una Witch (Easy=5, Normal=10, Advanced=15, Expert=20)",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
@@ -111,8 +127,8 @@ public void EclipsePointsUnified_OnPluginStart()
 
 	cvar_PointsCompleteMap = CreateConVar(
 		"eclipse_points_complete_map",
-		"500",
-		"Puntos (Currency + XP) por completar un mapa",
+		"1000",
+		"Puntos BASE (Currency + XP) por completar un mapa/finale (Easy=1000, Normal=2000, Advanced=3000, Expert=4000)",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
@@ -180,6 +196,9 @@ public void EclipsePointsUnified_OnPluginStart()
 	// Survival mode
 	HookEvent("survival_round_start", EclipsePoints_Event_SurvivalRound, EventHookMode_Post);
 
+	// Obtener ConVar de dificultad del servidor
+	g_hCvarDifficulty = FindConVar("z_difficulty");
+
 	LogMessage("[Eclipse Points] Sistema unificado de puntos inicializado");
 }
 
@@ -205,6 +224,54 @@ public void EclipsePointsUnified_OnClientDisconnect(int client)
 }
 
 //==================================================
+// === FUNCIONES DE DIFICULTAD ===
+//==================================================
+
+/**
+ * Obtiene el multiplicador de dificultad actual del servidor
+ * Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
+ *
+ * @return Multiplicador de puntos según dificultad
+ */
+int GetDifficultyMultiplier()
+{
+	if (g_hCvarDifficulty == INVALID_HANDLE)
+		return 1; // Default a Easy si no se puede detectar
+
+	char difficulty[32];
+	GetConVarString(g_hCvarDifficulty, difficulty, sizeof(difficulty));
+
+	// Determinar multiplicador basado en la dificultad
+	if (StrEqual(difficulty, "Easy", false))
+		return 1;
+	else if (StrEqual(difficulty, "Normal", false))
+		return 2;
+	else if (StrEqual(difficulty, "Hard", false) || StrEqual(difficulty, "Advanced", false))
+		return 3;
+	else if (StrEqual(difficulty, "Impossible", false) || StrEqual(difficulty, "Expert", false))
+		return 4;
+
+	return 1; // Default a Easy
+}
+
+/**
+ * Verifica si la dificultad actual es Easy
+ * Solo en Easy se guardan los puntos en la base de datos
+ *
+ * @return true si es Easy, false en caso contrario
+ */
+bool IsEasyDifficulty()
+{
+	if (g_hCvarDifficulty == INVALID_HANDLE)
+		return true; // Default a Easy si no se puede detectar
+
+	char difficulty[32];
+	GetConVarString(g_hCvarDifficulty, difficulty, sizeof(difficulty));
+
+	return StrEqual(difficulty, "Easy", false);
+}
+
+//==================================================
 // === FUNCIÓN CENTRAL DE OTORGAMIENTO DE PUNTOS ===
 //==================================================
 
@@ -214,8 +281,14 @@ public void EclipsePointsUnified_OnClientDisconnect(int client)
  * - Currency (para compras)
  * - XP (para niveles)
  *
+ * Los puntos se multiplican según la dificultad:
+ * Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
+ *
+ * IMPORTANTE: Solo en modo Easy se guardan los puntos en la base de datos.
+ * En otras dificultades, los puntos son temporales para esa sesión.
+ *
  * @param client        Cliente que recibe los puntos
- * @param points        Cantidad de puntos a otorgar (se aplica a AMBOS sistemas)
+ * @param points        Cantidad de puntos BASE a otorgar (se multiplica por dificultad)
  * @param reason        Razón del otorgamiento (para logs/mensajes)
  */
 void AwardUnifiedPoints(int client, int points, const char[] reason)
@@ -226,8 +299,12 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 	if (points <= 0)
 		return;
 
+	// Aplicar multiplicador de dificultad
+	int difficultyMultiplier = GetDifficultyMultiplier();
+	int finalPoints = points * difficultyMultiplier;
+
 	// Otorgar Currency Points (sistema de compras)
-	AwardCurrency(client, points, reason);
+	AwardCurrency(client, finalPoints, reason);
 
 	// Actualizar estadísticas de currency según el tipo de evento
 	if (StrContains(reason, "común", false) != -1 || StrContains(reason, "comun", false) != -1)
@@ -240,10 +317,11 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 		CurrencyStats_AddHeal(client);
 
 	// Otorgar XP Points (sistema de niveles)
-	Leveling_AwardXP(client, points, reason);
+	Leveling_AwardXP(client, finalPoints, reason);
 
-	// Log para debugging
-	// LogMessage("[Eclipse Points] %N recibió %d puntos por: %s", client, points, reason);
+	// Log para debugging con dificultad
+	// LogMessage("[Eclipse Points] %N recibió %d puntos (%d base x%d dificultad) por: %s",
+	//            client, finalPoints, points, difficultyMultiplier, reason);
 }
 
 //==================================================
@@ -251,7 +329,7 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 //==================================================
 
 /**
- * Evento: Infected Death (infectados comunes)
+ * Evento: Infected Death (infectados comunes y uncommon)
  */
 public Action EclipsePoints_Event_InfectedDeath(Event event, const char[] name, bool dontBroadcast)
 {
@@ -263,11 +341,26 @@ public Action EclipsePoints_Event_InfectedDeath(Event event, const char[] name, 
 	if (GetClientTeam(attacker) != 2)  // Team 2 = Survivors
 		return Plugin_Continue;
 
-	int points = cvar_PointsCommonKill.IntValue;
 	bool isHeadshot = event.GetBool("headshot", false);
 
-	// Otorgar puntos base por infectado común
-	AwardUnifiedPoints(attacker, points, "Matar infectado común");
+	// Detectar si es uncommon infected (L4D2 only)
+	bool isUncommon = false;
+	if (GetEngineVersion() == Engine_Left4Dead2)
+	{
+		// Los uncommon tienen la propiedad "type" en el evento
+		// Valor 0 = común, valor > 0 = uncommon (riot, clown, mudman, etc.)
+		int type = event.GetInt("type", 0);
+		isUncommon = (type > 0);
+	}
+
+	// Seleccionar puntos base según tipo
+	int points = isUncommon ? cvar_PointsUncommonKill.IntValue : cvar_PointsCommonKill.IntValue;
+
+	// Otorgar puntos base por infectado
+	if (isUncommon)
+		AwardUnifiedPoints(attacker, points, "Matar infectado uncommon");
+	else
+		AwardUnifiedPoints(attacker, points, "Matar infectado común");
 
 	// Bonus por headshot
 	if (isHeadshot)

@@ -283,8 +283,11 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 			client, xp_amount, reason, g_iPlayerLevel[client], g_iPlayerXP[client], xp_required);
 	}
 
-	// Actualizar en base de datos (asíncrono)
-	Leveling_UpdatePlayerDatabase(client);
+	// Actualizar en base de datos (asíncrono) SOLO si la dificultad es Easy
+	if (IsEasyDifficulty())
+	{
+		Leveling_UpdatePlayerDatabase(client);
+	}
 }
 
 /**
