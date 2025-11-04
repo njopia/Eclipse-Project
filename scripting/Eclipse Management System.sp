@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <sourcemod>
 #include <left4dhooks>
+#include <clientprefs>
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -53,9 +54,14 @@
 #include "modules/frags-system.module.sp"
 //////////////////////////////////////////////
 
+/////// PLAYERS LIST MODULE ///////////////////
+#tryinclude "modules/players-list.module.sp"
+//////////////////////////////////////////////
+
 /////// SERVER MANAGEMENT SYSTEM CORE /////////
 #include "modules/management/afk-join.sp"
 #tryinclude "modules/management/scripted-hud.module.sp"
+#tryinclude "modules/management/lang.module.sp"
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
@@ -203,6 +209,9 @@ public void OnPluginStart()
 	// Inicializar sistema de frags
 	FragsSystem_OnPluginStart();
 
+	// Inicializar sistema de lista de jugadores
+	PlayersList_OnPluginStart();
+
 	// ===== SISTEMA DE GESTIÓN DEL SERVIDOR =====
 	Afk_Join_OnPluginStart();
 
@@ -210,6 +219,9 @@ public void OnPluginStart()
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnPluginStart();
 #endif
+
+	// ===== SISTEMA DE IDIOMA =====
+	Language_OnPluginStart();
 
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
@@ -306,6 +318,15 @@ public void OnClientPostAdminCheck(int client)
 
 	// Inicializar Ion Cannon
 	IonCannon_OnClientPutInServer(client);
+
+	// Aplicar preferencias de idioma
+	Language_OnClientPostAdminCheck(client);
+}
+
+public void OnClientCookiesCached(int client)
+{
+	// Cargar preferencias de idioma desde cookies
+	Language_OnClientCookiesCached(client);
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
