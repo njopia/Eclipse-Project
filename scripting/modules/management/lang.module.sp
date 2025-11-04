@@ -101,26 +101,31 @@ void ShowLanguagePanel(int client)
 		GetLanguageInfo(currentLang, currentCode, sizeof(currentCode));
 	}
 
-	// Add all available languages
-	int num = GetLanguageCount();
-	for (int i = 0; i < num; i++)
-	{
-		char code[4], name[64];
-		GetLanguageInfo(i, code, sizeof(code), name, sizeof(name));
+	// Only add languages that we have translations for
+	// These are the languages in eclipse.phrases.txt
+	char supportedLangs[][] = {
+		"en", "es", "pt", "fr", "de", "ru", "it", "pl", "tr", "chi"
+	};
+	char langNames[][] = {
+		"English", "Español", "Português", "Français", "Deutsch",
+		"Русский", "Italiano", "Polski", "Türkçe", "中文"
+	};
 
-		bool isCurrent = StrEqual(currentCode, code, false);
+	for (int i = 0; i < sizeof(supportedLangs); i++)
+	{
+		bool isCurrent = StrEqual(currentCode, supportedLangs[i], false);
 		char menuItem[128];
 
 		if (isCurrent)
 		{
-			Format(menuItem, sizeof(menuItem), "%s ☑", name);
+			Format(menuItem, sizeof(menuItem), "%s ☑", langNames[i]);
 		}
 		else
 		{
-			Format(menuItem, sizeof(menuItem), "%s", name);
+			Format(menuItem, sizeof(menuItem), "%s", langNames[i]);
 		}
 
-		langmenu.AddItem(code, menuItem);
+		langmenu.AddItem(supportedLangs[i], menuItem);
 	}
 
 	langmenu.ExitButton = true;
