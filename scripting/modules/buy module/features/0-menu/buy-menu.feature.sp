@@ -121,7 +121,7 @@ public void InstantsMenu(int client)
 	char playerName[MAX_NAME_LENGTH];
 	GetClientName(client, playerName, sizeof(playerName))
 		Format(title, sizeof(title), "%T", "BM_Instant", client);
-	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerPoints = GetPlayerCurrency(client);
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], pointsText[32], levelText[32];
@@ -166,7 +166,7 @@ public void LongActionsMenu(int client)
 	char playerName[MAX_NAME_LENGTH];
 	GetClientName(client, playerName, sizeof(playerName))
 		Format(title, sizeof(title), "%T", "BM_LongAction", client);
-	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerPoints = GetPlayerCurrency(client);
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], pointsText[32], levelText[32];
@@ -229,7 +229,7 @@ public void DeployablesMenu(int client)
 	char playerName[MAX_NAME_LENGTH];
 	GetClientName(client, playerName, sizeof(playerName))
 		Format(title, sizeof(title), "%T", "BM_Deployables", client);
-	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerPoints = GetPlayerCurrency(client);
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], pointsText[32], levelText[32];
@@ -355,7 +355,7 @@ public void BombardmentsMenu(int client)
 	char playerName[MAX_NAME_LENGTH];
 	GetClientName(client, playerName, sizeof(playerName))
 		Format(title, sizeof(title), "%T", "BM_Bombardments", client);
-	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerPoints = GetPlayerCurrency(client);
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], pointsText[32], levelText[32];
@@ -429,7 +429,7 @@ public void TeamBonusesMenu(int client)
 	char playerName[MAX_NAME_LENGTH];
 	GetClientName(client, playerName, sizeof(playerName))
 		Format(title, sizeof(title), "%T", "BM_TeamBonuses", client);
-	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerPoints = GetPlayerCurrency(client);
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], pointsText[32], levelText[32];
@@ -796,7 +796,7 @@ public Action Cmd_Buy(int client, int args)
 	GetClientName(client, playerName, sizeof(playerName))
 		Format(title, sizeof(title), "%T", "Menu Title", client);
 	// Add player points and level to main title
-	int	 playerPoints = g_iPlayerCurrency[client];
+	int	 playerPoints = GetPlayerCurrency(client);
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], pointsText[32], levelText[32];

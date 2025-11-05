@@ -14,6 +14,7 @@
 #tryinclude "utils/database.utils.sp"
 //////////////////////////////////////////////
 
+#define PLUGIN_VERSION "1.0.0"
 /////// HELPERS /////////////////////////////
 #tryinclude "helpers/commons.helpers.sp"
 #tryinclude "helpers/entities.helpers.sp"
@@ -83,7 +84,7 @@ public Plugin myinfo =
 	name		= "Eclipse management system",
 	author		= "Natan Jopia",
 	description = "database management system module",
-	version		= "1.0.0",
+	version		= PLUGIN_VERSION,
 	url			= "https://gitlab.com/sourcepawn1/sm-win"
 };
 
@@ -162,6 +163,7 @@ public int Native_GetLevelProgress(Handle plugin, int numParams)
 
 /**
  * Native: Obtiene la moneda/puntos del jugador
+ * Devuelve currency de BD si es Easy, o currency local si es otra dificultad
  */
 public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 {
@@ -170,7 +172,8 @@ public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return 0;
 
-	return g_iPlayerCurrency[client];
+	// Usar la función GetPlayerCurrency que maneja la dificultad correctamente
+	return GetPlayerCurrency(client);
 }
 
 public void OnPluginStart()
@@ -189,7 +192,7 @@ public void OnPluginStart()
 	}
 	if (checkDBFile(DB_HUD_MESSAGES))
 	{
-		doSqlConnection(DB_HUD_MESSAGES); // Handle para HUD messages
+		doSqlConnection(DB_HUD_MESSAGES);	 // Handle para HUD messages
 	}
 	buyMenuOnPluginStart();
 	AdminMoney_OnPluginStart();
@@ -271,6 +274,7 @@ public void OnMapStart()
 	GetCurrentMap(sMap, 64);
 	Format(sMap, sizeof(sMap), "maps/%s.bsp", sMap);
 	PrecacheModel(sMap, true);
+	Leveling_OnMapStart();
 }
 
 public void OnMapEnd()
@@ -280,6 +284,7 @@ public void OnMapEnd()
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnMapEnd();
 #endif
+	Leveling_OnMapEnd();
 
 	// Limpiar todos los timers antes de cambiar de mapa
 	CleanupAllTimers();
@@ -291,6 +296,7 @@ public void OnConfigsExecuted()
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnConfigsExecuted();
 #endif
+	Leveling_OnConfigsExecuted();
 }
 
 public void OnClientPutInServer(int client)
@@ -321,6 +327,9 @@ public void OnClientPostAdminCheck(int client)
 
 	// Aplicar preferencias de idioma
 	Language_OnClientPostAdminCheck(client);
+
+	// Inicializar Throphy System
+	Leveling_OnClientPostAdminCheck(client);
 }
 
 public void OnClientCookiesCached(int client)
@@ -350,6 +359,11 @@ public void PrecacheAll()
 	// (opcional) activar logs:
 	// EMS_Precache_SetDebug(true);
 #endif
+}
+
+public void OnPluginEnd()
+{
+	Leveling_OnPluginEnd();
 }
 
 public Action EMS_CmdPrecacheReload(int client, int args)

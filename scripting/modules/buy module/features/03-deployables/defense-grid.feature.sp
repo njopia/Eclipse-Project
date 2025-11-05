@@ -421,7 +421,8 @@ void DefenseGrid_AwardXP(int client, int type)
 		int currencyAmount = xpAmount / 2; // Mitad del XP como puntos
 		if (currencyAmount > 0)
 		{
-			g_iPlayerCurrency[client] += currencyAmount;
+			// Usar AwardCurrency para manejar correctamente la dificultad
+			AwardCurrency(client, currencyAmount, "Defense Grid Reward");
 		}
 
 		// Mensaje al jugador

@@ -30,7 +30,8 @@
 //==================================================
 
 // ================== CURRENCY SYSTEM ==================
-int	   g_iPlayerCurrency[MAXPLAYERS + 1];	 // Player currency for buying items
+int	   g_iPlayerCurrency[MAXPLAYERS + 1];	 // Player currency for buying items (persistente en BD - SOLO Easy)
+int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency temporal para otras dificultades (no se guarda en BD)
 
 // Buy Cost ConVars
 Handle cvar_CostConvertHP	   = INVALID_HANDLE;
@@ -115,6 +116,7 @@ public void buyMenuOnPluginStart()
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_iPlayerCurrency[i] = 0;
+		g_iPlayerLocalCurrency[i] = 0;
 	}
 
 	// Initialize Ion Cannon module
@@ -170,6 +172,7 @@ public void OnClientDisconnect(int client)
 	g_fNextHint[client]		  = 0.0;
 	g_bHadMaxHealth[client]	  = false;
 	g_iPlayerCurrency[client] = 0;	  // Reset currency on disconnect
+	g_iPlayerLocalCurrency[client] = 0;	  // Reset local currency on disconnect
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
@@ -351,7 +354,9 @@ stock bool CanAffordPurchase(int client, int cost)
 	if (client <= 0 || !IsClientInGame(client))
 		return false;
 
-	return g_iPlayerCurrency[client] >= cost;
+	// Verificar en la variable correcta según dificultad
+	int playerCurrency = IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client];
+	return playerCurrency >= cost;
 }
 
 /**
@@ -359,28 +364,47 @@ stock bool CanAffordPurchase(int client, int cost)
  * Returns true if purchase was successful, false otherwise
  *
  * IMPORTANTE: Solo guarda en base de datos si la dificultad es Easy.
+ * Durante eventos especiales (Nightmare), el currency está congelado y no se puede comprar.
  */
 stock bool PurchaseItem(int client, int cost, const char[] itemName)
 {
+	// Si el currency está congelado (evento especial activo), no permitir compras
+	if (Leveling_IsCurrencyFrozen())
+	{
+		char message[128];
+		Format(message, sizeof(message), "No puedes comprar durante eventos especiales (Currency congelado).");
+		PrintToChat(client, "\x05[Sistema]\x01 %s", message);
+		return false;
+	}
+
+	// ANTI-EXPLOIT: Verificar cambio de dificultad antes de comprar
+	Leveling_CheckDifficultyChange(client);
+
 	if (!CanAffordPurchase(client, cost))
 	{
 		char message[128];
-		Format(message, sizeof(message), "%T", "Buy_InsufficientPoints", client, cost, g_iPlayerCurrency[client]);
+		int currentCurrency = IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client];
+		Format(message, sizeof(message), "%T", "Buy_InsufficientPoints", client, cost, currentCurrency);
 		PrintToChat(client, "\x05[Buy]\x01 %s", message);
 		return false;
 	}
 
-	// Deduct currency
-	g_iPlayerCurrency[client] -= cost;
-
-	// Persistir en base de datos SOLO si la dificultad es Easy
+	// Deduct currency de la variable correcta según dificultad
 	if (IsEasyDifficulty())
 	{
+		g_iPlayerCurrency[client] -= cost;
+		// Persistir en base de datos SOLO si la dificultad es Easy
 		Leveling_UpdatePlayerDatabase(client);
+	}
+	else
+	{
+		g_iPlayerLocalCurrency[client] -= cost;
+		// En otras dificultades NO se persiste
 	}
 
 	char message[128];
-	Format(message, sizeof(message), "%T", "Buy_PurchaseSuccess", client, itemName, g_iPlayerCurrency[client]);
+	int newBalance = IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client];
+	Format(message, sizeof(message), "%T", "Buy_PurchaseSuccess", client, itemName, newBalance);
 	PrintToChat(client, "\x04[Buy]\x01 %s", message);
 	return true;
 }
@@ -390,22 +414,37 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
  *
  * IMPORTANTE: Solo guarda en base de datos si la dificultad es Easy.
  * En otras dificultades (Normal, Advanced, Expert), los puntos son temporales.
+ * Durante eventos especiales (Nightmare), el currency está congelado y no se otorgan puntos.
  */
 stock void AwardCurrency(int client, int amount, const char[] reason = "")
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return;
 
-	g_iPlayerCurrency[client] += amount;
+	// Si el currency está congelado (evento especial activo), no otorgar puntos
+	if (Leveling_IsCurrencyFrozen())
+	{
+		return;
+	}
+
+	// ANTI-EXPLOIT: Verificar cambio de dificultad antes de otorgar currency
+	Leveling_CheckDifficultyChange(client);
+
+	// Agregar currency a la variable correcta según dificultad
+	if (IsEasyDifficulty())
+	{
+		g_iPlayerCurrency[client] += amount;
+		// Persistir en base de datos SOLO si la dificultad es Easy
+		Leveling_UpdatePlayerDatabase(client);
+	}
+	else
+	{
+		g_iPlayerLocalCurrency[client] += amount;
+		// En otras dificultades NO se persiste
+	}
 
 	// Registrar en estadísticas
 	CurrencyStats_AddEarnings(client, amount);
-
-	// Persistir en base de datos SOLO si la dificultad es Easy
-	if (IsEasyDifficulty())
-	{
-		Leveling_UpdatePlayerDatabase(client);
-	}
 
 // El parámetro 'reason' se usa en llamadas externas para logging/estadísticas
 #pragma unused reason
@@ -440,24 +479,37 @@ stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int top
 
 /**
  * Get player's current currency balance
+ * Devuelve currency de BD si es Easy, o currency local si es otra dificultad
  */
 stock int GetPlayerCurrency(int client)
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return 0;
 
-	return g_iPlayerCurrency[client];
+	// En Easy: usar currency persistente (BD)
+	// En otras dificultades: usar currency local (temporal)
+	return IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client];
 }
 
 /**
  * Set player's currency directly (for admin commands, etc.)
+ * Establece currency en BD si es Easy, o currency local si es otra dificultad
  */
 stock void SetPlayerCurrency(int client, int amount)
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return;
 
-	g_iPlayerCurrency[client] = amount;
+	// En Easy: establecer currency persistente (BD)
+	// En otras dificultades: establecer currency local (temporal)
+	if (IsEasyDifficulty())
+	{
+		g_iPlayerCurrency[client] = amount;
+	}
+	else
+	{
+		g_iPlayerLocalCurrency[client] = amount;
+	}
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "Buy_AdminSetBalance", client, amount);
