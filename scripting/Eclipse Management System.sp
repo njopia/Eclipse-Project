@@ -63,6 +63,7 @@
 #include "modules/management/afk-join.sp"
 #tryinclude "modules/management/scripted-hud.module.sp"
 #tryinclude "modules/management/lang.module.sp"
+#tryinclude "modules/management/mapvote.module.sp"
 
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
@@ -226,6 +227,11 @@ public void OnPluginStart()
 	// ===== SISTEMA DE IDIOMA =====
 	Language_OnPluginStart();
 
+	// ===== SISTEMA DE VOTACIÓN DE MAPAS =====
+#if defined _MAPVOTE_MODULE_
+	MapVote_OnPluginStart();
+#endif
+
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
 	RegConsoleCmd("sm_givemoney", Command_GiveMoneySub);
@@ -259,6 +265,11 @@ public void OnMapStart()
 
 	// Reset frags system
 	FragsSystem_OnMapStart();
+
+	// Reset map vote system
+#if defined _MAPVOTE_MODULE_
+	MapVote_OnMapStart();
+#endif
 
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
@@ -327,6 +338,11 @@ public void OnClientPostAdminCheck(int client)
 
 	// Aplicar preferencias de idioma
 	Language_OnClientPostAdminCheck(client);
+
+	// Inicializar sistema de votación de mapas
+#if defined _MAPVOTE_MODULE_
+	MapVote_OnClientPostAdminCheck(client);
+#endif
 
 	// Inicializar Throphy System
 	Leveling_OnClientPostAdminCheck(client);
