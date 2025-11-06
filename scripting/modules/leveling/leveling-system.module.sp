@@ -170,6 +170,30 @@ public void Leveling_OnClientPostAdminCheck(int client)
 }
 
 /**
+ * Guarda los datos del jugador cuando se desconecta
+ * @param client - ID del cliente
+ */
+public void Leveling_OnClientDisconnect(int client)
+{
+	if (client <= 0 || client > MaxClients || IsFakeClient(client))
+		return;
+
+	// Guardar datos en la base de datos (nivel/XP siempre, currency solo en Easy)
+	Leveling_UpdatePlayerDatabase(client);
+	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d, Currency: %d (Mode: %s)",
+			  client, g_iPlayerLevel[client], g_iPlayerXP[client],
+			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
+			  IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client],
+			  IsEasyDifficulty() ? "Easy/Persistent" : "Local/Temporary");
+
+	// Reset de variables locales
+	g_iPlayerLevel[client] = 0;
+	g_iPlayerXP[client] = 0;
+	g_iTotalPlayerXP[client] = 0;
+	g_bLastDifficultyWasEasy[client] = false;
+}
+
+/**
  * Carga los datos de nivel del jugador desde la base de datos
  * @param client - ID del cliente
  */
@@ -254,6 +278,13 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
 				  IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client],
 				  IsEasyDifficulty() ? "Easy/Persistent" : "Local/Temporary");
+
+		// Aplicar pasivas inmediatamente si el jugador está vivo
+		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
+		{
+			LevelingRewards_ApplyRewardsSilent(client, g_iPlayerLevel[client]);
+			LogToFile(g_szLevelingLogPath, "[LOAD] Aplicando pasivas a %N (Nivel %d)", client, g_iPlayerLevel[client]);
+		}
 	}
 	else
 	{
@@ -358,11 +389,8 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 				  client, xp_amount, reason, g_iPlayerLevel[client], g_iPlayerXP[client], xp_required);
 	}
 
-	// Actualizar en base de datos (asíncrono) SOLO si la dificultad es Easy
-	if (IsEasyDifficulty())
-	{
-		Leveling_UpdatePlayerDatabase(client);
-	}
+	// Actualizar en base de datos (asíncrono) - Nivel y XP siempre, currency solo en Easy
+	Leveling_UpdatePlayerDatabase(client);
 }
 
 /**
@@ -461,12 +489,25 @@ public void Leveling_UpdatePlayerDatabase(int client)
 	char escapedName[MAX_NAME_LENGTH * 2];
 	SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-	// Query de inserción/actualización (INSERT ... ON DUPLICATE KEY UPDATE) incluyendo currency
+	// Determinar qué currency guardar: solo el persistente si está en Easy, sino no actualizar
 	char query[1024];
-	Format(query, sizeof(query),
-		   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency, last_update) VALUES ('%s', '%s', %d, %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, current_currency = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
-		   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client],
-		   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client], escapedName);
+
+	if (IsEasyDifficulty())
+	{
+		// En Easy: Guardar nivel, XP y currency
+		Format(query, sizeof(query),
+			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency, last_update) VALUES ('%s', '%s', %d, %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, current_currency = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
+			   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client],
+			   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client], escapedName);
+	}
+	else
+	{
+		// En otras dificultades: Guardar solo nivel y XP, NO actualizar currency
+		Format(query, sizeof(query),
+			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency, last_update) VALUES ('%s', '%s', %d, %d, %d, 0, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
+			   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client],
+			   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], escapedName);
+	}
 
 	if (GetConVarBool(cvar_LevelingDebug))
 	{

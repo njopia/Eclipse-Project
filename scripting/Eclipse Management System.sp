@@ -77,7 +77,7 @@ char		sMap[96];
 
 // Hostname dinámico
 #define UPDATE_INTERVAL 5.0							   // segundos entre actualizaciones
-#define BASE_HOSTNAME	"Server under construction"	   // nombre base del servidor
+#define BASE_HOSTNAME	"[US-EAST] Coop"	   // nombre base del servidor
 Handle g_hTimer = INVALID_HANDLE;
 
 public Plugin myinfo =
@@ -546,7 +546,7 @@ public Action Timer_UpdateHostname(Handle timer)
 			humans++;
 	}
 	char newHostname[128];
-	Format(newHostname, sizeof(newHostname), "%s [%d/%d]", BASE_HOSTNAME, humans, maxplayers);
+	Format(newHostname, sizeof(newHostname), "%s [%d/%d] - Eclipse Community", BASE_HOSTNAME, humans, maxplayers);
 	SetConVarString(FindConVar("hostname"), newHostname);
 
 	return Plugin_Continue;

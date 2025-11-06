@@ -169,6 +169,9 @@ public void BuyMenu_OnClientPutInServer(int client)
 
 public void OnClientDisconnect(int client)
 {
+	// Guardar datos del jugador antes de resetear
+	Leveling_OnClientDisconnect(client);
+
 	g_fNextHint[client]		  = 0.0;
 	g_bHadMaxHealth[client]	  = false;
 	g_iPlayerCurrency[client] = 0;	  // Reset currency on disconnect
