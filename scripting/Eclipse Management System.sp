@@ -6,80 +6,108 @@
 
 #pragma newdecls required
 #pragma semicolon 1
-/////// DATABASE MANAGEMENT SYSTEM ///////////
+
+//==================================================
+// === DATABASE MANAGEMENT SYSTEM ===
+//==================================================
 #define EMS_MAIN_FILE	 // EMS_MAIN_FILE define main file as the current core
 #define ADMIN_DB_NAME	"admins"
 #define PLAYERS_DB_NAME "players"
 #define DB_HUD_MESSAGES PLAYERS_DB_NAME
 #tryinclude "utils/database.utils.sp"
-//////////////////////////////////////////////
 
 #define PLUGIN_VERSION "1.0.0"
-/////// HELPERS /////////////////////////////
+
+//==================================================
+// === HELPERS ===
+//==================================================
 #tryinclude "helpers/commons.helpers.sp"
 #tryinclude "helpers/entities.helpers.sp"
 #tryinclude "helpers/commands.helpers.sp"
 #tryinclude "helpers/sdks.helpers.sp"
 #tryinclude "helpers/beacons.helpers.sp"
-//////////////////////////////////////////////
+
+//==================================================
+// === PRECACHE UTILITIES ===
+//==================================================
 #tryinclude "utils/includes/precache.inc"
-/////// BUY MENU /////////////////////////////
+
+//==================================================
+// === BUY MENU MODULE ===
+//==================================================
 #tryinclude "modules/buy module/buy-menu.module.sp"
-//////////////////////////////////////////////
 
-/////// CURRENCY STATS MODULE (mantener para estadísticas) ///
+//==================================================
+// === CURRENCY STATS MODULE ===
+// Mantener para estadísticas
+//==================================================
 #tryinclude "modules/currency/currency-stats.module.sp"
-//////////////////////////////////////////////
 
-/////// SERVER MANAGEMENT UTILS ////////////
+//==================================================
+// === SERVER MANAGEMENT UTILITIES ===
+//==================================================
 #tryinclude "utils/server-management.utils.sp"
-//////////////////////////////////////////////
 
-/////// LEVELING SYSTEM MODULE ///////////////
+//==================================================
+// === LEVELING SYSTEM MODULE ===
+//==================================================
 #define LEVELING_DB_NAME "players"	  // Reutiliza la BD de players
 #tryinclude "modules/leveling/leveling-system.module.sp"
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
 #tryinclude "modules/leveling/leveling-ui.module.sp"
 #tryinclude "modules/leveling/leveling-info.module.sp"
-//////////////////////////////////////////////
 
-/////// ECLIPSE POINTS UNIFIED MODULE ///////////////
+//==================================================
+// === ECLIPSE POINTS UNIFIED MODULE ===
+//==================================================
 #include "modules/eclipse-points-unified.module.sp"
-//////////////////////////////////////////////
 
-/////// GAME MODES MODULE ///////////////////
+//==================================================
+// === GAME MODES MODULE ===
+//==================================================
 #tryinclude "modules/modes/bloodmoon.module.sp"
-//////////////////////////////////////////////
 
-/////// FRAGS SYSTEM MODULE ///////////////////
+//==================================================
+// === FRAGS SYSTEM MODULE ===
+//==================================================
 #include "modules/frags-system.module.sp"
-//////////////////////////////////////////////
 
-/////// PLAYERS LIST MODULE ///////////////////
+//==================================================
+// === PLAYERS LIST MODULE ===
+//==================================================
 #tryinclude "modules/players-list.module.sp"
-//////////////////////////////////////////////
 
-/////// SERVER MANAGEMENT SYSTEM CORE /////////
+//==================================================
+// === SERVER MANAGEMENT SYSTEM CORE ===
+//==================================================
 #include "modules/management/afk-join.sp"
 #tryinclude "modules/management/scripted-hud.module.sp"
 #tryinclude "modules/management/lang.module.sp"
 #tryinclude "modules/management/mapvote.module.sp"
 
+//==================================================
+// === GLOBAL VARIABLES ===
+//==================================================
+
+// Logging
 #define LOG_PATH "logs\\Eclipse_Management_System.log"
 static char logfilepath[PLATFORM_MAX_PATH];
 
-// Snow
-ConVar		cvar_preciptype;
-ConVar		cvar_density;
-ConVar		cvar_color;
-ConVar		cvar_render;
-char		sMap[96];
+// Snow system
+ConVar cvar_preciptype;
+ConVar cvar_density;
+ConVar cvar_color;
+ConVar cvar_render;
+char   sMap[96];
 
-// Hostname dinámico
-#define UPDATE_INTERVAL 5.0							   // segundos entre actualizaciones
-#define BASE_HOSTNAME	"[US-EAST] Coop"	   // nombre base del servidor
+// Dynamic hostname
+#define UPDATE_INTERVAL 5.0                // Seconds between updates
+#define BASE_HOSTNAME	"[US-EAST] Coop"   // Base server name
 Handle g_hTimer = INVALID_HANDLE;
 
+//==================================================
+// === PLUGIN INFO ===
+//==================================================
 public Plugin myinfo =
 {
 	name		= "Eclipse management system",
@@ -89,14 +117,21 @@ public Plugin myinfo =
 	url			= "https://gitlab.com/sourcepawn1/sm-win"
 };
 
-// Agregar esto después de la línea 66 (después de AskPluginLoad2)
+//==================================================
+// === PLUGIN LIBRARY & NATIVES ===
+//==================================================
+
+/**
+ * Called before plugin starts
+ * Creates natives for other plugins to access Eclipse system data
+ */
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	switch (GetEngineVersion())
 	{
 		case Engine_Left4Dead2, Engine_Left4Dead:
 		{
-			// ===== CREAR NATIVES PARA OTROS PLUGINS =====
+			// Create natives for other plugins
 			CreateNative("EMS_GetPlayerLevel", Native_GetPlayerLevel);
 			CreateNative("EMS_GetPlayerCurrentXP", Native_GetPlayerCurrentXP);
 			CreateNative("EMS_GetPlayerTotalXP", Native_GetPlayerTotalXP);
@@ -118,7 +153,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 //==================================================
 
 /**
- * Native: Obtiene el nivel actual del jugador
+ * Native: Get player's current level
+ * @param client Client index
+ * @return Current level of the player
  */
 public int Native_GetPlayerLevel(Handle plugin, int numParams)
 {
@@ -127,7 +164,9 @@ public int Native_GetPlayerLevel(Handle plugin, int numParams)
 }
 
 /**
- * Native: Obtiene el XP actual del jugador en su nivel
+ * Native: Get player's current XP in their level
+ * @param client Client index
+ * @return Current XP in the current level
  */
 public int Native_GetPlayerCurrentXP(Handle plugin, int numParams)
 {
@@ -136,7 +175,9 @@ public int Native_GetPlayerCurrentXP(Handle plugin, int numParams)
 }
 
 /**
- * Native: Obtiene el XP total acumulado del jugador
+ * Native: Get player's total accumulated XP
+ * @param client Client index
+ * @return Total XP accumulated
  */
 public int Native_GetPlayerTotalXP(Handle plugin, int numParams)
 {
@@ -145,7 +186,9 @@ public int Native_GetPlayerTotalXP(Handle plugin, int numParams)
 }
 
 /**
- * Native: Obtiene el XP requerido para el siguiente nivel
+ * Native: Get XP required for next level
+ * @param client Client index
+ * @return XP required for next level
  */
 public int Native_GetXPForNextLevel(Handle plugin, int numParams)
 {
@@ -154,7 +197,9 @@ public int Native_GetXPForNextLevel(Handle plugin, int numParams)
 }
 
 /**
- * Native: Obtiene el progreso en porcentaje (0-100)
+ * Native: Get level progress as percentage (0-100)
+ * @param client Client index
+ * @return Progress percentage
  */
 public int Native_GetLevelProgress(Handle plugin, int numParams)
 {
@@ -163,8 +208,10 @@ public int Native_GetLevelProgress(Handle plugin, int numParams)
 }
 
 /**
- * Native: Obtiene la moneda/puntos del jugador
- * Devuelve currency de BD si es Easy, o currency local si es otra dificultad
+ * Native: Get player's currency/points
+ * Returns DB currency if Easy, or local currency for other difficulties
+ * @param client Client index
+ * @return Player's currency amount
  */
 public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 {
@@ -173,94 +220,123 @@ public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return 0;
 
-	// Usar la función GetPlayerCurrency que maneja la dificultad correctamente
+	// Use GetPlayerCurrency function that handles difficulty correctly
 	return GetPlayerCurrency(client);
 }
 
+//==================================================
+// === PLUGIN LIFECYCLE ===
+//==================================================
+
+/**
+ * Called when the plugin starts
+ * Initializes all modules and systems
+ */
 public void OnPluginStart()
 {
+	// Initialize logging
 	BuildPath(Path_SM, logfilepath, sizeof(logfilepath), LOG_PATH);
 	LogToFile(logfilepath, "|               PLUGIN START                |");
 
+	// Initialize SDK hooks
 	HandleSdk();
+
+	// Initialize database connections
 	if (checkDBFile(PLAYERS_DB_NAME))
 	{
-		doSqlConnectionPlayers(PLAYERS_DB_NAME);	// Usar handle separado para players
+		doSqlConnectionPlayers(PLAYERS_DB_NAME);	// Separate handle for players
 	}
 	if (checkDBFile(ADMIN_DB_NAME))
 	{
-		doSqlConnection(ADMIN_DB_NAME);	   // Handle para admins
+		doSqlConnection(ADMIN_DB_NAME);				// Handle for admins
 	}
 	if (checkDBFile(DB_HUD_MESSAGES))
 	{
-		doSqlConnection(DB_HUD_MESSAGES);	 // Handle para HUD messages
+		doSqlConnection(DB_HUD_MESSAGES);			// Handle for HUD messages
 	}
+
+	// Initialize buy menu
 	buyMenuOnPluginStart();
 	AdminMoney_OnPluginStart();
 
-	// Inicializar sistema de leveling (DEBE ir ANTES del sistema de puntos unificado)
+	// Initialize leveling system (MUST be BEFORE unified points system)
 	Leveling_OnPluginStart();
 	LevelingRewards_OnPluginStart();
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
 
-	// ===== SISTEMA UNIFICADO DE PUNTOS =====
+	// Initialize unified points system
 	EclipsePointsUnified_OnPluginStart();
 
-	// Inicializar módulos de modos de juego
+	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
 
-	// Inicializar sistema de frags
+	// Initialize frags system
 	FragsSystem_OnPluginStart();
 
-	// Inicializar sistema de lista de jugadores
+	// Initialize players list system
 	PlayersList_OnPluginStart();
 
-	// ===== SISTEMA DE GESTIÓN DEL SERVIDOR =====
+	// Initialize server management system
 	Afk_Join_OnPluginStart();
 
-	// ===== SISTEMA DE HUD =====
+	// Initialize HUD system
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnPluginStart();
 #endif
 
-	// ===== SISTEMA DE IDIOMA =====
+	// Initialize language system
 	Language_OnPluginStart();
 
-	// ===== SISTEMA DE VOTACIÓN DE MAPAS =====
+	// Initialize map vote system
 #if defined _MAPVOTE_MODULE_
 	MapVote_OnPluginStart();
 #endif
 
+	// Register commands
 	RegConsoleCmd("buy", Cmd_Buy);
 	RegConsoleCmd("sm_buy", Cmd_Buy);
 	RegConsoleCmd("sm_givemoney", Command_GiveMoneySub);
 
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
+
+	// Create ConVars
 	g_cvarDebug = CreateConVar("sm_spawnammo_debug", "0", "Activa debug verboso (0/1).", 0, true, 0.0, true, 1.0);
+
+	// Load translations
 	LoadTranslations("eclipse.phrases");
+
+	// Hook events
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
 
+	// Snow system ConVars
 	cvar_preciptype = CreateConVar("snow_type", "3", "Type of the precipitation (https://developer.valvesoftware.com/wiki/Func_precipitation)");
-	cvar_density	= CreateConVar("snow_density", "75", "Density of the precipitation");
-	cvar_color		= CreateConVar("snow_color", "255 255 255", "Color of the precipitation");
-	cvar_render		= CreateConVar("snow_renderamt", "5", "Render of the precipitation");
+	cvar_density    = CreateConVar("snow_density", "75", "Density of the precipitation");
+	cvar_color      = CreateConVar("snow_color", "255 255 255", "Color of the precipitation");
+	cvar_render     = CreateConVar("snow_renderamt", "5", "Render of the precipitation");
+
+	// Precache all resources
 	PrecacheAll();
-	// timer para hostname dinamico
+
+	// Initialize dynamic hostname timer
 	if (g_hTimer != INVALID_HANDLE)
 		CloseHandle(g_hTimer);
 	g_hTimer = CreateTimer(UPDATE_INTERVAL, Timer_UpdateHostname, _, TIMER_REPEAT);
 }
 
+/**
+ * Called when map starts
+ * Initializes map-specific systems and resets states
+ */
 public void OnMapStart()
 {
 	LogToFile(logfilepath, "|               MAP START                   |");
 
-	// Limpiar todos los timers de mapas anteriores
+	// Clean up all timers from previous map
 	CleanupAllTimers();
 
-	// Reset tracking flags del sistema de puntos unificado
+	// Reset unified points system tracking flags
 	EclipsePointsUnified_OnMapStart();
 
 	// Reset frags system
@@ -271,95 +347,132 @@ public void OnMapStart()
 	MapVote_OnMapStart();
 #endif
 
+	// Initialize buy menu modules
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
 	Bloodmoon_OnMapStart();
 	NuclearStrike_OnMapStart();
 
+	// Initialize HUD
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnMapStart();
 #endif
+
+	// Precache resources
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_OnMapStart();
 #endif
+
+	// Precache current map
 	GetCurrentMap(sMap, 64);
 	Format(sMap, sizeof(sMap), "maps/%s.bsp", sMap);
 	PrecacheModel(sMap, true);
+
+	// Initialize leveling system
 	Leveling_OnMapStart();
 }
 
+/**
+ * Called when map ends
+ * Cleanup before map change
+ */
 public void OnMapEnd()
 {
 	LogToFile(logfilepath, "|               MAP END                     |");
 
+	// Cleanup HUD
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnMapEnd();
 #endif
+
+	// Cleanup leveling system
 	Leveling_OnMapEnd();
 
-	// Limpiar todos los timers antes de cambiar de mapa
+	// Clean up all timers before map change
 	CleanupAllTimers();
 }
 
+/**
+ * Called when configs are executed
+ * Initialize configuration-dependent systems
+ */
 public void OnConfigsExecuted()
 {
-	// Inicializar configuraciones del HUD
+	// Initialize HUD configurations
 #if defined _SCRIPTED_HUD_MODULE_
 	ScriptedHUD_OnConfigsExecuted();
 #endif
+
+	// Initialize leveling configurations
 	Leveling_OnConfigsExecuted();
 }
 
+/**
+ * Called when client connects to server
+ * Initialize client-specific systems
+ */
 public void OnClientPutInServer(int client)
 {
-	// Hook de daño para habilidades activas (ahora en buy module)
+	// Hook damage for active abilities (in buy module)
 	BuyMenu_OnClientPutInServer(client);
 
-	// Hook de Bloodmoon
+	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
 
-	// Inicializar UI de leveling
+	// Initialize leveling UI
 	LevelingUI_OnClientConnect(client);
 
-	// Inicializar frags system
+	// Initialize frags system
 	FragsSystem_OnClientPutInServer(client);
 }
 
+/**
+ * Called after client is admin checked
+ * Load client data from database
+ */
 public void OnClientPostAdminCheck(int client)
 {
-	// Cargar datos de leveling cuando el cliente se conecta
+	// Load leveling data when client connects
 	Leveling_OnClientPostAdminCheck(client);
 
-	// Inicializar Defense Grid
+	// Initialize Defense Grid
 	DefenseGrid_OnClientConnect(client);
 
-	// Inicializar Ion Cannon
+	// Initialize Ion Cannon
 	IonCannon_OnClientPutInServer(client);
 
-	// Aplicar preferencias de idioma
+	// Apply language preferences
 	Language_OnClientPostAdminCheck(client);
 
-	// Inicializar sistema de votación de mapas
+	// Initialize map vote system
 #if defined _MAPVOTE_MODULE_
 	MapVote_OnClientPostAdminCheck(client);
 #endif
 
-	// Inicializar Throphy System
+	// Initialize Trophy System
 	Leveling_OnClientPostAdminCheck(client);
 }
 
+/**
+ * Called when client cookies are cached
+ * Load client preferences
+ */
 public void OnClientCookiesCached(int client)
 {
-	// Cargar preferencias de idioma desde cookies
+	// Load language preferences from cookies
 	Language_OnClientCookiesCached(client);
 }
 
+/**
+ * Called on every player command
+ * Handle player actions like double jump and abilities
+ */
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon, int &subtype, int &cmdnum, int &tickcount, int &seed, int mouse[2])
 {
-	// Manejar doble salto del sistema de leveling
+	// Handle double jump from leveling system
 	LevelingRewards_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 
-	// Manejar weapon fire para habilidades activas (Berserker swing speed)
+	// Handle weapon fire for active abilities (Berserker swing speed)
 	if (buttons & IN_ATTACK)
 	{
 		Berserker_OnWeaponSwing(client);
@@ -368,20 +481,31 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	return Plugin_Continue;
 }
 
+/**
+ * Precache all resources
+ */
 public void PrecacheAll()
 {
 #if defined _EMS_PRECACHE_MODULE_
 	EMS_Precache_Init();
-	// (opcional) activar logs:
+	// (optional) enable logs:
 	// EMS_Precache_SetDebug(true);
 #endif
 }
 
+/**
+ * Called when plugin unloads
+ * Cleanup resources
+ */
 public void OnPluginEnd()
 {
 	Leveling_OnPluginEnd();
 }
 
+/**
+ * Command: Reload precache
+ * Admin command to reload all precached resources
+ */
 public Action EMS_CmdPrecacheReload(int client, int args)
 {
 #if defined _EMS_PRECACHE_MODULE_
@@ -396,43 +520,43 @@ public Action EMS_CmdPrecacheReload(int client, int args)
 //==================================================
 
 /**
- * Limpia todos los timers del sistema al cambiar de mapa
- * Esta función debe ser llamada en OnMapStart() y OnMapEnd()
+ * Cleans up all system timers when changing maps
+ * This function should be called in OnMapStart() and OnMapEnd()
  */
 stock void CleanupAllTimers()
 {
 	LogToFile(logfilepath, "[CLEANUP] Iniciando limpieza de timers del sistema...");
 
-	// Team Heal timers
+	// Clean up Team Heal timers
 	CleanupTeamHealTimers();
 
-	// Team Speed Boost timers
+	// Clean up Team Speed Boost timers
 	CleanupTeamSpeedBoostTimers();
 
-	// Nuclear Strike timers
+	// Clean up Nuclear Strike timers
 	CleanupNuclearStrikeTimers();
 
-	// Buy Menu timers (incluyendo timers de actualización dinámica)
+	// Clean up Buy Menu timers (including dynamic update timers)
 	CleanupBuyMenuTimers();
 
-	// Resetear estado de los jugadores
+	// Reset all players state
 	ResetAllPlayersState();
 
 	LogToFile(logfilepath, "[CLEANUP] Limpieza de timers completada");
 }
 
 /**
- * Limpia timers asociados al Buy Menu
+ * Cleans up timers associated with Buy Menu
  */
 stock void CleanupBuyMenuTimers()
 {
 	LogToFile(logfilepath, "[CLEANUP] Limpiando Buy Menu timers...");
-	// El TimerUpdate1 continúa en el nuevo mapa (TIMER_REPEAT)
-	// No es necesario matarlo, simplemente continúa funcionando
+	// TimerUpdate1 continues in the new map (TIMER_REPEAT)
+	// No need to kill it, it simply continues running
 }
 
 /**
- * Resetea el estado de todos los jugadores (cooldowns, variables, etc.)
+ * Resets all players state (cooldowns, variables, etc.)
  */
 stock void ResetAllPlayersState()
 {
@@ -443,40 +567,22 @@ stock void ResetAllPlayersState()
 		if (IsClientInGame(i))
 		{
 			// === TEAM BONUSES COOLDOWNS ===
-			// Resetear cooldowns de Team Heal
 			ResetTeamHealCooldown(i);
-
-			// Resetear cooldowns de Team Speed Boost
 			ResetTeamSpeedBoostCooldown(i);
 
 			// === INSTANTS COOLDOWNS ===
-			// Resetear cooldowns de Fire Yell
 			ResetFireYellCooldown(i);
-
-			// Resetear cooldowns de Power Yell
 			ResetPowerYellCooldown(i);
 
 			// === LONG ACTIONS COOLDOWNS ===
-			// Resetear cooldowns de Berserker
 			Berserker_ResetCooldown(i);
-
-			// Resetear cooldowns de Acid Bath
 			AcidBath_ResetCooldown(i);
-
-			// Resetear cooldowns de LifeStealer
 			LifeStealer_ResetCooldown(i);
-
-			// Resetear cooldowns de Speed Freak
 			SpeedFreak_ResetCooldown(i);
 
 			// === DEPLOYABLES COOLDOWNS ===
-			// Resetear cooldowns de Defense Grid
 			DefenseGrid_ResetCooldown(i);
-
-			// Resetear cooldowns de Ion Cannon
 			IonCannon_ResetCooldown(i);
-
-			// Resetear cooldowns de Ammo Pile
 			AmmoPile_ResetCooldown(i);
 		}
 	}
@@ -484,18 +590,31 @@ stock void ResetAllPlayersState()
 	LogToFile(logfilepath, "[CLEANUP] Reseteo de cooldowns completado");
 }
 
-// Snowing
+//==================================================
+// === SNOW SYSTEM ===
+//==================================================
+
+/**
+ * Event: Round Start
+ * Triggers snow creation
+ */
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	CreateTimer(0.3, CreateSnowFall);
 }
 
+/**
+ * Creates snowfall effect on the map
+ * @return Plugin_Continue
+ */
 public Action CreateSnowFall(Handle timer)
 {
+	// Remove any existing precipitation entities
 	int iEnt = -1;
 	while ((iEnt = FindEntityByClassname(iEnt, "func_precipitation")) != -1)
 		AcceptEntityInput(iEnt, "Kill");
 
+	// Create new precipitation entity
 	iEnt = CreateEntityByName("func_precipitation");
 
 	if (iEnt != -1)
@@ -503,27 +622,32 @@ public Action CreateSnowFall(Handle timer)
 		char  preciptype[5], density[5], color[16], render[5];
 		float vMins[3], vMax[3], vBuff[3];
 
+		// Get ConVar values
 		cvar_preciptype.GetString(preciptype, sizeof(preciptype));
 		cvar_density.GetString(density, sizeof(density));
 		cvar_color.GetString(color, sizeof(color));
 		cvar_render.GetString(render, sizeof(render));
 
+		// Set entity properties
 		DispatchKeyValue(iEnt, "model", sMap);
 		DispatchKeyValue(iEnt, "preciptype", preciptype);
 		DispatchKeyValue(iEnt, "renderamt", render);
 		DispatchKeyValue(iEnt, "density", density);
 		DispatchKeyValue(iEnt, "rendercolor", color);
 
+		// Set world bounds
 		GetEntPropVector(0, Prop_Data, "m_WorldMaxs", vMax);
 		GetEntPropVector(0, Prop_Data, "m_WorldMins", vMins);
 
 		SetEntPropVector(iEnt, Prop_Send, "m_vecMins", vMins);
 		SetEntPropVector(iEnt, Prop_Send, "m_vecMaxs", vMax);
 
+		// Calculate center position
 		vBuff[0] = vMins[0] + vMax[0];
 		vBuff[1] = vMins[1] + vMax[1];
 		vBuff[2] = vMins[2] + vMax[2];
 
+		// Spawn entity
 		TeleportEntity(iEnt, vBuff, NULL_VECTOR, NULL_VECTOR);
 		DispatchSpawn(iEnt);
 		ActivateEntity(iEnt);
@@ -531,10 +655,21 @@ public Action CreateSnowFall(Handle timer)
 	return Plugin_Continue;
 }
 
+//==================================================
+// === DYNAMIC HOSTNAME SYSTEM ===
+//==================================================
+
+/**
+ * Timer: Update dynamic hostname
+ * Updates server hostname with current player count
+ * @return Plugin_Continue
+ */
 public Action Timer_UpdateHostname(Handle timer)
 {
 	int maxplayers = GetMaxHumanPlayers();
-	int humans	   = 0;
+	int humans     = 0;
+
+	// Count human players
 	for (int i = 1; i <= maxplayers; i++)
 	{
 		if (!IsClientInGame(i))
@@ -545,6 +680,8 @@ public Action Timer_UpdateHostname(Handle timer)
 		else
 			humans++;
 	}
+
+	// Update hostname with player count
 	char newHostname[128];
 	Format(newHostname, sizeof(newHostname), "%s [%d/%d] - Eclipse Community", BASE_HOSTNAME, humans, maxplayers);
 	SetConVarString(FindConVar("hostname"), newHostname);
