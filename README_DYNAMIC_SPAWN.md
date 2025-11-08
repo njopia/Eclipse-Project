@@ -4,10 +4,34 @@
 
 Plugin **standalone** para Left 4 Dead 2 que gestiona dinámicamente el spawn de zombies, infectados especiales y jefes basándose en la cantidad de jugadores y dificultad del servidor.
 
-**Versión:** 1.1.0
+**Versión:** 1.1.1
 **Extraído y mejorado desde:** `onepiece3.sp`
 **Completamente independiente:** No requiere ningún otro plugin para funcionar.
 **Optimizado para:** Máximo 16 jugadores simultáneos
+
+---
+
+## 🔄 Changelog
+
+### v1.1.1 (2025-11-08)
+- **🐛 Fix:** Corregido sistema de hordas forzadas que no spawneaba zombies
+  - Cambiado de `ServerCommand()` a `FakeClientCommand()` para ejecutar `director_force_panic_event`
+  - Agregada función `GetAnyValidClient()` para encontrar un cliente válido
+  - Ahora las hordas forzadas se spawnean correctamente en el juego
+
+### v1.1.0
+- Agregado sistema de feedback en chat con 3 modos (Off/Todos/Solo Admins)
+- Agregado anti-spam configurable para mensajes de chat
+- Optimizado para máximo 16 jugadores (removido soporte 17-20+)
+- Mejorada configuración para 16 jugadores: 45-75s spawn, 11000 Tank HP
+- Agregados ConVars: `sm_dsm_chat_feedback`, `sm_dsm_feedback_interval`
+
+### v1.0.0
+- Release inicial como plugin standalone
+- Sistema de spawn dinámico basado en cantidad de jugadores (4-16)
+- Hordas forzadas automáticas cada X segundos
+- 7 ConVars configurables
+- Soporte para todos los modos de juego excepto Versus
 
 ---
 

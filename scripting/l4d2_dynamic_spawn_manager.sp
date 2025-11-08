@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <sdktools>
 
-#define PLUGIN_VERSION "1.1.0"
+#define PLUGIN_VERSION "1.1.1"
 #define MAX_PLAYERS 16
 
 // ConVars del plugin
@@ -122,10 +122,15 @@ public Action Timer_ForceHorde(Handle timer)
 	if (g_iCurrentGamemode == 1 || GetHumanCount() == 0)
 		return Plugin_Continue;
 
-	// Forzar panic event
+	// Buscar un cliente válido para ejecutar el comando
+	int client = GetAnyValidClient();
+	if (client == -1)
+		return Plugin_Continue;
+
+	// Forzar panic event usando FakeClientCommand (más confiable que ServerCommand)
 	int flags = GetCommandFlags("director_force_panic_event");
 	SetCommandFlags("director_force_panic_event", flags & ~FCVAR_CHEAT);
-	ServerCommand("director_force_panic_event");
+	FakeClientCommand(client, "director_force_panic_event");
 	SetCommandFlags("director_force_panic_event", flags);
 
 	// Feedback visual
@@ -418,6 +423,32 @@ int GetHumanCount()
 			count++;
 	}
 	return count;
+}
+
+int GetAnyValidClient()
+{
+	// Preferir supervivientes humanos primero
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i) && GetClientTeam(i) == 2)
+			return i;
+	}
+
+	// Si no hay supervivientes humanos, cualquier humano sirve
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+			return i;
+	}
+
+	// Si no hay humanos, usar cualquier cliente (incluso bots)
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+			return i;
+	}
+
+	return -1; // No hay clientes válidos
 }
 
 int GetCurrentGamemodeID()
