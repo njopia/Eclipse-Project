@@ -190,7 +190,7 @@ public void Leveling_OnClientDisconnect(int client)
 	g_iPlayerLevel[client] = 0;
 	g_iPlayerXP[client] = 0;
 	g_iTotalPlayerXP[client] = 0;
-	g_bLastDifficultyWasEasy[client] = false;
+	//g_bLastDifficultyWasEasy[client] = false;
 }
 
 /**

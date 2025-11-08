@@ -26,7 +26,22 @@
       "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\l4d2_mapvote.sp\")",
       "Bash(cmd /c move:*)",
       "Bash(powershell -Command:*)",
-      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\Natan_SuperTanks_Nightmare.sp\")"
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\Natan_SuperTanks_Nightmare.sp\")",
+      "Bash(mkdir:*)",
+      "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\supertanks\")",
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\natan_supertanks_modular_v2.sp\")",
+      "Bash(Select-String -Pattern \"(Error|Warning|Code size)\")",
+      "Bash('/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe' c:UsersSociusDesktopEclipse-Projectscriptingnatan_supertanks_modular_v2.sp)",
+      "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\natan_supertanks_modular_v2.smx 2>nul && echo Archivo SMX generado exitosamente || echo Archivo SMX no encontrado\")",
+      "Bash(nul)",
+      "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\*.smx | findstr natan_supertanks\")",
+      "Bash(cmd /c \"dir /s /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\natan_supertanks_modular_v2.smx 2>nul\")",
+      "Bash(cmd /c \"dir /b /s \"\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Left 4 Dead 2 Dedicated Server\\left4dead2\\addons\\sourcemod\\scripting\\compiled\"\" | findstr natan_supertanks_modular\")",
+      "Bash(Select-String -Pattern \"(Error|Warning|Code size)\" -Context 0,1)",
+      "Bash(cmd /c \"cd c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting && dir /b supertanks\\tanks\\st_tank_*.inc\")",
+      "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\natan_supertanks_modular_v2.smx 2>nul || dir /s /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\natan_supertanks_modular_v2.smx 2>nul\")",
+      "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\*.smx\")",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []
