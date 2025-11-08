@@ -4,8 +4,10 @@
 
 Plugin **standalone** para Left 4 Dead 2 que gestiona dinámicamente el spawn de zombies, infectados especiales y jefes basándose en la cantidad de jugadores y dificultad del servidor.
 
+**Versión:** 1.1.0
 **Extraído y mejorado desde:** `onepiece3.sp`
 **Completamente independiente:** No requiere ningún otro plugin para funcionar.
+**Optimizado para:** Máximo 16 jugadores simultáneos
 
 ---
 
@@ -27,6 +29,21 @@ El plugin ajusta automáticamente cada **5 segundos**:
 - Trigger de `director_force_panic_event` cada X segundos (configurable)
 - Solo en modos **Coop** y **Realism**
 - Mantiene la presión sobre los supervivientes
+- Notificación en chat cuando se activa
+
+### **💬 Feedback en Chat**
+
+- **Mensajes informativos** cuando se ajustan los spawns
+- **3 modos de visualización:**
+  - **Desactivado:** Sin mensajes
+  - **Todos:** Todos los jugadores ven los ajustes
+  - **Solo Admins:** Solo los administradores reciben notificaciones
+- **Anti-spam:** Intervalo mínimo configurable entre mensajes (default: 30s)
+- **Mensajes incluyen:**
+  - Número de jugadores actual
+  - Cantidad de especiales
+  - Intervalos de hordas
+  - HP de Tank y Witch
 
 ### **🎮 Compatible con Todos los Modos**
 
@@ -39,17 +56,20 @@ El plugin ajusta automáticamente cada **5 segundos**:
 
 ## 📊 Tabla de Escalado
 
-| Jugadores | Spawn Min | Spawn Max | Tank HP | Witch HP | Especiales |
-|-----------|-----------|-----------|---------|----------|------------|
-| ≤4        | 90s       | 180s      | 5,000   | 1,000    | 4          |
-| 5         | 90s       | 170s      | 6,000   | 1,000    | 5          |
-| 8         | 90s       | 140s      | 6,000   | 3,000    | 8          |
-| 12        | 60s       | 90s       | 7,000   | 4,100    | 12         |
-| 16        | 50s       | 80s       | 10,000  | 4,600    | 16         |
-| 20        | 30s       | 80s       | 12,000  | 5,000    | 20         |
-| 20+       | **20s**   | **80s**   | 12,000  | 5,000    | 20+        |
+| Jugadores | Spawn Min | Spawn Max | Tank HP | Witch HP | Especiales | Tank Limit |
+|-----------|-----------|-----------|---------|----------|------------|------------|
+| ≤4        | 90s       | 180s      | 5,000   | 1,000    | 4          | 1          |
+| 5         | 90s       | 170s      | 6,000   | 1,000    | 5          | 1          |
+| 8         | 90s       | 140s      | 6,000   | 3,000    | 8          | 2-3        |
+| 10        | 80s       | 110s      | 8,000   | 3,500    | 10         | 2-3        |
+| 12        | 60s       | 90s       | 9,000   | 4,100    | 12         | 2-3        |
+| 14        | 50s       | 80s       | 10,000  | 4,300    | 14         | 3-4        |
+| **16 (MAX)** | **45s** | **75s**   | **11,000** | **4,600** | **16**     | **3-4**    |
 
-**Nota:** Los valores varían según dificultad y configuración.
+**Nota:**
+- Los valores varían según dificultad y configuración
+- Si hay más de 16 jugadores, se usa la configuración de 16
+- Tank Limit incluye bonus por jugadores expertos (si está activado)
 
 ---
 
@@ -97,6 +117,13 @@ sm plugins load l4d2_dynamic_spawn_manager
 | `sm_dsm_auto_horde` | 1 | 0 | 1 | Activar hordas forzadas |
 | `sm_dsm_force_horde_interval` | 60.0 | 0.0 | 300.0 | Intervalo entre hordas (0=desactivado) |
 
+### **Feedback en Chat**
+
+| ConVar | Default | Min | Max | Descripción |
+|--------|---------|-----|-----|-------------|
+| `sm_dsm_chat_feedback` | 1 | 0 | 2 | Modo de feedback (0=Off, 1=Todos, 2=Admins) |
+| `sm_dsm_feedback_interval` | 30 | 10 | 300 | Segundos mínimos entre mensajes |
+
 ### **Multiplicadores**
 
 | ConVar | Default | Min | Max | Descripción |
@@ -114,6 +141,7 @@ sm plugins load l4d2_dynamic_spawn_manager
 sm_dsm_tank_hp_mult "0.7"           // Tanks con 70% HP
 sm_dsm_witch_hp_mult "0.5"          // Witches con 50% HP
 sm_dsm_force_horde_interval "90.0"  // Hordas cada 90 segundos
+sm_dsm_chat_feedback "1"            // Feedback para todos
 ```
 
 ### **Servidor Hardcore**
@@ -122,11 +150,20 @@ sm_dsm_tank_hp_mult "1.5"           // Tanks con 150% HP
 sm_dsm_witch_hp_mult "1.5"          // Witches con 150% HP
 sm_dsm_force_horde_interval "30.0"  // Hordas cada 30 segundos
 sm_dsm_diff_tank_reduction "0"      // Sin reducción por dificultad
+sm_dsm_chat_feedback "2"            // Feedback solo admins
 ```
 
 ### **Servidor Sin Hordas Forzadas**
 ```cfg
 sm_dsm_auto_horde "0"               // Desactivar hordas automáticas
+sm_dsm_chat_feedback "0"            // Sin mensajes en chat
+```
+
+### **Servidor con Feedback Detallado**
+```cfg
+sm_dsm_chat_feedback "1"            // Todos ven mensajes
+sm_dsm_feedback_interval "15"       // Mensajes cada 15s mínimo
+sm_dsm_update_interval "3.0"        // Actualizar cada 3 segundos
 ```
 
 ---
@@ -209,16 +246,18 @@ int GetMastersCount(int maxSkill)
 
 ## 📖 Comparación con onepiece3.sp
 
-| Característica | onepiece3.sp | l4d2_dynamic_spawn_manager.sp |
-|----------------|--------------|-------------------------------|
+| Característica | onepiece3.sp | l4d2_dynamic_spawn_manager.sp v1.1 |
+|----------------|--------------|-------------------------------------|
 | **Dependencias** | 20+ sistemas integrados | ✅ **Ninguna** (standalone) |
-| **Tamaño** | 7,372 líneas | ✅ **~450 líneas** |
-| **Gestión de spawn** | ✅ Sí | ✅ Sí |
+| **Tamaño** | 7,372 líneas | ✅ **~455 líneas** |
+| **Gestión de spawn** | ✅ Sí (hasta 20+ jugadores) | ✅ Sí (optimizado para max 16) |
+| **Feedback en chat** | ❌ No | ✅ **Sí (3 modos)** |
 | **Balance de equipos** | ✅ Sí | ❌ No (enfocado solo en spawn) |
 | **Sistema de autenticación** | ✅ Sí | ❌ No |
 | **Base de datos** | ✅ Requerida | ✅ **No requerida** |
-| **Configuración** | Hardcoded | ✅ **ConVars personalizables** |
+| **Configuración** | Hardcoded | ✅ **9 ConVars personalizables** |
 | **Documentación** | Escasa | ✅ **Completa** |
+| **Anti-spam mensajes** | N/A | ✅ **Intervalo configurable** |
 
 ---
 
@@ -242,6 +281,25 @@ Verifica los multiplicadores:
 ```
 sm_cvar sm_dsm_tank_hp_mult
 sm_cvar sm_dsm_witch_hp_mult
+```
+
+### **No veo mensajes en el chat**
+
+1. Verifica que el feedback esté activado: `sm_cvar sm_dsm_chat_feedback`
+2. Si está en modo `2` (Admins Only), solo los admins verán mensajes
+3. Verifica el intervalo anti-spam: `sm_cvar sm_dsm_feedback_interval`
+4. Los mensajes solo aparecen cuando cambia la cantidad de jugadores
+
+### **Demasiados mensajes en el chat**
+
+Aumenta el intervalo entre mensajes:
+```
+sm_dsm_feedback_interval "60"  // Mensajes cada 60 segundos mínimo
+```
+
+O desactiva el feedback:
+```
+sm_dsm_chat_feedback "0"
 ```
 
 ---

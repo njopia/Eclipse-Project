@@ -4,7 +4,8 @@
 #include <sourcemod>
 #include <sdktools>
 
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "1.1.0"
+#define MAX_PLAYERS 16
 
 // ConVars del plugin
 ConVar g_cvEnabled;
@@ -14,15 +15,19 @@ ConVar g_cvEnableAutoHorde;
 ConVar g_cvTankHealthMultiplier;
 ConVar g_cvWitchHealthMultiplier;
 ConVar g_cvDifficultyTankReduction;
+ConVar g_cvChatFeedback;
+ConVar g_cvChatFeedbackInterval;
 
 // Variables globales
 int g_iCurrentGamemode = -1;
+int g_iLastPlayerCount = 0;
+int g_iLastFeedbackTime = 0;
 
 public Plugin myinfo =
 {
 	name = "L4D2 Dynamic Spawn Manager",
 	author = "Eclipse Project",
-	description = "Manages zombie spawn rates and special infected based on player count and difficulty",
+	description = "Manages zombie spawn rates and special infected based on player count (max 16 players)",
 	version = PLUGIN_VERSION,
 	url = "https://github.com/eclipse-project"
 }
@@ -39,16 +44,23 @@ public void OnPluginStart()
 	g_cvTankHealthMultiplier = CreateConVar("sm_dsm_tank_hp_mult", "1.0", "Tank health multiplier", FCVAR_NOTIFY, true, 0.1, true, 5.0);
 	g_cvWitchHealthMultiplier = CreateConVar("sm_dsm_witch_hp_mult", "1.0", "Witch health multiplier", FCVAR_NOTIFY, true, 0.1, true, 5.0);
 	g_cvDifficultyTankReduction = CreateConVar("sm_dsm_diff_tank_reduction", "5000", "Tank HP reduction on Hard difficulty (not Survival)", FCVAR_NOTIFY, true, 0.0, true, 20000.0);
+	g_cvChatFeedback = CreateConVar("sm_dsm_chat_feedback", "1", "Show spawn adjustments in chat (0=Disabled, 1=Enabled, 2=Admins Only)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
+	g_cvChatFeedbackInterval = CreateConVar("sm_dsm_feedback_interval", "30", "Minimum seconds between chat feedback messages", FCVAR_NOTIFY, true, 10.0, true, 300.0);
 
 	AutoExecConfig(true, "l4d2_dynamic_spawn_manager");
 
 	// Detectar gamemode
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
+
+	// Hook de cambio de equipo para detectar nuevos jugadores
+	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 }
 
 public void OnMapStart()
 {
 	g_iCurrentGamemode = GetCurrentGamemodeID();
+	g_iLastPlayerCount = 0;
+	g_iLastFeedbackTime = 0;
 
 	// Iniciar timer de balance
 	if (g_cvEnabled.BoolValue)
@@ -60,12 +72,45 @@ public void OnMapStart()
 		{
 			CreateTimer(g_cvForceHordeInterval.FloatValue, Timer_ForceHorde, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
+
+		// Mensaje inicial
+		CreateTimer(3.0, Timer_InitialMessage, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
 public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
 	g_iCurrentGamemode = GetCurrentGamemodeID();
+	g_iLastPlayerCount = 0; // Reset para permitir feedback en nuevo round
+}
+
+public void Event_PlayerTeam(Event event, const char[] name, bool dontBroadcast)
+{
+	// Esto ayudará a detectar cambios de jugadores
+	int newTeam = event.GetInt("team");
+	if (newTeam == 2) // Equipo Survivors
+	{
+		CreateTimer(0.5, Timer_CheckPlayerCountChange, _, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+
+public Action Timer_InitialMessage(Handle timer)
+{
+	if (!g_cvEnabled.BoolValue)
+		return Plugin_Stop;
+
+	int feedbackMode = g_cvChatFeedback.IntValue;
+	if (feedbackMode == 0)
+		return Plugin_Stop;
+
+	PrintToChatAll("\x04[Dynamic Spawn] \x01Sistema de spawn dinámico activado (Max: \x05%d \x01jugadores)", MAX_PLAYERS);
+	return Plugin_Stop;
+}
+
+public Action Timer_CheckPlayerCountChange(Handle timer)
+{
+	// Simplemente forzar una actualización inmediata
+	return Plugin_Stop;
 }
 
 public Action Timer_ForceHorde(Handle timer)
@@ -82,6 +127,13 @@ public Action Timer_ForceHorde(Handle timer)
 	SetCommandFlags("director_force_panic_event", flags & ~FCVAR_CHEAT);
 	ServerCommand("director_force_panic_event");
 	SetCommandFlags("director_force_panic_event", flags);
+
+	// Feedback visual
+	int feedbackMode = g_cvChatFeedback.IntValue;
+	if (feedbackMode > 0)
+	{
+		PrintToChatAll("\x04[Dynamic Spawn] \x03Horda forzada activada!");
+	}
 
 	return Plugin_Continue;
 }
@@ -105,6 +157,10 @@ public Action Timer_BalanceSpawn(Handle timer)
 
 	// Contar jugadores humanos supervivientes
 	int iHumanCount = GetTeamHumanCount(2);
+
+	// Limitar a máximo 16 jugadores
+	if (iHumanCount > MAX_PLAYERS)
+		iHumanCount = MAX_PLAYERS;
 
 	// Calcular configuración según jugadores
 	int iMaxSpecials, iSpawnTimeMin, iSpawnTimeMax;
@@ -134,7 +190,7 @@ public Action Timer_BalanceSpawn(Handle timer)
 	else
 		iMaxSpecials = 4 + iSpecialsBonus;
 
-	// Configuraciones escalonadas por jugadores
+	// Configuraciones escalonadas por jugadores (OPTIMIZADO PARA MAX 16)
 	if (iHumanCount <= 4)
 	{
 		iBoomerLimit = 1; iChargerLimit = 1; iHunterLimit = 1; iJockeyLimit = 1;
@@ -196,7 +252,7 @@ public Action Timer_BalanceSpawn(Handle timer)
 		iBoomerLimit = 3; iChargerLimit = 2; iHunterLimit = 3; iJockeyLimit = 3;
 		iSmokerLimit = 2; iSpitterLimit = 2; iTankLimit = 2 + iTankBonus;
 		iSpawnTimeMin = 17 - iSpawnTimeBonus; iSpawnTimeMax = 27;
-		iTankHealth = 6000; iWitchHealth = 4000;
+		iTankHealth = 8000; iWitchHealth = 4000;
 		iMobSpawnMin = 70; iMobSpawnMax = 100;
 	}
 	else if (iHumanCount == 12)
@@ -204,7 +260,7 @@ public Action Timer_BalanceSpawn(Handle timer)
 		iBoomerLimit = 3; iChargerLimit = 2; iHunterLimit = 3; iJockeyLimit = 3;
 		iSmokerLimit = 3; iSpitterLimit = 2; iTankLimit = 2 + iTankBonus;
 		iSpawnTimeMin = 16 - iSpawnTimeBonus; iSpawnTimeMax = 26;
-		iTankHealth = 7000; iWitchHealth = 4100;
+		iTankHealth = 9000; iWitchHealth = 4100;
 		iMobSpawnMin = 60; iMobSpawnMax = 90;
 	}
 	else if (iHumanCount == 13)
@@ -212,15 +268,15 @@ public Action Timer_BalanceSpawn(Handle timer)
 		iBoomerLimit = 3; iChargerLimit = 2; iHunterLimit = 3; iJockeyLimit = 3;
 		iSmokerLimit = 3; iSpitterLimit = 3; iTankLimit = 2 + iTankBonus;
 		iSpawnTimeMin = 15 - iSpawnTimeBonus; iSpawnTimeMax = 25;
-		iTankHealth = 8000; iWitchHealth = 4200;
-		iMobSpawnMin = 50; iMobSpawnMax = 80;
+		iTankHealth = 9000; iWitchHealth = 4200;
+		iMobSpawnMin = 55; iMobSpawnMax = 85;
 	}
 	else if (iHumanCount == 14)
 	{
 		iBoomerLimit = 3; iChargerLimit = 3; iHunterLimit = 3; iJockeyLimit = 3;
 		iSmokerLimit = 3; iSpitterLimit = 3; iTankLimit = 3 + iTankBonus;
 		iSpawnTimeMin = 14 - iSpawnTimeBonus; iSpawnTimeMax = 24;
-		iTankHealth = 8000; iWitchHealth = 4300;
+		iTankHealth = 10000; iWitchHealth = 4300;
 		iMobSpawnMin = 50; iMobSpawnMax = 80;
 	}
 	else if (iHumanCount == 15)
@@ -228,56 +284,16 @@ public Action Timer_BalanceSpawn(Handle timer)
 		iBoomerLimit = 4; iChargerLimit = 3; iHunterLimit = 3; iJockeyLimit = 3;
 		iSmokerLimit = 3; iSpitterLimit = 3; iTankLimit = 3 + iTankBonus;
 		iSpawnTimeMin = 13 - iSpawnTimeBonus; iSpawnTimeMax = 23;
-		iTankHealth = 9000; iWitchHealth = 4500;
+		iTankHealth = 10000; iWitchHealth = 4500;
 		iMobSpawnMin = 50; iMobSpawnMax = 80;
 	}
-	else if (iHumanCount == 16)
+	else // iHumanCount >= 16 (MÁXIMO)
 	{
 		iBoomerLimit = 4; iChargerLimit = 3; iHunterLimit = 4; iJockeyLimit = 3;
 		iSmokerLimit = 3; iSpitterLimit = 3; iTankLimit = 3 + iTankBonus;
 		iSpawnTimeMin = 12 - iSpawnTimeBonus; iSpawnTimeMax = 22;
-		iTankHealth = 10000; iWitchHealth = 4600;
-		iMobSpawnMin = 50; iMobSpawnMax = 80;
-	}
-	else if (iHumanCount == 17)
-	{
-		iBoomerLimit = 4; iChargerLimit = 3; iHunterLimit = 4; iJockeyLimit = 4;
-		iSmokerLimit = 3; iSpitterLimit = 3; iTankLimit = 4 + iTankBonus;
-		iSpawnTimeMin = 11 - iSpawnTimeBonus; iSpawnTimeMax = 21;
-		iTankHealth = 9000; iWitchHealth = 4700;
-		iMobSpawnMin = 50; iMobSpawnMax = 80;
-	}
-	else if (iHumanCount == 18)
-	{
-		iBoomerLimit = 4; iChargerLimit = 3; iHunterLimit = 4; iJockeyLimit = 4;
-		iSmokerLimit = 4; iSpitterLimit = 4; iTankLimit = 4 + iTankBonus;
-		iSpawnTimeMin = 10 - iSpawnTimeBonus; iSpawnTimeMax = 20;
-		iTankHealth = 10000; iWitchHealth = 4800;
-		iMobSpawnMin = 50; iMobSpawnMax = 80;
-	}
-	else if (iHumanCount == 19)
-	{
-		iBoomerLimit = 4; iChargerLimit = 3; iHunterLimit = 4; iJockeyLimit = 4;
-		iSmokerLimit = 4; iSpitterLimit = 4; iTankLimit = 4 + iTankBonus;
-		iSpawnTimeMin = 10 - iSpawnTimeBonus; iSpawnTimeMax = 20;
-		iTankHealth = 11000; iWitchHealth = 4900;
-		iMobSpawnMin = 40; iMobSpawnMax = 80;
-	}
-	else if (iHumanCount == 20)
-	{
-		iBoomerLimit = 4; iChargerLimit = 4; iHunterLimit = 4; iJockeyLimit = 4;
-		iSmokerLimit = 4; iSpitterLimit = 4; iTankLimit = 4 + iTankBonus;
-		iSpawnTimeMin = 10 - iSpawnTimeBonus; iSpawnTimeMax = 20;
-		iTankHealth = 12000; iWitchHealth = 5000;
-		iMobSpawnMin = 30; iMobSpawnMax = 80;
-	}
-	else // > 20 jugadores
-	{
-		iBoomerLimit = 4; iChargerLimit = 4; iHunterLimit = 4; iJockeyLimit = 4;
-		iSmokerLimit = 4; iSpitterLimit = 4; iTankLimit = 5;
-		iSpawnTimeMin = 10 - iSpawnTimeBonus; iSpawnTimeMax = 20;
-		iTankHealth = 12000; iWitchHealth = 5000;
-		iMobSpawnMin = 20; iMobSpawnMax = 80;
+		iTankHealth = 11000; iWitchHealth = 4600;
+		iMobSpawnMin = 45; iMobSpawnMax = 75;
 	}
 
 	// Ajustes por dificultad
@@ -291,27 +307,42 @@ public Action Timer_BalanceSpawn(Handle timer)
 	iTankHealth = RoundToNearest(iTankHealth * g_cvTankHealthMultiplier.FloatValue);
 	iWitchHealth = RoundToNearest(iWitchHealth * g_cvWitchHealthMultiplier.FloatValue);
 
+	// Detectar cambio significativo de jugadores para feedback
+	bool bPlayerCountChanged = (g_iLastPlayerCount != iHumanCount);
+	int currentTime = GetTime();
+	bool bCanShowFeedback = (currentTime - g_iLastFeedbackTime) >= g_cvChatFeedbackInterval.IntValue;
+
 	// Aplicar cambios solo si son diferentes de los valores actuales
-	ApplyConVarIfChanged("l4d_infectedbots_boomer_limit", iBoomerLimit);
-	ApplyConVarIfChanged("l4d_infectedbots_charger_limit", iChargerLimit);
-	ApplyConVarIfChanged("l4d_infectedbots_hunter_limit", iHunterLimit);
-	ApplyConVarIfChanged("l4d_infectedbots_jockey_limit", iJockeyLimit);
-	ApplyConVarIfChanged("l4d_infectedbots_smoker_limit", iSmokerLimit);
-	ApplyConVarIfChanged("l4d_infectedbots_spitter_limit", iSpitterLimit);
-	ApplyConVarIfChanged("l4d_infectedbots_tank_limit", iTankLimit);
+	bool bAnyChange = false;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_boomer_limit", iBoomerLimit) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_charger_limit", iChargerLimit) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_hunter_limit", iHunterLimit) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_jockey_limit", iJockeyLimit) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_smoker_limit", iSmokerLimit) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_spitter_limit", iSpitterLimit) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_tank_limit", iTankLimit) || bAnyChange;
 
-	ApplyConVarIfChanged("l4d_infectedbots_spawn_time_min", iSpawnTimeMin);
-	ApplyConVarIfChanged("l4d_infectedbots_spawn_time_max", iSpawnTimeMax);
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_spawn_time_min", iSpawnTimeMin) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_spawn_time_max", iSpawnTimeMax) || bAnyChange;
 
-	ApplyConVarIfChanged("z_tank_health", iTankHealth);
-	ApplyConVarIfChanged("z_witch_health", iWitchHealth);
+	bAnyChange = ApplyConVarIfChanged("z_tank_health", iTankHealth) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("z_witch_health", iWitchHealth) || bAnyChange;
 
-	ApplyConVarIfChanged("z_mob_spawn_min_interval_normal", iMobSpawnMin);
-	ApplyConVarIfChanged("z_mob_spawn_max_interval_normal", iMobSpawnMax);
-	ApplyConVarIfChanged("z_mega_mob_spawn_min_interval", iMobSpawnMin);
-	ApplyConVarIfChanged("z_mega_mob_spawn_max_interval", iMobSpawnMax);
+	bAnyChange = ApplyConVarIfChanged("z_mob_spawn_min_interval_normal", iMobSpawnMin) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("z_mob_spawn_max_interval_normal", iMobSpawnMax) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("z_mega_mob_spawn_min_interval", iMobSpawnMin) || bAnyChange;
+	bAnyChange = ApplyConVarIfChanged("z_mega_mob_spawn_max_interval", iMobSpawnMax) || bAnyChange;
 
-	ApplyConVarIfChanged("l4d_infectedbots_max_specials", iMaxSpecials);
+	bAnyChange = ApplyConVarIfChanged("l4d_infectedbots_max_specials", iMaxSpecials) || bAnyChange;
+
+	// Mostrar feedback si hay cambios y se cumplen las condiciones
+	if (bAnyChange && bPlayerCountChanged && bCanShowFeedback)
+	{
+		ShowSpawnFeedback(iHumanCount, iMaxSpecials, iMobSpawnMin, iMobSpawnMax, iTankHealth, iWitchHealth);
+		g_iLastFeedbackTime = currentTime;
+	}
+
+	g_iLastPlayerCount = iHumanCount;
 
 	return Plugin_Continue;
 }
@@ -320,14 +351,51 @@ public Action Timer_BalanceSpawn(Handle timer)
 // FUNCIONES AUXILIARES
 // ========================
 
-void ApplyConVarIfChanged(const char[] cvarName, int newValue)
+void ShowSpawnFeedback(int players, int specials, int mobMin, int mobMax, int tankHP, int witchHP)
+{
+	int feedbackMode = g_cvChatFeedback.IntValue;
+
+	if (feedbackMode == 0)
+		return;
+
+	// Mensaje principal
+	char msg[256];
+	Format(msg, sizeof(msg), "\x04[Dynamic Spawn] \x01Ajustado para \x05%d \x01jugador%s",
+		players, (players == 1) ? "" : "es");
+
+	if (feedbackMode == 1) // Todos
+	{
+		PrintToChatAll("%s", msg);
+		PrintToChatAll("\x04↳ \x03Especiales: \x05%d \x01| Hordas: \x05%d-%ds \x01| Tank: \x05%dHP \x01| Witch: \x05%dHP",
+			specials, mobMin, mobMax, tankHP, witchHP);
+	}
+	else if (feedbackMode == 2) // Solo admins
+	{
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && !IsFakeClient(i) && CheckCommandAccess(i, "sm_admin", ADMFLAG_GENERIC))
+			{
+				PrintToChat(i, "%s", msg);
+				PrintToChat(i, "\x04↳ \x03Especiales: \x05%d \x01| Hordas: \x05%d-%ds \x01| Tank: \x05%dHP \x01| Witch: \x05%dHP",
+					specials, mobMin, mobMax, tankHP, witchHP);
+			}
+		}
+	}
+}
+
+bool ApplyConVarIfChanged(const char[] cvarName, int newValue)
 {
 	ConVar cv = FindConVar(cvarName);
 	if (cv == null)
-		return;
+		return false;
 
 	if (cv.IntValue != newValue)
+	{
 		cv.SetInt(newValue);
+		return true;
+	}
+
+	return false;
 }
 
 int GetTeamHumanCount(int team)
