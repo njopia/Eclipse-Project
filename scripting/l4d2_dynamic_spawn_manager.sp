@@ -4,7 +4,7 @@
 #include <sourcemod>
 #include <sdktools>
 
-#define PLUGIN_VERSION "1.1.1"
+#define PLUGIN_VERSION "1.2.0"
 #define MAX_PLAYERS 16
 
 // ConVars del plugin
@@ -17,6 +17,11 @@ ConVar g_cvWitchHealthMultiplier;
 ConVar g_cvDifficultyTankReduction;
 ConVar g_cvChatFeedback;
 ConVar g_cvChatFeedbackInterval;
+
+// ConVars para Mutant Zombies (opcional - requiere plugin Mutant Zombies)
+ConVar g_cvEnableMutants;
+ConVar g_cvMutantCount;
+ConVar g_cvMutantTypes;
 
 // Variables globales
 int g_iCurrentGamemode = -1;
@@ -46,6 +51,11 @@ public void OnPluginStart()
 	g_cvDifficultyTankReduction = CreateConVar("sm_dsm_diff_tank_reduction", "5000", "Tank HP reduction on Hard difficulty (not Survival)", FCVAR_NOTIFY, true, 0.0, true, 20000.0);
 	g_cvChatFeedback = CreateConVar("sm_dsm_chat_feedback", "1", "Show spawn adjustments in chat (0=Disabled, 1=Enabled, 2=Admins Only)", FCVAR_NOTIFY, true, 0.0, true, 2.0);
 	g_cvChatFeedbackInterval = CreateConVar("sm_dsm_feedback_interval", "30", "Minimum seconds between chat feedback messages", FCVAR_NOTIFY, true, 10.0, true, 300.0);
+
+	// Mutant Zombies integration (requires Mutant Zombies plugin)
+	g_cvEnableMutants = CreateConVar("sm_dsm_mutants_enabled", "0", "Spawn mutant zombies during forced hordes (0=Disabled, 1=Enabled, requires Mutant Zombies plugin)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	g_cvMutantCount = CreateConVar("sm_dsm_mutants_count", "5", "Number of mutants to spawn per forced horde", FCVAR_NOTIFY, true, 1.0, true, 20.0);
+	g_cvMutantTypes = CreateConVar("sm_dsm_mutants_types", "all", "Mutant types to spawn: all, bomb, fire, ghost, mind, smoke, spit, tesla (comma-separated)", FCVAR_NOTIFY);
 
 	AutoExecConfig(true, "l4d2_dynamic_spawn_manager");
 
@@ -133,11 +143,23 @@ public Action Timer_ForceHorde(Handle timer)
 	FakeClientCommand(client, "director_force_panic_event");
 	SetCommandFlags("director_force_panic_event", flags);
 
+	// Spawnear mutantes si está habilitado (requiere plugin Mutant Zombies)
+	if (g_cvEnableMutants.BoolValue)
+	{
+		SpawnMutantZombies(client);
+	}
+
 	// Feedback visual
 	int feedbackMode = g_cvChatFeedback.IntValue;
 	if (feedbackMode > 0)
 	{
-		PrintToChatAll("\x04[Dynamic Spawn] \x03Horda forzada activada!");
+		char mutantMsg[32];
+		if (g_cvEnableMutants.BoolValue)
+			Format(mutantMsg, sizeof(mutantMsg), " + %d mutantes", g_cvMutantCount.IntValue);
+		else
+			mutantMsg[0] = '\0';
+
+		PrintToChatAll("\x04[Dynamic Spawn] \x03Horda forzada activada!%s", mutantMsg);
 	}
 
 	return Plugin_Continue;
@@ -482,4 +504,82 @@ int GetMastersCount(int maxSkill)
 	// Por ahora retorna 0 (deshabilitado)
 	// Para activar, necesitas integrar con tu sistema de ranking/skill
 	return 0;
+}
+
+void SpawnMutantZombies(int client)
+{
+	// Esta función requiere el plugin "Mutant Zombies" instalado
+	// https://forums.alliedmods.net/showthread.php?p=1623308
+
+	if (client <= 0 || !IsClientInGame(client))
+		return;
+
+	int mutantCount = g_cvMutantCount.IntValue;
+	char mutantTypes[256];
+	g_cvMutantTypes.GetString(mutantTypes, sizeof(mutantTypes));
+
+	// Convertir a minúsculas para comparación
+	for (int i = 0; i < strlen(mutantTypes); i++)
+	{
+		mutantTypes[i] = CharToLower(mutantTypes[i]);
+	}
+
+	// Lista de tipos de mutantes disponibles
+	char mutantCommands[][] = {
+		"sm_mutantbomb",
+		"sm_mutantfire",
+		"sm_mutantghost",
+		"sm_mutantmind",
+		"sm_mutantsmoke",
+		"sm_mutantspit",
+		"sm_mutanttesla"
+	};
+
+	char mutantNames[][] = {
+		"bomb",
+		"fire",
+		"ghost",
+		"mind",
+		"smoke",
+		"spit",
+		"tesla"
+	};
+
+	// Si el tipo es "all", spawnear aleatoriamente de todos los tipos
+	if (StrEqual(mutantTypes, "all", false))
+	{
+		for (int i = 0; i < mutantCount; i++)
+		{
+			int randomType = GetRandomInt(0, sizeof(mutantCommands) - 1);
+			FakeClientCommand(client, mutantCommands[randomType]);
+		}
+	}
+	else
+	{
+		// Spawnear tipos específicos
+		char types[16][32];
+		int typeCount = ExplodeString(mutantTypes, ",", types, sizeof(types), sizeof(types[]));
+
+		for (int i = 0; i < mutantCount; i++)
+		{
+			// Elegir un tipo aleatorio de los especificados
+			if (typeCount > 0)
+			{
+				int randomTypeIndex = GetRandomInt(0, typeCount - 1);
+				char selectedType[32];
+				strcopy(selectedType, sizeof(selectedType), types[randomTypeIndex]);
+				TrimString(selectedType);
+
+				// Buscar el comando correspondiente
+				for (int j = 0; j < sizeof(mutantNames); j++)
+				{
+					if (StrEqual(selectedType, mutantNames[j], false))
+					{
+						FakeClientCommand(client, mutantCommands[j]);
+						break;
+					}
+				}
+			}
+		}
+	}
 }

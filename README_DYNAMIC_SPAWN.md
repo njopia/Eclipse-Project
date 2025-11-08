@@ -4,14 +4,27 @@
 
 Plugin **standalone** para Left 4 Dead 2 que gestiona dinámicamente el spawn de zombies, infectados especiales y jefes basándose en la cantidad de jugadores y dificultad del servidor.
 
-**Versión:** 1.1.1
+**Versión:** 1.2.0
 **Extraído y mejorado desde:** `onepiece3.sp`
 **Completamente independiente:** No requiere ningún otro plugin para funcionar.
 **Optimizado para:** Máximo 16 jugadores simultáneos
+**Integración opcional:** Mutant Zombies plugin
 
 ---
 
 ## 🔄 Changelog
+
+### v1.2.0 (2025-11-08)
+- **✨ Nueva Feature:** Integración con plugin Mutant Zombies
+  - Spawn automático de mutantes durante hordas forzadas
+  - Control de cantidad de mutantes por horda (1-20)
+  - Selección de tipos: all, bomb, fire, ghost, mind, smoke, spit, tesla
+  - Soporta múltiples tipos separados por comas
+  - Feedback en chat muestra cantidad de mutantes spawneados
+- **Nuevos ConVars:**
+  - `sm_dsm_mutants_enabled` - Activar/desactivar spawn de mutantes
+  - `sm_dsm_mutants_count` - Cantidad de mutantes por horda
+  - `sm_dsm_mutants_types` - Tipos de mutantes a spawnear
 
 ### v1.1.1 (2025-11-08)
 - **🐛 Fix:** Corregido sistema de hordas forzadas que no spawneaba zombies
@@ -54,6 +67,24 @@ El plugin ajusta automáticamente cada **5 segundos**:
 - Solo en modos **Coop** y **Realism**
 - Mantiene la presión sobre los supervivientes
 - Notificación en chat cuando se activa
+
+### **🧟 Integración con Mutant Zombies (Opcional)**
+
+- **Spawn automático de mutantes** durante hordas forzadas
+- **7 tipos de mutantes disponibles:**
+  - 💣 **Bomb** - Explota al morir causando daño masivo
+  - 🔥 **Fire** - Prende fuego a los supervivientes
+  - 👻 **Ghost** - Invisible hasta atacar
+  - 🧠 **Mind** - Controla a los supervivientes
+  - 💨 **Smoke** - Crea nubes de humo cegadoras
+  - 🤢 **Spit** - Escupe ácido continuo
+  - ⚡ **Tesla** - Electrocuta con ataques de rayo
+- **Configuración flexible:**
+  - Cantidad de mutantes por horda (1-20)
+  - Spawn aleatorio de todos los tipos (`all`)
+  - Selección específica de tipos separados por comas
+  - Desactivable independientemente de las hordas normales
+- **Requiere:** [Plugin Mutant Zombies](https://forums.alliedmods.net/showthread.php?p=1623308) instalado
 
 ### **💬 Feedback en Chat**
 
@@ -156,6 +187,20 @@ sm plugins load l4d2_dynamic_spawn_manager
 | `sm_dsm_witch_hp_mult` | 1.0 | 0.1 | 5.0 | Multiplicador de HP de la Witch |
 | `sm_dsm_diff_tank_reduction` | 5000 | 0 | 20000 | Reducción de HP del Tank en Hard |
 
+### **Mutant Zombies (Opcional)**
+
+| ConVar | Default | Min | Max | Descripción |
+|--------|---------|-----|-----|-------------|
+| `sm_dsm_mutants_enabled` | 0 | 0 | 1 | Spawnear mutantes en hordas (requiere plugin Mutant Zombies) |
+| `sm_dsm_mutants_count` | 5 | 1 | 20 | Cantidad de mutantes por horda |
+| `sm_dsm_mutants_types` | all | - | - | Tipos a spawnear: all, bomb, fire, ghost, mind, smoke, spit, tesla |
+
+**Tipos válidos para `sm_dsm_mutants_types`:**
+- `all` - Aleatorio entre todos los tipos
+- `bomb` - Solo mutantes bomba
+- `fire,tesla` - Solo fuego y tesla (separados por comas)
+- `bomb,ghost,smoke` - Múltiples tipos específicos
+
 ---
 
 ## 📝 Ejemplos de Configuración
@@ -188,6 +233,24 @@ sm_dsm_chat_feedback "0"            // Sin mensajes en chat
 sm_dsm_chat_feedback "1"            // Todos ven mensajes
 sm_dsm_feedback_interval "15"       // Mensajes cada 15s mínimo
 sm_dsm_update_interval "3.0"        // Actualizar cada 3 segundos
+```
+
+### **Servidor con Mutant Zombies**
+```cfg
+// Requiere plugin Mutant Zombies instalado
+sm_dsm_mutants_enabled "1"          // Activar spawn de mutantes
+sm_dsm_mutants_count "8"            // 8 mutantes por horda
+sm_dsm_mutants_types "all"          // Todos los tipos aleatoriamente
+sm_dsm_force_horde_interval "45.0"  // Hordas cada 45 segundos
+```
+
+### **Servidor con Mutantes Específicos**
+```cfg
+// Solo mutantes explosivos y eléctricos
+sm_dsm_mutants_enabled "1"
+sm_dsm_mutants_count "3"
+sm_dsm_mutants_types "bomb,tesla"   // Solo Bomb y Tesla
+sm_dsm_force_horde_interval "60.0"
 ```
 
 ---
@@ -226,7 +289,10 @@ El plugin ajusta automáticamente estos CVars según la configuración:
 - SourceMod 1.10+
 - Left 4 Dead 2
 
-### **Plugins Recomendados (opcional):**
+### **Plugins Opcionales:**
+- **[Mutant Zombies](https://forums.alliedmods.net/showthread.php?p=1623308)** - Para spawn de zombies mutantes durante hordas
+  - Requerido solo si `sm_dsm_mutants_enabled` está en `1`
+  - Agrega 7 tipos de mutantes especiales (bomb, fire, ghost, mind, smoke, spit, tesla)
 - `l4d_infectedbots.smx` - Para control de infectados bots
 - Cualquier plugin de ranking/skill si quieres activar `GetMastersCount()`
 
