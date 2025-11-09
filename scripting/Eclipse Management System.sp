@@ -53,8 +53,16 @@
 #tryinclude "modules/abilities/ability-berserker.sp"
 #tryinclude "modules/abilities/ability-acidbath.sp"
 #tryinclude "modules/abilities/ability-lifestealer.sp"
+#tryinclude "modules/abilities/ability-flameshield.sp"
+#tryinclude "modules/abilities/ability-nightcrawler.sp"
+#tryinclude "modules/abilities/ability-rapidfire.sp"
+#tryinclude "modules/abilities/ability-chainsaw.sp"
+#tryinclude "modules/abilities/ability-heatseeker.sp"
 #tryinclude "modules/abilities/ability-speedfreak.sp"
-#tryinclude "modules/abilities/abilities-remaining.sp"
+#tryinclude "modules/abilities/ability-healingaura.sp"
+#tryinclude "modules/abilities/ability-soulshield.sp"
+#tryinclude "modules/abilities/ability-polymorph.sp"
+#tryinclude "modules/abilities/ability-instagib.sp"
 
 //==================================================
 // === BUY MENU MODULE ===
