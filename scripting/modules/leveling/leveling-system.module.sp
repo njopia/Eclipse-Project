@@ -24,6 +24,7 @@ int			g_iPlayerLevel[MAXPLAYERS + 1];
 int			g_iPlayerXP[MAXPLAYERS + 1];
 int			g_iTotalPlayerXP[MAXPLAYERS + 1];
 bool		g_bShoulderCannon_AutoEquip[MAXPLAYERS + 1];  // Auto-equipar Shoulder Cannon al spawnar
+bool		g_bPlayerDataLoaded[MAXPLAYERS + 1];  // Trackea si los datos ya fueron cargados en esta sesión
 
 // --- Variable para congelar currency durante eventos especiales (ej: Nightmare) ---
 bool		g_bCurrencyFrozen = false; // Cuando es true, no se gana/pierde/resetea currency
@@ -186,6 +187,7 @@ public void Leveling_OnClientDisconnect(int client)
 	g_iPlayerLevel[client] = 0;
 	g_iPlayerXP[client] = 0;
 	g_iTotalPlayerXP[client] = 0;
+	g_bPlayerDataLoaded[client] = false;  // Reset flag para permitir carga en próxima sesión
 }
 
 /**
@@ -196,6 +198,16 @@ public void Leveling_LoadPlayerData(int client)
 {
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client))
 		return;
+
+	// Prevenir cargas duplicadas en la misma sesión
+	if (g_bPlayerDataLoaded[client])
+	{
+		if (GetConVarBool(cvar_LevelingDebug))
+		{
+			LogToFile(g_szLevelingLogPath, "[DEBUG] Datos de %N ya cargados, ignorando carga duplicada", client);
+		}
+		return;
+	}
 
 	char steamid[32];
 	GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
@@ -241,9 +253,10 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 	if (results == null)
 	{
 		LogToFile(g_szLevelingLogPath, "[ERROR] Fallo al cargar datos de nivel de %N: %s", client, error);
-		g_iPlayerLevel[client]	 = 0;
-		g_iPlayerXP[client]		 = 0;
-		g_iTotalPlayerXP[client] = 0;
+		LogToFile(g_szLevelingLogPath, "[ERROR] Manteniendo valores actuales para prevenir reset - Level: %d, XP: %d",
+				  g_iPlayerLevel[client], g_iPlayerXP[client]);
+		// NO resetear a 0 en caso de error de BD - mantener valores actuales
+		// Solo resetear si es un nuevo jugador (ver más abajo)
 		return;
 	}
 
@@ -253,6 +266,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerXP[client]		  = results.FetchInt(1);
 		g_iTotalPlayerXP[client]  = results.FetchInt(2);
 		g_bShoulderCannon_AutoEquip[client] = view_as<bool>(results.FetchInt(3));
+		g_bPlayerDataLoaded[client] = true;  // Marcar como cargado
 
 		// Currency se mantiene durante toda la sesión (no se resetea entre mapas)
 		// Solo se resetea al desconectar o al iniciar el plugin
@@ -276,6 +290,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerXP[client]		  = 0;
 		g_iTotalPlayerXP[client]  = 0;
 		g_bShoulderCannon_AutoEquip[client] = false;
+		g_bPlayerDataLoaded[client] = true;  // Marcar como cargado (nuevo jugador)
 		// Currency ya está inicializado en 0 por buyMenuOnPluginStart() o OnClientDisconnect()
 		// No lo tocamos aquí para no resetear el currency entre mapas
 
@@ -318,6 +333,8 @@ public void Callback_InsertPlayerLevel(Database db, DBResultSet results, const c
 
 /**
  * Evento: player_spawn - Se dispara cuando el jugador aparece en el mapa
+ * NOTA: Ya NO cargamos datos aquí - solo se cargan en OnClientPostAdminCheck
+ * Esto previene resets accidentales si hay errores de BD durante el juego
  */
 public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
 {
@@ -326,8 +343,14 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return Plugin_Continue;
 
-	// Cargar datos de nivel cuando aparece por primera vez
-	Leveling_LoadPlayerData(client);
+	// Ya no cargamos datos aquí - esto causaba resets si fallaba la BD
+	// Los datos se cargan SOLO en OnClientPostAdminCheck (al conectar)
+
+	// Aplicar pasivas si el jugador tiene nivel (datos ya cargados)
+	if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
+	{
+		LevelingRewards_ApplyRewardsSilent(client, g_iPlayerLevel[client]);
+	}
 
 	return Plugin_Continue;
 }
