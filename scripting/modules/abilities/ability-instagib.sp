@@ -7,7 +7,18 @@
 //==================================================
 
 #define INSTAGIB_DAMAGE_MULTIPLIER 10.0  // 10x daño contra infectados
-#define INSTAGIB_CRIT_CHANCE 50  // 50% de probabilidad de instakill
+#define INSTAGIB_CRIT_CHANCE 100  // 100% de probabilidad de instakill - SIEMPRE MATA
+
+// Efectos de explosión
+#define PARTICLE_BLOOD_EXPLODE "boomer_explode_D"
+#define PARTICLE_EXPLODE "boomer_explode"
+
+// Sonidos de explosión (se reproducen aleatoriamente)
+char g_szInstagib_ExplosionSounds[][] = {
+	"player/boomer/explode/explo_medium_09.wav",
+	"player/boomer/explode/explo_medium_10.wav",
+	"player/boomer/explode/explo_medium_14.wav"
+};
 
 /**
  * Activa Instagib
@@ -37,7 +48,7 @@ bool Ability_Instagib_Activate(int client)
 	// Activar night vision para efecto dramático
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
-	PrintToChat(client, "\x04[Instagib]\x01 ¡Munición anti-virus! Daño 10x + 50%% instakill.");
+	PrintToChat(client, "\x04[Instagib]\x01 ¡Munición anti-virus! Daño 10x + \x03INSTAKILL GARANTIZADO\x01 (explosión de cuerpos)");
 	return true;
 }
 
@@ -89,21 +100,23 @@ public Action Instagib_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 		// Multiplicar daño
 		damage *= INSTAGIB_DAMAGE_MULTIPLIER;
 
-		// Probabilidad de instakill
+		// Probabilidad de instakill (100% - siempre mata)
 		int roll = GetRandomInt(1, 100);
 		if (roll <= INSTAGIB_CRIT_CHANCE)
 		{
 			damage = 999999.0;  // Instakill
 			PrintHintText(attacker, "INSTAGIB!");
 
-			// Efecto visual
+			// Obtener posición para efectos
 			float victimPos[3];
 			GetClientAbsOrigin(victim, victimPos);
+
+			// Efecto visual de beam ring
 			TE_SetupBeamRingPoint(victimPos, 10.0, 200.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.3, 10.0, 0.0, {255, 255, 255, 255}, 10, 0);
 			TE_SendToAll();
 
-			// Efecto de sonido
-			EmitSoundToAll("weapons/hegrenade/explode5.wav", victim);
+			// Efecto de explosión del cuerpo
+			Instagib_CreateExplosion(victimPos);
 		}
 
 		return Plugin_Changed;
@@ -120,18 +133,23 @@ public Action Instagib_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 			// Multiplicar daño
 			damage *= INSTAGIB_DAMAGE_MULTIPLIER;
 
-			// Probabilidad de instakill
+			// Probabilidad de instakill (100% - siempre mata)
 			int roll = GetRandomInt(1, 100);
 			if (roll <= INSTAGIB_CRIT_CHANCE)
 			{
 				damage = 999999.0;  // Instakill
 				PrintHintText(attacker, "INSTAGIB!");
 
-				// Efecto visual en el target
+				// Obtener posición para efectos
 				float victimPos[3];
 				GetEntPropVector(victim, Prop_Send, "m_vecOrigin", victimPos);
+
+				// Efecto visual de beam ring
 				TE_SetupBeamRingPoint(victimPos, 10.0, 200.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.3, 10.0, 0.0, {255, 255, 255, 255}, 10, 0);
 				TE_SendToAll();
+
+				// Efecto de explosión del cuerpo
+				Instagib_CreateExplosion(victimPos);
 			}
 
 			return Plugin_Changed;
@@ -139,4 +157,34 @@ public Action Instagib_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 	}
 
 	return Plugin_Continue;
+}
+
+/**
+ * Crea efecto de explosión en una posición
+ */
+void Instagib_CreateExplosion(float origin[3])
+{
+	// Crear partícula de explosión de boomer
+	int particle = CreateEntityByName("info_particle_system");
+	if (IsValidEntity(particle))
+	{
+		TeleportEntity(particle, origin, NULL_VECTOR, NULL_VECTOR);
+
+		DispatchKeyValue(particle, "effect_name", PARTICLE_EXPLODE);
+		DispatchSpawn(particle);
+		ActivateEntity(particle);
+		AcceptEntityInput(particle, "Enable");
+		AcceptEntityInput(particle, "start");
+
+		// Auto-destruir después de 0.1 segundos
+		char output[64];
+		Format(output, sizeof(output), "OnUser1 !self:Kill::0.1:-1");
+		SetVariantString(output);
+		AcceptEntityInput(particle, "AddOutput");
+		AcceptEntityInput(particle, "FireUser1");
+	}
+
+	// Reproducir sonido de explosión aleatorio
+	int randomSound = GetRandomInt(0, sizeof(g_szInstagib_ExplosionSounds) - 1);
+	EmitSoundToAll(g_szInstagib_ExplosionSounds[randomSound], SOUND_FROM_WORLD, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, SNDVOL_NORMAL, SNDPITCH_NORMAL, -1, origin);
 }
