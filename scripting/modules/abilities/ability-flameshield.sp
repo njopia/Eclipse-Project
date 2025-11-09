@@ -108,7 +108,9 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 	float clientPos[3];
 	GetClientAbsOrigin(client, clientPos);
 
-	// Buscar infectados cercanos
+	int infectadosQuemados = 0;
+
+	// Buscar infectados cercanos (especiales)
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (i != client && IsClientInGame(i) && GetClientTeam(i) == 3 && IsPlayerAlive(i))
@@ -124,6 +126,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 
 				// Incendiar al infectado
 				Flameshield_IgniteEntity(i, client, 3.0);
+				infectadosQuemados++;
 			}
 		}
 	}
@@ -140,7 +143,14 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 		{
 			// Incendiar infectado común
 			Flameshield_IgniteEntity(entity, client, 3.0);
+			infectadosQuemados++;
 		}
+	}
+
+	// Debug: mostrar cuántos infectados se quemaron
+	if (infectadosQuemados > 0)
+	{
+		PrintHintText(client, "Flameshield: %d infectados quemados", infectadosQuemados);
 	}
 
 	return Plugin_Continue;
@@ -184,23 +194,68 @@ void Flameshield_CreateFireEffect(int client)
 stock void Flameshield_IgniteEntity(int entity, int attacker, float duration)
 {
 	#pragma unused attacker
+
+	if (!IsValidEntity(entity))
+		return;
+
 	// Si Left4DHooks está disponible, usar la función nativa
 	#if defined _l4dhooks_included
 		L4D2_Ignite(entity, duration);
-	#else
-		// Fallback: usar entityflame manual
-		char targetName[32];
-		Format(targetName, sizeof(targetName), "target_%d", entity);
-		DispatchKeyValue(entity, "targetname", targetName);
-
-		int flame = CreateEntityByName("entityflame");
-		if (flame != -1)
-		{
-			DispatchKeyValue(flame, "targetname", "flame");
-			DispatchKeyValue(flame, "fireattack", targetName);
-			DispatchKeyValueFloat(flame, "lifetime", duration);
-			DispatchSpawn(flame);
-			AcceptEntityInput(flame, "Enable");
-		}
+		return;
 	#endif
+
+	// Para jugadores (infectados especiales): usar IgniteEntity de SDKTools
+	if (entity > 0 && entity <= MaxClients)
+	{
+		if (IsClientInGame(entity))
+		{
+			IgniteEntity(entity, duration);
+		}
+		return;
+	}
+
+	// Para entidades (infectados comunes): usar método extendido
+	ExtinguishEntity(entity); // Apagar fuego existente primero
+	IgniteEntity(entity, duration); // Intentar IgniteEntity primero
+
+	// Método adicional para asegurar que se vea el fuego
+	char targetName[32];
+	Format(targetName, sizeof(targetName), "flameshield_t_%d", entity);
+	DispatchKeyValue(entity, "targetname", targetName);
+
+	int flame = CreateEntityByName("entityflame");
+	if (flame != -1)
+	{
+		float pos[3];
+		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+
+		DispatchKeyValue(flame, "target", targetName);
+		DispatchKeyValueFloat(flame, "lifetime", duration);
+		DispatchKeyValue(flame, "damagescale", "2.0");
+
+		DispatchSpawn(flame);
+		TeleportEntity(flame, pos, NULL_VECTOR, NULL_VECTOR);
+		ActivateEntity(flame);
+		AcceptEntityInput(flame, "TurnOn");
+
+		// Parent al infectado
+		SetVariantString(targetName);
+		AcceptEntityInput(flame, "SetParent");
+
+		// Auto-destruir
+		CreateTimer(duration + 0.5, Timer_RemoveFlame, EntIndexToEntRef(flame), TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+
+/**
+ * Timer para remover la llama
+ */
+public Action Timer_RemoveFlame(Handle timer, int flameRef)
+{
+	int flame = EntRefToEntIndex(flameRef);
+	if (flame != INVALID_ENT_REFERENCE && IsValidEntity(flame))
+	{
+		RemoveEntity(flame);
+	}
+	return Plugin_Stop;
 }
