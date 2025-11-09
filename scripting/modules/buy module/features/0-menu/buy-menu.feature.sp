@@ -683,9 +683,12 @@ public Action Cmd_Buy(int client, int args)
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_1, text);
-	// Abilities en lugar de Long Actions
-	Format(text, sizeof(text), "🔥 Abilities");
-	g_MainMenu.AddItem(BM_CHOICE_0_2, text);
+	// Abilities - Only show if player has level 3 or higher
+	if (playerLevel >= 3)
+	{
+		Format(text, sizeof(text), "Abilities");
+		g_MainMenu.AddItem(BM_CHOICE_0_2, text);
+	}
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_3, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_3, text);
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_4, client);

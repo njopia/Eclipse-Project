@@ -430,24 +430,32 @@ void ShowAbilitiesMenu(int client)
 {
 	int level = Leveling_GetPlayerLevel(client);
 
+	// Minimum level required to access abilities menu (first ability: Detect Zombie at level 3)
+	if (level < 3)
+	{
+		PrintToChat(client, "\x04[Abilities]\x01 You need to reach level 3 to unlock abilities.");
+		return;
+	}
+
 	Menu menu = new Menu(AbilitiesMenu_Handler);
 	menu.SetTitle("=== ABILITIES MENU ===\nLevel: %d\n ", level);
 
 	char display[128];
 	char info[8];
 
-	// List ALL abilities (unlocked and locked)
+	// List ONLY unlocked abilities
 	for (int i = 1; i < 16; i++)
 	{
 		AbilityIndex ability = view_as<AbilityIndex>(i);
 		int reqLevel = Abilities_GetRequiredLevel(ability);
 
-		char abilityName[64];
-		Abilities_GetName(ability, abilityName, sizeof(abilityName));
-
+		// Only show abilities that are unlocked
 		if (level >= reqLevel)
 		{
-			// Ability UNLOCKED - Check status
+			char abilityName[64];
+			Abilities_GetName(ability, abilityName, sizeof(abilityName));
+
+			// Check ability status
 			if (Abilities_IsActive(client, ability))
 			{
 				Format(display, sizeof(display), "%s [ACTIVE]", abilityName);
@@ -467,13 +475,7 @@ void ShowAbilitiesMenu(int client)
 			Format(info, sizeof(info), "%d", i);
 			menu.AddItem(info, display);
 		}
-		else
-		{
-			// Ability LOCKED - Show required level
-			Format(display, sizeof(display), "%s [Locked - Level %d]", abilityName, reqLevel);
-			Format(info, sizeof(info), "%d", i);
-			menu.AddItem(info, display, ITEMDRAW_DISABLED);
-		}
+		// Locked abilities are now hidden
 	}
 
 	menu.ExitBackButton = true;
