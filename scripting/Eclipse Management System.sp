@@ -88,6 +88,11 @@
 #tryinclude "modules/management/mapvote.module.sp"
 
 //==================================================
+// === MAIN MENU MODULE ===
+//==================================================
+#tryinclude "modules/main-menu.module.sp"
+
+//==================================================
 // === GLOBAL VARIABLES ===
 //==================================================
 
@@ -294,6 +299,9 @@ public void OnPluginStart()
 #if defined _MAPVOTE_MODULE_
 	MapVote_OnPluginStart();
 #endif
+
+	// Initialize main menu
+	MainMenu_OnPluginStart();
 
 	// Register commands
 	RegConsoleCmd("buy", Cmd_Buy);
