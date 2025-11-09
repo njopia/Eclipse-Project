@@ -58,9 +58,10 @@ void ShowMainMenu(int client)
 	menu.SetTitle(title);
 
 	// === OPCIONES PRINCIPALES (siempre disponibles) ===
-	menu.AddItem("buy", "Tienda / Buy Menu");
-	menu.AddItem("level", "Nivel & XP");
-	menu.AddItem("rewards", "Mis Rewards/Habilidades");
+	menu.AddItem("buy", "🛒 Tienda / Buy Menu");
+	menu.AddItem("level", "📊 Nivel & XP");
+	menu.AddItem("rewards", "⭐ Mis Rewards Pasivos");
+	menu.AddItem("abilities", "🔥 Abilities Activables");
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === INFORMACIÓN & ESTADÍSTICAS ===
@@ -117,6 +118,11 @@ public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2
 			{
 				// Mostrar rewards activos directamente
 				ShowActiveRewardsMenuWithBackButton(client);
+			}
+			else if (StrEqual(info, "abilities"))
+			{
+				// Abrir menú de abilities
+				FakeClientCommand(client, "sm_abilities");
 			}
 			else if (StrEqual(info, "frags"))
 			{
