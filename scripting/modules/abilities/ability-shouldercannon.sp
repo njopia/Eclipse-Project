@@ -506,53 +506,69 @@ void ShoulderCannon_ShowMenu(int client)
 
 	char buffer[128];
 
-	// Opción 1: Auto-equipar
-	Format(buffer, sizeof(buffer), "%s Auto Equip al Spawnar",
-		g_bShoulderCannon_AutoEquip[client] ? "[X]" : "[ ]");
-	menu.AddItem("autoequip", buffer);
-
-	// Opción 2: Desactivar disparo
-	Format(buffer, sizeof(buffer), "%s Desactivar Disparo",
-		g_bCannon_Disabled[client] ? "[X]" : "[ ]");
-	menu.AddItem("disable", buffer);
-
-	// Opción 3: Never Target
-	char neverText[64];
-	switch(g_iCannon_NeverTarget[client])
+	// Opción 0: Equipar/Desequipar
+	bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
+	if (isEquipped)
 	{
-		case TARGET_NEVER_NONE: Format(neverText, sizeof(neverText), "None");
-		case TARGET_NEVER_COMMONS: Format(neverText, sizeof(neverText), "Commons");
-		case TARGET_NEVER_SPECIALS: Format(neverText, sizeof(neverText), "Specials");
-		case TARGET_NEVER_WITCHES: Format(neverText, sizeof(neverText), "Witches");
-		case TARGET_NEVER_TANKS: Format(neverText, sizeof(neverText), "Tanks");
-		case TARGET_NEVER_COMMONS_SPECIALS: Format(neverText, sizeof(neverText), "Commons/Specials");
-		case TARGET_NEVER_COMMONS_WITCHES: Format(neverText, sizeof(neverText), "Commons/Witches");
-		case TARGET_NEVER_WITCHES_TANKS: Format(neverText, sizeof(neverText), "Witches/Tanks");
+		Format(buffer, sizeof(buffer), "[X] Equip Shoulder Cannon");
 	}
-	Format(buffer, sizeof(buffer), "[%s] Never Target", neverText);
-	menu.AddItem("never", buffer);
-
-	// Opción 4: Target First
-	char firstText[64];
-	switch(g_iCannon_TargetFirst[client])
+	else
 	{
-		case TARGET_FIRST_COMMONS: Format(firstText, sizeof(firstText), "Commons");
-		case TARGET_FIRST_SPECIALS: Format(firstText, sizeof(firstText), "Specials");
-		case TARGET_FIRST_WITCHES: Format(firstText, sizeof(firstText), "Witches");
-		case TARGET_FIRST_TANKS: Format(firstText, sizeof(firstText), "Tanks");
+		Format(buffer, sizeof(buffer), "[ ] Equip Shoulder Cannon");
 	}
-	Format(buffer, sizeof(buffer), "[%s] Target First", firstText);
-	menu.AddItem("first", buffer);
+	menu.AddItem("equip", buffer);
 
-	// Opción 5: Fire Rate
-	char rateText[64];
-	if (g_fCannon_FireRate[client] <= 0.05) Format(rateText, sizeof(rateText), "+0.05 Fastest");
-	else if (g_fCannon_FireRate[client] <= 0.10) Format(rateText, sizeof(rateText), "+0.10 Faster");
-	else if (g_fCannon_FireRate[client] <= 0.15) Format(rateText, sizeof(rateText), "+0.15 Default");
-	else if (g_fCannon_FireRate[client] <= 0.20) Format(rateText, sizeof(rateText), "+0.20 Slower");
-	else Format(rateText, sizeof(rateText), "+0.25 Slowest");
-	Format(buffer, sizeof(buffer), "[%s] Fire Rate", rateText);
-	menu.AddItem("rate", buffer);
+	// Solo mostrar opciones si está equipado
+	if (isEquipped)
+	{
+		// Opción 1: Auto-equipar
+		Format(buffer, sizeof(buffer), "%s Auto Equip al Spawnar",
+			g_bShoulderCannon_AutoEquip[client] ? "[X]" : "[ ]");
+		menu.AddItem("autoequip", buffer);
+
+		// Opción 2: Desactivar disparo
+		Format(buffer, sizeof(buffer), "%s Desactivar Disparo",
+			g_bCannon_Disabled[client] ? "[X]" : "[ ]");
+		menu.AddItem("disable", buffer);
+
+		// Opción 3: Never Target
+		char neverText[64];
+		switch(g_iCannon_NeverTarget[client])
+		{
+			case TARGET_NEVER_NONE: Format(neverText, sizeof(neverText), "None");
+			case TARGET_NEVER_COMMONS: Format(neverText, sizeof(neverText), "Commons");
+			case TARGET_NEVER_SPECIALS: Format(neverText, sizeof(neverText), "Specials");
+			case TARGET_NEVER_WITCHES: Format(neverText, sizeof(neverText), "Witches");
+			case TARGET_NEVER_TANKS: Format(neverText, sizeof(neverText), "Tanks");
+			case TARGET_NEVER_COMMONS_SPECIALS: Format(neverText, sizeof(neverText), "Commons/Specials");
+			case TARGET_NEVER_COMMONS_WITCHES: Format(neverText, sizeof(neverText), "Commons/Witches");
+			case TARGET_NEVER_WITCHES_TANKS: Format(neverText, sizeof(neverText), "Witches/Tanks");
+		}
+		Format(buffer, sizeof(buffer), "[%s] Never Target", neverText);
+		menu.AddItem("never", buffer);
+
+		// Opción 4: Target First
+		char firstText[64];
+		switch(g_iCannon_TargetFirst[client])
+		{
+			case TARGET_FIRST_COMMONS: Format(firstText, sizeof(firstText), "Commons");
+			case TARGET_FIRST_SPECIALS: Format(firstText, sizeof(firstText), "Specials");
+			case TARGET_FIRST_WITCHES: Format(firstText, sizeof(firstText), "Witches");
+			case TARGET_FIRST_TANKS: Format(firstText, sizeof(firstText), "Tanks");
+		}
+		Format(buffer, sizeof(buffer), "[%s] Target First", firstText);
+		menu.AddItem("first", buffer);
+
+		// Opción 5: Fire Rate
+		char rateText[64];
+		if (g_fCannon_FireRate[client] <= 0.05) Format(rateText, sizeof(rateText), "+0.05 Fastest");
+		else if (g_fCannon_FireRate[client] <= 0.10) Format(rateText, sizeof(rateText), "+0.10 Faster");
+		else if (g_fCannon_FireRate[client] <= 0.15) Format(rateText, sizeof(rateText), "+0.15 Default");
+		else if (g_fCannon_FireRate[client] <= 0.20) Format(rateText, sizeof(rateText), "+0.20 Slower");
+		else Format(rateText, sizeof(rateText), "+0.25 Slowest");
+		Format(buffer, sizeof(buffer), "[%s] Fire Rate", rateText);
+		menu.AddItem("rate", buffer);
+	}
 
 	menu.ExitButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -568,7 +584,28 @@ public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, 
 		char info[32];
 		menu.GetItem(param, info, sizeof(info));
 
-		if (StrEqual(info, "autoequip"))
+		if (StrEqual(info, "equip"))
+		{
+			// Toggle equipar/desequipar
+			bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
+
+			if (isEquipped)
+			{
+				// Desequipar
+				ShoulderCannon_Unequip(client);
+				PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon desequipado");
+			}
+			else
+			{
+				// Equipar
+				ShoulderCannon_Equip(client);
+				PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon equipado");
+			}
+
+			// Reabrir menú
+			ShoulderCannon_ShowMenu(client);
+		}
+		else if (StrEqual(info, "autoequip"))
 		{
 			g_bShoulderCannon_AutoEquip[client] = !g_bShoulderCannon_AutoEquip[client];
 			Leveling_SaveShoulderCannonAutoEquip(client, g_bShoulderCannon_AutoEquip[client]);

@@ -524,34 +524,19 @@ public void SpecialsMenu(int client)
 
 	g_SpecialsMenu.SetTitle(fullTitle);
 
-	// Shoulder Cannon (Level 35) - Equipable permanente
+	// Shoulder Cannon (Level 35) - Abre menú de configuración
 	int requiredLevelSC = 35;
 	Format(baseText, sizeof(baseText), "Shoulder Cannon");
 	if (playerLevel >= requiredLevelSC)
 	{
-		// Verificar si está equipado
-		bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
-
-		if (isEquipped)
-		{
-			Format(text, sizeof(text), "%s [EQUIPPED]", baseText);
-		}
-		else
-		{
-			Format(text, sizeof(text), "%s [NOT EQUIPPED]", baseText);
-		}
-		g_SpecialsMenu.AddItem(BM_CHOICE_6_1, text);
-
-		// Opción para configurar
-		Format(text, sizeof(text), "  └ Configure Settings");
-		g_SpecialsMenu.AddItem(BM_CHOICE_6_2, text);
+		g_SpecialsMenu.AddItem(BM_CHOICE_6_1, baseText);
 	}
 	else
 	{
 		char lockedText[64];
 		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, requiredLevelSC);
 		Format(text, sizeof(text), "%s %s", baseText, lockedText);
-		g_SpecialsMenu.AddItem("locked_shouldercannon", text, ITEMDRAW_DEFAULT);
+		g_SpecialsMenu.AddItem("locked_shouldercannon", text, ITEMDRAW_DISABLED);
 	}
 
 	g_SpecialsMenu.ExitBackButton = true;
@@ -566,7 +551,7 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 		menu.GetItem(param, info, sizeof(info));
 		int playerLevel = Leveling_GetPlayerLevel(client);
 
-		// Shoulder Cannon - Equip/Unequip
+		// Shoulder Cannon - Abrir menú de configuración
 		if (StrEqual(info, BM_CHOICE_6_1))
 		{
 			if (playerLevel < 35)
@@ -575,43 +560,7 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 				return 0;
 			}
 
-			// Verificar si está equipado
-			bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
-
-			if (isEquipped)
-			{
-				// Desequipar
-				ShoulderCannon_Unequip(client);
-				// Actualizar auto-equip a false en BBDD
-				Leveling_SaveShoulderCannonAutoEquip(client, false);
-				PrintToChat(client, "\x04[Specials]\x01 Shoulder Cannon desequipado");
-			}
-			else
-			{
-				// Equipar
-				ShoulderCannon_Equip(client);
-				// Actualizar auto-equip a true en BBDD
-				Leveling_SaveShoulderCannonAutoEquip(client, true);
-				PrintToChat(client, "\x04[Specials]\x01 Shoulder Cannon equipado");
-			}
-
-			// Reabrir menú
-			SpecialsMenu(client);
-			if (g_SpecialsMenu != null)
-			{
-				g_SpecialsMenu.Display(client, 20);
-			}
-		}
-		// Shoulder Cannon - Configure Settings
-		else if (StrEqual(info, BM_CHOICE_6_2))
-		{
-			if (playerLevel < 35)
-			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 35 para usar Shoulder Cannon");
-				return 0;
-			}
-
-			// Abrir menú de configuración
+			// Abrir menú de configuración del Shoulder Cannon
 			ShoulderCannon_ShowMenu(client);
 		}
 	}
