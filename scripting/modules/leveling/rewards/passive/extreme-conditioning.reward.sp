@@ -118,6 +118,13 @@ public Action ExtremeConditioning_OnPlayerRunCmd(int client, int &buttons, int &
  */
 stock void ExtremeConditioning_UpdateSpeed(int client)
 {
+	// IMPORTANTE: Speed Freak ability tiene prioridad sobre Extreme Conditioning
+	if (Abilities_IsActive(client, Ability_SpeedFreak))
+	{
+		// Speed Freak maneja su propia velocidad (2.5x)
+		return;
+	}
+
 	int flags = GetEntityFlags(client);
 	float speedValue;
 	float speedMultiplier = GetConVarFloat(cvar_ExtremeConditioning_SpeedMultiplier);

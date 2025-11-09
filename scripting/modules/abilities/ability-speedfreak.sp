@@ -20,7 +20,10 @@ bool Ability_SpeedFreak_Activate(int client)
 	SetEntityHealth(client, 50);
 
 	// Aumentar velocidad drasticamente
-	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 2.5); // 250% velocidad
+	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.5); // 250% velocidad
+
+	// NOTA: La velocidad se mantiene automáticamente porque ExtremeConditioning
+	// verifica Abilities_IsActive(client, Ability_SpeedFreak) antes de aplicar su velocidad
 
 	// Efecto visual azul
 	int clients[1];
@@ -54,8 +57,8 @@ void Ability_SpeedFreak_Deactivate(int client)
 	if (!IsClientInGame(client))
 		return;
 
-	// Restaurar velocidad normal
-	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", 1.0);
+	// Restaurar velocidad normal (Extreme Conditioning se encargará si está desbloqueado)
+	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
 
 	// Restaurar HP (o dar 100 como mínimo)
 	int currentHP = GetClientHealth(client);
