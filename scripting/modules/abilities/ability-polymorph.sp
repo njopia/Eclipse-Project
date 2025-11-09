@@ -43,7 +43,7 @@ bool Ability_Polymorph_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Polymorph]\x01 ¡Transforma zombies en items! Cuidado: 2%% de fallo (explosión).");
+	PrintToChat(client, "\x04[Polymorph]\x01 Transforma zombies en items! Cuidado: 2%% de fallo (explosion).");
 	return true;
 }
 
@@ -107,7 +107,7 @@ public void Polymorph_OnInfectedKilled(int attacker, int victim)
 		TE_SetupGlowSprite(victimPos, PrecacheModel("sprites/blueglow1.vmt"), 0.5, 1.0, 200);
 		TE_SendToAll();
 
-		PrintHintText(attacker, "Polymorph: ¡Item creado!");
+		PrintHintText(attacker, "Polymorph: Item creado!");
 	}
 	else
 	{
@@ -118,7 +118,7 @@ public void Polymorph_OnInfectedKilled(int attacker, int victim)
 		TE_SetupGlowSprite(victimPos, PrecacheModel("sprites/redglow1.vmt"), 0.5, 1.0, 200);
 		TE_SendToAll();
 
-		PrintHintText(attacker, "Polymorph: ¡FALLÓ! Explosión!");
+		PrintHintText(attacker, "Polymorph: FALLO! Explosion!");
 	}
 }
 
@@ -180,7 +180,7 @@ void Polymorph_CreateExplosion(float pos[3], int attacker)
 		if (damage > 0)
 		{
 			SDKHooks_TakeDamage(attacker, explosion, explosion, float(damage), DMG_BLAST);
-			PrintToChat(attacker, "\x04[Polymorph]\x01 ¡Explosión! -%d HP", damage);
+			PrintToChat(attacker, "\x04[Polymorph]\x01 Explosion! -%d HP", damage);
 		}
 	}
 

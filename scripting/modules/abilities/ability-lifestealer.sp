@@ -32,7 +32,7 @@ bool Ability_Lifestealer_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Lifestealer]\x01 ¡Robas vida con cada golpe!");
+	PrintToChat(client, "\x04[Lifestealer]\x01 Robas vida con cada golpe!");
 	return true;
 }
 

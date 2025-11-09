@@ -28,7 +28,7 @@ bool Ability_Instagib_Activate(int client)
 	// Activar night vision para efecto dramático
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
-	PrintToChat(client, "\x04[Instagib]\x01 ¡Munición anti-virus! Daño 10x + \x03INSTAKILL GARANTIZADO\x01 (explosión de cuerpos)");
+	PrintToChat(client, "\x04[Instagib]\x01 Municion anti-virus! Daño 10x + \x03INSTAKILL GARANTIZADO\x01 (explosion de cuerpos)");
 	return true;
 }
 

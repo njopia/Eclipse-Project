@@ -47,7 +47,7 @@ bool Ability_ChainsawMassacre_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Chainsaw Massacre]\x01 ¡Motosierra infinita! +%d XP por kill.", CHAINSAW_BONUS_XP);
+	PrintToChat(client, "\x04[Chainsaw Massacre]\x01 Motosierra infinita! +%d XP por kill.", CHAINSAW_BONUS_XP);
 	return true;
 }
 

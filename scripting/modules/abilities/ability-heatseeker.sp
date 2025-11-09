@@ -70,7 +70,7 @@ bool Ability_HeatSeeker_Activate(int client)
 
 	HeatSeeker_ShowPriority(client);
 
-	PrintToChat(client, "\x04[Heat Seeker]\x01 ¡Granadas teledirigidas! Usa WALK para cambiar prioridad.");
+	PrintToChat(client, "\x04[Heat Seeker]\x01 Granadas teledirigidas! Usa WALK para cambiar prioridad.");
 	return true;
 }
 

@@ -30,7 +30,7 @@ bool Ability_AcidBath_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Acid Bath]\x01 ¡El ácido de Spitter ahora te cura!");
+	PrintToChat(client, "\x04[Acid Bath]\x01 El acido de Spitter ahora te cura!");
 	return true;
 }
 

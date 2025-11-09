@@ -41,7 +41,7 @@ bool Ability_Soulshield_Activate(int client)
 	// Hook de daño para trackear bloques
 	SDKHook(client, SDKHook_OnTakeDamage, Soulshield_OnTakeDamage);
 
-	PrintToChat(client, "\x04[Soulshield]\x01 ¡Invulnerabilidad total! No recibes daño.");
+	PrintToChat(client, "\x04[Soulshield]\x01 Invulnerabilidad total! No recibes daño.");
 	return true;
 }
 

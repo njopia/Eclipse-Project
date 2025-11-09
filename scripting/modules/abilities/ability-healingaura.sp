@@ -42,7 +42,7 @@ bool Ability_HealingAura_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Healing Aura]\x01 ¡Aura de curación activada! Curas a aliados cercanos.");
+	PrintToChat(client, "\x04[Healing Aura]\x01 Aura de curacion activada! Curas a aliados cercanos.");
 	return true;
 }
 

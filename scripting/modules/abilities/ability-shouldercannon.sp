@@ -106,7 +106,7 @@ bool Ability_ShoulderCannon_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Shoulder Cannon]\x01 ¡Cañón equipado! Disparo automático activado.");
+	PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon equipado! Disparo automatico activado.");
 	return true;
 }
 

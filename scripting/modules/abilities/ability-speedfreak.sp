@@ -45,7 +45,7 @@ bool Ability_SpeedFreak_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Speed Freak]\x01 ¡Velocidad máxima! HP reducido a 50.");
+	PrintToChat(client, "\x04[Speed Freak]\x01 Velocidad maxima! HP reducido a 50.");
 	return true;
 }
 

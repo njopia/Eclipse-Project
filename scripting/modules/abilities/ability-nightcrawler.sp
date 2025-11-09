@@ -67,7 +67,7 @@ bool Ability_Nightcrawler_Activate(int client)
 	// Mostrar target actual
 	Nightcrawler_ShowCurrentTarget(client);
 
-	PrintToChat(client, "\x04[Nightcrawler]\x01 ¡Teletransporte activado! Usa WALK (Shift) para cambiar destino, USE (E) para teletransportarte.");
+	PrintToChat(client, "\x04[Nightcrawler]\x01 Teletransporte activado! Usa WALK (Shift) para cambiar destino, USE (E) para teletransportarte.");
 	return true;
 }
 

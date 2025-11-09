@@ -43,7 +43,7 @@ bool Ability_Flameshield_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Flameshield]\x01 ¡Escudo de fuego activado! Quemas a zombies cercanos.");
+	PrintToChat(client, "\x04[Flameshield]\x01 Escudo de fuego activado! Quemas a zombies cercanos.");
 	return true;
 }
 

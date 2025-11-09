@@ -61,7 +61,7 @@ bool Ability_RapidFire_Activate(int client)
 		EndMessage();
 	}
 
-	PrintToChat(client, "\x04[Rapid Fire]\x01 ¡M16 a máxima cadencia! Munición auto-resupply.");
+	PrintToChat(client, "\x04[Rapid Fire]\x01 M16 a maxima cadencia! Municion auto-resupply.");
 	return true;
 }
 
