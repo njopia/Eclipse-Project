@@ -620,7 +620,7 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 		if (param == MenuCancel_ExitBack)
 		{
 			// Volver al menú principal
-			OpenMainMenu(client);
+			Cmd_Buy(client, 0);
 		}
 	}
 	else if (action == MenuAction_End)

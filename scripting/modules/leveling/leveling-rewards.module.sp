@@ -380,11 +380,7 @@ public Action Timer_AutoEquipShoulderCannon(Handle timer, int userid)
 	if (GetClientTeam(client) != 2) // Solo Survivors
 		return Plugin_Stop;
 
-	// Verificar que no esté ya equipado
-	if (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]))
-		return Plugin_Stop;
-
-	// Equipar
+	// Equipar (ShoulderCannon_Equip ya verifica si está equipado)
 	ShoulderCannon_Equip(client);
 
 	return Plugin_Stop;
