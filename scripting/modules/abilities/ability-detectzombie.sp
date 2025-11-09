@@ -9,7 +9,6 @@
 // Clone tracking arrays
 int g_iDetectZombie_Clones[MAXPLAYERS + 1];  // Clone entity for each infected
 bool g_bDetectZombie_Active[MAXPLAYERS + 1];  // Is detect active for this survivor
-Handle g_hDetectZombie_UpdateTimer = INVALID_HANDLE;  // Global timer for all updates
 
 /**
  * Initialize on plugin start
@@ -17,7 +16,8 @@ Handle g_hDetectZombie_UpdateTimer = INVALID_HANDLE;  // Global timer for all up
 void DetectZombie_OnPluginStart()
 {
 	// Start global update timer (1 second interval)
-	g_hDetectZombie_UpdateTimer = CreateTimer(1.0, Timer_DetectZombie_Update, _, TIMER_REPEAT);
+	// Note: Using TIMER_REPEAT so it runs continuously
+	CreateTimer(1.0, Timer_DetectZombie_Update, _, TIMER_REPEAT);
 }
 
 /**
@@ -26,6 +26,14 @@ void DetectZombie_OnPluginStart()
 void DetectZombie_OnMapStart()
 {
 	// Precache models if needed
+	// Kill all existing clones from previous map
+	DetectZombie_KillAllClones();
+
+	// Reset all active states
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		g_bDetectZombie_Active[i] = false;
+	}
 }
 
 /**
