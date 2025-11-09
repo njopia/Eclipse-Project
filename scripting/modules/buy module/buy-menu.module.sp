@@ -386,8 +386,9 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 	// Si el currency está congelado (evento especial activo), no permitir compras
 	if (Leveling_IsCurrencyFrozen())
 	{
+		SetGlobalTransTarget(client);
 		char message[128];
-		Format(message, sizeof(message), "No puedes comprar durante eventos especiales (Currency congelado).");
+		Format(message, sizeof(message), "%t", "Buy_CurrencyFrozen");
 		PrintToChat(client, "\x05[Sistema]\x01 %s", message);
 		return false;
 	}
@@ -599,7 +600,10 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
 public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName)
 {
 	// Función deprecada - abilities movidas al sistema de Abilities
-	PrintToChat(client, "\x04[Eclipse]\x01 Las habilidades ahora están en el sistema de Abilities. Usa \x05!abilities\x01");
+	SetGlobalTransTarget(client);
+	char message[256];
+	Format(message, sizeof(message), "%t", "Ability_MovedToAbilities");
+	PrintToChat(client, "\x04[Eclipse]\x01 %s", message);
 	return false;
 }
 

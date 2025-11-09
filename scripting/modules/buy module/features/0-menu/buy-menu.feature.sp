@@ -513,8 +513,9 @@ public void SpecialsMenu(int client)
 	char text[128];
 	char title[128];
 	char playerName[MAX_NAME_LENGTH];
-	GetClientName(client, playerName, sizeof(playerName))
-		Format(title, sizeof(title), "Specials");
+	GetClientName(client, playerName, sizeof(playerName));
+	SetGlobalTransTarget(client);
+	Format(title, sizeof(title), "%t", "Menu_Specials");
 	int	 playerLevel  = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], levelText[32];
@@ -526,7 +527,7 @@ public void SpecialsMenu(int client)
 
 	// Shoulder Cannon (Level 35) - Abre menú de configuración
 	int requiredLevelSC = 35;
-	Format(baseText, sizeof(baseText), "Shoulder Cannon");
+	Format(baseText, sizeof(baseText), "%T", "BM_Ability_ShoulderCannon", client);
 	if (playerLevel >= requiredLevelSC)
 	{
 		g_SpecialsMenu.AddItem(BM_CHOICE_6_1, baseText);
@@ -556,7 +557,10 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 		{
 			if (playerLevel < 35)
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 35 para usar Shoulder Cannon");
+				SetGlobalTransTarget(client);
+				char errorMsg[128];
+				Format(errorMsg, sizeof(errorMsg), "%t", "Error_NeedLevel35ShoulderCannon");
+				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
 				return 0;
 			}
 
@@ -773,7 +777,7 @@ public Action Cmd_Buy(int client, int args)
 	// Abilities - Only show if player has level 3 or higher
 	if (playerLevel >= 3)
 	{
-		Format(text, sizeof(text), "Abilities");
+		Format(text, sizeof(text), "%T", "Menu_Abilities", client);
 		g_MainMenu.AddItem(BM_CHOICE_0_2, text);
 	}
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_3, client);
@@ -785,7 +789,7 @@ public Action Cmd_Buy(int client, int args)
 	// Specials - Only show if player has level 35 or higher
 	if (playerLevel >= 35)
 	{
-		Format(text, sizeof(text), "Specials");
+		Format(text, sizeof(text), "%T", "Menu_Specials", client);
 		g_MainMenu.AddItem(BM_CHOICE_0_6, text);
 	}
 	g_MainMenu.ExitButton = true;

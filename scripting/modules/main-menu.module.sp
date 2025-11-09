@@ -14,9 +14,9 @@
 public void MainMenu_OnPluginStart()
 {
 	// Registrar comandos
-	RegConsoleCmd("menu", Command_MainMenu, "Abre el menú principal");
-	RegConsoleCmd("sm_menu", Command_MainMenu, "Abre el menú principal");
-	RegConsoleCmd("sm_mainmenu", Command_MainMenu, "Abre el menú principal");
+	RegConsoleCmd("menu", Command_MainMenu, "Opens the main menu");
+	RegConsoleCmd("sm_menu", Command_MainMenu, "Opens the main menu");
+	RegConsoleCmd("sm_mainmenu", Command_MainMenu, "Opens the main menu");
 }
 
 /**
@@ -395,12 +395,16 @@ void ShowRewardDetailPanel(int client, int rewardLevel)
 	GetRewardDetailedInfo(rewardLevel, rewardName, sizeof(rewardName), rewardDesc, sizeof(rewardDesc));
 
 	Panel panel = new Panel();
-	panel.SetTitle("Reward Information");
+
+	char titleText[64];
+	SetGlobalTransTarget(client);
+	Format(titleText, sizeof(titleText), "%t", "Menu_RewardInformation");
+	panel.SetTitle(titleText);
 
 	panel.DrawText("=======================");
 
 	char text[128];
-	Format(text, sizeof(text), "Reward: %s", rewardName);
+	Format(text, sizeof(text), "%T", "Menu_RewardLabel", client, rewardName);
 	panel.DrawText(text);
 
 	panel.DrawText("=======================");
@@ -409,7 +413,9 @@ void ShowRewardDetailPanel(int client, int rewardLevel)
 	panel.DrawText(" ");
 	panel.DrawText("=======================");
 
-	panel.DrawItem("Volver");
+	char backText[32];
+	Format(backText, sizeof(backText), "%T", "Menu_BackButton", client);
+	panel.DrawItem(backText);
 	panel.Send(client, RewardDetailPanelHandler, 40);
 
 	delete panel;
