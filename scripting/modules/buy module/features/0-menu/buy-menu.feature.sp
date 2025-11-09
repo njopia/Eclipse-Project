@@ -176,8 +176,6 @@ public void LongActionsMenu(int client)
 	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n %s: %s \n %s: %d \n %s: %d \n=================", title, playerText, playerName, pointsText, playerPoints, levelText, playerLevel);
 	g_LongActionsMenu.SetTitle(fullTitle, LANG_SERVER);
 
-	char baseText[40];
-
 	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
 	// NOTA: Estas habilidades ahora son parte del sistema de Abilities (!abilities)
 	// Se han movido a ser desbloqueables por nivel sin necesidad de currency

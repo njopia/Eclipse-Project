@@ -48,7 +48,6 @@ void ShowMainMenu(int client)
 
 	int level = Leveling_GetPlayerLevel(client);
 	int currentXP = Leveling_GetPlayerCurrentXP(client);
-	int totalXP = Leveling_GetPlayerTotalXP(client);
 	int currency = GetPlayerCurrency(client);
 
 	// Título del menú con información del jugador

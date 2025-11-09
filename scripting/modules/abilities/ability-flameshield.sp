@@ -183,6 +183,7 @@ void Flameshield_CreateFireEffect(int client)
  */
 stock void L4D2_Ignite(int entity, int attacker, float duration)
 {
+	#pragma unused attacker
 	// Si Left4DHooks está disponible, usar la función nativa
 	#if defined _l4d2_direct_included
 		L4D2_IgniteEntity(entity, duration);
