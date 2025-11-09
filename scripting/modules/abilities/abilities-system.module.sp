@@ -132,8 +132,7 @@ void Abilities_ResetPlayer(int client)
 		}
 	}
 
-	// Reset Detect Zombie state
-	g_bDetectZombie_Active[client] = false;
+	// Clean up Detect Zombie clones (the deactivate function handles state reset)
 	DetectZombie_KillClone(client);
 }
 
