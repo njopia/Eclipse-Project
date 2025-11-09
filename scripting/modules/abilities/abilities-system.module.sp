@@ -76,6 +76,9 @@ public void Abilities_OnPluginStart()
 
 	// Precache de Shoulder Cannon
 	Ability_ShoulderCannon_Precache();
+
+	// Initialize Detect Zombie
+	DetectZombie_OnPluginStart();
 }
 
 /**
@@ -88,6 +91,9 @@ public void Abilities_OnMapStart()
 	{
 		Abilities_ResetPlayer(i);
 	}
+
+	// Initialize Detect Zombie for map
+	DetectZombie_OnMapStart();
 }
 
 /**
@@ -125,6 +131,10 @@ void Abilities_ResetPlayer(int client)
 			g_hAbilityTimer[client][i] = INVALID_HANDLE;
 		}
 	}
+
+	// Reset Detect Zombie state
+	g_bDetectZombie_Active[client] = false;
+	DetectZombie_KillClone(client);
 }
 
 /**
