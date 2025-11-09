@@ -123,7 +123,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 				SDKHooks_TakeDamage(i, client, client, FLAMESHIELD_DAMAGE, DMG_BURN);
 
 				// Incendiar al infectado
-				L4D2_Ignite(i, client, 3.0);
+				Flameshield_IgniteEntity(i, client, 3.0);
 			}
 		}
 	}
@@ -139,7 +139,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 		if (distance <= FLAMESHIELD_RADIUS)
 		{
 			// Incendiar infectado común
-			L4D2_Ignite(entity, client, 3.0);
+			Flameshield_IgniteEntity(entity, client, 3.0);
 		}
 	}
 
@@ -179,16 +179,16 @@ void Flameshield_CreateFireEffect(int client)
 }
 
 /**
- * Wrapper para L4D2_Ignite (compatible con y sin Left4DHooks)
+ * Wrapper para incendiar entidades (compatible con y sin Left4DHooks)
  */
-stock void L4D2_Ignite(int entity, int attacker, float duration)
+stock void Flameshield_IgniteEntity(int entity, int attacker, float duration)
 {
 	#pragma unused attacker
 	// Si Left4DHooks está disponible, usar la función nativa
-	#if defined _l4d2_direct_included
-		L4D2_IgniteEntity(entity, duration);
+	#if defined _l4dhooks_included
+		L4D2_Ignite(entity, duration);
 	#else
-		// Fallback: usar comando ignite
+		// Fallback: usar entityflame manual
 		char targetName[32];
 		Format(targetName, sizeof(targetName), "target_%d", entity);
 		DispatchKeyValue(entity, "targetname", targetName);
