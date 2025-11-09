@@ -9,6 +9,7 @@
 int g_iNightcrawler_CurrentTarget[MAXPLAYERS + 1];
 int g_iNightcrawler_SurvivorList[MAXPLAYERS + 1][MAXPLAYERS + 1];
 int g_iNightcrawler_SurvivorCount[MAXPLAYERS + 1];
+int g_iNightcrawler_LastTarget[MAXPLAYERS + 1]; // Para evitar repetir el mismo survivor
 
 /**
  * Activa Nightcrawler
@@ -24,7 +25,24 @@ bool Ability_Nightcrawler_Activate(int client)
 		return false;
 	}
 
-	g_iNightcrawler_CurrentTarget[client] = 0;
+	// Seleccionar un índice aleatorio (evitando repetir el anterior si es posible)
+	int randomIndex = GetRandomInt(0, g_iNightcrawler_SurvivorCount[client] - 1);
+
+	// Si hay más de 1 survivor y el aleatorio coincide con el último usado, intentar otro
+	if (g_iNightcrawler_SurvivorCount[client] > 1)
+	{
+		int attempts = 0;
+		while (g_iNightcrawler_SurvivorList[client][randomIndex] == g_iNightcrawler_LastTarget[client] && attempts < 10)
+		{
+			randomIndex = GetRandomInt(0, g_iNightcrawler_SurvivorCount[client] - 1);
+			attempts++;
+		}
+	}
+
+	g_iNightcrawler_CurrentTarget[client] = randomIndex;
+
+	// Guardar el survivor actual como el último usado
+	g_iNightcrawler_LastTarget[client] = g_iNightcrawler_SurvivorList[client][randomIndex];
 
 	// Efecto visual púrpura
 	int clients[1];
@@ -61,6 +79,7 @@ void Ability_Nightcrawler_Deactivate(int client)
 	if (!IsClientInGame(client))
 		return;
 
+	// No limpiar LastTarget - queremos recordarlo para la próxima activación
 	g_iNightcrawler_CurrentTarget[client] = 0;
 	g_iNightcrawler_SurvivorCount[client] = 0;
 
