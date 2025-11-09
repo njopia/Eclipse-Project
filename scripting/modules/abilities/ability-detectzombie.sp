@@ -128,7 +128,7 @@ void DetectZombie_CreateOrUpdateClone(int client)
 		// Get position and angles
 		float origin[3], angles[3];
 		GetClientAbsOrigin(client, origin);
-		GetClientEyeAngles(client, angles);
+		GetClientAbsAngles(client, angles);  // Body angles for proper orientation
 
 		// Create prop_dynamic_override
 		int entity = CreateEntityByName("prop_dynamic_override");
@@ -161,11 +161,22 @@ void DetectZombie_CreateOrUpdateClone(int client)
 	}
 	else
 	{
-		// Clone exists, update position
+		// Clone exists, update position and animations
 		float origin[3], angles[3];
 		GetClientAbsOrigin(client, origin);
-		GetClientEyeAngles(client, angles);
+		GetClientAbsAngles(client, angles);  // Body angles, not eye angles
 		TeleportEntity(clone, origin, angles, NULL_VECTOR);
+
+		// Copy animation properties for realistic movement
+		SetEntProp(clone, Prop_Send, "m_nSequence", GetEntProp(client, Prop_Send, "m_nSequence"));
+		SetEntPropFloat(clone, Prop_Send, "m_flCycle", GetEntPropFloat(client, Prop_Send, "m_flCycle"));
+		SetEntPropFloat(clone, Prop_Send, "m_flPlaybackRate", GetEntPropFloat(client, Prop_Send, "m_flPlaybackRate"));
+
+		// Copy pose parameters (body/leg positioning)
+		for (int i = 0; i < 24; i++)
+		{
+			SetEntPropFloat(clone, Prop_Send, "m_flPoseParameter", GetEntPropFloat(client, Prop_Send, "m_flPoseParameter", i), i);
+		}
 	}
 }
 
