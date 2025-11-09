@@ -436,18 +436,18 @@ void ShowAbilitiesMenu(int client)
 	char display[128];
 	char info[8];
 
-	// Listar todas las abilities desbloqueadas
+	// Listar TODAS las abilities (desbloqueadas y bloqueadas)
 	for (int i = 1; i < 16; i++)
 	{
 		AbilityIndex ability = view_as<AbilityIndex>(i);
 		int reqLevel = Abilities_GetRequiredLevel(ability);
 
+		char abilityName[64];
+		Abilities_GetName(ability, abilityName, sizeof(abilityName));
+
 		if (level >= reqLevel)
 		{
-			char abilityName[64];
-			Abilities_GetName(ability, abilityName, sizeof(abilityName));
-
-			// Verificar estado
+			// Ability DESBLOQUEADA - Verificar estado
 			if (Abilities_IsActive(client, ability))
 			{
 				Format(display, sizeof(display), "✓ %s (ACTIVA)", abilityName);
@@ -466,6 +466,13 @@ void ShowAbilitiesMenu(int client)
 
 			Format(info, sizeof(info), "%d", i);
 			menu.AddItem(info, display);
+		}
+		else
+		{
+			// Ability BLOQUEADA - Mostrar nivel requerido
+			Format(display, sizeof(display), "🔒 %s [Nivel %d]", abilityName, reqLevel);
+			Format(info, sizeof(info), "%d", i);
+			menu.AddItem(info, display, ITEMDRAW_DISABLED);
 		}
 	}
 
