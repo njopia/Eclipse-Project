@@ -520,14 +520,11 @@ stock void SetPlayerCurrency(int client, int amount)
 
 /**
  * Hook cuando un jugador muere
+ * NOTA: ShoulderCannon ahora es parte del sistema de Abilities
  */
 public Action Event_BuyMenu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	int client = GetClientOfUserId(event.GetInt("userid"));
-	if (client > 0 && client <= MaxClients)
-	{
-		ShoulderCannon_OnPlayerDeath(client);
-	}
+	// ShoulderCannon_OnPlayerDeath removido - ahora es parte del sistema de Abilities
 	return Plugin_Continue;
 }
 
