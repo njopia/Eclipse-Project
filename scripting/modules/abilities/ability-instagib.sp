@@ -77,46 +77,45 @@ void Ability_Instagib_Deactivate(int client)
 public Action Instagib_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	// Si el atacante tiene Instagib activo
-	if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
+	if (attacker <= 0 || attacker > MaxClients || !IsClientInGame(attacker))
+		return Plugin_Continue;
+
+	if (!Abilities_IsActive(attacker, Ability_Instagib))
+		return Plugin_Continue;
+
+	// CASO 1: Victim es un jugador infectado (infectado especial o tank)
+	if (victim > 0 && victim <= MaxClients && IsClientInGame(victim) && GetClientTeam(victim) == 3)
 	{
-		if (!Abilities_IsActive(attacker, Ability_Instagib))
-			return Plugin_Continue;
+		// Multiplicar daño
+		damage *= INSTAGIB_DAMAGE_MULTIPLIER;
 
-		// Solo contra infectados
-		if (victim <= 0 || victim > MaxClients)
+		// Probabilidad de instakill
+		int roll = GetRandomInt(1, 100);
+		if (roll <= INSTAGIB_CRIT_CHANCE)
 		{
-			// También funciona contra entidades infectadas (witch, etc)
-			char className[64];
-			if (IsValidEntity(victim))
-			{
-				GetEdictClassname(victim, className, sizeof(className));
-				if (StrContains(className, "infected") != -1 || StrContains(className, "witch") != -1)
-				{
-					// Multiplicar daño
-					damage *= INSTAGIB_DAMAGE_MULTIPLIER;
+			damage = 999999.0;  // Instakill
+			PrintHintText(attacker, "INSTAGIB!");
 
-					// Probabilidad de instakill
-					int roll = GetRandomInt(1, 100);
-					if (roll <= INSTAGIB_CRIT_CHANCE)
-					{
-						damage = 999999.0;  // Instakill
-						PrintHintText(attacker, "INSTAGIB!");
+			// Efecto visual
+			float victimPos[3];
+			GetClientAbsOrigin(victim, victimPos);
+			TE_SetupBeamRingPoint(victimPos, 10.0, 200.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.3, 10.0, 0.0, {255, 255, 255, 255}, 10, 0);
+			TE_SendToAll();
 
-						// Efecto visual en el target
-						float victimPos[3];
-						GetEntPropVector(victim, Prop_Send, "m_vecOrigin", victimPos);
-						TE_SetupBeamRingPoint(victimPos, 10.0, 200.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.3, 10.0, 0.0, {255, 255, 255, 255}, 10, 0);
-						TE_SendToAll();
-					}
-
-					return Plugin_Changed;
-				}
-			}
-			return Plugin_Continue;
+			// Efecto de sonido
+			EmitSoundToAll("weapons/hegrenade/explode5.wav", victim);
 		}
 
-		// Victim es un cliente infectado
-		if (GetClientTeam(victim) == 3)
+		return Plugin_Changed;
+	}
+
+	// CASO 2: Victim es una entidad (infected común, witch, etc)
+	if (victim > MaxClients && IsValidEntity(victim))
+	{
+		char className[64];
+		GetEdictClassname(victim, className, sizeof(className));
+
+		if (StrContains(className, "infected") != -1 || StrContains(className, "witch") != -1)
 		{
 			// Multiplicar daño
 			damage *= INSTAGIB_DAMAGE_MULTIPLIER;
@@ -128,14 +127,11 @@ public Action Instagib_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 				damage = 999999.0;  // Instakill
 				PrintHintText(attacker, "INSTAGIB!");
 
-				// Efecto visual
+				// Efecto visual en el target
 				float victimPos[3];
-				GetClientAbsOrigin(victim, victimPos);
+				GetEntPropVector(victim, Prop_Send, "m_vecOrigin", victimPos);
 				TE_SetupBeamRingPoint(victimPos, 10.0, 200.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.3, 10.0, 0.0, {255, 255, 255, 255}, 10, 0);
 				TE_SendToAll();
-
-				// Efecto de sonido
-				EmitSoundToAll("weapons/hegrenade/explode5.wav", victim);
 			}
 
 			return Plugin_Changed;
