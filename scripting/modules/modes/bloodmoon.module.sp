@@ -149,12 +149,12 @@ public void Bloodmoon_OnMapStart()
 public Action Bloodmoon_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	if (!g_bBloodmoonActive) return Plugin_Continue;
-	if (!IsValidClient(victim) || GetClientTeam(victim) != 2) return Plugin_Continue;
+	if (!bloodmoon_IsValidClient(victim) || GetClientTeam(victim) != 2) return Plugin_Continue;
 
 	float mult = GetConVarFloat(g_cvar_Bloodmoon_DmgMult);
 	if (mult <= 1.0) return Plugin_Continue;
 
-	bool fromSpecial = (IsValidClient(attacker) && GetClientTeam(attacker) == 3);
+	bool fromSpecial = (bloodmoon_IsValidClient(attacker) && GetClientTeam(attacker) == 3);
 	bool fromCommon = false;
 
 	if (!fromSpecial)
@@ -592,7 +592,7 @@ public bool Bloodmoon_IsActive()
 /**
  * Utilidad para validar clientes
  */
-bool IsValidClient(int client)
+bool bloodmoon_IsValidClient(int client)
 {
 	return (client >= 1 && client <= MaxClients && IsClientInGame(client) && !IsClientSourceTV(client) && !IsFakeClient(client));
 }
