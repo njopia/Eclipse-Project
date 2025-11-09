@@ -44,6 +44,19 @@
 #tryinclude "modules/leveling/leveling-info.module.sp"
 
 //==================================================
+// === ABILITIES SYSTEM MODULE ===
+// Sistema de habilidades desbloqueables por nivel
+// No requieren currency, se activan automáticamente
+//==================================================
+#tryinclude "modules/abilities/abilities-system.module.sp"
+#tryinclude "modules/abilities/ability-detectzombie.sp"
+#tryinclude "modules/abilities/ability-berserker.sp"
+#tryinclude "modules/abilities/ability-acidbath.sp"
+#tryinclude "modules/abilities/ability-lifestealer.sp"
+#tryinclude "modules/abilities/ability-speedfreak.sp"
+#tryinclude "modules/abilities/abilities-remaining.sp"
+
+//==================================================
 // === BUY MENU MODULE ===
 //==================================================
 #tryinclude "modules/buy module/buy-menu.module.sp"
@@ -272,6 +285,9 @@ public void OnPluginStart()
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
 
+	// Initialize abilities system (AFTER leveling system)
+	Abilities_OnPluginStart();
+
 	// Initialize unified points system
 	EclipsePointsUnified_OnPluginStart();
 
@@ -348,6 +364,9 @@ public void OnMapStart()
 
 	// Reset unified points system tracking flags
 	EclipsePointsUnified_OnMapStart();
+
+	// Reset abilities system
+	Abilities_OnMapStart();
 
 	// Reset frags system
 	FragsSystem_OnMapStart();
