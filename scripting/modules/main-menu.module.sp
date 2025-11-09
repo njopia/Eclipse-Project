@@ -115,8 +115,8 @@ public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2
 			}
 			else if (StrEqual(info, "rewards"))
 			{
-				// Mostrar rewards activos
-				FakeClientCommand(client, "sm_rewards");
+				// Mostrar rewards activos directamente
+				ShowActiveRewardsMenuWithBackButton(client);
 			}
 			else if (StrEqual(info, "frags"))
 			{
@@ -173,4 +173,178 @@ public Action Timer_ReopenMenu(Handle timer, int userid)
 	}
 
 	return Plugin_Stop;
+}
+
+/**
+ * Muestra el menú de rewards activos con botón de retorno al menú principal
+ */
+void ShowActiveRewardsMenuWithBackButton(int client)
+{
+	int level = Leveling_GetPlayerLevel(client);
+
+	Menu menu = new Menu(ActiveRewards_MainMenuHandler);
+
+	char title[128];
+	Format(title, sizeof(title), "═══ MIS REWARDS ACTIVOS ═══\nNivel: %d\n ", level);
+	menu.SetTitle(title);
+
+	int count = 0;
+
+	// Lista de rewards con sus niveles requeridos
+	if (level >= 1)
+	{
+		menu.AddItem("info", "✓ Double Jump (Lvl 1)");
+		count++;
+	}
+	if (level >= 2)
+	{
+		menu.AddItem("info", "✓ Acrobatics (Lvl 2)");
+		count++;
+	}
+	if (level >= 3)
+	{
+		menu.AddItem("info", "✓ Health Bonus +25 HP (Lvl 3)");
+		count++;
+	}
+	if (level >= 4)
+	{
+		menu.AddItem("info", "✓ Medic (Lvl 4)");
+		count++;
+	}
+	if (level >= 6)
+	{
+		menu.AddItem("info", "✓ Pack Rat +25% Ammo (Lvl 6)");
+		count++;
+	}
+	if (level >= 8)
+	{
+		menu.AddItem("info", "✓ Desert Cobra (Lvl 8)");
+		count++;
+	}
+	if (level >= 9)
+	{
+		menu.AddItem("info", "✓ Damage Reduction -5% (Lvl 9)");
+		count++;
+	}
+	if (level >= 10)
+	{
+		menu.AddItem("info", "✓ Gene Mutations I +100 HP (Lvl 10)");
+		count++;
+	}
+	if (level >= 11)
+	{
+		menu.AddItem("info", "✓ Self Revive (Lvl 11)");
+		count++;
+	}
+	if (level >= 13)
+	{
+		menu.AddItem("info", "✓ Sleight of Hand 2x Reload (Lvl 13)");
+		count++;
+	}
+	if (level >= 15)
+	{
+		menu.AddItem("info", "✓ Knife (Lvl 15)");
+		count++;
+	}
+	if (level >= 17)
+	{
+		menu.AddItem("info", "✓ Hard to Kill 500 HP (Lvl 17)");
+		count++;
+	}
+	if (level >= 19)
+	{
+		menu.AddItem("info", "✓ Arms Dealer 40 Items (Lvl 19)");
+		count++;
+	}
+	if (level >= 20)
+	{
+		menu.AddItem("info", "✓ Gene Mutations II +200 HP (Lvl 20)");
+		count++;
+	}
+	if (level >= 22)
+	{
+		menu.AddItem("info", "✓ Surgeon -50% Heal Time (Lvl 22)");
+		count++;
+	}
+	if (level >= 24)
+	{
+		menu.AddItem("info", "✓ Extreme Conditioning +25% Speed (Lvl 24)");
+		count++;
+	}
+	if (level >= 26)
+	{
+		menu.AddItem("info", "✓ BullsEye (Lvl 26)");
+		count++;
+	}
+	if (level >= 29)
+	{
+		menu.AddItem("info", "✓ Size Matters (Lvl 29)");
+		count++;
+	}
+	if (level >= 30)
+	{
+		menu.AddItem("info", "✓ Gene Mutations III +300 HP (Lvl 30)");
+		count++;
+	}
+	if (level >= 32)
+	{
+		menu.AddItem("info", "✓ Master at Arms 2x Melee (Lvl 32)");
+		count++;
+	}
+	if (level >= 35)
+	{
+		menu.AddItem("info", "✓ Hardened Stance (Lvl 35)");
+		count++;
+	}
+	if (level >= 38)
+	{
+		menu.AddItem("info", "✓ Critical Hit 10% (Lvl 38)");
+		count++;
+	}
+	if (level >= 40)
+	{
+		menu.AddItem("info", "✓ Gene Mutations IV +400 HP (Lvl 40)");
+		count++;
+	}
+	if (level >= 41)
+	{
+		menu.AddItem("info", "✓ Commando (Lvl 41)");
+		count++;
+	}
+	if (level >= 44)
+	{
+		menu.AddItem("info", "✓ Second Chance (Lvl 44)");
+		count++;
+	}
+	if (level >= 47)
+	{
+		menu.AddItem("info", "✓ Laser Rounds (Lvl 47)");
+		count++;
+	}
+
+	if (count == 0)
+	{
+		menu.AddItem("none", "No tienes rewards activos aún", ITEMDRAW_DISABLED);
+	}
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+/**
+ * Handler del menú de rewards activos desde el menú principal
+ */
+public int ActiveRewards_MainMenuHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Cancel && param == MenuCancel_ExitBack)
+	{
+		// Volver al menú principal
+		ShowMainMenu(client);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
 }
