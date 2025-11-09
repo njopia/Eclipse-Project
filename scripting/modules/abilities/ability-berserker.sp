@@ -109,9 +109,9 @@ void Berserker_UpdateMeleeSpeed(int client)
 	// Si el arma está en reposo (m_flCycle == 0), acelerar ataque
 	if (m_flCycle == 0.0)
 	{
-		SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", 1.6);
-		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", m_flNextPrimaryAttack - 0.30);
-		SetEntPropFloat(weapon, Prop_Send, "m_flNextSecondaryAttack", m_flNextSecondaryAttack - 0.30);
+		SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", 2.5);
+		SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", m_flNextPrimaryAttack - 0.50);
+		SetEntPropFloat(weapon, Prop_Send, "m_flNextSecondaryAttack", m_flNextSecondaryAttack - 0.50);
 	}
 }
 

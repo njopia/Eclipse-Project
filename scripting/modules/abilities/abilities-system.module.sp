@@ -18,6 +18,7 @@
 bool g_bAbilityActive[MAXPLAYERS + 1][16];  // Estado activo de cada ability
 float g_fAbilityCooldown[MAXPLAYERS + 1][16];  // Tiempo de cooldown
 Handle g_hAbilityTimer[MAXPLAYERS + 1][16];  // Timers de duración
+float g_fAbilityEndTime[MAXPLAYERS + 1][16];  // Tiempo de finalización de la ability
 
 // Índices de abilities
 enum AbilityIndex
@@ -127,6 +128,7 @@ void Abilities_ResetPlayer(int client)
 	{
 		g_bAbilityActive[client][i] = false;
 		g_fAbilityCooldown[client][i] = 0.0;
+		g_fAbilityEndTime[client][i] = 0.0;
 
 		if (g_hAbilityTimer[client][i] != INVALID_HANDLE)
 		{
@@ -251,10 +253,9 @@ float Abilities_GetDurationRemaining(int client, AbilityIndex ability)
 	if (!IsValidClient(client) || !Abilities_IsActive(client, ability))
 		return 0.0;
 
-	// El timer de duración almacena cuándo termina la ability
-	// Calculamos el tiempo restante
-	return ABILITY_DURATION;  // Por ahora, retornar duración fija
-	// TODO: Implementar tracking preciso de tiempo restante si se necesita
+	// Calcular tiempo restante basado en el tiempo de finalización
+	float remaining = g_fAbilityEndTime[client][ability] - GetGameTime();
+	return (remaining > 0.0) ? remaining : 0.0;
 }
 
 /**
@@ -353,6 +354,9 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 
 		// Establecer cooldown
 		g_fAbilityCooldown[client][ability] = GetGameTime() + ABILITY_COOLDOWN;
+
+		// Guardar tiempo de finalización para tracking de duración
+		g_fAbilityEndTime[client][ability] = GetGameTime() + ABILITY_DURATION;
 
 		// Crear timer de duración
 		Handle data;
