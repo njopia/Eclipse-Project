@@ -15,9 +15,9 @@ bool g_bDetectZombie_Active[MAXPLAYERS + 1];  // Is detect active for this survi
  */
 void DetectZombie_OnPluginStart()
 {
-	// Start global update timer (1 second interval)
+	// Start global update timer (0.1 second interval for smooth movement)
 	// Note: Using TIMER_REPEAT so it runs continuously
-	CreateTimer(1.0, Timer_DetectZombie_Update, _, TIMER_REPEAT);
+	CreateTimer(0.1, Timer_DetectZombie_Update, _, TIMER_REPEAT);
 }
 
 /**
