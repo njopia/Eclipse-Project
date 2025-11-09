@@ -9,12 +9,14 @@ Menu g_InstantsMenu;
 // Menu g_LongActionsMenu; // Removido - ahora usa ShowAbilitiesMenu()
 Menu g_TeamBonusesMenu;
 Menu g_BombardmentsMenu;
+Menu g_SpecialsMenu;
 /// Main Menu Choices ///
 #define BM_CHOICE_0_1 "BM_Instant"
 #define BM_CHOICE_0_2 "BM_LongAction"
 #define BM_CHOICE_0_3 "BM_Deployables"
 #define BM_CHOICE_0_4 "BM_Bombardments"
 #define BM_CHOICE_0_5 "BM_TeamBonuses"
+#define BM_CHOICE_0_6 "BM_Specials"
 /// Instant Choices ///
 #define BM_CHOICE_1_1 "BM_Instant_ConvertHP"
 #define BM_CHOICE_1_2 "BM_Instant_FireYell"
@@ -38,6 +40,8 @@ Menu g_BombardmentsMenu;
 /// Team Bonuses Choices ///
 #define BM_CHOICE_5_1 "BM_TeamBonuses_TeamSpeedBoost"
 #define BM_CHOICE_5_2 "BM_TeamBonuses_TeamHeal"
+/// Specials Choices ///
+#define BM_CHOICE_6_1 "BM_Specials_ShoulderCannon"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -90,6 +94,15 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 				if (g_TeamBonusesMenu != null)
 				{
 					g_TeamBonusesMenu.Display(client, 20);
+				}
+			}
+			if (StrEqual(info, BM_CHOICE_0_6))
+			{
+				// PrintToChat(client, "\x05[Eclipse]\x01 Specials");
+				SpecialsMenu(client);
+				if (g_SpecialsMenu != null)
+				{
+					g_SpecialsMenu.Display(client, 20);
 				}
 			}
 		}
@@ -492,6 +505,99 @@ public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int
 	return 0;
 }
 
+// Function to Create Specials Submenu
+public void SpecialsMenu(int client)
+{
+	g_SpecialsMenu = new Menu(MenuHandler_Specials, MENU_ACTIONS_ALL);
+	char baseText[64];
+	char text[128];
+	char title[128];
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName))
+		Format(title, sizeof(title), "Specials");
+	int	 playerLevel  = Leveling_GetPlayerLevel(client);
+	char fullTitle[256];
+	char playerText[32], levelText[32];
+	Format(playerText, sizeof(playerText), "%T", "UI_Player", client);
+	Format(levelText, sizeof(levelText), "%T", "UI_Level", client);
+	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n %s: %s \n %s: %d \n=================", title, playerText, playerName, levelText, playerLevel);
+
+	g_SpecialsMenu.SetTitle(fullTitle);
+
+	// Shoulder Cannon (Level 35) - Equipable permanente
+	int requiredLevelSC = 35;
+	Format(baseText, sizeof(baseText), "Shoulder Cannon");
+	if (playerLevel >= requiredLevelSC)
+	{
+		// Verificar si está equipado
+		bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
+
+		if (isEquipped)
+		{
+			Format(text, sizeof(text), "%s [EQUIPPED]", baseText);
+		}
+		else
+		{
+			Format(text, sizeof(text), "%s [NOT EQUIPPED]", baseText);
+		}
+		g_SpecialsMenu.AddItem(BM_CHOICE_6_1, text);
+	}
+	else
+	{
+		char lockedText[64];
+		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, requiredLevelSC);
+		Format(text, sizeof(text), "%s %s", baseText, lockedText);
+		g_SpecialsMenu.AddItem("locked_shouldercannon", text, ITEMDRAW_DEFAULT);
+	}
+
+	g_SpecialsMenu.ExitBackButton = true;
+	g_SpecialsMenu.ExitButton	 = true;
+}
+
+public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[32];
+		menu.GetItem(param, info, sizeof(info));
+		int playerLevel = Leveling_GetPlayerLevel(client);
+
+		// Shoulder Cannon (Level 35)
+		if (StrEqual(info, BM_CHOICE_6_1))
+		{
+			if (playerLevel < 35)
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 35 para usar Shoulder Cannon");
+				return 0;
+			}
+
+			// Verificar si está equipado
+			bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
+
+			if (isEquipped)
+			{
+				// Desequipar
+				ShoulderCannon_Unequip(client);
+				PrintToChat(client, "\x04[Specials]\x01 Shoulder Cannon desequipado");
+			}
+			else
+			{
+				// Equipar
+				ShoulderCannon_Equip(client);
+				PrintToChat(client, "\x04[Specials]\x01 Shoulder Cannon equipado");
+			}
+
+			// Reabrir menú
+			SpecialsMenu(client);
+			if (g_SpecialsMenu != null)
+			{
+				g_SpecialsMenu.Display(client, 20);
+			}
+		}
+	}
+	return 0;
+}
+
 public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int param)
 {
 	// PrintToChatAll("action: %i", action);
@@ -695,6 +801,12 @@ public Action Cmd_Buy(int client, int args)
 	g_MainMenu.AddItem(BM_CHOICE_0_4, text);
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_5, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_5, text);
+	// Specials - Only show if player has level 35 or higher
+	if (playerLevel >= 35)
+	{
+		Format(text, sizeof(text), "Specials");
+		g_MainMenu.AddItem(BM_CHOICE_0_6, text);
+	}
 	g_MainMenu.ExitButton = true;
 	g_MainMenu.Display(client, 20);
 
@@ -704,6 +816,7 @@ public Action Cmd_Buy(int client, int args)
 	DeployablesMenu(client);
 	BombardmentsMenu(client);
 	TeamBonusesMenu(client);
+	SpecialsMenu(client);
 
 	return Plugin_Handled;
 }

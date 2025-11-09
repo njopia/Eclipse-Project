@@ -35,7 +35,7 @@ enum AbilityIndex
 	Ability_HeatSeeker = 9,        // Lvl 27
 	Ability_SpeedFreak = 10,       // Lvl 31
 	Ability_HealingAura = 11,      // Lvl 33
-	Ability_ShoulderCannon = 12,   // Lvl 35
+	// Ability_ShoulderCannon removed - now available in !buy -> Specials
 	Ability_Soulshield = 13,       // Lvl 37
 	Ability_Polymorph = 14,        // Lvl 39
 	Ability_Instagib = 15          // Lvl 46
@@ -73,7 +73,7 @@ public void Abilities_OnPluginStart()
 	RegConsoleCmd("sm_heatseeker", Command_ActivateAbility_HeatSeeker);
 	RegConsoleCmd("sm_speedfreak", Command_ActivateAbility_SpeedFreak);
 	RegConsoleCmd("sm_healingaura", Command_ActivateAbility_HealingAura);
-	RegConsoleCmd("sm_shouldercannon", Command_ActivateAbility_ShoulderCannon);
+	// sm_shouldercannon removed - Shoulder Cannon now available in !buy -> Specials
 	RegConsoleCmd("sm_soulshield", Command_ActivateAbility_Soulshield);
 	RegConsoleCmd("sm_polymorph", Command_ActivateAbility_Polymorph);
 	RegConsoleCmd("sm_instagib", Command_ActivateAbility_Instagib);
@@ -178,7 +178,6 @@ int Abilities_GetRequiredLevel(AbilityIndex ability)
 		case Ability_HeatSeeker: return 27;
 		case Ability_SpeedFreak: return 31;
 		case Ability_HealingAura: return 33;
-		case Ability_ShoulderCannon: return 35;
 		case Ability_Soulshield: return 37;
 		case Ability_Polymorph: return 39;
 		case Ability_Instagib: return 46;
@@ -204,7 +203,6 @@ void Abilities_GetName(AbilityIndex ability, char[] buffer, int maxlen)
 		case Ability_HeatSeeker: strcopy(buffer, maxlen, "Heat Seeker");
 		case Ability_SpeedFreak: strcopy(buffer, maxlen, "Speed Freak");
 		case Ability_HealingAura: strcopy(buffer, maxlen, "Healing Aura");
-		case Ability_ShoulderCannon: strcopy(buffer, maxlen, "Shoulder Cannon");
 		case Ability_Soulshield: strcopy(buffer, maxlen, "Soulshield");
 		case Ability_Polymorph: strcopy(buffer, maxlen, "Polymorph");
 		case Ability_Instagib: strcopy(buffer, maxlen, "Instagib");
@@ -345,7 +343,6 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		case Ability_HeatSeeker: success = Ability_HeatSeeker_Activate(client);
 		case Ability_SpeedFreak: success = Ability_SpeedFreak_Activate(client);
 		case Ability_HealingAura: success = Ability_HealingAura_Activate(client);
-		case Ability_ShoulderCannon: success = Ability_ShoulderCannon_Activate(client);
 		case Ability_Soulshield: success = Ability_Soulshield_Activate(client);
 		case Ability_Polymorph: success = Ability_Polymorph_Activate(client);
 		case Ability_Instagib: success = Ability_Instagib_Activate(client);
@@ -446,7 +443,6 @@ void Abilities_Deactivate(int client, AbilityIndex ability)
 		case Ability_HeatSeeker: Ability_HeatSeeker_Deactivate(client);
 		case Ability_SpeedFreak: Ability_SpeedFreak_Deactivate(client);
 		case Ability_HealingAura: Ability_HealingAura_Deactivate(client);
-		case Ability_ShoulderCannon: Ability_ShoulderCannon_Deactivate(client);
 		case Ability_Soulshield: Ability_Soulshield_Deactivate(client);
 		case Ability_Polymorph: Ability_Polymorph_Deactivate(client);
 		case Ability_Instagib: Ability_Instagib_Deactivate(client);
@@ -649,11 +645,7 @@ public Action Command_ActivateAbility_HealingAura(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action Command_ActivateAbility_ShoulderCannon(int client, int args)
-{
-	Abilities_Activate(client, Ability_ShoulderCannon);
-	return Plugin_Handled;
-}
+// Command_ActivateAbility_ShoulderCannon removed - Shoulder Cannon now available in !buy -> Specials
 
 public Action Command_ActivateAbility_Soulshield(int client, int args)
 {

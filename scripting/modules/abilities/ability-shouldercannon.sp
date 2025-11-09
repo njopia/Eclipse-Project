@@ -203,8 +203,9 @@ public Action Timer_ShoulderCannon_Fire(Handle timer, int userid)
 	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
 		return Plugin_Stop;
 
-	if (!Abilities_IsActive(client, Ability_ShoulderCannon))
-		return Plugin_Stop;
+	// Verificar si está equipado (ya no depende de Abilities system)
+	// if (!Abilities_IsActive(client, Ability_ShoulderCannon))
+	// 	return Plugin_Stop;
 
 	int cannon = g_iShoulderCannon_Entity[client];
 	if (cannon <= 0 || !IsValidEntity(cannon))
@@ -216,6 +217,10 @@ public Action Timer_ShoulderCannon_Fire(Handle timer, int userid)
 
 	// No disparar si está siendo agarrado
 	if (IsPlayerHeld(client))
+		return Plugin_Continue;
+
+	// No disparar si el jugador lo deshabilitó
+	if (g_bCannon_Disabled[client])
 		return Plugin_Continue;
 
 	// Buscar objetivo
@@ -847,4 +852,111 @@ public int ShoulderCannon_FireRateHandler(Menu menu, MenuAction action, int clie
 	}
 
 	return 0;
+}
+
+//==================================================
+// === SHOULDER CANNON EQUIP/UNEQUIP (FROM BUY MENU) ===
+//==================================================
+
+/**
+ * Equipa el Shoulder Cannon (sin cooldown ni costo)
+ * Llamado desde el menú !buy -> Specials
+ */
+void ShoulderCannon_Equip(int client)
+{
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return;
+
+	if (GetClientTeam(client) != 2)
+	{
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Solo Survivors pueden usar Shoulder Cannon");
+		return;
+	}
+
+	// Si ya está equipado, no hacer nada
+	if (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]))
+	{
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Ya está equipado");
+		return;
+	}
+
+	// Crear entidad del cañón
+	int entity = CreateEntityByName("prop_dynamic_override");
+	if (entity == -1)
+		entity = CreateEntityByName("prop_dynamic");
+
+	if (!IsValidEntity(entity))
+		return;
+
+	// Configurar modelo
+	DispatchKeyValue(entity, "model", MODEL_M60);
+	DispatchKeyValue(entity, "spawnflags", "2");
+	DispatchSpawn(entity);
+	ActivateEntity(entity);
+
+	// Parentear al jugador
+	SetVariantString("!activator");
+	AcceptEntityInput(entity, "SetParent", client);
+	SetVariantString("eyes");
+	AcceptEntityInput(entity, "SetParentAttachment");
+
+	// Configurar propiedades
+	AcceptEntityInput(entity, "DisableCollision");
+	AcceptEntityInput(entity, "DisableShadow");
+	SetEntProp(entity, Prop_Data, "m_iEFlags", 0);
+	SetEntPropFloat(entity, Prop_Data, "m_flModelScale", 0.43);
+
+	// Posicionar
+	float Origin[3] = {-5.0, -5.0, -6.0};
+	float Angles[3] = {-15.0, 0.0, 90.0};
+	TeleportEntity(entity, Origin, Angles, NULL_VECTOR);
+
+	g_iShoulderCannon_Entity[client] = entity;
+
+	// Iniciar timer de disparo usando fire rate configurado
+	float fireRate = g_fCannon_FireRate[client];
+	if (fireRate <= 0.0)
+		fireRate = SHOULDER_CANNON_FIRE_RATE;
+
+	g_hShoulderCannon_FireTimer[client] = CreateTimer(fireRate, Timer_ShoulderCannon_Fire, GetClientUserId(client), TIMER_REPEAT);
+
+	// Hook de transmisión
+	SDKHook(entity, SDKHook_SetTransmit, ShoulderCannon_Hook_SetTransmit);
+
+	PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon equipado! Disparo automatico %s", g_bCannon_Disabled[client] ? "DESACTIVADO" : "activado");
+}
+
+/**
+ * Desequipa el Shoulder Cannon
+ * Llamado desde el menú !buy -> Specials
+ */
+void ShoulderCannon_Unequip(int client)
+{
+	// Remover entidad
+	int entity = g_iShoulderCannon_Entity[client];
+	if (entity > 0 && IsValidEntity(entity))
+	{
+		char classname[16];
+		GetEdictClassname(entity, classname, sizeof(classname));
+		if (StrEqual(classname, "prop_dynamic", false))
+		{
+			char model[64];
+			GetEntPropString(entity, Prop_Data, "m_ModelName", model, sizeof(model));
+			if (StrEqual(model, MODEL_M60, false))
+			{
+				AcceptEntityInput(entity, "Kill");
+			}
+		}
+	}
+
+	g_iShoulderCannon_Entity[client] = 0;
+
+	// Detener timer
+	if (g_hShoulderCannon_FireTimer[client] != INVALID_HANDLE)
+	{
+		KillTimer(g_hShoulderCannon_FireTimer[client]);
+		g_hShoulderCannon_FireTimer[client] = INVALID_HANDLE;
+	}
+
+	PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon desequipado");
 }
