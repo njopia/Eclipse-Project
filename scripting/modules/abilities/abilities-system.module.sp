@@ -57,6 +57,9 @@ public void Abilities_OnPluginStart()
 	RegConsoleCmd("sm_abilities", Command_AbilitiesMenu, "Abre el menú de abilities");
 	RegConsoleCmd("sm_ability", Command_AbilitiesMenu, "Abre el menú de abilities");
 
+	// Timer para actualizar velocidad de melee (Berserker)
+	CreateTimer(0.1, Timer_UpdateAbilities, _, TIMER_REPEAT);
+
 	// Comandos individuales para cada ability
 	RegConsoleCmd("sm_detectzombie", Command_ActivateAbility_DetectZombie);
 	RegConsoleCmd("sm_berserker", Command_ActivateAbility_Berserker);
@@ -241,6 +244,20 @@ float Abilities_GetCooldownRemaining(int client, AbilityIndex ability)
 }
 
 /**
+ * Obtiene el tiempo restante de duración de una ability activa
+ */
+float Abilities_GetDurationRemaining(int client, AbilityIndex ability)
+{
+	if (!IsValidClient(client) || !Abilities_IsActive(client, ability))
+		return 0.0;
+
+	// El timer de duración almacena cuándo termina la ability
+	// Calculamos el tiempo restante
+	return ABILITY_DURATION;  // Por ahora, retornar duración fija
+	// TODO: Implementar tracking preciso de tiempo restante si se necesita
+}
+
+/**
  * Verifica si una ability está activa
  */
 bool Abilities_IsActive(int client, AbilityIndex ability)
@@ -375,6 +392,26 @@ public Action Timer_AbilityEnd(Handle timer, Handle data)
 	PrintToChat(client, "\x04[%s]\x01 Ability desactivada.", abilityName);
 
 	return Plugin_Stop;
+}
+
+/**
+ * Timer para actualizar abilities que necesitan actualizaciones continuas
+ */
+public Action Timer_UpdateAbilities(Handle timer)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || !IsPlayerAlive(i) || GetClientTeam(i) != 2)
+			continue;
+
+		// Actualizar velocidad de melee para Berserker
+		if (Abilities_IsActive(i, Ability_Berserker))
+		{
+			Berserker_UpdateMeleeSpeed(i);
+		}
+	}
+
+	return Plugin_Continue;
 }
 
 /**
