@@ -430,50 +430,52 @@ void ShowAbilitiesMenu(int client)
 {
 	int level = Leveling_GetPlayerLevel(client);
 
+	// Minimum level required to access abilities menu (first ability: Detect Zombie at level 3)
+	if (level < 3)
+	{
+		PrintToChat(client, "\x04[Abilities]\x01 You need to reach level 3 to unlock abilities.");
+		return;
+	}
+
 	Menu menu = new Menu(AbilitiesMenu_Handler);
-	menu.SetTitle("═══ ABILITIES MENU ═══\nNivel: %d\n ", level);
+	menu.SetTitle("=== ABILITIES MENU ===\nLevel: %d\n ", level);
 
 	char display[128];
 	char info[8];
 
-	// Listar TODAS las abilities (desbloqueadas y bloqueadas)
+	// List ONLY unlocked abilities
 	for (int i = 1; i < 16; i++)
 	{
 		AbilityIndex ability = view_as<AbilityIndex>(i);
 		int reqLevel = Abilities_GetRequiredLevel(ability);
 
-		char abilityName[64];
-		Abilities_GetName(ability, abilityName, sizeof(abilityName));
-
+		// Only show abilities that are unlocked
 		if (level >= reqLevel)
 		{
-			// Ability DESBLOQUEADA - Verificar estado
+			char abilityName[64];
+			Abilities_GetName(ability, abilityName, sizeof(abilityName));
+
+			// Check ability status
 			if (Abilities_IsActive(client, ability))
 			{
-				Format(display, sizeof(display), "✓ %s (ACTIVA)", abilityName);
+				Format(display, sizeof(display), "%s [ACTIVE]", abilityName);
 			}
 			else if (Abilities_IsOnCooldown(client, ability))
 			{
 				float remaining = Abilities_GetCooldownRemaining(client, ability);
 				int minutes = RoundToFloor(remaining / 60.0);
 				int seconds = RoundToFloor(remaining) % 60;
-				Format(display, sizeof(display), "⏱ %s (%d:%02d)", abilityName, minutes, seconds);
+				Format(display, sizeof(display), "%s [CD: %d:%02d]", abilityName, minutes, seconds);
 			}
 			else
 			{
-				Format(display, sizeof(display), "► %s [LISTA]", abilityName);
+				Format(display, sizeof(display), "%s [READY]", abilityName);
 			}
 
 			Format(info, sizeof(info), "%d", i);
 			menu.AddItem(info, display);
 		}
-		else
-		{
-			// Ability BLOQUEADA - Mostrar nivel requerido
-			Format(display, sizeof(display), "🔒 %s [Nivel %d]", abilityName, reqLevel);
-			Format(info, sizeof(info), "%d", i);
-			menu.AddItem(info, display, ITEMDRAW_DISABLED);
-		}
+		// Locked abilities are now hidden
 	}
 
 	menu.ExitBackButton = true;
