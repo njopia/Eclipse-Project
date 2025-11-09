@@ -17,6 +17,8 @@ Menu g_SpecialsMenu;
 #define BM_CHOICE_0_4 "BM_Bombardments"
 #define BM_CHOICE_0_5 "BM_TeamBonuses"
 #define BM_CHOICE_0_6 "BM_Specials"
+#define BM_CHOICE_6_1 "BM_Specials_ShoulderCannon"
+#define BM_CHOICE_6_2 "BM_Specials_ShoulderCannon_Config"
 /// Instant Choices ///
 #define BM_CHOICE_1_1 "BM_Instant_ConvertHP"
 #define BM_CHOICE_1_2 "BM_Instant_FireYell"
@@ -40,8 +42,6 @@ Menu g_SpecialsMenu;
 /// Team Bonuses Choices ///
 #define BM_CHOICE_5_1 "BM_TeamBonuses_TeamSpeedBoost"
 #define BM_CHOICE_5_2 "BM_TeamBonuses_TeamHeal"
-/// Specials Choices ///
-#define BM_CHOICE_6_1 "BM_Specials_ShoulderCannon"
 
 public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 {
@@ -541,6 +541,10 @@ public void SpecialsMenu(int client)
 			Format(text, sizeof(text), "%s [NOT EQUIPPED]", baseText);
 		}
 		g_SpecialsMenu.AddItem(BM_CHOICE_6_1, text);
+
+		// Opción para configurar
+		Format(text, sizeof(text), "  └ Configure Settings");
+		g_SpecialsMenu.AddItem(BM_CHOICE_6_2, text);
 	}
 	else
 	{
@@ -562,7 +566,7 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 		menu.GetItem(param, info, sizeof(info));
 		int playerLevel = Leveling_GetPlayerLevel(client);
 
-		// Shoulder Cannon (Level 35)
+		// Shoulder Cannon - Equip/Unequip
 		if (StrEqual(info, BM_CHOICE_6_1))
 		{
 			if (playerLevel < 35)
@@ -578,12 +582,16 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 			{
 				// Desequipar
 				ShoulderCannon_Unequip(client);
+				// Actualizar auto-equip a false en BBDD
+				Leveling_SaveShoulderCannonAutoEquip(client, false);
 				PrintToChat(client, "\x04[Specials]\x01 Shoulder Cannon desequipado");
 			}
 			else
 			{
 				// Equipar
 				ShoulderCannon_Equip(client);
+				// Actualizar auto-equip a true en BBDD
+				Leveling_SaveShoulderCannonAutoEquip(client, true);
 				PrintToChat(client, "\x04[Specials]\x01 Shoulder Cannon equipado");
 			}
 
@@ -594,6 +602,30 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 				g_SpecialsMenu.Display(client, 20);
 			}
 		}
+		// Shoulder Cannon - Configure Settings
+		else if (StrEqual(info, BM_CHOICE_6_2))
+		{
+			if (playerLevel < 35)
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Necesitas nivel 35 para usar Shoulder Cannon");
+				return 0;
+			}
+
+			// Abrir menú de configuración
+			ShoulderCannon_ShowMenu(client);
+		}
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (param == MenuCancel_ExitBack)
+		{
+			// Volver al menú principal
+			OpenMainMenu(client);
+		}
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
 	}
 	return 0;
 }
