@@ -38,7 +38,7 @@ Handle cvar_ShoulderCannon_Range = INVALID_HANDLE;
 int   g_iShoulderCannon_Entity[MAXPLAYERS + 1];
 int   g_iShoulderCannon_Ammo[MAXPLAYERS + 1];
 bool  g_bShoulderCannon_Disabled[MAXPLAYERS + 1];
-bool  g_bShoulderCannon_AutoEquip[MAXPLAYERS + 1];
+// g_bShoulderCannon_AutoEquip ahora está definido en leveling-system.module.sp (manejado con BD)
 int   g_iShoulderCannon_NeverTarget[MAXPLAYERS + 1];
 int   g_iShoulderCannon_TargetFirst[MAXPLAYERS + 1];
 float g_fShoulderCannon_FireRate[MAXPLAYERS + 1];
@@ -109,7 +109,7 @@ public void ShoulderCannon_OnClientConnect(int client)
 	g_iShoulderCannon_Entity[client] = 0;
 	g_iShoulderCannon_Ammo[client] = GetConVarInt(cvar_ShoulderCannon_MaxAmmo);
 	g_bShoulderCannon_Disabled[client] = false;
-	g_bShoulderCannon_AutoEquip[client] = false;
+	// g_bShoulderCannon_AutoEquip se carga desde BD en Leveling_LoadPlayerData()
 	g_iShoulderCannon_NeverTarget[client] = 0;
 	g_iShoulderCannon_TargetFirst[client] = 0;
 	g_fShoulderCannon_FireRate[client] = 0.15; // Default fire rate
