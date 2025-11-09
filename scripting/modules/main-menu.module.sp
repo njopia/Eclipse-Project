@@ -58,19 +58,19 @@ void ShowMainMenu(int client)
 	menu.SetTitle(title);
 
 	// === OPCIONES PRINCIPALES (siempre disponibles) ===
-	menu.AddItem("buy", "🛒 Tienda / Buy Menu");
-	menu.AddItem("level", "📊 Nivel & XP");
-	menu.AddItem("rewards", "⭐ Mis Rewards/Habilidades");
+	menu.AddItem("buy", "Tienda / Buy Menu");
+	menu.AddItem("level", "Nivel & XP");
+	menu.AddItem("rewards", "Mis Rewards/Habilidades");
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === INFORMACIÓN & ESTADÍSTICAS ===
-	menu.AddItem("frags", "🎯 Panel de Frags");
-	menu.AddItem("players", "👥 Lista de Jugadores");
+	menu.AddItem("frags", "Panel de Frags");
+	menu.AddItem("players", "Lista de Jugadores");
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === OPCIONES DE SERVIDOR ===
-	menu.AddItem("mapvote", "🗺️ Votación de Mapas");
-	menu.AddItem("language", "🌐 Cambiar Idioma");
+	menu.AddItem("mapvote", "Votación de Mapas");
+	menu.AddItem("language", "Cambiar Idioma");
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === ACCIONES DE EQUIPO ===
@@ -80,10 +80,10 @@ void ShowMainMenu(int client)
 	}
 	else
 	{
-		menu.AddItem("join", "👤 Unirse a Survivors (!join)");
+		menu.AddItem("join", "Unirse a Survivors (!join)");
 	}
 
-	menu.AddItem("afk", "💤 Ir a Espectadores (!afk)");
+	menu.AddItem("afk", "Ir a Espectadores (!afk)");
 
 	menu.ExitButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);

@@ -46,7 +46,7 @@ public Action CmdJoin(int client, int args)
 	if (!IsPlayer(client)) return Plugin_Handled;
 	if (GetClientTeam(client) == TEAM_SURVIVOR) return Plugin_Handled;
 	// Muestra un panel con info y opciones rápidas
-	ShowMainMenu(client);
+	afkShowMainMenu(client);
 	return Plugin_Handled;
 }
 
@@ -61,14 +61,14 @@ public Action Timer_ShowPanel(Handle timer, int client)
 		return Plugin_Stop;
 	}
 
-	ShowMainMenu(client);
+	afkShowMainMenu(client);
 
 	return Plugin_Continue;
 }
 
 /* ===================== Lógica ===================== */
 
-void ShowMainMenu(int client)
+void afkShowMainMenu(int client)
 {
 	int survTotal, survHumans, specs;
 	CountTeams(survTotal, survHumans, specs);
@@ -140,7 +140,7 @@ void ToSpectator(int client, bool verbose)
 	ChangeClientTeam(client, TEAM_SPECTATOR);
 	// En algunos casos ayuda emitir el comando del juego
 	FakeClientCommand(client, "jointeam 1");
-	ShowMainMenu(client);
+	afkShowMainMenu(client);
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "AFK_MovedToSpectator", LANG_SERVER, client);
