@@ -33,6 +33,17 @@
 #tryinclude "utils/includes/precache.inc"
 
 //==================================================
+// === LEVELING SYSTEM MODULE ===
+// IMPORTANTE: Se incluye ANTES del Buy Menu porque
+// define g_bShoulderCannon_AutoEquip usado en shoulder-cannon.feature.sp
+//==================================================
+#define LEVELING_DB_NAME "players"	  // Reutiliza la BD de players
+#tryinclude "modules/leveling/leveling-system.module.sp"
+#tryinclude "modules/leveling/leveling-rewards.module.sp"
+#tryinclude "modules/leveling/leveling-ui.module.sp"
+#tryinclude "modules/leveling/leveling-info.module.sp"
+
+//==================================================
 // === BUY MENU MODULE ===
 //==================================================
 #tryinclude "modules/buy module/buy-menu.module.sp"
@@ -47,15 +58,6 @@
 // === SERVER MANAGEMENT UTILITIES ===
 //==================================================
 #tryinclude "utils/server-management.utils.sp"
-
-//==================================================
-// === LEVELING SYSTEM MODULE ===
-//==================================================
-#define LEVELING_DB_NAME "players"	  // Reutiliza la BD de players
-#tryinclude "modules/leveling/leveling-system.module.sp"
-#tryinclude "modules/leveling/leveling-rewards.module.sp"
-#tryinclude "modules/leveling/leveling-ui.module.sp"
-#tryinclude "modules/leveling/leveling-info.module.sp"
 
 //==================================================
 // === ECLIPSE POINTS UNIFIED MODULE ===
