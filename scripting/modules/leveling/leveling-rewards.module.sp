@@ -359,7 +359,35 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 	// Mostrar UI de nivel/XP
 	LevelingUI_ShowOnSpawn(client);
 
+	// Auto-equipar Shoulder Cannon si está habilitado (con delay para asegurar spawn completo)
+	if (playerLevel >= 35 && Leveling_GetShoulderCannonAutoEquip(client))
+	{
+		CreateTimer(0.5, Timer_AutoEquipShoulderCannon, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+	}
+
 	return Plugin_Continue;
+}
+
+/**
+ * Timer para auto-equipar Shoulder Cannon al spawnar
+ */
+public Action Timer_AutoEquipShoulderCannon(Handle timer, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
+		return Plugin_Stop;
+
+	if (GetClientTeam(client) != 2) // Solo Survivors
+		return Plugin_Stop;
+
+	// Verificar que no esté ya equipado
+	if (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]))
+		return Plugin_Stop;
+
+	// Equipar
+	ShoulderCannon_Equip(client);
+
+	return Plugin_Stop;
 }
 
 /**
