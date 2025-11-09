@@ -52,15 +52,15 @@ void ShowMainMenu(int client)
 
 	// Título del menú con información del jugador
 	char title[256];
-	Format(title, sizeof(title), "═══ ECLIPSE MENU ═══\n \nJugador: %s\nNivel: %d | XP: %d/%d\nCurrency: %d\n ",
+	Format(title, sizeof(title), "=== ECLIPSE MENU ===\n \nJugador: %s\nNivel: %d | XP: %d/%d\nCurrency: %d\n ",
 		playerName, level, currentXP, Leveling_GetXPRequiredForNextLevel(client), currency);
 	menu.SetTitle(title);
 
 	// === OPCIONES PRINCIPALES (siempre disponibles) ===
-	menu.AddItem("buy", "🛒 Tienda / Buy Menu");
-	menu.AddItem("level", "📊 Nivel & XP");
-	menu.AddItem("rewards", "⭐ Mis Rewards Pasivos");
-	menu.AddItem("abilities", "🔥 Abilities Activables");
+	menu.AddItem("buy", "Tienda / Buy Menu");
+	menu.AddItem("level", "Nivel & XP");
+	menu.AddItem("rewards", "Mis Rewards Pasivos");
+	menu.AddItem("abilities", "Abilities Activables");
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === INFORMACIÓN & ESTADÍSTICAS ===
@@ -76,7 +76,7 @@ void ShowMainMenu(int client)
 	// === ACCIONES DE EQUIPO ===
 	if (GetClientTeam(client) == 2)
 	{
-		menu.AddItem("join", "✓ Ya estás en Survivors");
+		menu.AddItem("join", "Ya estas en Survivors");
 	}
 	else
 	{
@@ -190,7 +190,7 @@ void ShowActiveRewardsMenuWithBackButton(int client)
 	Menu menu = new Menu(ActiveRewards_MainMenuHandler);
 
 	char title[128];
-	Format(title, sizeof(title), "═══ MIS REWARDS ACTIVOS ═══\nNivel: %d\n ", level);
+	Format(title, sizeof(title), "=== MIS REWARDS ACTIVOS ===\nNivel: %d\n ", level);
 	menu.SetTitle(title);
 
 	int count = 0;
@@ -198,132 +198,132 @@ void ShowActiveRewardsMenuWithBackButton(int client)
 	// Lista de rewards con sus niveles requeridos
 	if (level >= 1)
 	{
-		menu.AddItem("1", "✓ Double Jump (Lvl 1)");
+		menu.AddItem("1", "Double Jump (Lvl 1)");
 		count++;
 	}
 	if (level >= 2)
 	{
-		menu.AddItem("2", "✓ Acrobatics (Lvl 2)");
+		menu.AddItem("2", "Acrobatics (Lvl 2)");
 		count++;
 	}
 	if (level >= 3)
 	{
-		menu.AddItem("3", "✓ Health Bonus +25 HP (Lvl 3)");
+		menu.AddItem("3", "Health Bonus +25 HP (Lvl 3)");
 		count++;
 	}
 	if (level >= 4)
 	{
-		menu.AddItem("4", "✓ Medic (Lvl 4)");
+		menu.AddItem("4", "Medic (Lvl 4)");
 		count++;
 	}
 	if (level >= 6)
 	{
-		menu.AddItem("6", "✓ Pack Rat +25% Ammo (Lvl 6)");
+		menu.AddItem("6", "Pack Rat +25% Ammo (Lvl 6)");
 		count++;
 	}
 	if (level >= 8)
 	{
-		menu.AddItem("8", "✓ Desert Cobra (Lvl 8)");
+		menu.AddItem("8", "Desert Cobra (Lvl 8)");
 		count++;
 	}
 	if (level >= 9)
 	{
-		menu.AddItem("9", "✓ Damage Reduction -5% (Lvl 9)");
+		menu.AddItem("9", "Damage Reduction -5% (Lvl 9)");
 		count++;
 	}
 	if (level >= 10)
 	{
-		menu.AddItem("10", "✓ Gene Mutations I +100 HP (Lvl 10)");
+		menu.AddItem("10", "Gene Mutations I +100 HP (Lvl 10)");
 		count++;
 	}
 	if (level >= 11)
 	{
-		menu.AddItem("11", "✓ Self Revive (Lvl 11)");
+		menu.AddItem("11", "Self Revive (Lvl 11)");
 		count++;
 	}
 	if (level >= 13)
 	{
-		menu.AddItem("13", "✓ Sleight of Hand 2x Reload (Lvl 13)");
+		menu.AddItem("13", "Sleight of Hand 2x Reload (Lvl 13)");
 		count++;
 	}
 	if (level >= 15)
 	{
-		menu.AddItem("15", "✓ Knife (Lvl 15)");
+		menu.AddItem("15", "Knife (Lvl 15)");
 		count++;
 	}
 	if (level >= 17)
 	{
-		menu.AddItem("17", "✓ Hard to Kill 500 HP (Lvl 17)");
+		menu.AddItem("17", "Hard to Kill 500 HP (Lvl 17)");
 		count++;
 	}
 	if (level >= 19)
 	{
-		menu.AddItem("19", "✓ Arms Dealer 40 Items (Lvl 19)");
+		menu.AddItem("19", "Arms Dealer 40 Items (Lvl 19)");
 		count++;
 	}
 	if (level >= 20)
 	{
-		menu.AddItem("20", "✓ Gene Mutations II +200 HP (Lvl 20)");
+		menu.AddItem("20", "Gene Mutations II +200 HP (Lvl 20)");
 		count++;
 	}
 	if (level >= 22)
 	{
-		menu.AddItem("22", "✓ Surgeon -50% Heal Time (Lvl 22)");
+		menu.AddItem("22", "Surgeon -50% Heal Time (Lvl 22)");
 		count++;
 	}
 	if (level >= 24)
 	{
-		menu.AddItem("24", "✓ Extreme Conditioning +25% Speed (Lvl 24)");
+		menu.AddItem("24", "Extreme Conditioning +25% Speed (Lvl 24)");
 		count++;
 	}
 	if (level >= 26)
 	{
-		menu.AddItem("26", "✓ BullsEye (Lvl 26)");
+		menu.AddItem("26", "BullsEye (Lvl 26)");
 		count++;
 	}
 	if (level >= 29)
 	{
-		menu.AddItem("29", "✓ Size Matters (Lvl 29)");
+		menu.AddItem("29", "Size Matters (Lvl 29)");
 		count++;
 	}
 	if (level >= 30)
 	{
-		menu.AddItem("30", "✓ Gene Mutations III +300 HP (Lvl 30)");
+		menu.AddItem("30", "Gene Mutations III +300 HP (Lvl 30)");
 		count++;
 	}
 	if (level >= 32)
 	{
-		menu.AddItem("32", "✓ Master at Arms 2x Melee (Lvl 32)");
+		menu.AddItem("32", "Master at Arms 2x Melee (Lvl 32)");
 		count++;
 	}
 	if (level >= 35)
 	{
-		menu.AddItem("35", "✓ Hardened Stance (Lvl 35)");
+		menu.AddItem("35", "Hardened Stance (Lvl 35)");
 		count++;
 	}
 	if (level >= 38)
 	{
-		menu.AddItem("38", "✓ Critical Hit 10% (Lvl 38)");
+		menu.AddItem("38", "Critical Hit 10% (Lvl 38)");
 		count++;
 	}
 	if (level >= 40)
 	{
-		menu.AddItem("40", "✓ Gene Mutations IV +400 HP (Lvl 40)");
+		menu.AddItem("40", "Gene Mutations IV +400 HP (Lvl 40)");
 		count++;
 	}
 	if (level >= 41)
 	{
-		menu.AddItem("41", "✓ Commando (Lvl 41)");
+		menu.AddItem("41", "Commando (Lvl 41)");
 		count++;
 	}
 	if (level >= 44)
 	{
-		menu.AddItem("44", "✓ Second Chance (Lvl 44)");
+		menu.AddItem("44", "Second Chance (Lvl 44)");
 		count++;
 	}
 	if (level >= 47)
 	{
-		menu.AddItem("47", "✓ Laser Rounds (Lvl 47)");
+		menu.AddItem("47", "Laser Rounds (Lvl 47)");
 		count++;
 	}
 
@@ -377,17 +377,17 @@ void ShowRewardDetailPanel(int client, int rewardLevel)
 	Panel panel = new Panel();
 	panel.SetTitle("Reward Information");
 
-	panel.DrawText("═══════════════════════");
+	panel.DrawText("=======================");
 
 	char text[128];
 	Format(text, sizeof(text), "Reward: %s", rewardName);
 	panel.DrawText(text);
 
-	panel.DrawText("═══════════════════════");
+	panel.DrawText("=======================");
 	panel.DrawText(" ");
 	panel.DrawText(rewardDesc);
 	panel.DrawText(" ");
-	panel.DrawText("═══════════════════════");
+	panel.DrawText("=======================");
 
 	panel.DrawItem("Volver");
 	panel.Send(client, RewardDetailPanelHandler, 40);
