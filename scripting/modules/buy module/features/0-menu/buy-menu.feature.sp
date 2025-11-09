@@ -6,7 +6,7 @@
 Menu g_MainMenu;
 Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
-Menu g_LongActionsMenu;
+// Menu g_LongActionsMenu; // Removido - ahora usa ShowAbilitiesMenu()
 Menu g_TeamBonusesMenu;
 Menu g_BombardmentsMenu;
 /// Main Menu Choices ///
@@ -62,12 +62,8 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			}
 			if (StrEqual(info, BM_CHOICE_0_2))
 			{
-				PrintToChat(client, "\x05[Eclipse]\x01 Long Action");
-				LongActionsMenu(client);
-				if (g_LongActionsMenu != null)
-				{
-					g_LongActionsMenu.Display(client, 20);
-				}
+				// Abrir menú de Abilities en lugar de Long Actions
+				ShowAbilitiesMenu(client);
 			}
 			if (StrEqual(info, BM_CHOICE_0_3))
 			{
@@ -159,33 +155,8 @@ public void InstantsMenu(int client)
 	g_InstantsMenu.ExitButton	  = true;
 }
 
-public void LongActionsMenu(int client)
-{
-	g_LongActionsMenu = new Menu(MenuHandler_LongActions, MENU_ACTIONS_ALL);
-	char title[128];
-	char playerName[MAX_NAME_LENGTH];
-	GetClientName(client, playerName, sizeof(playerName))
-		Format(title, sizeof(title), "%T", "BM_LongAction", client);
-	int	 playerPoints = GetPlayerCurrency(client);
-	int	 playerLevel  = Leveling_GetPlayerLevel(client);
-	char fullTitle[256];
-	char playerText[32], pointsText[32], levelText[32];
-	Format(playerText, sizeof(playerText), "%T", "UI_Player", client);
-	Format(pointsText, sizeof(pointsText), "%T", "UI_Points", client);
-	Format(levelText, sizeof(levelText), "%T", "UI_Level", client);
-	Format(fullTitle, sizeof(fullTitle), "%s \n================= \n %s: %s \n %s: %d \n %s: %d \n=================", title, playerText, playerName, pointsText, playerPoints, levelText, playerLevel);
-	g_LongActionsMenu.SetTitle(fullTitle, LANG_SERVER);
+// LongActionsMenu removida - reemplazada por ShowAbilitiesMenu() del sistema de Abilities
 
-	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
-	// NOTA: Estas habilidades ahora son parte del sistema de Abilities (!abilities)
-	// Se han movido a ser desbloqueables por nivel sin necesidad de currency
-
-	// Berserker, Acid Bath, LifeStealer, Speed Freak y Shoulder Cannon
-	// ahora se encuentran en el sistema de Abilities (nivel 5, 9, 12, 31, 35)
-
-	g_LongActionsMenu.ExitBackButton = true;
-	g_LongActionsMenu.ExitButton	 = true;
-}
 // Function to Create Submenu
 public void DeployablesMenu(int client)
 {
@@ -556,17 +527,7 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 	return 0;
 }
 
-public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int param)
-{
-	if (action == MenuAction_Select)
-	{
-		// NOTA: Todas las abilities (Berserker, Acid Bath, LifeStealer, Speed Freak, Shoulder Cannon)
-		// han sido movidas al sistema de Abilities (!abilities)
-		// Este menú ya no contiene items activos
-		PrintToChat(client, "\x04[Eclipse]\x01 Las habilidades ahora están en el sistema de Abilities. Usa \x05!abilities\x01");
-	}
-	return 0;
-}
+// MenuHandler_LongActions removido - reemplazado por ShowAbilitiesMenu()
 
 public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
 {
@@ -722,7 +683,8 @@ public Action Cmd_Buy(int client, int args)
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_1, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_1, text);
-	Format(text, sizeof(text), "%T", BM_CHOICE_0_2, client);
+	// Abilities en lugar de Long Actions
+	Format(text, sizeof(text), "🔥 Abilities");
 	g_MainMenu.AddItem(BM_CHOICE_0_2, text);
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_3, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_3, text);
@@ -735,7 +697,7 @@ public Action Cmd_Buy(int client, int args)
 
 	// Recreate all submenus to show current timers
 	InstantsMenu(client);
-	LongActionsMenu(client);
+	// LongActionsMenu removido - ahora usa ShowAbilitiesMenu() directamente
 	DeployablesMenu(client);
 	BombardmentsMenu(client);
 	TeamBonusesMenu(client);
