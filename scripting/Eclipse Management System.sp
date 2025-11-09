@@ -454,6 +454,9 @@ public void OnClientPutInServer(int client)
 	// Hook damage for active abilities (in buy module)
 	BuyMenu_OnClientPutInServer(client);
 
+	// Initialize Shoulder Cannon defaults
+	ShoulderCannon_InitializeDefaults(client);
+
 	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
 

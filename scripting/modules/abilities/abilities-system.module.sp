@@ -78,6 +78,10 @@ public void Abilities_OnPluginStart()
 	RegConsoleCmd("sm_polymorph", Command_ActivateAbility_Polymorph);
 	RegConsoleCmd("sm_instagib", Command_ActivateAbility_Instagib);
 
+	// Shoulder Cannon menu command
+	RegConsoleCmd("shouldercannon", Command_ShoulderCannonMenu, "Abre el menú de configuración de Shoulder Cannon");
+	RegConsoleCmd("sm_cannonmenu", Command_ShoulderCannonMenu, "Abre el menú de configuración de Shoulder Cannon");
+
 	// Precache de Shoulder Cannon
 	Ability_ShoulderCannon_Precache();
 
@@ -666,5 +670,17 @@ public Action Command_ActivateAbility_Polymorph(int client, int args)
 public Action Command_ActivateAbility_Instagib(int client, int args)
 {
 	Abilities_Activate(client, Ability_Instagib);
+	return Plugin_Handled;
+}
+
+/**
+ * Comando para abrir el menú de configuración del Shoulder Cannon
+ */
+public Action Command_ShoulderCannonMenu(int client, int args)
+{
+	if (client <= 0 || !IsClientInGame(client))
+		return Plugin_Handled;
+
+	ShoulderCannon_ShowMenu(client);
 	return Plugin_Handled;
 }

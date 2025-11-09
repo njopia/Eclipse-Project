@@ -20,9 +20,30 @@
 #define SHOULDER_CANNON_RANGE 600.0
 #define SHOULDER_CANNON_FIRE_RATE 0.15
 
+// Target types
+#define TARGET_NEVER_NONE 0
+#define TARGET_NEVER_COMMONS 1
+#define TARGET_NEVER_SPECIALS 2
+#define TARGET_NEVER_WITCHES 3
+#define TARGET_NEVER_TANKS 4
+#define TARGET_NEVER_COMMONS_SPECIALS 5
+#define TARGET_NEVER_COMMONS_WITCHES 6
+#define TARGET_NEVER_WITCHES_TANKS 7
+
+#define TARGET_FIRST_COMMONS 0
+#define TARGET_FIRST_SPECIALS 1
+#define TARGET_FIRST_WITCHES 2
+#define TARGET_FIRST_TANKS 3
+
 // Estado del jugador
 int g_iShoulderCannon_Entity[MAXPLAYERS + 1];
 Handle g_hShoulderCannon_FireTimer[MAXPLAYERS + 1];
+
+// Configuración del Shoulder Cannon (guardadas en BBDD via g_bShoulderCannon_AutoEquip en leveling)
+bool g_bCannon_Disabled[MAXPLAYERS + 1];  // Desactivar disparo automático
+int g_iCannon_NeverTarget[MAXPLAYERS + 1];  // Qué no atacar nunca
+int g_iCannon_TargetFirst[MAXPLAYERS + 1];  // Qué atacar primero
+float g_fCannon_FireRate[MAXPLAYERS + 1];  // Velocidad de disparo
 
 /**
  * Precache de recursos
@@ -571,4 +592,259 @@ bool IsPlayerHeld(int client)
 		return true;
 	}
 	return false;
+}
+
+//==================================================
+// === SHOULDER CANNON MENU SYSTEM ===
+//==================================================
+
+/**
+ * Inicializa valores por defecto del cannon
+ */
+void ShoulderCannon_InitializeDefaults(int client)
+{
+	g_bCannon_Disabled[client] = false;
+	g_iCannon_NeverTarget[client] = TARGET_NEVER_NONE;
+	g_iCannon_TargetFirst[client] = TARGET_FIRST_COMMONS;
+	g_fCannon_FireRate[client] = SHOULDER_CANNON_FIRE_RATE;
+}
+
+/**
+ * Muestra el menú principal del Shoulder Cannon
+ */
+void ShoulderCannon_ShowMenu(int client)
+{
+	if (!IsClientInGame(client) || GetClientTeam(client) != 2)
+		return;
+
+	int level = Leveling_GetLevel(client);
+	if (level < 35)
+	{
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Necesitas nivel 35 para usar Shoulder Cannon (Actual: %d)", level);
+		return;
+	}
+
+	Menu menu = new Menu(ShoulderCannon_MenuHandler);
+	menu.SetTitle("Shoulder Cannon Menu\n \nConfiguracion:");
+
+	char buffer[128];
+
+	// Opción 1: Auto-equipar
+	Format(buffer, sizeof(buffer), "%s Auto Equip al Spawnar",
+		g_bShoulderCannon_AutoEquip[client] ? "[X]" : "[ ]");
+	menu.AddItem("autoequip", buffer);
+
+	// Opción 2: Desactivar disparo
+	Format(buffer, sizeof(buffer), "%s Desactivar Disparo",
+		g_bCannon_Disabled[client] ? "[X]" : "[ ]");
+	menu.AddItem("disable", buffer);
+
+	// Opción 3: Never Target
+	char neverText[64];
+	switch(g_iCannon_NeverTarget[client])
+	{
+		case TARGET_NEVER_NONE: Format(neverText, sizeof(neverText), "None");
+		case TARGET_NEVER_COMMONS: Format(neverText, sizeof(neverText), "Commons");
+		case TARGET_NEVER_SPECIALS: Format(neverText, sizeof(neverText), "Specials");
+		case TARGET_NEVER_WITCHES: Format(neverText, sizeof(neverText), "Witches");
+		case TARGET_NEVER_TANKS: Format(neverText, sizeof(neverText), "Tanks");
+		case TARGET_NEVER_COMMONS_SPECIALS: Format(neverText, sizeof(neverText), "Commons/Specials");
+		case TARGET_NEVER_COMMONS_WITCHES: Format(neverText, sizeof(neverText), "Commons/Witches");
+		case TARGET_NEVER_WITCHES_TANKS: Format(neverText, sizeof(neverText), "Witches/Tanks");
+	}
+	Format(buffer, sizeof(buffer), "[%s] Never Target", neverText);
+	menu.AddItem("never", buffer);
+
+	// Opción 4: Target First
+	char firstText[64];
+	switch(g_iCannon_TargetFirst[client])
+	{
+		case TARGET_FIRST_COMMONS: Format(firstText, sizeof(firstText), "Commons");
+		case TARGET_FIRST_SPECIALS: Format(firstText, sizeof(firstText), "Specials");
+		case TARGET_FIRST_WITCHES: Format(firstText, sizeof(firstText), "Witches");
+		case TARGET_FIRST_TANKS: Format(firstText, sizeof(firstText), "Tanks");
+	}
+	Format(buffer, sizeof(buffer), "[%s] Target First", firstText);
+	menu.AddItem("first", buffer);
+
+	// Opción 5: Fire Rate
+	char rateText[64];
+	if (g_fCannon_FireRate[client] <= 0.05) Format(rateText, sizeof(rateText), "+0.05 Fastest");
+	else if (g_fCannon_FireRate[client] <= 0.10) Format(rateText, sizeof(rateText), "+0.10 Faster");
+	else if (g_fCannon_FireRate[client] <= 0.15) Format(rateText, sizeof(rateText), "+0.15 Default");
+	else if (g_fCannon_FireRate[client] <= 0.20) Format(rateText, sizeof(rateText), "+0.20 Slower");
+	else Format(rateText, sizeof(rateText), "+0.25 Slowest");
+	Format(buffer, sizeof(buffer), "[%s] Fire Rate", rateText);
+	menu.AddItem("rate", buffer);
+
+	menu.ExitButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+/**
+ * Handler del menú principal
+ */
+public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[32];
+		menu.GetItem(param, info, sizeof(info));
+
+		if (StrEqual(info, "autoequip"))
+		{
+			g_bShoulderCannon_AutoEquip[client] = !g_bShoulderCannon_AutoEquip[client];
+			Leveling_SavePlayerData(client);
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto-equip: %s",
+				g_bShoulderCannon_AutoEquip[client] ? "ON" : "OFF");
+			ShoulderCannon_ShowMenu(client);
+		}
+		else if (StrEqual(info, "disable"))
+		{
+			g_bCannon_Disabled[client] = !g_bCannon_Disabled[client];
+			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Disparo: %s",
+				g_bCannon_Disabled[client] ? "DESACTIVADO" : "ACTIVADO");
+			ShoulderCannon_ShowMenu(client);
+		}
+		else if (StrEqual(info, "never"))
+		{
+			ShoulderCannon_ShowNeverTargetMenu(client);
+		}
+		else if (StrEqual(info, "first"))
+		{
+			ShoulderCannon_ShowTargetFirstMenu(client);
+		}
+		else if (StrEqual(info, "rate"))
+		{
+			ShoulderCannon_ShowFireRateMenu(client);
+		}
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
+}
+
+/**
+ * Menú Never Target
+ */
+void ShoulderCannon_ShowNeverTargetMenu(int client)
+{
+	Menu menu = new Menu(ShoulderCannon_NeverTargetHandler);
+	menu.SetTitle("Never Target:");
+
+	menu.AddItem("0", "None");
+	menu.AddItem("1", "Commons");
+	menu.AddItem("2", "Specials");
+	menu.AddItem("3", "Witches");
+	menu.AddItem("4", "Tanks");
+	menu.AddItem("5", "Commons/Specials");
+	menu.AddItem("6", "Commons/Witches");
+	menu.AddItem("7", "Witches/Tanks");
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int ShoulderCannon_NeverTargetHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[8];
+		menu.GetItem(param, info, sizeof(info));
+		g_iCannon_NeverTarget[client] = StringToInt(info);
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Never Target actualizado");
+		ShoulderCannon_ShowMenu(client);
+	}
+	else if (action == MenuAction_Cancel && param == MenuCancel_ExitBack)
+	{
+		ShoulderCannon_ShowMenu(client);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
+}
+
+/**
+ * Menú Target First
+ */
+void ShoulderCannon_ShowTargetFirstMenu(int client)
+{
+	Menu menu = new Menu(ShoulderCannon_TargetFirstHandler);
+	menu.SetTitle("Target First:");
+
+	menu.AddItem("0", "Commons");
+	menu.AddItem("1", "Specials");
+	menu.AddItem("2", "Witches");
+	menu.AddItem("3", "Tanks");
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int ShoulderCannon_TargetFirstHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[8];
+		menu.GetItem(param, info, sizeof(info));
+		g_iCannon_TargetFirst[client] = StringToInt(info);
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Target First actualizado");
+		ShoulderCannon_ShowMenu(client);
+	}
+	else if (action == MenuAction_Cancel && param == MenuCancel_ExitBack)
+	{
+		ShoulderCannon_ShowMenu(client);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
+}
+
+/**
+ * Menú Fire Rate
+ */
+void ShoulderCannon_ShowFireRateMenu(int client)
+{
+	Menu menu = new Menu(ShoulderCannon_FireRateHandler);
+	menu.SetTitle("Fire Rate:");
+
+	menu.AddItem("0.05", "[+0.05] Fastest");
+	menu.AddItem("0.10", "[+0.10] Faster");
+	menu.AddItem("0.15", "[+0.15] Default");
+	menu.AddItem("0.20", "[+0.20] Slower");
+	menu.AddItem("0.25", "[+0.25] Slowest");
+
+	menu.ExitBackButton = true;
+	menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public int ShoulderCannon_FireRateHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[8];
+		menu.GetItem(param, info, sizeof(info));
+		g_fCannon_FireRate[client] = StringToFloat(info);
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Fire Rate actualizado a %.2f", g_fCannon_FireRate[client]);
+		ShoulderCannon_ShowMenu(client);
+	}
+	else if (action == MenuAction_Cancel && param == MenuCancel_ExitBack)
+	{
+		ShoulderCannon_ShowMenu(client);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+
+	return 0;
 }
