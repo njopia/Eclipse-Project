@@ -264,7 +264,7 @@ int GetDifficultyMultiplier()
  *
  * @return true si es Easy, false en caso contrario
  */
-bool IsEasyDifficulty()
+/* bool IsEasyDifficulty()
 {
 	if (g_hCvarDifficulty == INVALID_HANDLE)
 		return true; // Default a Easy si no se puede detectar
@@ -273,7 +273,7 @@ bool IsEasyDifficulty()
 	GetConVarString(g_hCvarDifficulty, difficulty, sizeof(difficulty));
 
 	return StrEqual(difficulty, "Easy", false);
-}
+} */
 
 //==================================================
 // === FUNCIÓN CENTRAL DE OTORGAMIENTO DE PUNTOS ===

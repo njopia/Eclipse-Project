@@ -685,7 +685,7 @@ public Action Timer_UpdateHostname(Handle timer)
 
 	// Update hostname with player count
 	char newHostname[128];
-	Format(newHostname, sizeof(newHostname), "%s [%d/%d] - Eclipse Community", BASE_HOSTNAME, humans, maxplayers);
+	Format(newHostname, sizeof(newHostname), "%s [%d/%d] - Eclipse BETA Release", BASE_HOSTNAME, humans, maxplayers);
 	SetConVarString(FindConVar("hostname"), newHostname);
 
 	return Plugin_Continue;

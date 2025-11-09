@@ -559,12 +559,12 @@ public int Leveling_GetLevelProgress(int client)
  *
  * NOTA: Durante eventos especiales (Nightmare, etc), el currency está congelado
  */
-stock void Leveling_CheckDifficultyChange(int client)
+/* stock void Leveling_CheckDifficultyChange(int client)
 {
 	// Esta función ahora es un stub (vacía) porque currency es siempre temporal
 	// Se mantiene para no romper llamadas existentes en el código
 	return;
-}
+} */
 
 /**
  * Congela el currency para todos los jugadores (usado durante eventos especiales)
