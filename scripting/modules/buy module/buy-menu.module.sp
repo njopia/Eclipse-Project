@@ -554,8 +554,27 @@ public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dont
  */
 public Action Hook_BuyMenu_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-	// Las habilidades de daño se manejan ahora en el sistema de Abilities
-	return Plugin_Continue;
+	Action result = Plugin_Continue;
+
+	// Acid Bath: Convierte daño de ácido en curación
+	Action acidResult = AcidBath_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
+	if (acidResult > result)
+		result = acidResult;
+
+	// Lifestealer: Roba vida al hacer daño
+	Action lifeResult = Lifestealer_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
+	if (lifeResult > result)
+		result = lifeResult;
+
+	// Instagib: Multiplica daño masivamente
+	Action instaResult = Instagib_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
+	if (instaResult > result)
+		result = instaResult;
+
+	// Soulshield: Bloquea todo el daño
+	// Nota: Soulshield usa su propio hook cuando está activo
+
+	return result;
 }
 
 // ============================================================================

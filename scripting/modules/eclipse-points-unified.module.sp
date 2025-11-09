@@ -370,6 +370,17 @@ public Action EclipsePoints_Event_InfectedDeath(Event event, const char[] name, 
 		AwardUnifiedPoints(attacker, headshotBonus, "Headshot");
 	}
 
+	// Hooks de abilities que necesitan saber cuando se mata un infectado
+	int victim = event.GetInt("entityid");  // Entity index del infectado muerto
+	char weapon[64];
+	event.GetString("weapon", weapon, sizeof(weapon));
+
+	// Chainsaw Massacre: Bonus XP por kill con chainsaw
+	ChainsawMassacre_OnInfectedKilled(attacker, victim, weapon);
+
+	// Polymorph: Transformar infectado en item
+	Polymorph_OnInfectedKilled(attacker, victim);
+
 	return Plugin_Continue;
 }
 

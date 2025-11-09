@@ -510,8 +510,9 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	// Handle double jump from leveling system
 	LevelingRewards_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 
-	// Handle weapon fire for active abilities (Berserker swing speed)
-	// Removido - Berserker ahora es parte del sistema de Abilities
+	// Handle ability-specific controls
+	Nightcrawler_OnPlayerRunCmd(client, buttons);
+	HeatSeeker_OnPlayerRunCmd(client, buttons);
 
 	return Plugin_Continue;
 }
