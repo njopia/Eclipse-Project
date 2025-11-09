@@ -25,26 +25,6 @@ char g_szInstagib_ExplosionSounds[][] = {
  */
 bool Ability_Instagib_Activate(int client)
 {
-	// Efecto visual blanco brillante
-	int clients[1];
-	clients[0] = client;
-	int color[4] = {255, 255, 255, 120};
-	int duration = 60000;
-	int flags = 0x0001;
-
-	Handle message = StartMessageEx(GetUserMessageId("Fade"), clients, 1);
-	if (message != INVALID_HANDLE)
-	{
-		BfWriteShort(message, duration);
-		BfWriteShort(message, 500);
-		BfWriteShort(message, flags);
-		BfWriteByte(message, color[0]);
-		BfWriteByte(message, color[1]);
-		BfWriteByte(message, color[2]);
-		BfWriteByte(message, color[3]);
-		EndMessage();
-	}
-
 	// Activar night vision para efecto dramático
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1);
 
@@ -62,24 +42,6 @@ void Ability_Instagib_Deactivate(int client)
 
 	// Desactivar night vision
 	SetEntProp(client, Prop_Send, "m_bNightVisionOn", 0);
-
-	// Limpiar efecto visual
-	int clients[1];
-	clients[0] = client;
-	int color[4] = {0, 0, 0, 0};
-
-	Handle message = StartMessageEx(GetUserMessageId("Fade"), clients, 1);
-	if (message != INVALID_HANDLE)
-	{
-		BfWriteShort(message, 500);
-		BfWriteShort(message, 500);
-		BfWriteShort(message, 0x0002);
-		BfWriteByte(message, color[0]);
-		BfWriteByte(message, color[1]);
-		BfWriteByte(message, color[2]);
-		BfWriteByte(message, color[3]);
-		EndMessage();
-	}
 }
 
 /**
