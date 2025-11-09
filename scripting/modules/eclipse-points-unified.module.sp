@@ -584,11 +584,15 @@ public Action EclipsePoints_Event_LeftSafeArea(Event event, const char[] name, b
 
 /**
  * Evento: Map Complete (finale o transición)
- * Solo otorga puntos a jugadores que salieron del safe area inicial
+ * Solo otorga XP (NO currency) a jugadores que salieron del safe area inicial
  */
 public Action EclipsePoints_Event_MapComplete(Event event, const char[] name, bool dontBroadcast)
 {
 	int points = cvar_PointsCompleteMap.IntValue;
+
+	// Aplicar multiplicador de dificultad
+	int difficultyMultiplier = GetDifficultyMultiplier();
+	int finalPoints = points * difficultyMultiplier;
 
 	// Otorgar a todos los survivors vivos que participaron
 	for (int client = 1; client <= MaxClients; client++)
@@ -598,8 +602,12 @@ public Action EclipsePoints_Event_MapComplete(Event event, const char[] name, bo
 			// Solo otorgar si el jugador salió del safe area y no ha recibido el premio
 			if (g_bPlayerLeftSafeArea[client] && !g_bMapCompleteAwarded[client])
 			{
-				AwardUnifiedPoints(client, points, "Completar mapa");
+				// SOLO otorgar XP, NO currency
+				Leveling_AwardXP(client, finalPoints, "Completar mapa");
 				g_bMapCompleteAwarded[client] = true;
+
+				// Mostrar mensaje al jugador
+				PrintToChat(client, "\x04[Eclipse]\x01 +%d XP por completar el mapa", finalPoints);
 			}
 		}
 	}
