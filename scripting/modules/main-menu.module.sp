@@ -52,38 +52,55 @@ void ShowMainMenu(int client)
 
 	// Título del menú con información del jugador
 	char title[256];
-	Format(title, sizeof(title), "=== ECLIPSE MENU ===\n \nJugador: %s\nNivel: %d | XP: %d/%d\nCurrency: %d\n ",
-		playerName, level, currentXP, Leveling_GetXPRequiredForNextLevel(client), currency);
+	SetGlobalTransTarget(client);
+	Format(title, sizeof(title), "%t", "MainMenu_Title", playerName, level, currentXP, Leveling_GetXPRequiredForNextLevel(client), currency);
 	menu.SetTitle(title);
 
 	// === OPCIONES PRINCIPALES (siempre disponibles) ===
-	menu.AddItem("buy", "Tienda / Buy Menu");
-	menu.AddItem("level", "Nivel & XP");
-	menu.AddItem("rewards", "Mis Rewards Pasivos");
-	menu.AddItem("abilities", "Abilities Activables");
+	char text[128];
+	Format(text, sizeof(text), "%T", "MainMenu_Shop", client);
+	menu.AddItem("buy", text);
+
+	Format(text, sizeof(text), "%T", "MainMenu_LevelXP", client);
+	menu.AddItem("level", text);
+
+	Format(text, sizeof(text), "%T", "MainMenu_Rewards", client);
+	menu.AddItem("rewards", text);
+
+	Format(text, sizeof(text), "%T", "MainMenu_Abilities", client);
+	menu.AddItem("abilities", text);
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === INFORMACIÓN & ESTADÍSTICAS ===
-	menu.AddItem("frags", "Panel de Frags");
-	menu.AddItem("players", "Lista de Jugadores");
+	Format(text, sizeof(text), "%T", "MainMenu_FragsPanel", client);
+	menu.AddItem("frags", text);
+
+	Format(text, sizeof(text), "%T", "MainMenu_PlayersList", client);
+	menu.AddItem("players", text);
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === OPCIONES DE SERVIDOR ===
-	menu.AddItem("mapvote", "Votación de Mapas");
-	menu.AddItem("language", "Cambiar Idioma");
+	Format(text, sizeof(text), "%T", "MainMenu_MapVote", client);
+	menu.AddItem("mapvote", text);
+
+	Format(text, sizeof(text), "%T", "MainMenu_Language", client);
+	menu.AddItem("language", text);
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
 	// === ACCIONES DE EQUIPO ===
 	if (GetClientTeam(client) == 2)
 	{
-		menu.AddItem("join", "Ya estas en Survivors");
+		Format(text, sizeof(text), "%T", "MainMenu_AlreadyInSurvivors", client);
+		menu.AddItem("join", text);
 	}
 	else
 	{
-		menu.AddItem("join", "Unirse a Survivors (!join)");
+		Format(text, sizeof(text), "%T", "MainMenu_JoinSurvivors", client);
+		menu.AddItem("join", text);
 	}
 
-	menu.AddItem("afk", "Ir a Espectadores (!afk)");
+	Format(text, sizeof(text), "%T", "MainMenu_GoSpectator", client);
+	menu.AddItem("afk", text);
 
 	menu.ExitButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -190,7 +207,8 @@ void ShowActiveRewardsMenuWithBackButton(int client)
 	Menu menu = new Menu(ActiveRewards_MainMenuHandler);
 
 	char title[128];
-	Format(title, sizeof(title), "=== MIS REWARDS ACTIVOS ===\nNivel: %d\n ", level);
+	SetGlobalTransTarget(client);
+	Format(title, sizeof(title), "%t", "MainMenu_ActiveRewardsTitle", level);
 	menu.SetTitle(title);
 
 	int count = 0;
@@ -329,7 +347,9 @@ void ShowActiveRewardsMenuWithBackButton(int client)
 
 	if (count == 0)
 	{
-		menu.AddItem("none", "No tienes rewards activos aún", ITEMDRAW_DISABLED);
+		char noRewardsText[64];
+		Format(noRewardsText, sizeof(noRewardsText), "%T", "MainMenu_NoRewardsYet", client);
+		menu.AddItem("none", noRewardsText, ITEMDRAW_DISABLED);
 	}
 
 	menu.ExitBackButton = true;
