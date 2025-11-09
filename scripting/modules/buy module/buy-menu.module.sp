@@ -3,6 +3,8 @@
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
 
+#include <clientprefs>
+
 //==================================================
 // === CENTRALIZED COOLDOWN CONFIGURATION ===
 //==================================================
@@ -31,9 +33,11 @@
 
 // ================== CURRENCY SYSTEM ==================
 // Currency persiste durante toda la sesión del jugador (se mantiene entre mapas)
-// Se resetea solo al desconectarse del servidor
+// Se mantiene incluso al cambiar de mapa usando cookies de SourceMod
+// Se resetea solo al desconectarse completamente del servidor
 // NO se guarda en base de datos
-int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency de sesión (se mantiene entre mapas, se resetea al desconectar)
+int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency de sesión (se mantiene entre mapas con cookies)
+Handle g_hCurrencyCookie = INVALID_HANDLE;			 // Cookie para persistir currency entre cambios de mapa
 
 // Buy Cost ConVars
 Handle cvar_CostConvertHP	   = INVALID_HANDLE;
@@ -114,6 +118,9 @@ public void buyMenuOnPluginStart()
 	cvar_CostNuclearStrike	= CreateConVar("buy_cost_nuclear_strike", "100", "Cost in points to buy Nuclear Strike", FCVAR_PLUGIN);
 	// ============================================
 
+	// Create cookie to persist currency across map changes
+	g_hCurrencyCookie = RegClientCookie("eclipse_session_currency", "Currency points during current session", CookieAccess_Private);
+
 	// Initialize player currency (always temporal)
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -161,6 +168,25 @@ public void BuyMenu_OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, Hook_BuyMenu_OnTakeDamage);
 
+	// Cargar currency desde cookie (persiste entre cambios de mapa)
+	if (!IsFakeClient(client) && AreClientCookiesCached(client))
+	{
+		char sCurrency[32];
+		GetClientCookie(client, g_hCurrencyCookie, sCurrency, sizeof(sCurrency));
+		if (strlen(sCurrency) > 0)
+		{
+			g_iPlayerLocalCurrency[client] = StringToInt(sCurrency);
+		}
+		else
+		{
+			g_iPlayerLocalCurrency[client] = 0;
+		}
+	}
+	else
+	{
+		g_iPlayerLocalCurrency[client] = 0;
+	}
+
 	Berserker_OnClientConnect(client);
 	AcidBath_OnClientConnect(client);
 	LifeStealer_OnClientConnect(client);
@@ -170,12 +196,20 @@ public void BuyMenu_OnClientPutInServer(int client)
 
 public void OnClientDisconnect(int client)
 {
+	// Guardar currency en cookie ANTES de resetear (persiste entre cambios de mapa)
+	if (!IsFakeClient(client))
+	{
+		char sCurrency[32];
+		IntToString(g_iPlayerLocalCurrency[client], sCurrency, sizeof(sCurrency));
+		SetClientCookie(client, g_hCurrencyCookie, sCurrency);
+	}
+
 	// Guardar datos del jugador antes de resetear
 	Leveling_OnClientDisconnect(client);
 
 	g_fNextHint[client]		  = 0.0;
 	g_bHadMaxHealth[client]	  = false;
-	g_iPlayerLocalCurrency[client] = 0;	  // Reset currency on disconnect (persiste entre mapas, se pierde al desconectar)
+	g_iPlayerLocalCurrency[client] = 0;	  // Reset local variable (pero ya guardado en cookie)
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
@@ -387,8 +421,11 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 		return false;
 	}
 
-	// Deduct currency (persiste entre mapas, se resetea al desconectar)
+	// Deduct currency (persiste entre mapas con cookies)
 	g_iPlayerLocalCurrency[client] -= cost;
+
+	// Actualizar cookie para persistir entre cambios de mapa
+	UpdateCurrencyCookie(client);
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "Buy_PurchaseSuccess", client, itemName, g_iPlayerLocalCurrency[client]);
@@ -413,14 +450,30 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 		return;
 	}
 
-	// Agregar currency (persiste entre mapas, se resetea al desconectar)
+	// Agregar currency (persiste entre mapas con cookies)
 	g_iPlayerLocalCurrency[client] += amount;
+
+	// Actualizar cookie para persistir entre cambios de mapa
+	UpdateCurrencyCookie(client);
 
 	// Registrar en estadísticas
 	CurrencyStats_AddEarnings(client, amount);
 
 // El parámetro 'reason' se usa en llamadas externas para logging/estadísticas
 #pragma unused reason
+}
+
+/**
+ * Actualiza la cookie de currency para persistir entre cambios de mapa
+ */
+stock void UpdateCurrencyCookie(int client)
+{
+	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
+		return;
+
+	char sCurrency[32];
+	IntToString(g_iPlayerLocalCurrency[client], sCurrency, sizeof(sCurrency));
+	SetClientCookie(client, g_hCurrencyCookie, sCurrency);
 }
 
 /**
@@ -465,7 +518,7 @@ stock int GetPlayerCurrency(int client)
 
 /**
  * Set player's currency directly (for admin commands, etc.)
- * NOTA: Currency persiste durante la sesión (entre mapas)
+ * NOTA: Currency persiste durante la sesión (entre mapas con cookies)
  */
 stock void SetPlayerCurrency(int client, int amount)
 {
@@ -474,6 +527,9 @@ stock void SetPlayerCurrency(int client, int amount)
 
 	// Currency persiste durante la sesión
 	g_iPlayerLocalCurrency[client] = amount;
+
+	// Actualizar cookie para persistir entre cambios de mapa
+	UpdateCurrencyCookie(client);
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "Buy_AdminSetBalance", client, amount);
