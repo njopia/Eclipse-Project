@@ -178,10 +178,9 @@ public void Leveling_OnClientDisconnect(int client)
 
 	// Guardar datos en la base de datos (solo nivel/XP, currency NO se guarda en BD)
 	Leveling_UpdatePlayerDatabase(client);
-	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d, Currency perdido: %d",
+	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d",
 			  client, g_iPlayerLevel[client], g_iPlayerXP[client],
-			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
-			  g_iPlayerLocalCurrency[client]);
+			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client]);
 
 	// Reset de variables locales
 	g_iPlayerLevel[client] = 0;
@@ -258,10 +257,10 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		// Currency se mantiene durante toda la sesión (no se resetea entre mapas)
 		// Solo se resetea al desconectar o al iniciar el plugin
 
-		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, Currency: %d, AutoEquip: %d",
+		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, AutoEquip: %d",
 				  client, g_iPlayerLevel[client], g_iPlayerXP[client],
 				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
-				  g_iPlayerLocalCurrency[client], g_bShoulderCannon_AutoEquip[client]);
+				  g_bShoulderCannon_AutoEquip[client]);
 
 		// Aplicar pasivas inmediatamente si el jugador está vivo
 		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
