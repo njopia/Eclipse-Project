@@ -431,12 +431,12 @@ void ShowAbilitiesMenu(int client)
 	int level = Leveling_GetPlayerLevel(client);
 
 	Menu menu = new Menu(AbilitiesMenu_Handler);
-	menu.SetTitle("═══ ABILITIES MENU ═══\nNivel: %d\n ", level);
+	menu.SetTitle("=== ABILITIES MENU ===\nLevel: %d\n ", level);
 
 	char display[128];
 	char info[8];
 
-	// Listar TODAS las abilities (desbloqueadas y bloqueadas)
+	// List ALL abilities (unlocked and locked)
 	for (int i = 1; i < 16; i++)
 	{
 		AbilityIndex ability = view_as<AbilityIndex>(i);
@@ -447,21 +447,21 @@ void ShowAbilitiesMenu(int client)
 
 		if (level >= reqLevel)
 		{
-			// Ability DESBLOQUEADA - Verificar estado
+			// Ability UNLOCKED - Check status
 			if (Abilities_IsActive(client, ability))
 			{
-				Format(display, sizeof(display), "✓ %s (ACTIVA)", abilityName);
+				Format(display, sizeof(display), "%s [ACTIVE]", abilityName);
 			}
 			else if (Abilities_IsOnCooldown(client, ability))
 			{
 				float remaining = Abilities_GetCooldownRemaining(client, ability);
 				int minutes = RoundToFloor(remaining / 60.0);
 				int seconds = RoundToFloor(remaining) % 60;
-				Format(display, sizeof(display), "⏱ %s (%d:%02d)", abilityName, minutes, seconds);
+				Format(display, sizeof(display), "%s [CD: %d:%02d]", abilityName, minutes, seconds);
 			}
 			else
 			{
-				Format(display, sizeof(display), "► %s [LISTA]", abilityName);
+				Format(display, sizeof(display), "%s [READY]", abilityName);
 			}
 
 			Format(info, sizeof(info), "%d", i);
@@ -469,8 +469,8 @@ void ShowAbilitiesMenu(int client)
 		}
 		else
 		{
-			// Ability BLOQUEADA - Mostrar nivel requerido
-			Format(display, sizeof(display), "🔒 %s [Nivel %d]", abilityName, reqLevel);
+			// Ability LOCKED - Show required level
+			Format(display, sizeof(display), "%s [Locked - Level %d]", abilityName, reqLevel);
 			Format(info, sizeof(info), "%d", i);
 			menu.AddItem(info, display, ITEMDRAW_DISABLED);
 		}
