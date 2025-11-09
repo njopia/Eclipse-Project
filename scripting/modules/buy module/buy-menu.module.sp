@@ -126,12 +126,8 @@ public void buyMenuOnPluginStart()
 	IonCannon_OnPluginStart();
 
 	// Initialize Active Abilities
-	Berserker_OnPluginStart();
-	AcidBath_OnPluginStart();
-	LifeStealer_OnPluginStart();
-	SpeedFreak_OnPluginStart();
-	ShoulderCannon_OnPluginStart();
-	//ResetFireYellCooldowns(i);
+	// Removidas - ahora son parte del sistema de Abilities
+	// (Berserker, AcidBath, LifeStealer, SpeedFreak, ShoulderCannon)
 
 	// Hook events
 	HookEvent("round_start", Event_RoundStart_IonCannon, EventHookMode_PostNoCopy);
@@ -182,11 +178,8 @@ public void BuyMenu_OnClientPutInServer(int client)
 		g_iPlayerLocalCurrency[client] = 0;
 	}
 
-	Berserker_OnClientConnect(client);
-	AcidBath_OnClientConnect(client);
-	LifeStealer_OnClientConnect(client);
-	SpeedFreak_OnClientConnect(client);
-	ShoulderCannon_OnClientConnect(client);
+	// Active Abilities OnClientConnect removidas
+	// Ahora son parte del sistema de Abilities
 }
 
 public void OnClientDisconnect(int client)
@@ -219,11 +212,8 @@ public void OnClientDisconnect(int client)
 
 	// Cleanup active abilities
 	SDKUnhook(client, SDKHook_OnTakeDamage, Hook_BuyMenu_OnTakeDamage);
-	Berserker_OnClientDisconnect(client);
-	AcidBath_OnClientDisconnect(client);
-	LifeStealer_OnClientDisconnect(client);
-	SpeedFreak_OnClientDisconnect(client);
-	ShoulderCannon_OnClientDisconnect(client);
+	// Active Abilities OnClientDisconnect removidas
+	// Ahora son parte del sistema de Abilities
 }
 
 public void DelegateBuyMenuModule()
@@ -334,13 +324,7 @@ stock void TimerUpdateClients()
 		UpdateTimers(i);
 
 		// Update active abilities
-		if (IsClientInGame(i) && !IsFakeClient(i))
-		{
-			Berserker_OnSecondTick(i);
-			AcidBath_OnSecondTick(i);
-			LifeStealer_OnSecondTick(i);
-			SpeedFreak_OnSecondTick(i);
-		}
+		// Removidas - ahora son parte del sistema de Abilities
 	}
 }
 stock void UpdateTimers(int client)
@@ -549,52 +533,21 @@ public Action Event_BuyMenu_PlayerDeath(Event event, const char[] name, bool don
 
 /**
  * Hook cuando un infectado común recibe daño
+ * NOTA: LifeStealer ahora es parte del sistema de Abilities
  */
 public Action Event_BuyMenu_InfectedHurt(Event event, const char[] name, bool dontBroadcast)
 {
-	int attacker = GetClientOfUserId(event.GetInt("attacker"));
-	int entityid = event.GetInt("entityid");
-	int damage	 = event.GetInt("amount");
-
-	// Verificar que el atacante es válido y tiene LifeStealer activo
-	if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
-	{
-		if (LifeStealer_IsActive(attacker))
-		{
-			// Aplicar robo de vida inmediatamente
-			LifeStealer_OnDamageDealt(attacker, entityid, float(damage));
-		}
-	}
-
+	// LifeStealer removido - ahora es parte del sistema de Abilities
 	return Plugin_Continue;
 }
 
 /**
  * Hook cuando un jugador (infectado especial/tank) recibe daño
+ * NOTA: LifeStealer ahora es parte del sistema de Abilities
  */
 public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
-	int attacker = GetClientOfUserId(event.GetInt("attacker"));
-	int victim	 = GetClientOfUserId(event.GetInt("userid"));
-	int damage	 = event.GetInt("dmg_health");
-
-	// Verificar que el atacante y víctima son válidos
-	if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
-	{
-		if (victim > 0 && victim <= MaxClients && IsClientInGame(victim))
-		{
-			// Solo procesar si la víctima es infectado (Team 3)
-			if (GetClientTeam(victim) == 3)
-			{
-				if (LifeStealer_IsActive(attacker))
-				{
-					// Aplicar robo de vida inmediatamente
-					LifeStealer_OnDamageDealt(attacker, victim, float(damage));
-				}
-			}
-		}
-	}
-
+	// LifeStealer removido - ahora es parte del sistema de Abilities
 	return Plugin_Continue;
 }
 
@@ -611,202 +564,36 @@ public Action Hook_BuyMenu_OnTakeDamage(int victim, int &attacker, int &inflicto
 // ============================================================================
 
 // ==================== ACTIVE ABILITIES HELPER FUNCTIONS ====================
+// NOTA: Estas funciones ya no se usan - las abilities fueron movidas al sistema de Abilities
 
 /**
  * Obtiene información de habilidad para el menú de compra (solo estado)
+ * DEPRECADA: Las abilities ahora son parte del sistema de Abilities (!abilities)
  */
 public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer, int maxlen, const char[] abilityName)
 {
-	if (StrEqual(abilityName, "Berserker", false))
-	{
-		int cooldown = Berserker_GetCooldown(client);
-		if (cooldown > 0)
-		{
-			Format(buffer, maxlen, "[CD: %is]", cooldown);
-		}
-		else if (Berserker_IsActive(client))
-		{
-			int remaining = Berserker_GetTimeRemaining(client);
-			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
-		}
-		else
-		{
-			Format(buffer, maxlen, "[Listo]");
-		}
-	}
-	else if (StrEqual(abilityName, "Acid Bath", false))
-	{
-		int cooldown = AcidBath_GetCooldown(client);
-		if (cooldown > 0)
-		{
-			Format(buffer, maxlen, "[CD: %is]", cooldown);
-		}
-		else if (AcidBath_IsActive(client))
-		{
-			int remaining = AcidBath_GetTimeRemaining(client);
-			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
-		}
-		else
-		{
-			Format(buffer, maxlen, "[Listo]");
-		}
-	}
-	else if (StrEqual(abilityName, "LifeStealer", false))
-	{
-		int cooldown = LifeStealer_GetCooldown(client);
-		if (cooldown > 0)
-		{
-			Format(buffer, maxlen, "[CD: %is]", cooldown);
-		}
-		else if (LifeStealer_IsActive(client))
-		{
-			int remaining = LifeStealer_GetTimeRemaining(client);
-			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
-		}
-		else
-		{
-			Format(buffer, maxlen, "[Listo]");
-		}
-	}
-	else if (StrEqual(abilityName, "Speed Freak", false))
-	{
-		int cooldown = SpeedFreak_GetCooldown(client);
-		if (cooldown > 0)
-		{
-			Format(buffer, maxlen, "[CD: %is]", cooldown);
-		}
-		else if (SpeedFreak_IsActive(client))
-		{
-			int remaining = SpeedFreak_GetTimeRemaining(client);
-			Format(buffer, maxlen, "[ACTIVO: %is]", remaining);
-		}
-		else
-		{
-			Format(buffer, maxlen, "[Listo]");
-		}
-	}
-	else if (StrEqual(abilityName, "Shoulder Cannon", false))
-	{
-		if (ShoulderCannon_IsActive(client))
-		{
-			int ammo = ShoulderCannon_GetAmmo(client);
-			Format(buffer, maxlen, "[Munición: %i]", ammo);
-		}
-		else
-		{
-			Format(buffer, maxlen, "[Equipar]");
-		}
-	}
+	// Función deprecada - abilities movidas al sistema de Abilities
+	Format(buffer, maxlen, "[Ver !abilities]");
 }
 
 /**
  * Activa una habilidad por nombre
+ * DEPRECADA: Las abilities ahora son parte del sistema de Abilities (!abilities)
  */
 public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName)
 {
-	if (StrEqual(abilityName, "Berserker", false))
-	{
-		if (!Berserker_HasMeleeEquipped(client))
-		{
-			char message[128];
-			Format(message, sizeof(message), "%T", "Ability_NeedMeleeWeapon", client, "Berserker");
-			PrintToChat(client, "\x05[Ability]\x01 %s", message);
-			return false;
-		}
-		else if (Berserker_GetCooldown(client) > 0)
-		{
-			char message[128];
-			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, Berserker_GetCooldown(client));
-			PrintToChat(client, "\x05[Ability]\x01 %s", message);
-			return false;
-		}
-
-		Berserker_Activate(client);
-		return true;
-	}
-	else if (StrEqual(abilityName, "Acid Bath", false))
-	{
-		if (AcidBath_GetCooldown(client) > 0)
-		{
-			char message[128];
-			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, AcidBath_GetCooldown(client));
-			PrintToChat(client, "\x05[Ability]\x01 %s", message);
-			return false;
-		}
-
-		AcidBath_Activate(client);
-		return true;
-	}
-	else if (StrEqual(abilityName, "LifeStealer", false))
-	{
-		if (LifeStealer_GetCooldown(client) > 0)
-		{
-			char message[128];
-			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, LifeStealer_GetCooldown(client));
-			PrintToChat(client, "\x05[Ability]\x01 %s", message);
-			return false;
-		}
-		LifeStealer_Activate(client);
-		return true;
-	}
-	else if (StrEqual(abilityName, "Speed Freak", false))
-	{
-		if (SpeedFreak_GetCooldown(client) > 0)
-		{
-			char message[128];
-			Format(message, sizeof(message), "%T", "Error_WaitSeconds", client, SpeedFreak_GetCooldown(client));
-			PrintToChat(client, "\x05[Ability]\x01 %s", message);
-			return false;
-		}
-		SpeedFreak_Activate(client);
-		return true;
-	}
-	else if (StrEqual(abilityName, "Shoulder Cannon", false))
-	{
-		// Toggle: equipar o desequipar
-		if (ShoulderCannon_IsActive(client))
-		{
-			ShoulderCannon_Remove(client);
-			char message[128];
-			Format(message, sizeof(message), "%T", "Ability_Unequipped", client, "Shoulder Cannon");
-			PrintToChat(client, "\x05[Ability]\x01 %s", message);
-		}
-		else
-		{
-			ShoulderCannon_Activate(client);
-		}
-		return true;
-	}
-
+	// Función deprecada - abilities movidas al sistema de Abilities
+	PrintToChat(client, "\x04[Eclipse]\x01 Las habilidades ahora están en el sistema de Abilities. Usa \x05!abilities\x01");
 	return false;
 }
 
 /**
  * Verifica si el jugador puede usar una habilidad
+ * DEPRECADA: Las abilities ahora son parte del sistema de Abilities (!abilities)
  */
 public bool ActiveAbilities_CanUseAbility(int client, int level, const char[] abilityName)
 {
-	if (StrEqual(abilityName, "Berserker", false))
-	{
-		return Berserker_CanUse(client, level);
-	}
-	else if (StrEqual(abilityName, "Acid Bath", false))
-	{
-		return AcidBath_CanUse(client, level);
-	}
-	else if (StrEqual(abilityName, "LifeStealer", false))
-	{
-		return LifeStealer_CanUse(client, level);
-	}
-	else if (StrEqual(abilityName, "Speed Freak", false))
-	{
-		return SpeedFreak_CanUse(client, level);
-	}
-	else if (StrEqual(abilityName, "Shoulder Cannon", false))
-	{
-		return ShoulderCannon_CanUse(client, level);
-	}
-
+	// Función deprecada - abilities movidas al sistema de Abilities
 	return false;
 }
 

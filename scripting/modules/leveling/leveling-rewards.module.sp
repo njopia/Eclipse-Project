@@ -106,7 +106,7 @@ public Action LevelingRewards_OnPlayerRunCmd(int client, int &buttons, int &impu
 	Knife_Process(client, buttons, playerLevel);
 
 	// Habilidades activas que necesiten procesamiento por tick
-	SpeedFreak_OnPlayerRunCmd(client);
+	// SpeedFreak removido - ahora es parte del sistema de Abilities
 
 	return Plugin_Continue;
 }

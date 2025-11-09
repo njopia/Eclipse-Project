@@ -194,8 +194,8 @@ stock void HealthBonus_EnsureMaxHealth(int client)
 
 	// NO aplicar Health Bonus si Speed Freak está activo
 	// Speed Freak tiene prioridad y maneja el HP máximo temporalmente
-	if (SpeedFreak_IsActive(client))
-		return;
+	// NOTA: Speed Freak ahora es parte del sistema de Abilities
+	// La verificación de conflicto de HP se maneja en el módulo de abilities
 
 	int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
 	int expectedMaxHealth = 100 + bonusAmount;

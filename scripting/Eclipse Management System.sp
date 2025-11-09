@@ -511,10 +511,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	LevelingRewards_OnPlayerRunCmd(client, buttons, impulse, vel, angles, weapon);
 
 	// Handle weapon fire for active abilities (Berserker swing speed)
-	if (buttons & IN_ATTACK)
-	{
-		Berserker_OnWeaponSwing(client);
-	}
+	// Removido - Berserker ahora es parte del sistema de Abilities
 
 	return Plugin_Continue;
 }
@@ -613,10 +610,7 @@ stock void ResetAllPlayersState()
 			ResetPowerYellCooldown(i);
 
 			// === LONG ACTIONS COOLDOWNS ===
-			Berserker_ResetCooldown(i);
-			AcidBath_ResetCooldown(i);
-			LifeStealer_ResetCooldown(i);
-			SpeedFreak_ResetCooldown(i);
+			// Removidas - ahora son parte del sistema de Abilities
 
 			// === DEPLOYABLES COOLDOWNS ===
 			DefenseGrid_ResetCooldown(i);
