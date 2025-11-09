@@ -24,9 +24,6 @@ int			g_iPlayerLevel[MAXPLAYERS + 1];
 int			g_iPlayerXP[MAXPLAYERS + 1];
 int			g_iTotalPlayerXP[MAXPLAYERS + 1];
 
-// --- Variable para detectar cambios de dificultad ---
-bool		g_bLastDifficultyWasEasy[MAXPLAYERS + 1]; // Rastrea si el jugador estaba en Easy la última vez
-
 // --- Variable para congelar currency durante eventos especiales (ej: Nightmare) ---
 bool		g_bCurrencyFrozen = false; // Cuando es true, no se gana/pierde/resetea currency
 
@@ -178,19 +175,16 @@ public void Leveling_OnClientDisconnect(int client)
 	if (client <= 0 || client > MaxClients || IsFakeClient(client))
 		return;
 
-	// Guardar datos en la base de datos (nivel/XP siempre, currency solo en Easy)
+	// Guardar datos en la base de datos (solo nivel/XP, currency es siempre temporal)
 	Leveling_UpdatePlayerDatabase(client);
-	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d, Currency: %d (Mode: %s)",
+	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d",
 			  client, g_iPlayerLevel[client], g_iPlayerXP[client],
-			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
-			  IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client],
-			  IsEasyDifficulty() ? "Easy/Persistent" : "Local/Temporary");
+			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client]);
 
 	// Reset de variables locales
 	g_iPlayerLevel[client] = 0;
 	g_iPlayerXP[client] = 0;
 	g_iTotalPlayerXP[client] = 0;
-	g_bLastDifficultyWasEasy[client] = false;
 }
 
 /**
@@ -215,10 +209,10 @@ public void Leveling_LoadPlayerData(int client)
 		return;
 	}
 
-	// Query para obtener datos del jugador (incluyendo currency)
+	// Query para obtener datos del jugador (solo nivel y XP, currency es temporal)
 	char query[512];
 	Format(query, sizeof(query),
-		   "SELECT current_level, current_xp, total_xp, current_currency FROM player_levels WHERE steamid = '%s'",
+		   "SELECT current_level, current_xp, total_xp FROM player_levels WHERE steamid = '%s'",
 		   steamid);
 
 	if (GetConVarBool(cvar_LevelingDebug))
@@ -258,26 +252,12 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerXP[client]		  = results.FetchInt(1);
 		g_iTotalPlayerXP[client]  = results.FetchInt(2);
 
-		// Cargar currency de BD SOLO si estamos en dificultad Easy
-		if (IsEasyDifficulty())
-		{
-			g_iPlayerCurrency[client] = results.FetchInt(3);
-			g_iPlayerLocalCurrency[client] = 0; // Resetear local
-			g_bLastDifficultyWasEasy[client] = true; // Marcar que está en Easy
-		}
-		else
-		{
-			// En otras dificultades, usar currency local temporal
-			g_iPlayerCurrency[client] = 0; // No usar BD
-			g_iPlayerLocalCurrency[client] = 0; // Iniciar desde 0
-			g_bLastDifficultyWasEasy[client] = false; // Marcar que NO está en Easy
-		}
+		// Currency es siempre temporal, se resetea en cada sesión
+		g_iPlayerLocalCurrency[client] = 0;
 
-		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, Currency: %d (Mode: %s)",
+		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d",
 				  client, g_iPlayerLevel[client], g_iPlayerXP[client],
-				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
-				  IsEasyDifficulty() ? g_iPlayerCurrency[client] : g_iPlayerLocalCurrency[client],
-				  IsEasyDifficulty() ? "Easy/Persistent" : "Local/Temporary");
+				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client]);
 
 		// Aplicar pasivas inmediatamente si el jugador está vivo
 		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
@@ -292,9 +272,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerLevel[client]	  = 0;
 		g_iPlayerXP[client]		  = 0;
 		g_iTotalPlayerXP[client]  = 0;
-		g_iPlayerCurrency[client] = 0;	  // Inicializar currency de BD
-		g_iPlayerLocalCurrency[client] = 0; // Inicializar currency local
-		g_bLastDifficultyWasEasy[client] = IsEasyDifficulty(); // Inicializar dificultad actual
+		g_iPlayerLocalCurrency[client] = 0; // Currency siempre temporal
 
 		char steamid[32];
 		GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
@@ -306,10 +284,10 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		char escapedName[MAX_NAME_LENGTH * 2];
 		SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-		// Insertar nuevo registro (incluyendo currency)
+		// Insertar nuevo registro (sin currency, solo nivel/XP)
 		char insertQuery[512];
 		Format(insertQuery, sizeof(insertQuery),
-			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency) VALUES ('%s', '%s', 0, 0, 0, 0)",
+			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp) VALUES ('%s', '%s', 0, 0, 0)",
 			   steamid, escapedName);
 
 		LogToFile(g_szLevelingLogPath, "[NEW] Creando nuevo jugador: %N (%s)", client, steamid);
@@ -389,7 +367,7 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 				  client, xp_amount, reason, g_iPlayerLevel[client], g_iPlayerXP[client], xp_required);
 	}
 
-	// Actualizar en base de datos (asíncrono) - Nivel y XP siempre, currency solo en Easy
+	// Actualizar en base de datos (asíncrono) - Solo nivel y XP, currency es temporal
 	Leveling_UpdatePlayerDatabase(client);
 }
 
@@ -489,25 +467,12 @@ public void Leveling_UpdatePlayerDatabase(int client)
 	char escapedName[MAX_NAME_LENGTH * 2];
 	SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-	// Determinar qué currency guardar: solo el persistente si está en Easy, sino no actualizar
+	// Guardar solo nivel y XP (currency es siempre temporal, no se guarda en BD)
 	char query[1024];
-
-	if (IsEasyDifficulty())
-	{
-		// En Easy: Guardar nivel, XP y currency
-		Format(query, sizeof(query),
-			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency, last_update) VALUES ('%s', '%s', %d, %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, current_currency = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
-			   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client],
-			   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_iPlayerCurrency[client], escapedName);
-	}
-	else
-	{
-		// En otras dificultades: Guardar solo nivel y XP, NO actualizar currency
-		Format(query, sizeof(query),
-			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, current_currency, last_update) VALUES ('%s', '%s', %d, %d, %d, 0, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
-			   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client],
-			   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], escapedName);
-	}
+	Format(query, sizeof(query),
+		   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, last_update) VALUES ('%s', '%s', %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
+		   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client],
+		   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], escapedName);
 
 	if (GetConVarBool(cvar_LevelingDebug))
 	{
@@ -583,59 +548,17 @@ public int Leveling_GetLevelProgress(int client)
 }
 
 /**
- * Detecta cambios de dificultad y resetea currency apropiadamente
- * ANTI-EXPLOIT: Previene que jugadores acumulen currency en Easy y lo usen en otras dificultades
+ * Detecta cambios de dificultad
+ * NOTA: Currency es siempre temporal ahora, no requiere reset por cambio de dificultad
+ * Esta función se mantiene por compatibilidad pero ya no gestiona currency
  *
- * NOTA: Durante eventos especiales (Nightmare, etc), el currency está congelado y no se resetea
+ * NOTA: Durante eventos especiales (Nightmare, etc), el currency está congelado
  */
 stock void Leveling_CheckDifficultyChange(int client)
 {
-	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
-		return;
-
-	// Si el currency está congelado (evento especial activo), no hacer nada
-	if (g_bCurrencyFrozen)
-	{
-		return;
-	}
-
-	bool currentlyEasy = IsEasyDifficulty();
-
-	// Si la dificultad cambió desde la última vez
-	if (currentlyEasy != g_bLastDifficultyWasEasy[client])
-	{
-		// Resetear AMBAS variables de currency para evitar exploits
-		g_iPlayerCurrency[client] = 0;
-		g_iPlayerLocalCurrency[client] = 0;
-
-		// Actualizar el estado de dificultad
-		g_bLastDifficultyWasEasy[client] = currentlyEasy;
-
-		// Si cambió a Easy, recargar desde BD
-		if (currentlyEasy)
-		{
-			Leveling_LoadPlayerData(client);
-			LogToFile(g_szLevelingLogPath, "[ANTI-EXPLOIT] %N - Cambio a Easy detectado, recargando currency desde BD", client);
-		}
-		else
-		{
-			// Si cambió desde Easy a otra dificultad, guardar en BD y resetear local
-			Leveling_UpdatePlayerDatabase(client);
-			LogToFile(g_szLevelingLogPath, "[ANTI-EXPLOIT] %N - Cambio desde Easy detectado, currency reseteado a 0", client);
-		}
-
-		// Notificar al jugador
-		char message[128];
-		if (currentlyEasy)
-		{
-			Format(message, sizeof(message), "Dificultad cambiada a Easy. Tu currency guardado ha sido cargado.");
-		}
-		else
-		{
-			Format(message, sizeof(message), "Dificultad cambiada. Currency reseteado (modo temporal).");
-		}
-		PrintToChat(client, "\x04[Sistema]\x01 %s", message);
-	}
+	// Esta función ahora es un stub (vacía) porque currency es siempre temporal
+	// Se mantiene para no romper llamadas existentes en el código
+	return;
 }
 
 /**

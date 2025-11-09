@@ -209,9 +209,9 @@ public int Native_GetLevelProgress(Handle plugin, int numParams)
 
 /**
  * Native: Get player's currency/points
- * Returns DB currency if Easy, or local currency for other difficulties
+ * NOTA: Currency es siempre temporal (nunca se guarda en BD)
  * @param client Client index
- * @return Player's currency amount
+ * @return Player's currency amount (always temporary)
  */
 public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 {
@@ -220,7 +220,7 @@ public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return 0;
 
-	// Use GetPlayerCurrency function that handles difficulty correctly
+	// Currency es siempre temporal
 	return GetPlayerCurrency(client);
 }
 
