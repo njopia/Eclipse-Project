@@ -60,6 +60,7 @@
 #tryinclude "modules/abilities/ability-heatseeker.sp"
 #tryinclude "modules/abilities/ability-speedfreak.sp"
 #tryinclude "modules/abilities/ability-healingaura.sp"
+#tryinclude "modules/abilities/ability-shouldercannon.sp"
 #tryinclude "modules/abilities/ability-soulshield.sp"
 #tryinclude "modules/abilities/ability-polymorph.sp"
 #tryinclude "modules/abilities/ability-instagib.sp"

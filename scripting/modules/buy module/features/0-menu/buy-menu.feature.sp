@@ -179,41 +179,11 @@ public void LongActionsMenu(int client)
 	char baseText[40];
 
 	// === HABILIDADES ACTIVAS (Basadas en nivel) ===
+	// NOTA: Estas habilidades ahora son parte del sistema de Abilities (!abilities)
+	// Se han movido a ser desbloqueables por nivel sin necesidad de currency
 
-	char abilityText[128];
-	char abilityName[64];
-	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_2, client);
-	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Berserker");
-	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-	g_LongActionsMenu.AddItem("ability_berserker", abilityText);
-
-	// char abilityText[128];
-	// char abilityName[64];
-	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_3, client);
-	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Acid Bath");
-	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-	g_LongActionsMenu.AddItem("ability_acidbath", abilityText);
-
-	// char abilityText[128];
-	// char abilityName[64];
-	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_4, client);
-	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "LifeStealer");
-	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-	g_LongActionsMenu.AddItem("ability_lifestealer", abilityText);
-
-	// char abilityText[128];
-	// char abilityName[64];
-	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_5, client);
-	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Speed Freak");
-	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-	g_LongActionsMenu.AddItem("ability_speedfreak", abilityText);
-
-	// char abilityText[128];
-	// char abilityName[64];
-	Format(abilityName, sizeof(abilityName), "%T", BM_CHOICE_2_6, client);
-	ActiveAbilities_GetAbilityInfo(client, playerLevel, baseText, sizeof(baseText), "Shoulder Cannon");
-	Format(abilityText, sizeof(abilityText), "%s %s", abilityName, baseText);
-	g_LongActionsMenu.AddItem("ability_shouldercannon", abilityText);
+	// Berserker, Acid Bath, LifeStealer, Speed Freak y Shoulder Cannon
+	// ahora se encuentran en el sistema de Abilities (nivel 5, 9, 12, 31, 35)
 
 	g_LongActionsMenu.ExitBackButton = true;
 	g_LongActionsMenu.ExitButton	 = true;
@@ -592,64 +562,10 @@ public int MenuHandler_LongActions(Menu menu, MenuAction action, int client, int
 {
 	if (action == MenuAction_Select)
 	{
-		char info[64];
-		menu.GetItem(param, info, sizeof(info));
-
-		// Berserker Ability
-		if (StrEqual(info, "ability_berserker"))
-		{
-			if (!ActiveAbilities_ActivateAbility(client, "Berserker"))
-			{
-				char errorMsg[128];
-				Format(errorMsg, sizeof(errorMsg), "%T", "Error_CannotActivate", client, "Berserker");
-				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			}
-		}
-		// Acid Bath Ability
-		else if (StrEqual(info, "ability_acidbath"))
-		{
-			if (!ActiveAbilities_ActivateAbility(client, "Acid Bath"))
-			{
-				char errorMsg[128];
-				Format(errorMsg, sizeof(errorMsg), "%T", "Error_CannotActivate", client, "Acid Bath");
-				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			}
-		}
-		// LifeStealer Ability
-		else if (StrEqual(info, "ability_lifestealer"))
-		{
-			if (!ActiveAbilities_ActivateAbility(client, "LifeStealer"))
-			{
-				char errorMsg[128];
-				Format(errorMsg, sizeof(errorMsg), "%T", "Error_CannotActivate", client, "LifeStealer");
-				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			}
-		}
-		// Speed Freak Ability
-		else if (StrEqual(info, "ability_speedfreak"))
-		{
-			if (!ActiveAbilities_ActivateAbility(client, "Speed Freak"))
-			{
-				char errorMsg[128];
-				Format(errorMsg, sizeof(errorMsg), "%T", "Error_CannotActivate", client, "Speed Freak");
-				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			}
-		}
-		// Shoulder Cannon Ability - Abrir menú
-		else if (StrEqual(info, "ability_shouldercannon"))
-		{
-			int playerLevel = Leveling_GetPlayerLevel(client);
-			if (ShoulderCannon_CanUse(client, playerLevel))
-			{
-				ShoulderCannon_OpenMenu(client);
-			}
-			else
-			{
-				char errorMsg[128];
-				Format(errorMsg, sizeof(errorMsg), "%T", "Error_NoAccess", client, "Shoulder Cannon");
-				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			}
-		}
+		// NOTA: Todas las abilities (Berserker, Acid Bath, LifeStealer, Speed Freak, Shoulder Cannon)
+		// han sido movidas al sistema de Abilities (!abilities)
+		// Este menú ya no contiene items activos
+		PrintToChat(client, "\x04[Eclipse]\x01 Las habilidades ahora están en el sistema de Abilities. Usa \x05!abilities\x01");
 	}
 	return 0;
 }

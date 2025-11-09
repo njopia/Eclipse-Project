@@ -15,9 +15,9 @@
 #define ABILITY_DURATION 60.0
 
 // Variables globales de estado de abilities
-bool g_bAbilityActive[MAXPLAYERS + 1][15];  // Estado activo de cada ability
-float g_fAbilityCooldown[MAXPLAYERS + 1][15];  // Tiempo de cooldown
-Handle g_hAbilityTimer[MAXPLAYERS + 1][15];  // Timers de duración
+bool g_bAbilityActive[MAXPLAYERS + 1][16];  // Estado activo de cada ability
+float g_fAbilityCooldown[MAXPLAYERS + 1][16];  // Tiempo de cooldown
+Handle g_hAbilityTimer[MAXPLAYERS + 1][16];  // Timers de duración
 
 // Índices de abilities
 enum AbilityIndex
@@ -34,9 +34,10 @@ enum AbilityIndex
 	Ability_HeatSeeker = 9,        // Lvl 27
 	Ability_SpeedFreak = 10,       // Lvl 31
 	Ability_HealingAura = 11,      // Lvl 33
-	Ability_Soulshield = 12,       // Lvl 37
-	Ability_Polymorph = 13,        // Lvl 39
-	Ability_Instagib = 14          // Lvl 46
+	Ability_ShoulderCannon = 12,   // Lvl 35
+	Ability_Soulshield = 13,       // Lvl 37
+	Ability_Polymorph = 14,        // Lvl 39
+	Ability_Instagib = 15          // Lvl 46
 }
 
 // ConVars
@@ -68,9 +69,13 @@ public void Abilities_OnPluginStart()
 	RegConsoleCmd("sm_heatseeker", Command_ActivateAbility_HeatSeeker);
 	RegConsoleCmd("sm_speedfreak", Command_ActivateAbility_SpeedFreak);
 	RegConsoleCmd("sm_healingaura", Command_ActivateAbility_HealingAura);
+	RegConsoleCmd("sm_shouldercannon", Command_ActivateAbility_ShoulderCannon);
 	RegConsoleCmd("sm_soulshield", Command_ActivateAbility_Soulshield);
 	RegConsoleCmd("sm_polymorph", Command_ActivateAbility_Polymorph);
 	RegConsoleCmd("sm_instagib", Command_ActivateAbility_Instagib);
+
+	// Precache de Shoulder Cannon
+	Ability_ShoulderCannon_Precache();
 }
 
 /**
@@ -109,7 +114,7 @@ public void Abilities_OnClientConnect(int client)
  */
 void Abilities_ResetPlayer(int client)
 {
-	for (int i = 0; i < 15; i++)
+	for (int i = 0; i < 16; i++)
 	{
 		g_bAbilityActive[client][i] = false;
 		g_fAbilityCooldown[client][i] = 0.0;
@@ -127,7 +132,7 @@ void Abilities_ResetPlayer(int client)
  */
 void Abilities_CleanupTimers(int client)
 {
-	for (int i = 0; i < 15; i++)
+	for (int i = 0; i < 16; i++)
 	{
 		if (g_hAbilityTimer[client][i] != INVALID_HANDLE)
 		{
@@ -155,6 +160,7 @@ int Abilities_GetRequiredLevel(AbilityIndex ability)
 		case Ability_HeatSeeker: return 27;
 		case Ability_SpeedFreak: return 31;
 		case Ability_HealingAura: return 33;
+		case Ability_ShoulderCannon: return 35;
 		case Ability_Soulshield: return 37;
 		case Ability_Polymorph: return 39;
 		case Ability_Instagib: return 46;
@@ -180,6 +186,7 @@ void Abilities_GetName(AbilityIndex ability, char[] buffer, int maxlen)
 		case Ability_HeatSeeker: strcopy(buffer, maxlen, "Heat Seeker");
 		case Ability_SpeedFreak: strcopy(buffer, maxlen, "Speed Freak");
 		case Ability_HealingAura: strcopy(buffer, maxlen, "Healing Aura");
+		case Ability_ShoulderCannon: strcopy(buffer, maxlen, "Shoulder Cannon");
 		case Ability_Soulshield: strcopy(buffer, maxlen, "Soulshield");
 		case Ability_Polymorph: strcopy(buffer, maxlen, "Polymorph");
 		case Ability_Instagib: strcopy(buffer, maxlen, "Instagib");
@@ -307,6 +314,7 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		case Ability_HeatSeeker: success = Ability_HeatSeeker_Activate(client);
 		case Ability_SpeedFreak: success = Ability_SpeedFreak_Activate(client);
 		case Ability_HealingAura: success = Ability_HealingAura_Activate(client);
+		case Ability_ShoulderCannon: success = Ability_ShoulderCannon_Activate(client);
 		case Ability_Soulshield: success = Ability_Soulshield_Activate(client);
 		case Ability_Polymorph: success = Ability_Polymorph_Activate(client);
 		case Ability_Instagib: success = Ability_Instagib_Activate(client);
@@ -384,6 +392,7 @@ void Abilities_Deactivate(int client, AbilityIndex ability)
 		case Ability_HeatSeeker: Ability_HeatSeeker_Deactivate(client);
 		case Ability_SpeedFreak: Ability_SpeedFreak_Deactivate(client);
 		case Ability_HealingAura: Ability_HealingAura_Deactivate(client);
+		case Ability_ShoulderCannon: Ability_ShoulderCannon_Deactivate(client);
 		case Ability_Soulshield: Ability_Soulshield_Deactivate(client);
 		case Ability_Polymorph: Ability_Polymorph_Deactivate(client);
 		case Ability_Instagib: Ability_Instagib_Deactivate(client);
@@ -428,7 +437,7 @@ void ShowAbilitiesMenu(int client)
 	char info[8];
 
 	// Listar todas las abilities desbloqueadas
-	for (int i = 1; i < 15; i++)
+	for (int i = 1; i < 16; i++)
 	{
 		AbilityIndex ability = view_as<AbilityIndex>(i);
 		int reqLevel = Abilities_GetRequiredLevel(ability);
@@ -574,6 +583,12 @@ public Action Command_ActivateAbility_SpeedFreak(int client, int args)
 public Action Command_ActivateAbility_HealingAura(int client, int args)
 {
 	Abilities_Activate(client, Ability_HealingAura);
+	return Plugin_Handled;
+}
+
+public Action Command_ActivateAbility_ShoulderCannon(int client, int args)
+{
+	Abilities_Activate(client, Ability_ShoulderCannon);
 	return Plugin_Handled;
 }
 

@@ -64,12 +64,7 @@ Handle cvar_CostNuclearStrike  = INVALID_HANDLE;
 #tryinclude "features/01-instants/power-yell.feature.sp"
 #tryinclude "features/01-instants/leap-of-desesperation.feature.sp"
 //////////////////////////////////////////////
-#tryinclude "features/02-long-actions/surv-speed.feature.sp"
-#tryinclude "features/02-long-actions/berserker.feature.sp"
-#tryinclude "features/02-long-actions/acid-bath.feature.sp"
-#tryinclude "features/02-long-actions/lifestealer.feature.sp"
-#tryinclude "features/02-long-actions/speed-freak.feature.sp"
-#tryinclude "features/02-long-actions/shoulder-cannon.feature.sp"
+// Long Actions removidas - ahora son Abilities desbloqueables por nivel
 //////////////////////////////////////////////
 ////// DEPLOYABLES ///////////////////////////
 #tryinclude "features/03-deployables/ammo.feature.sp"
@@ -605,28 +600,12 @@ public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dont
 
 /**
  * Hook para manejar daño (para todas las habilidades)
+ * NOTA: Berserker, Acid Bath, Lifestealer y Speed Freak ahora son parte del sistema de Abilities
  */
 public Action Hook_BuyMenu_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-	Action result = Plugin_Continue;
-
-	// Berserker - aumenta daño de melee del atacante
-	if (attacker > 0 && attacker <= MaxClients && IsClientInGame(attacker))
-	{
-		Action berserkerResult = Berserker_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
-		if (berserkerResult > result)
-			result = berserkerResult;
-	}
-
-	// Acid Bath - convierte daño de ácido en curación para la víctima
-	if (victim > 0 && victim <= MaxClients && IsClientInGame(victim))
-	{
-		Action acidBathResult = AcidBath_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
-		if (acidBathResult > result)
-			result = acidBathResult;
-	}
-
-	return result;
+	// Las habilidades de daño se manejan ahora en el sistema de Abilities
+	return Plugin_Continue;
 }
 
 // ============================================================================
