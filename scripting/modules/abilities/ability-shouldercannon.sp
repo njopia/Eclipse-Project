@@ -622,7 +622,7 @@ void ShoulderCannon_ShowMenu(int client)
 	if (!IsClientInGame(client) || GetClientTeam(client) != 2)
 		return;
 
-	int level = Leveling_GetLevel(client);
+	int level = Leveling_GetPlayerLevel(client);
 	if (level < 35)
 	{
 		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Necesitas nivel 35 para usar Shoulder Cannon (Actual: %d)", level);
@@ -699,7 +699,7 @@ public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, 
 		if (StrEqual(info, "autoequip"))
 		{
 			g_bShoulderCannon_AutoEquip[client] = !g_bShoulderCannon_AutoEquip[client];
-			Leveling_SavePlayerData(client);
+			Leveling_SaveShoulderCannonAutoEquip(client, g_bShoulderCannon_AutoEquip[client]);
 			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto-equip: %s",
 				g_bShoulderCannon_AutoEquip[client] ? "ON" : "OFF");
 			ShoulderCannon_ShowMenu(client);
