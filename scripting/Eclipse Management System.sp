@@ -209,9 +209,9 @@ public int Native_GetLevelProgress(Handle plugin, int numParams)
 
 /**
  * Native: Get player's currency/points
- * NOTA: Currency es siempre temporal (nunca se guarda en BD)
+ * NOTA: Currency persiste durante la sesión (se mantiene entre mapas, se resetea al desconectar)
  * @param client Client index
- * @return Player's currency amount (always temporary)
+ * @return Player's currency amount (session-persistent, not saved in DB)
  */
 public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 {
@@ -220,7 +220,7 @@ public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return 0;
 
-	// Currency es siempre temporal
+	// Currency persiste durante la sesión
 	return GetPlayerCurrency(client);
 }
 

@@ -8,7 +8,7 @@
 // currency-events y leveling-xp-events
 //
 // Un solo evento otorga AMBOS tipos de puntos:
-// - Currency Points (para compras en buy menu) - SIEMPRE TEMPORAL
+// - Currency Points (para compras) - Persiste entre mapas, se resetea al desconectar
 // - XP Points (para subir de nivel) - Se guarda en BD
 //==================================================
 
@@ -232,7 +232,7 @@ public void EclipsePointsUnified_OnClientDisconnect(int client)
  * Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
  *
  * NOTA: Este multiplicador afecta tanto a Currency como a XP
- * Currency es siempre temporal, XP se guarda en BD
+ * Currency persiste entre mapas (se resetea al desconectar), XP se guarda en BD
  *
  * @return Multiplicador de puntos según dificultad
  */
@@ -259,7 +259,8 @@ int GetDifficultyMultiplier()
 
 /**
  * Verifica si la dificultad actual es Easy
- * NOTA: Esta función se mantiene por compatibilidad, pero currency ya no se guarda en BD
+ * NOTA: Esta función se mantiene por compatibilidad
+ * Currency persiste entre mapas pero no se guarda en BD
  *
  * @return true si es Easy, false en caso contrario
  */
@@ -281,7 +282,7 @@ bool IsEasyDifficulty()
 /**
  * Otorga puntos UNIFICADOS a un jugador
  * Esta función otorga AMBOS tipos de puntos simultáneamente:
- * - Currency (para compras) - SIEMPRE TEMPORAL (nunca se guarda en BD)
+ * - Currency (para compras) - Persiste entre mapas, se resetea al desconectar (NO se guarda en BD)
  * - XP (para niveles) - Se guarda en BD
  *
  * Los puntos se multiplican según la dificultad:

@@ -175,11 +175,12 @@ public void Leveling_OnClientDisconnect(int client)
 	if (client <= 0 || client > MaxClients || IsFakeClient(client))
 		return;
 
-	// Guardar datos en la base de datos (solo nivel/XP, currency es siempre temporal)
+	// Guardar datos en la base de datos (solo nivel/XP, currency NO se guarda en BD)
 	Leveling_UpdatePlayerDatabase(client);
-	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d",
+	LogToFile(g_szLevelingLogPath, "[DISCONNECT] Guardando datos de %N - Level: %d, XP: %d/%d, Total XP: %d, Currency perdido: %d",
 			  client, g_iPlayerLevel[client], g_iPlayerXP[client],
-			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client]);
+			  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
+			  g_iPlayerLocalCurrency[client]);
 
 	// Reset de variables locales
 	g_iPlayerLevel[client] = 0;
@@ -252,12 +253,13 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerXP[client]		  = results.FetchInt(1);
 		g_iTotalPlayerXP[client]  = results.FetchInt(2);
 
-		// Currency es siempre temporal, se resetea en cada sesión
-		g_iPlayerLocalCurrency[client] = 0;
+		// Currency se mantiene durante toda la sesión (no se resetea entre mapas)
+		// Solo se resetea al desconectar o al iniciar el plugin
 
-		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d",
+		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, Currency: %d",
 				  client, g_iPlayerLevel[client], g_iPlayerXP[client],
-				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client]);
+				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
+				  g_iPlayerLocalCurrency[client]);
 
 		// Aplicar pasivas inmediatamente si el jugador está vivo
 		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
@@ -272,7 +274,8 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerLevel[client]	  = 0;
 		g_iPlayerXP[client]		  = 0;
 		g_iTotalPlayerXP[client]  = 0;
-		g_iPlayerLocalCurrency[client] = 0; // Currency siempre temporal
+		// Currency ya está inicializado en 0 por buyMenuOnPluginStart() o OnClientDisconnect()
+		// No lo tocamos aquí para no resetear el currency entre mapas
 
 		char steamid[32];
 		GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
@@ -549,7 +552,7 @@ public int Leveling_GetLevelProgress(int client)
 
 /**
  * Detecta cambios de dificultad
- * NOTA: Currency es siempre temporal ahora, no requiere reset por cambio de dificultad
+ * NOTA: Currency persiste entre mapas (durante toda la sesión), no requiere reset por cambio de dificultad
  * Esta función se mantiene por compatibilidad pero ya no gestiona currency
  *
  * NOTA: Durante eventos especiales (Nightmare, etc), el currency está congelado

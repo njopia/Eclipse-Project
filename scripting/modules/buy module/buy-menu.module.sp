@@ -30,9 +30,10 @@
 //==================================================
 
 // ================== CURRENCY SYSTEM ==================
-// Currency es SIEMPRE temporal (se resetea al desconectarse)
-// Se gana mediante kills, eventos, etc. pero no se guarda en BD
-int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency temporal para todas las dificultades (nunca se guarda en BD)
+// Currency persiste durante toda la sesión del jugador (se mantiene entre mapas)
+// Se resetea solo al desconectarse del servidor
+// NO se guarda en base de datos
+int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency de sesión (se mantiene entre mapas, se resetea al desconectar)
 
 // Buy Cost ConVars
 Handle cvar_CostConvertHP	   = INVALID_HANDLE;
@@ -174,7 +175,7 @@ public void OnClientDisconnect(int client)
 
 	g_fNextHint[client]		  = 0.0;
 	g_bHadMaxHealth[client]	  = false;
-	g_iPlayerLocalCurrency[client] = 0;	  // Reset currency on disconnect (always temporal)
+	g_iPlayerLocalCurrency[client] = 0;	  // Reset currency on disconnect (persiste entre mapas, se pierde al desconectar)
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
@@ -356,7 +357,7 @@ stock bool CanAffordPurchase(int client, int cost)
 	if (client <= 0 || !IsClientInGame(client))
 		return false;
 
-	// Currency es siempre temporal
+	// Currency persiste durante la sesión
 	return g_iPlayerLocalCurrency[client] >= cost;
 }
 
@@ -364,7 +365,7 @@ stock bool CanAffordPurchase(int client, int cost)
  * Attempt to purchase an item
  * Returns true if purchase was successful, false otherwise
  *
- * NOTA: Currency es siempre temporal (no se guarda en BD)
+ * NOTA: Currency persiste durante toda la sesión (se mantiene entre mapas, se pierde al desconectar)
  * Durante eventos especiales (Nightmare), el currency está congelado y no se puede comprar.
  */
 stock bool PurchaseItem(int client, int cost, const char[] itemName)
@@ -386,7 +387,7 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 		return false;
 	}
 
-	// Deduct currency (siempre temporal, nunca se guarda en BD)
+	// Deduct currency (persiste entre mapas, se resetea al desconectar)
 	g_iPlayerLocalCurrency[client] -= cost;
 
 	char message[128];
@@ -398,7 +399,7 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 /**
  * Award currency to player
  *
- * NOTA: Currency es siempre temporal (nunca se guarda en BD)
+ * NOTA: Currency persiste durante la sesión (se mantiene entre mapas, se resetea al desconectar)
  * Durante eventos especiales (Nightmare), el currency está congelado y no se otorgan puntos.
  */
 stock void AwardCurrency(int client, int amount, const char[] reason = "")
@@ -412,7 +413,7 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 		return;
 	}
 
-	// Agregar currency (siempre temporal, nunca se persiste en BD)
+	// Agregar currency (persiste entre mapas, se resetea al desconectar)
 	g_iPlayerLocalCurrency[client] += amount;
 
 	// Registrar en estadísticas
@@ -451,27 +452,27 @@ stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int top
 
 /**
  * Get player's current currency balance
- * NOTA: Currency es siempre temporal
+ * NOTA: Currency persiste durante la sesión (entre mapas)
  */
 stock int GetPlayerCurrency(int client)
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return 0;
 
-	// Currency es siempre temporal
+	// Currency persiste durante la sesión
 	return g_iPlayerLocalCurrency[client];
 }
 
 /**
  * Set player's currency directly (for admin commands, etc.)
- * NOTA: Currency es siempre temporal
+ * NOTA: Currency persiste durante la sesión (entre mapas)
  */
 stock void SetPlayerCurrency(int client, int amount)
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return;
 
-	// Currency es siempre temporal
+	// Currency persiste durante la sesión
 	g_iPlayerLocalCurrency[client] = amount;
 
 	char message[128];
