@@ -23,6 +23,7 @@ Handle		cvar_LevelingDebug			 = INVALID_HANDLE;
 int			g_iPlayerLevel[MAXPLAYERS + 1];
 int			g_iPlayerXP[MAXPLAYERS + 1];
 int			g_iTotalPlayerXP[MAXPLAYERS + 1];
+bool		g_bShoulderCannon_AutoEquip[MAXPLAYERS + 1];  // Auto-equipar Shoulder Cannon al spawnar
 
 // --- Variable para congelar currency durante eventos especiales (ej: Nightmare) ---
 bool		g_bCurrencyFrozen = false; // Cuando es true, no se gana/pierde/resetea currency
@@ -210,10 +211,10 @@ public void Leveling_LoadPlayerData(int client)
 		return;
 	}
 
-	// Query para obtener datos del jugador (solo nivel y XP, currency es temporal)
+	// Query para obtener datos del jugador (solo nivel, XP y preferencias, currency es temporal)
 	char query[512];
 	Format(query, sizeof(query),
-		   "SELECT current_level, current_xp, total_xp FROM player_levels WHERE steamid = '%s'",
+		   "SELECT current_level, current_xp, total_xp, shoulder_cannon_auto_equip FROM player_levels WHERE steamid = '%s'",
 		   steamid);
 
 	if (GetConVarBool(cvar_LevelingDebug))
@@ -252,14 +253,15 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerLevel[client]	  = results.FetchInt(0);
 		g_iPlayerXP[client]		  = results.FetchInt(1);
 		g_iTotalPlayerXP[client]  = results.FetchInt(2);
+		g_bShoulderCannon_AutoEquip[client] = view_as<bool>(results.FetchInt(3));
 
 		// Currency se mantiene durante toda la sesión (no se resetea entre mapas)
 		// Solo se resetea al desconectar o al iniciar el plugin
 
-		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, Currency: %d",
+		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, Currency: %d, AutoEquip: %d",
 				  client, g_iPlayerLevel[client], g_iPlayerXP[client],
 				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
-				  g_iPlayerLocalCurrency[client]);
+				  g_iPlayerLocalCurrency[client], g_bShoulderCannon_AutoEquip[client]);
 
 		// Aplicar pasivas inmediatamente si el jugador está vivo
 		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
@@ -274,6 +276,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iPlayerLevel[client]	  = 0;
 		g_iPlayerXP[client]		  = 0;
 		g_iTotalPlayerXP[client]  = 0;
+		g_bShoulderCannon_AutoEquip[client] = false;
 		// Currency ya está inicializado en 0 por buyMenuOnPluginStart() o OnClientDisconnect()
 		// No lo tocamos aquí para no resetear el currency entre mapas
 
@@ -287,10 +290,10 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		char escapedName[MAX_NAME_LENGTH * 2];
 		SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-		// Insertar nuevo registro (sin currency, solo nivel/XP)
+		// Insertar nuevo registro (sin currency, solo nivel/XP y preferencias)
 		char insertQuery[512];
 		Format(insertQuery, sizeof(insertQuery),
-			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp) VALUES ('%s', '%s', 0, 0, 0)",
+			   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, shoulder_cannon_auto_equip) VALUES ('%s', '%s', 0, 0, 0, 0)",
 			   steamid, escapedName);
 
 		LogToFile(g_szLevelingLogPath, "[NEW] Creando nuevo jugador: %N (%s)", client, steamid);
@@ -470,12 +473,12 @@ public void Leveling_UpdatePlayerDatabase(int client)
 	char escapedName[MAX_NAME_LENGTH * 2];
 	SQL_EscapeString(g_hDbPlayers, name, escapedName, sizeof(escapedName));
 
-	// Guardar solo nivel y XP (currency es siempre temporal, no se guarda en BD)
+	// Guardar nivel, XP y preferencias (currency es siempre temporal, no se guarda en BD)
 	char query[1024];
 	Format(query, sizeof(query),
-		   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, last_update) VALUES ('%s', '%s', %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
-		   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client],
-		   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], escapedName);
+		   "INSERT INTO player_levels (steamid, player_name, current_level, current_xp, total_xp, shoulder_cannon_auto_equip, last_update) VALUES ('%s', '%s', %d, %d, %d, %d, CURRENT_TIMESTAMP) ON DUPLICATE KEY UPDATE current_level = %d, current_xp = %d, total_xp = %d, shoulder_cannon_auto_equip = %d, player_name = '%s', last_update = CURRENT_TIMESTAMP",
+		   steamid, escapedName, g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_bShoulderCannon_AutoEquip[client],
+		   g_iPlayerLevel[client], g_iPlayerXP[client], g_iTotalPlayerXP[client], g_bShoulderCannon_AutoEquip[client], escapedName);
 
 	if (GetConVarBool(cvar_LevelingDebug))
 	{
@@ -597,6 +600,40 @@ public void Leveling_UnfreezeCurrency()
 public bool Leveling_IsCurrencyFrozen()
 {
 	return g_bCurrencyFrozen;
+}
+
+/**
+ * Guarda la preferencia de auto-equip de Shoulder Cannon
+ * @param client - ID del cliente
+ * @param autoEquip - Valor de auto-equip (true/false)
+ */
+public void Leveling_SaveShoulderCannonAutoEquip(int client, bool autoEquip)
+{
+	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client))
+		return;
+
+	g_bShoulderCannon_AutoEquip[client] = autoEquip;
+
+	// Guardar en base de datos inmediatamente
+	Leveling_UpdatePlayerDatabase(client);
+
+	if (GetConVarBool(cvar_LevelingDebug))
+	{
+		LogToFile(g_szLevelingLogPath, "[AUTOEQUIP] %N cambió auto-equip Shoulder Cannon a: %d", client, autoEquip);
+	}
+}
+
+/**
+ * Obtiene la preferencia de auto-equip de Shoulder Cannon
+ * @param client - ID del cliente
+ * @return - true si auto-equip está activado, false si no
+ */
+public bool Leveling_GetShoulderCannonAutoEquip(int client)
+{
+	if (client <= 0 || client > MaxClients)
+		return false;
+
+	return g_bShoulderCannon_AutoEquip[client];
 }
 
 /**

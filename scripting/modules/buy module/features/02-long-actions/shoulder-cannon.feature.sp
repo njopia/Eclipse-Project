@@ -94,6 +94,7 @@ public void ShoulderCannon_OnPluginStart()
 
 	// Hook de eventos
 	HookEvent("player_use", ShoulderCannon_Event_PlayerUse, EventHookMode_Post);
+	HookEvent("player_spawn", ShoulderCannon_Event_PlayerSpawn, EventHookMode_Post);
 
 	// Precache
 	PrecacheModel(MODEL_M60, true);
@@ -812,6 +813,50 @@ public Action ShoulderCannon_Event_PlayerUse(Event event, const char[] name, boo
 }
 
 /**
+ * Evento: player_spawn - Auto-equipa Shoulder Cannon si está habilitado
+ */
+public Action ShoulderCannon_Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+{
+	int client = GetClientOfUserId(event.GetInt("userid"));
+	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
+		return Plugin_Continue;
+
+	if (GetClientTeam(client) != 2)
+		return Plugin_Continue;
+
+	// Verificar si auto-equip está habilitado
+	if (!Leveling_GetShoulderCannonAutoEquip(client))
+		return Plugin_Continue;
+
+	// Pequeño delay para asegurar que el jugador esté completamente spawneado
+	CreateTimer(0.5, Timer_AutoEquipShoulderCannon, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+
+	return Plugin_Continue;
+}
+
+/**
+ * Timer para auto-equipar Shoulder Cannon después del spawn
+ */
+public Action Timer_AutoEquipShoulderCannon(Handle timer, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
+		return Plugin_Stop;
+
+	if (GetClientTeam(client) != 2)
+		return Plugin_Stop;
+
+	// Auto-equipar si no está ya equipado
+	if (!ShoulderCannon_HasCannon(client))
+	{
+		ShoulderCannon_Activate(client);
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto-equipado.");
+	}
+
+	return Plugin_Stop;
+}
+
+/**
  * Verifica si la clase es de munición
  */
 stock bool IsAmmoClass(const char[] classname)
@@ -972,6 +1017,7 @@ public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, 
 		else if (StrEqual(info, "autoequip"))
 		{
 			g_bShoulderCannon_AutoEquip[client] = !g_bShoulderCannon_AutoEquip[client];
+			Leveling_SaveShoulderCannonAutoEquip(client, g_bShoulderCannon_AutoEquip[client]);  // Guardar en BD
 			PrintToChat(client, "\x04[Shoulder Cannon]\x01 Auto Equip: %s", g_bShoulderCannon_AutoEquip[client] ? "Activado" : "Desactivado");
 			ShoulderCannon_OpenMenu(client);
 		}
