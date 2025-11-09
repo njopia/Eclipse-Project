@@ -18,7 +18,7 @@ bool Ability_Berserker_Activate(int client)
 
 	// Aplicar efecto de adrenalina por 60 segundos
 	// Esto aumenta velocidad de movimiento y velocidad de ataque
-	L4D2_AdrenalineUsed(client, 60.0);
+	L4D2_UseAdrenaline(client, 60.0);
 
 	// Grito de habilidad (efecto de sonido)
 	AbilityShout(client);
