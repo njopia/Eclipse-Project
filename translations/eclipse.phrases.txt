@@ -2444,4 +2444,73 @@
     "tr"  "Geri"
     "chi" "返回"
   }
+
+  // ====================================
+  // COW LEVEL TRANSLATIONS
+  // ====================================
+  "CowLevel_Welcome"
+  {
+    "en"  "Welcome to the Secret Cow Level!"
+    "es"  "¡Bienvenido al Nivel Secreto de las Vacas!"
+    "pt"  "Bem-vindo ao Nível Secreto das Vacas!"
+    "fr"  "Bienvenue au Niveau Secret des Vaches!"
+    "de"  "Willkommen im geheimen Kuh-Level!"
+    "ru"  "Добро пожаловать на Секретный Коровий Уровень!"
+    "it"  "Benvenuto al Livello Segreto delle Mucche!"
+    "pl"  "Witaj w Sekretnym Poziomie Krów!"
+    "tr"  "Gizli İnek Seviyesine Hoş Geldiniz!"
+    "chi" "欢迎来到秘密奶牛关卡！"
+  }
+  "CowLevel_Unlocked"
+  {
+    "en"  "Secret Cow Level Unlocked! Moo!"
+    "es"  "¡Nivel Secreto de Vacas Desbloqueado! ¡Muuu!"
+    "pt"  "Nível Secreto das Vacas Desbloqueado! Muuu!"
+    "fr"  "Niveau Secret des Vaches Débloqué! Meuh!"
+    "de"  "Geheimes Kuh-Level Freigeschaltet! Muh!"
+    "ru"  "Секретный Коровий Уровень Разблокирован! Му-у-у!"
+    "it"  "Livello Segreto delle Mucche Sbloccato! Muuu!"
+    "pl"  "Sekretny Poziom Krów Odblokowany! Muuu!"
+    "tr"  "Gizli İnek Seviyesi Açıldı! Möö!"
+    "chi" "秘密奶牛关卡已解锁！哞！"
+  }
+  "CowLevel_Activated"
+  {
+    "en"  "Cow Level has been activated"
+    "es"  "El Nivel de Vacas ha sido activado"
+    "pt"  "O Nível das Vacas foi ativado"
+    "fr"  "Le Niveau des Vaches a été activé"
+    "de"  "Kuh-Level wurde aktiviert"
+    "ru"  "Коровий уровень активирован"
+    "it"  "Il Livello delle Mucche è stato attivato"
+    "pl"  "Poziom Krów został aktywowany"
+    "tr"  "İnek Seviyesi etkinleştirildi"
+    "chi" "奶牛关卡已激活"
+  }
+  "CowLevel_Deactivated"
+  {
+    "en"  "Cow Level has been deactivated"
+    "es"  "El Nivel de Vacas ha sido desactivado"
+    "pt"  "O Nível das Vacas foi desativado"
+    "fr"  "Le Niveau des Vaches a été désactivé"
+    "de"  "Kuh-Level wurde deaktiviert"
+    "ru"  "Коровий уровень деактивирован"
+    "it"  "Il Livello delle Mucche è stato disattivato"
+    "pl"  "Poziom Krów został dezaktywowany"
+    "tr"  "İnek Seviyesi devre dışı bırakıldı"
+    "chi" "奶牛关卡已停用"
+  }
+  "CowLevel_Ended"
+  {
+    "en"  "The Secret Cow Level has ended"
+    "es"  "El Nivel Secreto de Vacas ha terminado"
+    "pt"  "O Nível Secreto das Vacas terminou"
+    "fr"  "Le Niveau Secret des Vaches est terminé"
+    "de"  "Das geheime Kuh-Level ist beendet"
+    "ru"  "Секретный Коровий Уровень завершён"
+    "it"  "Il Livello Segreto delle Mucche è terminato"
+    "pl"  "Sekretny Poziom Krów się zakończył"
+    "tr"  "Gizli İnek Seviyesi sona erdi"
+    "chi" "秘密奶牛关卡已结束"
+  }
 }

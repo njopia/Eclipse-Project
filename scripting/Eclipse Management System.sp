@@ -90,6 +90,7 @@
 // === GAME MODES MODULE ===
 //==================================================
 #tryinclude "modules/modes/bloodmoon.module.sp"
+#tryinclude "modules/modes/cow-level.module.sp"
 
 //==================================================
 // === FRAGS SYSTEM MODULE ===
@@ -302,6 +303,7 @@ public void OnPluginStart()
 
 	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
+	CowLevel_OnPluginStart();
 
 	// Initialize frags system
 	FragsSystem_OnPluginStart();
@@ -389,6 +391,7 @@ public void OnMapStart()
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
 	Bloodmoon_OnMapStart();
+	CowLevel_OnMapStart();
 	NuclearStrike_OnMapStart();
 
 	// Initialize HUD
@@ -417,6 +420,9 @@ public void OnMapStart()
 public void OnMapEnd()
 {
 	LogToFile(logfilepath, "|               MAP END                     |");
+
+	// Cleanup game modes
+	CowLevel_OnMapEnd();
 
 	// Cleanup HUD
 #if defined _SCRIPTED_HUD_MODULE_
@@ -459,6 +465,9 @@ public void OnClientPutInServer(int client)
 
 	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
+
+	// Hook for Cow Level
+	CowLevel_OnClientPutInServer(client);
 
 	// Initialize leveling UI
 	LevelingUI_OnClientConnect(client);
