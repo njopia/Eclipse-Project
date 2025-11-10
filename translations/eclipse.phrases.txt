@@ -2446,6 +2446,75 @@
   }
 
   // ====================================
+  // DIFFICULTY ORCHESTRATOR TRANSLATIONS
+  // ====================================
+  "DiffOrch_BloodmoonUnlocked"
+  {
+    "en"  "Bloodmoon Difficulty Unlocked!"
+    "es"  "¡Dificultad Luna de Sangre Desbloqueada!"
+    "pt"  "Dificuldade Lua de Sangue Desbloqueada!"
+    "fr"  "Difficulté Lune de Sang Débloquée!"
+    "de"  "Blutmond-Schwierigkeit Freigeschaltet!"
+    "ru"  "Сложность Кровавая Луна Разблокирована!"
+    "it"  "Difficoltà Luna di Sangue Sbloccata!"
+    "pl"  "Trudność Krwawa Księżyc Odblokowana!"
+    "tr"  "Kanlı Ay Zorluğu Açıldı!"
+    "chi" "血月难度已解锁！"
+  }
+  "DiffOrch_HellUnlocked"
+  {
+    "en"  "Hell Difficulty Unlocked!"
+    "es"  "¡Dificultad Infierno Desbloqueada!"
+    "pt"  "Dificuldade Inferno Desbloqueada!"
+    "fr"  "Difficulté Enfer Débloquée!"
+    "de"  "Hölle-Schwierigkeit Freigeschaltet!"
+    "ru"  "Сложность Ад Разблокирована!"
+    "it"  "Difficoltà Inferno Sbloccata!"
+    "pl"  "Trudność Piekło Odblokowana!"
+    "tr"  "Cehennem Zorluğu Açıldı!"
+    "chi" "地狱难度已解锁！"
+  }
+  "DiffOrch_InfernoUnlocked"
+  {
+    "en"  "Inferno Difficulty Unlocked!"
+    "es"  "¡Dificultad Infierno Ardiente Desbloqueada!"
+    "pt"  "Dificuldade Inferno Desbloqueada!"
+    "fr"  "Difficulté Enfer Ardent Débloquée!"
+    "de"  "Inferno-Schwierigkeit Freigeschaltet!"
+    "ru"  "Сложность Инферно Разблокирована!"
+    "it"  "Difficoltà Inferno Ardente Sbloccata!"
+    "pl"  "Trudność Piekło Płonące Odblokowana!"
+    "tr"  "Cehennem Ateşi Zorluğu Açıldı!"
+    "chi" "炼狱难度已解锁！"
+  }
+  "DiffOrch_CowLevelUnlocked"
+  {
+    "en"  "Secret Cow Level Unlocked!"
+    "es"  "¡Nivel Secreto de Vacas Desbloqueado!"
+    "pt"  "Nível Secreto das Vacas Desbloqueado!"
+    "fr"  "Niveau Secret des Vaches Débloqué!"
+    "de"  "Geheimes Kuh-Level Freigeschaltet!"
+    "ru"  "Секретный Коровий Уровень Разблокирован!"
+    "it"  "Livello Segreto delle Mucche Sbloccato!"
+    "pl"  "Sekretny Poziom Krów Odblokowany!"
+    "tr"  "Gizli İnek Seviyesi Açıldı!"
+    "chi" "秘密奶牛关卡已解锁！"
+  }
+  "DiffOrch_AllCompleted"
+  {
+    "en"  "You have conquered all difficulties! Congratulations!"
+    "es"  "¡Has conquistado todas las dificultades! ¡Felicitaciones!"
+    "pt"  "Você conquistou todas as dificuldades! Parabéns!"
+    "fr"  "Vous avez conquis toutes les difficultés! Félicitations!"
+    "de"  "Sie haben alle Schwierigkeiten gemeistert! Glückwunsch!"
+    "ru"  "Вы покорили все сложности! Поздравляем!"
+    "it"  "Hai conquistato tutte le difficoltà! Congratulazioni!"
+    "pl"  "Pokonałeś wszystkie trudności! Gratulacje!"
+    "tr"  "Tüm zorlukları fethettiniz! Tebrikler!"
+    "chi" "您已征服所有难度！恭喜！"
+  }
+
+  // ====================================
   // COW LEVEL TRANSLATIONS
   // ====================================
   "CowLevel_Welcome"

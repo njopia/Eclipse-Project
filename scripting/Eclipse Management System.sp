@@ -89,6 +89,7 @@
 //==================================================
 // === GAME MODES MODULE ===
 //==================================================
+#tryinclude "modules/modes/difficulty-orchestrator.module.sp"
 #tryinclude "modules/modes/bloodmoon.module.sp"
 #tryinclude "modules/modes/cow-level.module.sp"
 
@@ -301,6 +302,9 @@ public void OnPluginStart()
 	// Initialize unified points system
 	EclipsePointsUnified_OnPluginStart();
 
+	// Initialize game mode orchestrator (MUST be before individual modes)
+	DifficultyOrchestrator_OnPluginStart();
+
 	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
 	CowLevel_OnPluginStart();
@@ -390,6 +394,10 @@ public void OnMapStart()
 	// Initialize buy menu modules
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
+
+	// Initialize difficulty orchestrator (MUST be before individual modes)
+	DifficultyOrchestrator_OnMapStart();
+
 	Bloodmoon_OnMapStart();
 	CowLevel_OnMapStart();
 	NuclearStrike_OnMapStart();
