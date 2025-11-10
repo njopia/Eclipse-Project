@@ -90,6 +90,8 @@
 // === GAME MODES MODULE ===
 //==================================================
 #tryinclude "modules/modes/bloodmoon.module.sp"
+#tryinclude "modules/modes/hell.module.sp"
+#tryinclude "modules/modes/inferno.module.sp"
 
 //==================================================
 // === FRAGS SYSTEM MODULE ===
@@ -302,6 +304,8 @@ public void OnPluginStart()
 
 	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
+	Hell_OnPluginStart();
+	Inferno_OnPluginStart();
 
 	// Initialize frags system
 	FragsSystem_OnPluginStart();
@@ -389,6 +393,8 @@ public void OnMapStart()
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
 	Bloodmoon_OnMapStart();
+	Hell_OnMapStart();
+	Inferno_OnMapStart();
 	NuclearStrike_OnMapStart();
 
 	// Initialize HUD
@@ -459,6 +465,8 @@ public void OnClientPutInServer(int client)
 
 	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
+	Hell_OnClientPutInServer(client);
+	Inferno_OnClientPutInServer(client);
 
 	// Initialize leveling UI
 	LevelingUI_OnClientConnect(client);
