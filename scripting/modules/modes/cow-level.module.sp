@@ -29,7 +29,6 @@ int    g_iCowLevel_ColorCorrectionRef = -1;
 int    g_iCowLevel_FogVolumeRef = -1;
 int    g_iCowLevelSpawns = 0;
 float  g_fCowLevel_LastPanicEvent = 0.0;
-float  g_fCowLevel_MapStartTime = 0.0;
 Handle g_hCowLevel_EventTimer = null;
 
 // Array para almacenar referencias de cows spawneadas
@@ -91,8 +90,6 @@ public void CowLevel_ConVarChanged(Handle convar, const char[] oldValue, const c
  */
 public void CowLevel_OnMapStart()
 {
-	g_fCowLevel_MapStartTime = GetGameTime();
-
 	// Precache models
 	PrecacheModel(MODEL_COW, true);
 	PrecacheModel(MODEL_COWPILE, true);
