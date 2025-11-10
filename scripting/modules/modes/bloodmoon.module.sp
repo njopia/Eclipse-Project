@@ -1011,9 +1011,17 @@ bool Bloodmoon_IsFinaleActive()
  */
 void Bloodmoon_CreateColorCorrection(const char[] fileName, float weight)
 {
+	LogMessage("[Bloodmoon] Creating color_correction entity...");
+
 	// 1. Crear color_correction entity
 	int colorEnt = CreateEntityByName("color_correction");
-	if (colorEnt == -1) return;
+	if (colorEnt == -1)
+	{
+		LogMessage("[Bloodmoon] ERROR: Failed to create color_correction entity!");
+		return;
+	}
+
+	LogMessage("[Bloodmoon] color_correction entity created: %d", colorEnt);
 
 	DispatchKeyValue(colorEnt, "spawnflags", "2");
 
@@ -1037,28 +1045,50 @@ void Bloodmoon_CreateColorCorrection(const char[] fileName, float weight)
 	float origin[3] = {0.0, 0.0, 0.0};
 	TeleportEntity(colorEnt, origin, NULL_VECTOR, NULL_VECTOR);
 
-	g_iColorCorrectionRef = EntIndexToEntRef(colorEnt);
+	// Validate entity is still valid before creating reference
+	if (IsValidEntity(colorEnt))
+	{
+		g_iColorCorrectionRef = EntIndexToEntRef(colorEnt);
+		LogMessage("[Bloodmoon] color_correction spawned and enabled (ref: %d)", g_iColorCorrectionRef);
+	}
+	else
+	{
+		LogMessage("[Bloodmoon] ERROR: color_correction entity became invalid after spawn!");
+		g_iColorCorrectionRef = -1;
+	}
 
 	// 2. Crear fog_volume para aplicar color correction globalmente
+	LogMessage("[Bloodmoon] Creating fog_volume entity for color correction...");
 	int fogVolEnt = CreateEntityByName("fog_volume");
-	if (fogVolEnt == -1) return;
+	if (fogVolEnt == -1)
+	{
+		LogMessage("[Bloodmoon] ERROR: Failed to create fog_volume entity!");
+		return;
+	}
 
+	LogMessage("[Bloodmoon] fog_volume entity created: %d", fogVolEnt);
+
+	DispatchKeyValue(fogVolEnt, "targetname", "bloodmoon_fogvolume");
 	DispatchKeyValue(fogVolEnt, "ColorCorrectionName", tName);
-	DispatchKeyValue(fogVolEnt, "spawnflags", "0");
+
+	// Usar DispatchKeyValue en vez de SetEntPropVector (más seguro)
+	DispatchKeyValue(fogVolEnt, "mins", "-10000 -10000 -10000");
+	DispatchKeyValue(fogVolEnt, "maxs", "10000 10000 10000");
 
 	DispatchSpawn(fogVolEnt);
 	ActivateEntity(fogVolEnt);
-	AcceptEntityInput(fogVolEnt, "Enable");
 
-	// Hacer el fog_volume infinito (cubre todo el mapa)
-	float vMins[3] = {-99999.0, -99999.0, -99999.0};
-	float vMaxs[3] = {99999.0, 99999.0, 99999.0};
-	SetEntPropVector(fogVolEnt, Prop_Send, "m_vecMins", vMins);
-	SetEntPropVector(fogVolEnt, Prop_Send, "m_vecMaxs", vMaxs);
-
-	TeleportEntity(fogVolEnt, origin, NULL_VECTOR, NULL_VECTOR);
-
-	g_iFogVolumeRef = EntIndexToEntRef(fogVolEnt);
+	// Validate entity is still valid before creating reference
+	if (IsValidEntity(fogVolEnt))
+	{
+		g_iFogVolumeRef = EntIndexToEntRef(fogVolEnt);
+		LogMessage("[Bloodmoon] fog_volume spawned (ref: %d)", g_iFogVolumeRef);
+	}
+	else
+	{
+		LogMessage("[Bloodmoon] ERROR: fog_volume entity became invalid after spawn!");
+		g_iFogVolumeRef = -1;
+	}
 
 	// Desactivar otros fog_volume entities
 	int entity = -1;
