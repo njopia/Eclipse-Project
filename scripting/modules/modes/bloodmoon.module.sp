@@ -814,21 +814,11 @@ public Action Bloodmoon_Timer_Events(Handle timer)
 }
 
 /**
- * Spawnea un Tank usando left4dhooks si está disponible, sino usando fake client
+ * Spawnea un Tank usando fake client
+ * TODO: Agregar soporte para left4dhooks cuando esté disponible
  */
 void Bloodmoon_SpawnTank()
 {
-	// Intentar con left4dhooks primero (más confiable)
-	#if defined _l4dh_included
-	if (L4D_IsMapRunning())
-	{
-		L4D_SpawnTank(NULL_VECTOR, NULL_VECTOR);
-		g_iTankCount++;
-		return;
-	}
-	#endif
-
-	// Fallback: método tradicional con fake client
 	int bot = CreateFakeClient("Tank");
 	if (bot > 0)
 	{
@@ -866,15 +856,12 @@ public Action Timer_KickBot(Handle timer, int userid)
 }
 
 /**
- * Fuerza un panic event usando left4dhooks si está disponible
+ * Fuerza un panic event usando comando director
+ * TODO: Agregar soporte para left4dhooks cuando esté disponible
  */
 void Bloodmoon_ForcePanicEvent()
 {
-	#if defined _l4dh_included
-	// Usar left4dhooks si está disponible
-	L4D_ForcePanicEvent();
-	#else
-	// Fallback: usar comando director
+	// Usar comando director
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && !IsFakeClient(i))
@@ -886,7 +873,6 @@ void Bloodmoon_ForcePanicEvent()
 			break;
 		}
 	}
-	#endif
 }
 
 /**
