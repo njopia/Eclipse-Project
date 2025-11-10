@@ -1045,15 +1045,15 @@ void Bloodmoon_CreateColorCorrection(const char[] fileName, float weight)
 	float origin[3] = {0.0, 0.0, 0.0};
 	TeleportEntity(colorEnt, origin, NULL_VECTOR, NULL_VECTOR);
 
-	// Validate entity is still valid before creating reference
-	if (IsValidEntity(colorEnt))
+	// Validate entity index is in valid range and entity is valid
+	if (colorEnt > 0 && IsValidEntity(colorEnt))
 	{
 		g_iColorCorrectionRef = EntIndexToEntRef(colorEnt);
 		LogMessage("[Bloodmoon] color_correction spawned and enabled (ref: %d)", g_iColorCorrectionRef);
 	}
 	else
 	{
-		LogMessage("[Bloodmoon] ERROR: color_correction entity became invalid after spawn!");
+		LogMessage("[Bloodmoon] ERROR: color_correction entity became invalid after spawn (index: %d)!", colorEnt);
 		g_iColorCorrectionRef = -1;
 	}
 
@@ -1078,15 +1078,15 @@ void Bloodmoon_CreateColorCorrection(const char[] fileName, float weight)
 	DispatchSpawn(fogVolEnt);
 	ActivateEntity(fogVolEnt);
 
-	// Validate entity is still valid before creating reference
-	if (IsValidEntity(fogVolEnt))
+	// Validate entity index is in valid range and entity is valid
+	if (fogVolEnt > 0 && IsValidEntity(fogVolEnt))
 	{
 		g_iFogVolumeRef = EntIndexToEntRef(fogVolEnt);
 		LogMessage("[Bloodmoon] fog_volume spawned (ref: %d)", g_iFogVolumeRef);
 	}
 	else
 	{
-		LogMessage("[Bloodmoon] ERROR: fog_volume entity became invalid after spawn!");
+		LogMessage("[Bloodmoon] ERROR: fog_volume entity became invalid after spawn (index: %d)!", fogVolEnt);
 		g_iFogVolumeRef = -1;
 	}
 

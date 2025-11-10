@@ -567,15 +567,15 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	ActivateEntity(colorEnt);
 	AcceptEntityInput(colorEnt, "Enable");
 
-	// Validate entity is still valid before creating reference
-	if (IsValidEntity(colorEnt))
+	// Validate entity index is in valid range and entity is valid
+	if (colorEnt > 0 && IsValidEntity(colorEnt))
 	{
 		g_iCowLevel_ColorCorrectionRef = EntIndexToEntRef(colorEnt);
 		LogMessage("[Cow Level] color_correction spawned and enabled (ref: %d)", g_iCowLevel_ColorCorrectionRef);
 	}
 	else
 	{
-		LogMessage("[Cow Level] ERROR: color_correction entity became invalid after spawn!");
+		LogMessage("[Cow Level] ERROR: color_correction entity became invalid after spawn (index: %d)!", colorEnt);
 		g_iCowLevel_ColorCorrectionRef = -1;
 	}
 
@@ -600,15 +600,15 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	DispatchSpawn(fogVolEnt);
 	ActivateEntity(fogVolEnt);
 
-	// Validate entity is still valid before creating reference
-	if (IsValidEntity(fogVolEnt))
+	// Validate entity index is in valid range and entity is valid
+	if (fogVolEnt > 0 && IsValidEntity(fogVolEnt))
 	{
 		g_iCowLevel_FogVolumeRef = EntIndexToEntRef(fogVolEnt);
 		LogMessage("[Cow Level] fog_volume spawned (ref: %d)", g_iCowLevel_FogVolumeRef);
 	}
 	else
 	{
-		LogMessage("[Cow Level] ERROR: fog_volume entity became invalid after spawn!");
+		LogMessage("[Cow Level] ERROR: fog_volume entity became invalid after spawn (index: %d)!", fogVolEnt);
 		g_iCowLevel_FogVolumeRef = -1;
 	}
 }
