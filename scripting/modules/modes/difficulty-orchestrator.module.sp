@@ -375,8 +375,10 @@ void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 		}
 		case MODE_BLOODMOON:
 		{
-			if (!GetConVarBool(g_hBloodmoon_Enable))
-				SetConVarBool(g_hBloodmoon_Enable, true);
+			// Forzar toggle para garantizar que el hook se dispare
+			if (GetConVarBool(g_hBloodmoon_Enable))
+				SetConVarBool(g_hBloodmoon_Enable, false);
+			SetConVarBool(g_hBloodmoon_Enable, true);
 		}
 		case MODE_HELL:
 		{
@@ -390,8 +392,10 @@ void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 		}
 		case MODE_COWLEVEL:
 		{
-			if (!GetConVarBool(g_hCowLevel_Enable))
-				SetConVarBool(g_hCowLevel_Enable, true);
+			// Forzar toggle para garantizar que el hook se dispare
+			if (GetConVarBool(g_hCowLevel_Enable))
+				SetConVarBool(g_hCowLevel_Enable, false);
+			SetConVarBool(g_hCowLevel_Enable, true);
 		}
 	}
 }

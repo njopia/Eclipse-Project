@@ -91,7 +91,7 @@ float  g_fMapStartTime = 0.0;						// Timestamp del inicio del mapa
 public void Bloodmoon_OnPluginStart()
 {
 	// ConVars principales
-	g_cvar_Bloodmoon_Enable = CreateConVar("bloodmoon_enable", "1", "Habilita el sistema de Bloodmoon", FCVAR_PLUGIN);
+	g_cvar_Bloodmoon_Enable = CreateConVar("bloodmoon_enable", "0", "Habilita el sistema de Bloodmoon", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_DmgMult = CreateConVar("bloodmoon_damage_mult", "1.35", "Multiplicador de daño a Survivors", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_Fade = CreateConVar("bloodmoon_fade", "1", "Fade rojo persistente", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_ChangeDiff = CreateConVar("bloodmoon_change_difficulty", "1", "Cambiar a Experto", FCVAR_PLUGIN);
