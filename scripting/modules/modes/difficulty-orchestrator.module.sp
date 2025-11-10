@@ -101,6 +101,13 @@ public void DifficultyOrchestrator_OnPluginStart()
 	// Hook ConVar changes para detectar activaciones manuales
 	HookConVarChange(g_cvar_DiffOrch_MutualExclusion, ConVarChanged_MutualExclusion);
 
+	// Hook cambios en ConVars de modos individuales para enforcar mutual exclusion
+	HookConVarChange(g_cvar_Bloodmoon_Enable, ConVarChanged_ModeActivation);
+	HookConVarChange(g_cvar_CowLevel_Enable, ConVarChanged_ModeActivation);
+	// TODO: Agregar hooks cuando Hell e Inferno estén implementados
+	// HookConVarChange(g_cvar_Hell_Enable, ConVarChanged_ModeActivation);
+	// HookConVarChange(g_cvar_Inferno_Enable, ConVarChanged_ModeActivation);
+
 	// Comandos admin
 	RegAdminCmd("sm_diffmode", Command_DiffMode, ADMFLAG_ROOT, "Gestionar modos de dificultad");
 	RegAdminCmd("sm_resetprogression", Command_ResetProgression, ADMFLAG_ROOT, "Resetear progresión de dificultad");
@@ -385,6 +392,67 @@ public void ConVarChanged_MutualExclusion(Handle convar, const char[] oldValue, 
 		// Si se activa mutual exclusion, aplicar inmediatamente
 		DifficultyOrchestrator_DetectActiveMode();
 		DifficultyOrchestrator_EnforceMutualExclusion(g_CurrentMode);
+	}
+}
+
+/**
+ * Hook: Cambio en ConVars de activación de modos individuales
+ * Detecta cuando un modo es activado manualmente y aplica mutual exclusion
+ */
+public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, const char[] newValue)
+{
+	if (!GetConVarBool(g_cvar_DiffOrch_Enable))
+		return;
+
+	if (!GetConVarBool(g_cvar_DiffOrch_MutualExclusion))
+		return;
+
+	// Solo procesar si el modo fue activado (0 → 1)
+	int oldVal = StringToInt(oldValue);
+	int newVal = StringToInt(newValue);
+
+	if (oldVal == 1 && newVal == 1)
+		return; // No hubo cambio real
+
+	if (newVal == 1)
+	{
+		// Determinar qué modo fue activado
+		DifficultyMode activatedMode = MODE_NONE;
+
+		if (convar == g_cvar_Bloodmoon_Enable)
+			activatedMode = MODE_BLOODMOON;
+		else if (convar == g_cvar_CowLevel_Enable)
+			activatedMode = MODE_COWLEVEL;
+		// TODO: Agregar Hell e Inferno cuando estén implementados
+
+		if (activatedMode != MODE_NONE)
+		{
+			LogMessage("[Difficulty Orchestrator] Manual activation detected: %d", activatedMode);
+
+			// Actualizar modo actual
+			g_PreviousMode = g_CurrentMode;
+			g_CurrentMode = activatedMode;
+
+			// Enforcar mutual exclusion
+			DifficultyOrchestrator_EnforceMutualExclusion(activatedMode);
+		}
+	}
+	else if (newVal == 0)
+	{
+		// Modo desactivado - si era el modo actual, resetear
+		DifficultyMode deactivatedMode = MODE_NONE;
+
+		if (convar == g_cvar_Bloodmoon_Enable)
+			deactivatedMode = MODE_BLOODMOON;
+		else if (convar == g_cvar_CowLevel_Enable)
+			deactivatedMode = MODE_COWLEVEL;
+
+		if (deactivatedMode == g_CurrentMode)
+		{
+			LogMessage("[Difficulty Orchestrator] Current mode deactivated: %d", deactivatedMode);
+			g_PreviousMode = g_CurrentMode;
+			g_CurrentMode = MODE_NONE;
+		}
 	}
 }
 
