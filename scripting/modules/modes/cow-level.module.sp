@@ -567,32 +567,49 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	ActivateEntity(colorEnt);
 	AcceptEntityInput(colorEnt, "Enable");
 
-	g_iCowLevel_ColorCorrectionRef = EntIndexToEntRef(colorEnt);
-	LogMessage("[Cow Level] color_correction spawned and enabled (ref: %d)", g_iCowLevel_ColorCorrectionRef);
+	// Validate entity is still valid before creating reference
+	if (IsValidEntity(colorEnt))
+	{
+		g_iCowLevel_ColorCorrectionRef = EntIndexToEntRef(colorEnt);
+		LogMessage("[Cow Level] color_correction spawned and enabled (ref: %d)", g_iCowLevel_ColorCorrectionRef);
+	}
+	else
+	{
+		LogMessage("[Cow Level] ERROR: color_correction entity became invalid after spawn!");
+		g_iCowLevel_ColorCorrectionRef = -1;
+	}
 
 	// Crear fog_volume para que el color correction funcione
 	LogMessage("[Cow Level] Creating fog_volume entity...");
 	int fogVolEnt = CreateEntityByName("fog_volume");
-	if (fogVolEnt != -1)
+	if (fogVolEnt == -1)
 	{
-		LogMessage("[Cow Level] fog_volume entity created: %d", fogVolEnt);
+		LogMessage("[Cow Level] ERROR: Failed to create fog_volume entity!");
+		return;
+	}
 
-		DispatchKeyValue(fogVolEnt, "targetname", "cowlevel_fogvolume");
-		DispatchKeyValue(fogVolEnt, "PostProcessName", "cowlevel_colorcorrection");
+	LogMessage("[Cow Level] fog_volume entity created: %d", fogVolEnt);
 
-		// Cubrir todo el mapa
-		DispatchKeyValue(fogVolEnt, "mins", "-10000 -10000 -10000");
-		DispatchKeyValue(fogVolEnt, "maxs", "10000 10000 10000");
+	DispatchKeyValue(fogVolEnt, "targetname", "cowlevel_fogvolume");
+	DispatchKeyValue(fogVolEnt, "PostProcessName", "cowlevel_colorcorrection");
 
-		DispatchSpawn(fogVolEnt);
-		ActivateEntity(fogVolEnt);
+	// Cubrir todo el mapa - DEBE hacerse ANTES de DispatchSpawn
+	DispatchKeyValue(fogVolEnt, "mins", "-10000 -10000 -10000");
+	DispatchKeyValue(fogVolEnt, "maxs", "10000 10000 10000");
 
+	DispatchSpawn(fogVolEnt);
+	ActivateEntity(fogVolEnt);
+
+	// Validate entity is still valid before creating reference
+	if (IsValidEntity(fogVolEnt))
+	{
 		g_iCowLevel_FogVolumeRef = EntIndexToEntRef(fogVolEnt);
 		LogMessage("[Cow Level] fog_volume spawned (ref: %d)", g_iCowLevel_FogVolumeRef);
 	}
 	else
 	{
-		LogMessage("[Cow Level] ERROR: Failed to create fog_volume entity!");
+		LogMessage("[Cow Level] ERROR: fog_volume entity became invalid after spawn!");
+		g_iCowLevel_FogVolumeRef = -1;
 	}
 }
 
