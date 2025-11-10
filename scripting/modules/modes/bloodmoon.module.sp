@@ -178,6 +178,10 @@ public void Bloodmoon_OnPluginStart()
 	g_iColorCorrectionRef = -1;
 	g_iFogVolumeRef = -1;
 	g_iPrecipitationRef = -1;
+
+	// Inicializar array de referencias de partículas
+	for (int i = 0; i < 16; i++)
+		g_iParticleRefs[i] = -1;
 }
 
 /**
@@ -188,6 +192,21 @@ public void Bloodmoon_OnMapStart()
 	g_iOrigCommonLimit = g_iOrigMobMin = g_iOrigMobMax = g_iOrigMegaMob = -1;
 	g_fMapStartTime = GetGameTime();
 	g_iTankCount = 0;
+
+	// Reset comprehensivo de estado para nuevo mapa
+	g_fLastTankSpawn = 0.0;
+	g_fLastPanicEvent = 0.0;
+	g_iParticleTotal = 0;
+
+	// Reset de referencias de entidades
+	g_iFogRef = -1;
+	g_iColorCorrectionRef = -1;
+	g_iFogVolumeRef = -1;
+	g_iPrecipitationRef = -1;
+
+	// Reset array de partículas
+	for (int i = 0; i < 16; i++)
+		g_iParticleRefs[i] = -1;
 
 	// Precache del sonido mega mob
 	PrecacheSound("npc/mega_mob/mega_mob_incoming.wav", true);
@@ -468,6 +487,11 @@ void Bloodmoon_Deactivate(const char[] reason = "manual")
 	Bloodmoon_RestoreDirector();
 	g_bBloodmoonActive = false;
 
+	// Resetear variables de estado para reactivación limpia
+	g_iTankCount = 0;
+	g_fLastTankSpawn = 0.0;
+	g_fLastPanicEvent = 0.0;
+
 	// === LIMPIAR NUEVOS SISTEMAS ===
 	Bloodmoon_StopEventTimer();
 	Bloodmoon_RemoveColorCorrection();
@@ -630,6 +654,8 @@ void Bloodmoon_RemoveAmbientParticles()
 			AcceptEntityInput(ent, "Stop");
 			RemoveEntity(ent);
 		}
+		// Invalidar la referencia después de remover
+		g_iParticleRefs[i] = -1;
 	}
 	g_iParticleTotal = 0;
 }

@@ -205,7 +205,7 @@ void CowLevel_Activate()
 
 	LogMessage("[Cow Level] ============ ACTIVATION START ============");
 
-	g_bCowLevelActive = true;
+	// Preparar timestamp (NO activar aún)
 	g_fCowLevel_LastPanicEvent = GetGameTime();
 
 	// Anunciar activación
@@ -242,6 +242,9 @@ void CowLevel_Activate()
 		LogMessage("[Cow Level] Starting event timer...");
 		g_hCowLevel_EventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT);
 	}
+
+	// SOLO activar después de que todos los recursos estén creados
+	g_bCowLevelActive = true;
 
 	LogMessage("[Cow Level] ============ ACTIVATION COMPLETE ============");
 }
@@ -281,7 +284,10 @@ void CowLevel_Deactivate()
 public Action Timer_CowLevelEvents(Handle timer)
 {
 	if (!g_bCowLevelActive)
+	{
+		g_hCowLevel_EventTimer = null;
 		return Plugin_Stop;
+	}
 
 	float currentTime = GetGameTime();
 	float mapElapsed = currentTime - g_fCowLevel_MapStartTime;
@@ -510,8 +516,11 @@ void CowLevel_CreateCow(float vOrigin[3], float vAngles[3])
 		DispatchSpawn(entity);
 		TeleportEntity(entity, vOrigin, vAngles, NULL_VECTOR);
 
-		// Guardar referencia
-		g_aCowEntities.Push(EntIndexToEntRef(entity));
+		// Guardar referencia (con null check)
+		if (g_aCowEntities != null)
+		{
+			g_aCowEntities.Push(EntIndexToEntRef(entity));
+		}
 	}
 }
 
@@ -520,6 +529,10 @@ void CowLevel_CreateCow(float vOrigin[3], float vAngles[3])
  */
 void CowLevel_RemoveCowSpawns()
 {
+	// Null check para seguridad
+	if (g_aCowEntities == null)
+		return;
+
 	// Usar el array de referencias
 	for (int i = 0; i < g_aCowEntities.Length; i++)
 	{
@@ -585,6 +598,8 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	if (fogVolEnt == -1)
 	{
 		LogMessage("[Cow Level] ERROR: Failed to create fog_volume entity!");
+		// Limpiar color_correction huérfano
+		CowLevel_RemoveColorCorrection();
 		return;
 	}
 
