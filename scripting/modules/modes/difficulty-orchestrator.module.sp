@@ -310,6 +310,13 @@ public void DifficultyOrchestrator_SetMode(DifficultyMode mode)
  */
 void DifficultyOrchestrator_EnforceMutualExclusion(DifficultyMode activeMode)
 {
+	// Verificar que los handles estén inicializados
+	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
+	{
+		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, skipping mutual exclusion");
+		return;
+	}
+
 	// Desactivar Bloodmoon si no es el modo activo
 	if (activeMode != MODE_BLOODMOON && GetConVarBool(g_hBloodmoon_Enable))
 	{
@@ -350,6 +357,13 @@ void DifficultyOrchestrator_EnforceMutualExclusion(DifficultyMode activeMode)
  */
 void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 {
+	// Verificar que los handles estén inicializados
+	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
+	{
+		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, cannot activate mode");
+		return;
+	}
+
 	switch (mode)
 	{
 		case MODE_NONE:
@@ -388,6 +402,13 @@ void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 void DifficultyOrchestrator_DetectActiveMode()
 {
 	DifficultyMode detectedMode = MODE_NONE;
+
+	// Verificar que los handles estén inicializados
+	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
+	{
+		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, skipping detection");
+		return;
+	}
 
 	// Check en orden de prioridad
 	if (GetConVarBool(g_hCowLevel_Enable))
