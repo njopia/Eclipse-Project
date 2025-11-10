@@ -197,7 +197,13 @@ public Action Command_ToggleCowLevel(int client, int args)
  */
 void CowLevel_Activate()
 {
-	if (g_bCowLevelActive) return;
+	if (g_bCowLevelActive)
+	{
+		LogMessage("[Cow Level] Already active, skipping activation");
+		return;
+	}
+
+	LogMessage("[Cow Level] ============ ACTIVATION START ============");
 
 	g_bCowLevelActive = true;
 	g_fCowLevel_LastPanicEvent = GetGameTime();
@@ -209,9 +215,11 @@ void CowLevel_Activate()
 	PrintToChatAll("\x05[Eclipse]\x04 %s", message);
 
 	// Reproducir sonido
+	LogMessage("[Cow Level] Playing activation sound...");
 	EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
 
 	// Cargar cow spawns
+	LogMessage("[Cow Level] Loading cow spawns...");
 	CowLevel_LoadCowSpawns();
 
 	// Crear color correction
@@ -220,14 +228,22 @@ void CowLevel_Activate()
 		char colorFile[PLATFORM_MAX_PATH];
 		GetConVarString(g_cvar_CowLevel_ColorFile, colorFile, sizeof(colorFile));
 		float weight = GetConVarFloat(g_cvar_CowLevel_ColorWeight);
+		LogMessage("[Cow Level] Creating color correction: file=%s, weight=%.2f", colorFile, weight);
 		CowLevel_CreateColorCorrection(colorFile, weight);
+	}
+	else
+	{
+		LogMessage("[Cow Level] Color correction disabled");
 	}
 
 	// Iniciar timer de eventos
 	if (g_hCowLevel_EventTimer == null)
 	{
+		LogMessage("[Cow Level] Starting event timer...");
 		g_hCowLevel_EventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT);
 	}
+
+	LogMessage("[Cow Level] ============ ACTIVATION COMPLETE ============");
 }
 
 /**
@@ -526,10 +542,17 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	// Limpiar anteriores
 	CowLevel_RemoveColorCorrection();
 
+	LogMessage("[Cow Level] Creating color_correction entity...");
+
 	// Crear color_correction entity
 	int colorEnt = CreateEntityByName("color_correction");
 	if (colorEnt == -1)
+	{
+		LogMessage("[Cow Level] ERROR: Failed to create color_correction entity!");
 		return;
+	}
+
+	LogMessage("[Cow Level] color_correction entity created: %d", colorEnt);
 
 	DispatchKeyValue(colorEnt, "targetname", "cowlevel_colorcorrection");
 	DispatchKeyValue(colorEnt, "filename", fileName);
@@ -545,11 +568,15 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	AcceptEntityInput(colorEnt, "Enable");
 
 	g_iCowLevel_ColorCorrectionRef = EntIndexToEntRef(colorEnt);
+	LogMessage("[Cow Level] color_correction spawned and enabled (ref: %d)", g_iCowLevel_ColorCorrectionRef);
 
 	// Crear fog_volume para que el color correction funcione
+	LogMessage("[Cow Level] Creating fog_volume entity...");
 	int fogVolEnt = CreateEntityByName("fog_volume");
 	if (fogVolEnt != -1)
 	{
+		LogMessage("[Cow Level] fog_volume entity created: %d", fogVolEnt);
+
 		DispatchKeyValue(fogVolEnt, "targetname", "cowlevel_fogvolume");
 		DispatchKeyValue(fogVolEnt, "PostProcessName", "cowlevel_colorcorrection");
 
@@ -561,6 +588,11 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 		ActivateEntity(fogVolEnt);
 
 		g_iCowLevel_FogVolumeRef = EntIndexToEntRef(fogVolEnt);
+		LogMessage("[Cow Level] fog_volume spawned (ref: %d)", g_iCowLevel_FogVolumeRef);
+	}
+	else
+	{
+		LogMessage("[Cow Level] ERROR: Failed to create fog_volume entity!");
 	}
 }
 

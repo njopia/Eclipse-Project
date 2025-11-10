@@ -170,6 +170,9 @@ public void Bloodmoon_OnPluginStart()
 	RegAdminCmd("sm_bloodmoon_status", Cmd_BloodmoonStatus, ADMFLAG_GENERIC, "Estado Bloodmoon");
 	RegAdminCmd("sm_bloodmoon_testmob", Cmd_BloodmoonTestMob, ADMFLAG_GENERIC, "Fuerza una horda");
 
+	// Hook ConVar para detectar activación/desactivación
+	HookConVarChange(g_cvar_Bloodmoon_Enable, Bloodmoon_ConVarChanged);
+
 	g_sOrigDifficulty[0] = '\0';
 	g_iFogRef = -1;
 	g_iColorCorrectionRef = -1;
@@ -188,6 +191,30 @@ public void Bloodmoon_OnMapStart()
 
 	// Precache del sonido mega mob
 	PrecacheSound("npc/mega_mob/mega_mob_incoming.wav", true);
+}
+
+/**
+ * Callback cuando cambia el ConVar de enable
+ */
+public void Bloodmoon_ConVarChanged(Handle convar, const char[] oldValue, const char[] newValue)
+{
+	if (convar == g_cvar_Bloodmoon_Enable)
+	{
+		bool bNewState = GetConVarBool(g_cvar_Bloodmoon_Enable);
+
+		LogMessage("[Bloodmoon] ConVar changed from '%s' to '%s' (state: %d)", oldValue, newValue, bNewState);
+
+		if (bNewState && !g_bBloodmoonActive)
+		{
+			LogMessage("[Bloodmoon] Activating Bloodmoon mode...");
+			Bloodmoon_Activate("convar");
+		}
+		else if (!bNewState && g_bBloodmoonActive)
+		{
+			LogMessage("[Bloodmoon] Deactivating Bloodmoon mode...");
+			Bloodmoon_Deactivate("convar");
+		}
+	}
 }
 
 /**
@@ -329,7 +356,14 @@ public Action Cmd_BloodmoonTestMob(int client, int args)
  */
 void Bloodmoon_Activate(const char[] reason = "manual")
 {
-	if (g_bBloodmoonActive) return;
+	if (g_bBloodmoonActive)
+	{
+		LogMessage("[Bloodmoon] Already active, skipping activation");
+		return;
+	}
+
+	LogMessage("[Bloodmoon] ============ ACTIVATION START ============");
+	LogMessage("[Bloodmoon] Reason: %s", reason);
 
 	#pragma unused reason
 
@@ -342,6 +376,7 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	g_iTankCount = 0;
 
 	// Ambientación
+	LogMessage("[Bloodmoon] Applying light style...");
 	Bloodmoon_ApplyLightStyle();
 
 	// === NUEVOS SISTEMAS ===
@@ -352,17 +387,24 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 		char colorFile[PLATFORM_MAX_PATH];
 		GetConVarString(g_cvar_Bloodmoon_ColorFile, colorFile, sizeof(colorFile));
 		float weight = GetConVarFloat(g_cvar_Bloodmoon_ColorWeight);
+		LogMessage("[Bloodmoon] Creating color correction: file=%s, weight=%.2f", colorFile, weight);
 		Bloodmoon_CreateColorCorrection(colorFile, weight);
+	}
+	else
+	{
+		LogMessage("[Bloodmoon] Color correction disabled");
 	}
 
 	// Precipitation system (nieve/lluvia en todo el mapa)
 	if (GetConVarBool(g_cvar_Bloodmoon_UsePrecipitation))
 	{
 		int precipType = GetConVarInt(g_cvar_Bloodmoon_PrecipType);
+		LogMessage("[Bloodmoon] Creating precipitation: type=%d", precipType);
 		Bloodmoon_CreatePrecipitation(precipType);
 	}
 	else
 	{
+		LogMessage("[Bloodmoon] Creating ambient particles...");
 		// Usar el sistema de partículas antiguo
 		Bloodmoon_CreateAmbientParticles();
 	}
@@ -370,12 +412,19 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	// Fog controller
 	if (GetConVarBool(g_cvar_Bloodmoon_FogEnable))
 	{
+		LogMessage("[Bloodmoon] Creating fog controller...");
 		int ent = Bloodmoon_SpawnFogController();
 		g_iFogRef = (ent != -1) ? EntIndexToEntRef(ent) : -1;
+		LogMessage("[Bloodmoon] Fog entity: %d (ref: %d)", ent, g_iFogRef);
 		Bloodmoon_StartFogEnforcerTimer();
+	}
+	else
+	{
+		LogMessage("[Bloodmoon] Fog disabled");
 	}
 
 	// Iniciar timer de eventos periódicos (tanks, panic, breeder, sonidos)
+	LogMessage("[Bloodmoon] Starting event timer...");
 	Bloodmoon_StartEventTimer();
 
 	char sStart[128], sLoop[128];
@@ -391,8 +440,20 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 
 	if (GetConVarBool(g_cvar_Bloodmoon_ChangeDiff))
 	{
+		LogMessage("[Bloodmoon] Changing difficulty to Impossible...");
 		ServerCommand("z_difficulty Impossible");
+
+		// Verify the change
+		char currentDiff[32];
+		GetConVarString(z_difficulty, currentDiff, sizeof(currentDiff));
+		LogMessage("[Bloodmoon] Current z_difficulty after command: %s", currentDiff);
 	}
+	else
+	{
+		LogMessage("[Bloodmoon] Difficulty change disabled");
+	}
+
+	LogMessage("[Bloodmoon] ============ ACTIVATION COMPLETE ============");
 }
 
 /**
@@ -479,8 +540,16 @@ void Bloodmoon_RestoreLightStyle()
 
 int Bloodmoon_SpawnFogController()
 {
+	LogMessage("[Bloodmoon] Creating env_fog_controller entity...");
+
 	int ent = CreateEntityByName("env_fog_controller");
-	if (ent == -1) return -1;
+	if (ent == -1)
+	{
+		LogMessage("[Bloodmoon] ERROR: Failed to create env_fog_controller entity!");
+		return -1;
+	}
+
+	LogMessage("[Bloodmoon] env_fog_controller entity created: %d", ent);
 
 	char color[32];
 	GetConVarString(g_cvar_Bloodmoon_FogColor, color, sizeof(color));
@@ -491,6 +560,8 @@ int Bloodmoon_SpawnFogController()
 	char sEnd[16];
 	IntToString(GetConVarInt(g_cvar_Bloodmoon_FogEnd), sEnd, sizeof(sEnd));
 
+	LogMessage("[Bloodmoon] Fog settings: color=%s, density=%s, start=%s, end=%s", color, density, sStart, sEnd);
+
 	DispatchKeyValue(ent, "fogcolor", color);
 	DispatchKeyValue(ent, "fogstart", sStart);
 	DispatchKeyValue(ent, "fogend", sEnd);
@@ -498,6 +569,8 @@ int Bloodmoon_SpawnFogController()
 	DispatchKeyValue(ent, "fogenable", "1");
 	DispatchSpawn(ent);
 	AcceptEntityInput(ent, "TurnOn");
+
+	LogMessage("[Bloodmoon] env_fog_controller spawned and activated");
 
 	return ent;
 }
