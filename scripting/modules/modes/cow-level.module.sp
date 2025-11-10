@@ -25,12 +25,12 @@ Handle g_cvar_CowLevel_RemoveSpecials = INVALID_HANDLE;
 
 // Estado
 bool   g_bCowLevelActive = false;
-int    g_iColorCorrectionRef = -1;
-int    g_iFogVolumeRef = -1;
+int    g_iCowLevel_ColorCorrectionRef = -1;
+int    g_iCowLevel_FogVolumeRef = -1;
 int    g_iCowLevelSpawns = 0;
-float  g_fLastPanicEvent = 0.0;
-float  g_fMapStartTime = 0.0;
-Handle g_hEventTimer = null;
+float  g_fCowLevel_LastPanicEvent = 0.0;
+float  g_fCowLevel_MapStartTime = 0.0;
+Handle g_hCowLevel_EventTimer = null;
 
 // Array para almacenar referencias de cows spawneadas
 ArrayList g_aCowEntities = null;
@@ -91,7 +91,7 @@ public void CowLevel_ConVarChanged(Handle convar, const char[] oldValue, const c
  */
 public void CowLevel_OnMapStart()
 {
-	g_fMapStartTime = GetGameTime();
+	g_fCowLevel_MapStartTime = GetGameTime();
 
 	// Precache models
 	PrecacheModel(MODEL_COW, true);
@@ -102,8 +102,8 @@ public void CowLevel_OnMapStart()
 
 	// Reset estado
 	g_iCowLevelSpawns = 0;
-	g_iColorCorrectionRef = -1;
-	g_iFogVolumeRef = -1;
+	g_iCowLevel_ColorCorrectionRef = -1;
+	g_iCowLevel_FogVolumeRef = -1;
 
 	// Limpiar array de cows
 	if (g_aCowEntities != null)
@@ -200,7 +200,7 @@ void CowLevel_Activate()
 	if (g_bCowLevelActive) return;
 
 	g_bCowLevelActive = true;
-	g_fLastPanicEvent = GetGameTime();
+	g_fCowLevel_LastPanicEvent = GetGameTime();
 
 	// Anunciar activación
 	SetGlobalTransTarget(LANG_SERVER);
@@ -224,9 +224,9 @@ void CowLevel_Activate()
 	}
 
 	// Iniciar timer de eventos
-	if (g_hEventTimer == null)
+	if (g_hCowLevel_EventTimer == null)
 	{
-		g_hEventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT);
+		g_hCowLevel_EventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT);
 	}
 }
 
@@ -240,10 +240,10 @@ void CowLevel_Deactivate()
 	g_bCowLevelActive = false;
 
 	// Detener timer de eventos
-	if (g_hEventTimer != null)
+	if (g_hCowLevel_EventTimer != null)
 	{
-		KillTimer(g_hEventTimer);
-		g_hEventTimer = null;
+		KillTimer(g_hCowLevel_EventTimer);
+		g_hCowLevel_EventTimer = null;
 	}
 
 	// Remover cows
@@ -271,10 +271,10 @@ public Action Timer_CowLevelEvents(Handle timer)
 	float panicInterval = GetConVarFloat(g_cvar_CowLevel_PanicInterval);
 
 	// Panic Events
-	if (panicInterval > 0.0 && (currentTime - g_fLastPanicEvent) >= panicInterval)
+	if (panicInterval > 0.0 && (currentTime - g_fCowLevel_LastPanicEvent) >= panicInterval)
 	{
 		CowLevel_ForcePanicEvent();
-		g_fLastPanicEvent = currentTime;
+		g_fCowLevel_LastPanicEvent = currentTime;
 	}
 
 	// Mega Mob Sound (probabilidad)
@@ -538,7 +538,7 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	ActivateEntity(colorEnt);
 	AcceptEntityInput(colorEnt, "Enable");
 
-	g_iColorCorrectionRef = EntIndexToEntRef(colorEnt);
+	g_iCowLevel_ColorCorrectionRef = EntIndexToEntRef(colorEnt);
 
 	// Crear fog_volume para que el color correction funcione
 	int fogVolEnt = CreateEntityByName("fog_volume");
@@ -554,7 +554,7 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 		DispatchSpawn(fogVolEnt);
 		ActivateEntity(fogVolEnt);
 
-		g_iFogVolumeRef = EntIndexToEntRef(fogVolEnt);
+		g_iCowLevel_FogVolumeRef = EntIndexToEntRef(fogVolEnt);
 	}
 }
 
@@ -564,24 +564,24 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 void CowLevel_RemoveColorCorrection()
 {
 	// Remover color_correction
-	if (g_iColorCorrectionRef != -1)
+	if (g_iCowLevel_ColorCorrectionRef != -1)
 	{
-		int entity = EntRefToEntIndex(g_iColorCorrectionRef);
+		int entity = EntRefToEntIndex(g_iCowLevel_ColorCorrectionRef);
 		if (entity != INVALID_ENT_REFERENCE && IsValidEntity(entity))
 		{
 			AcceptEntityInput(entity, "Kill");
 		}
-		g_iColorCorrectionRef = -1;
+		g_iCowLevel_ColorCorrectionRef = -1;
 	}
 
 	// Remover fog_volume
-	if (g_iFogVolumeRef != -1)
+	if (g_iCowLevel_FogVolumeRef != -1)
 	{
-		int entity = EntRefToEntIndex(g_iFogVolumeRef);
+		int entity = EntRefToEntIndex(g_iCowLevel_FogVolumeRef);
 		if (entity != INVALID_ENT_REFERENCE && IsValidEntity(entity))
 		{
 			AcceptEntityInput(entity, "Kill");
 		}
-		g_iFogVolumeRef = -1;
+		g_iCowLevel_FogVolumeRef = -1;
 	}
 }
