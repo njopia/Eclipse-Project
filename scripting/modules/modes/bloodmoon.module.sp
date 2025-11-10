@@ -213,6 +213,19 @@ public void Bloodmoon_OnMapStart()
 }
 
 /**
+ * Hook cuando un mapa termina
+ */
+public void Bloodmoon_OnMapEnd()
+{
+	// Desactivar Bloodmoon si está activo al cambiar de mapa
+	if (g_bBloodmoonActive)
+	{
+		LogMessage("[Bloodmoon] Map ending, deactivating Bloodmoon");
+		Bloodmoon_Deactivate("map_end");
+	}
+}
+
+/**
  * Callback cuando cambia el ConVar de enable
  */
 public void Bloodmoon_ConVarChanged(Handle convar, const char[] oldValue, const char[] newValue)

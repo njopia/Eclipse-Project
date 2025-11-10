@@ -430,6 +430,7 @@ public void OnMapEnd()
 	LogToFile(logfilepath, "|               MAP END                     |");
 
 	// Cleanup game modes
+	Bloodmoon_OnMapEnd();
 	CowLevel_OnMapEnd();
 
 	// Cleanup HUD
