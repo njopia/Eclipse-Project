@@ -437,6 +437,8 @@ public void OnMapEnd()
 
 	// Cleanup game modes
 	Bloodmoon_OnMapEnd();
+	Hell_OnMapEnd();
+	Inferno_OnMapEnd();
 	CowLevel_OnMapEnd();
 
 	// Cleanup HUD

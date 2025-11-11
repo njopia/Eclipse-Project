@@ -114,8 +114,35 @@ public void Hell_OnPluginStart()
 	RegAdminCmd("sm_hell_toggle", Cmd_HellToggle, ADMFLAG_GENERIC, "Alterna Hell Mode");
 	RegAdminCmd("sm_hell_status", Cmd_HellStatus, ADMFLAG_GENERIC, "Estado Hell Mode");
 
+	// Hook ConVar para detectar activación/desactivación
+	HookConVarChange(g_cvar_Hell_Enable, Hell_ConVarChanged);
+
 	g_sOrigDifficulty_Hell[0] = '\0';
 	g_iFogRef_Hell = -1;
+}
+
+/**
+ * Callback cuando cambia el ConVar de enable
+ */
+public void Hell_ConVarChanged(Handle convar, const char[] oldValue, const char[] newValue)
+{
+	if (convar == g_cvar_Hell_Enable)
+	{
+		bool bNewState = GetConVarBool(g_cvar_Hell_Enable);
+
+		LogMessage("[Hell] ConVar changed from '%s' to '%s' (state: %d)", oldValue, newValue, bNewState);
+
+		if (bNewState && !g_bHellActive)
+		{
+			LogMessage("[Hell] Activating Hell mode...");
+			Hell_Activate("convar");
+		}
+		else if (!bNewState && g_bHellActive)
+		{
+			LogMessage("[Hell] Deactivating Hell mode...");
+			Hell_Deactivate("convar");
+		}
+	}
 }
 
 /**
@@ -140,6 +167,19 @@ public void Hell_OnClientDisconnect(int client)
 public void Hell_OnMapStart()
 {
 	g_iOrigCommonLimit_Hell = g_iOrigMobMin_Hell = g_iOrigMobMax_Hell = g_iOrigMegaMob_Hell = -1;
+}
+
+/**
+ * Hook cuando un mapa termina
+ */
+public void Hell_OnMapEnd()
+{
+	// Desactivar Hell si está activo al cambiar de mapa
+	if (g_bHellActive)
+	{
+		LogMessage("[Hell] Map ending, deactivating Hell");
+		Hell_Deactivate("map_end");
+	}
 }
 
 /**

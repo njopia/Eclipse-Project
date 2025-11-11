@@ -23,6 +23,20 @@ Handle g_cvar_CowLevel_MegaMobSound = INVALID_HANDLE;
 Handle g_cvar_CowLevel_MegaMobSoundChance = INVALID_HANDLE;
 Handle g_cvar_CowLevel_RemoveSpecials = INVALID_HANDLE;
 
+// ConVars del juego
+Handle z_common_limit_cowlevel = INVALID_HANDLE;
+Handle z_mob_spawn_min_size_cowlevel = INVALID_HANDLE;
+Handle z_mob_spawn_max_size_cowlevel = INVALID_HANDLE;
+Handle z_mega_mob_size_cowlevel = INVALID_HANDLE;
+Handle z_difficulty_cowlevel = INVALID_HANDLE;
+
+// Backups
+int	   g_iOrigCommonLimit_CowLevel = -1;
+int	   g_iOrigMobMin_CowLevel = -1;
+int	   g_iOrigMobMax_CowLevel = -1;
+int	   g_iOrigMegaMob_CowLevel = -1;
+char   g_sOrigDifficulty_CowLevel[16];
+
 // Estado
 bool   g_bCowLevelActive = false;
 int    g_iCowLevel_ColorCorrectionRef = -1;
@@ -56,6 +70,13 @@ public void CowLevel_OnPluginStart()
 	// Special Infected Removal
 	g_cvar_CowLevel_RemoveSpecials = CreateConVar("cowlevel_remove_specials", "1", "Remover infected especiales (solo zombies comunes)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
+	// Obtener ConVars del juego
+	z_common_limit_cowlevel = FindConVar("z_common_limit");
+	z_mob_spawn_min_size_cowlevel = FindConVar("z_mob_spawn_min_size");
+	z_mob_spawn_max_size_cowlevel = FindConVar("z_mob_spawn_max_size");
+	z_mega_mob_size_cowlevel = FindConVar("z_mega_mob_size");
+	z_difficulty_cowlevel = FindConVar("z_difficulty");
+
 	// Inicializar array de entidades
 	g_aCowEntities = new ArrayList();
 
@@ -64,6 +85,8 @@ public void CowLevel_OnPluginStart()
 
 	// Registrar comando admin
 	RegAdminCmd("sm_cowlevel", Command_ToggleCowLevel, ADMFLAG_ROOT, "Toggle Secret Cow Level");
+
+	g_sOrigDifficulty_CowLevel[0] = '\0';
 }
 
 /**
@@ -92,6 +115,9 @@ public void CowLevel_ConVarChanged(Handle convar, const char[] oldValue, const c
 public void CowLevel_OnMapStart()
 {
 	g_fCowLevel_MapStartTime = GetGameTime();
+
+	// Reset backups
+	g_iOrigCommonLimit_CowLevel = g_iOrigMobMin_CowLevel = g_iOrigMobMax_CowLevel = g_iOrigMegaMob_CowLevel = -1;
 
 	// Precache models
 	PrecacheModel(MODEL_COW, true);
@@ -205,6 +231,10 @@ void CowLevel_Activate()
 
 	LogMessage("[Cow Level] ============ ACTIVATION START ============");
 
+	// Cachear y aplicar configuración del director
+	CowLevel_CacheOriginalDirector();
+	// Cow Level no modifica el director, pero guardamos los valores por si acaso
+
 	// Preparar timestamp (NO activar aún)
 	g_fCowLevel_LastPanicEvent = GetGameTime();
 
@@ -257,6 +287,9 @@ void CowLevel_Deactivate()
 	if (!g_bCowLevelActive) return;
 
 	g_bCowLevelActive = false;
+
+	// Restaurar configuración del director
+	CowLevel_RestoreDirector();
 
 	// Detener timer de eventos
 	if (g_hCowLevel_EventTimer != null)
@@ -654,4 +687,42 @@ void CowLevel_RemoveColorCorrection()
 		}
 		g_iCowLevel_FogVolumeRef = -1;
 	}
+}
+
+//==================================================
+// FUNCIONES DE BACKUP Y RESTAURACIÓN
+//==================================================
+
+/**
+ * Cachea los valores originales del director
+ */
+void CowLevel_CacheOriginalDirector()
+{
+	if (g_iOrigCommonLimit_CowLevel == -1 && z_common_limit_cowlevel != null)
+		g_iOrigCommonLimit_CowLevel = GetConVarInt(z_common_limit_cowlevel);
+	if (g_iOrigMobMin_CowLevel == -1 && z_mob_spawn_min_size_cowlevel != null)
+		g_iOrigMobMin_CowLevel = GetConVarInt(z_mob_spawn_min_size_cowlevel);
+	if (g_iOrigMobMax_CowLevel == -1 && z_mob_spawn_max_size_cowlevel != null)
+		g_iOrigMobMax_CowLevel = GetConVarInt(z_mob_spawn_max_size_cowlevel);
+	if (g_iOrigMegaMob_CowLevel == -1 && z_mega_mob_size_cowlevel != null)
+		g_iOrigMegaMob_CowLevel = GetConVarInt(z_mega_mob_size_cowlevel);
+	if (g_sOrigDifficulty_CowLevel[0] == '\0' && z_difficulty_cowlevel != null)
+		GetConVarString(z_difficulty_cowlevel, g_sOrigDifficulty_CowLevel, sizeof(g_sOrigDifficulty_CowLevel));
+}
+
+/**
+ * Restaura los valores originales del director
+ */
+void CowLevel_RestoreDirector()
+{
+	if (z_common_limit_cowlevel && g_iOrigCommonLimit_CowLevel != -1)
+		SetConVarInt(z_common_limit_cowlevel, g_iOrigCommonLimit_CowLevel);
+	if (z_mob_spawn_min_size_cowlevel && g_iOrigMobMin_CowLevel != -1)
+		SetConVarInt(z_mob_spawn_min_size_cowlevel, g_iOrigMobMin_CowLevel);
+	if (z_mob_spawn_max_size_cowlevel && g_iOrigMobMax_CowLevel != -1)
+		SetConVarInt(z_mob_spawn_max_size_cowlevel, g_iOrigMobMax_CowLevel);
+	if (z_mega_mob_size_cowlevel && g_iOrigMegaMob_CowLevel != -1)
+		SetConVarInt(z_mega_mob_size_cowlevel, g_iOrigMegaMob_CowLevel);
+	if (z_difficulty_cowlevel && g_sOrigDifficulty_CowLevel[0] != '\0')
+		ServerCommand("z_difficulty %s", g_sOrigDifficulty_CowLevel);
 }

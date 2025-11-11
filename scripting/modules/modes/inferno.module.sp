@@ -114,8 +114,35 @@ public void Inferno_OnPluginStart()
 	RegAdminCmd("sm_inferno_toggle", Cmd_InfernoToggle, ADMFLAG_GENERIC, "Alterna Inferno Mode");
 	RegAdminCmd("sm_inferno_status", Cmd_InfernoStatus, ADMFLAG_GENERIC, "Estado Inferno Mode");
 
+	// Hook ConVar para detectar activación/desactivación
+	HookConVarChange(g_cvar_Inferno_Enable, Inferno_ConVarChanged);
+
 	g_sOrigDifficulty_Inferno[0] = '\0';
 	g_iFogRef_Inferno = -1;
+}
+
+/**
+ * Callback cuando cambia el ConVar de enable
+ */
+public void Inferno_ConVarChanged(Handle convar, const char[] oldValue, const char[] newValue)
+{
+	if (convar == g_cvar_Inferno_Enable)
+	{
+		bool bNewState = GetConVarBool(g_cvar_Inferno_Enable);
+
+		LogMessage("[Inferno] ConVar changed from '%s' to '%s' (state: %d)", oldValue, newValue, bNewState);
+
+		if (bNewState && !g_bInfernoActive)
+		{
+			LogMessage("[Inferno] Activating Inferno mode...");
+			Inferno_Activate("convar");
+		}
+		else if (!bNewState && g_bInfernoActive)
+		{
+			LogMessage("[Inferno] Deactivating Inferno mode...");
+			Inferno_Deactivate("convar");
+		}
+	}
 }
 
 /**
@@ -140,6 +167,19 @@ public void Inferno_OnClientDisconnect(int client)
 public void Inferno_OnMapStart()
 {
 	g_iOrigCommonLimit_Inferno = g_iOrigMobMin_Inferno = g_iOrigMobMax_Inferno = g_iOrigMegaMob_Inferno = -1;
+}
+
+/**
+ * Hook cuando un mapa termina
+ */
+public void Inferno_OnMapEnd()
+{
+	// Desactivar Inferno si está activo al cambiar de mapa
+	if (g_bInfernoActive)
+	{
+		LogMessage("[Inferno] Map ending, deactivating Inferno");
+		Inferno_Deactivate("map_end");
+	}
 }
 
 /**

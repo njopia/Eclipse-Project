@@ -47,9 +47,8 @@ DifficultyMode g_PreviousMode = MODE_NONE;
 // Handles para ConVars de modos (obtenidos dinámicamente)
 Handle g_hBloodmoon_Enable = INVALID_HANDLE;
 Handle g_hCowLevel_Enable = INVALID_HANDLE;
-// TODO: Agregar cuando Hell e Inferno estén implementados
-// Handle g_hHell_Enable = INVALID_HANDLE;
-// Handle g_hInferno_Enable = INVALID_HANDLE;
+Handle g_hHell_Enable = INVALID_HANDLE;
+Handle g_hInferno_Enable = INVALID_HANDLE;
 
 //==================================================
 // FUNCIONES PÚBLICAS
@@ -123,9 +122,8 @@ public Action Timer_FindModeConVars(Handle timer)
 	// Buscar ConVars registrados por los módulos
 	g_hBloodmoon_Enable = FindConVar("bloodmoon_enable");
 	g_hCowLevel_Enable = FindConVar("cowlevel_enable");
-	// TODO: Agregar cuando Hell e Inferno estén implementados
-	// g_hHell_Enable = FindConVar("hell_enable");
-	// g_hInferno_Enable = FindConVar("inferno_enable");
+	g_hHell_Enable = FindConVar("hell_enable");
+	g_hInferno_Enable = FindConVar("inferno_enable");
 
 	// Hook cambios en ConVars de modos individuales para enforcar mutual exclusion
 	if (g_hBloodmoon_Enable != INVALID_HANDLE)
@@ -133,6 +131,12 @@ public Action Timer_FindModeConVars(Handle timer)
 
 	if (g_hCowLevel_Enable != INVALID_HANDLE)
 		HookConVarChange(g_hCowLevel_Enable, ConVarChanged_ModeActivation);
+
+	if (g_hHell_Enable != INVALID_HANDLE)
+		HookConVarChange(g_hHell_Enable, ConVarChanged_ModeActivation);
+
+	if (g_hInferno_Enable != INVALID_HANDLE)
+		HookConVarChange(g_hInferno_Enable, ConVarChanged_ModeActivation);
 
 	LogMessage("[Difficulty Orchestrator] Mode ConVars hooked successfully");
 	return Plugin_Stop;
@@ -325,24 +329,18 @@ void DifficultyOrchestrator_EnforceMutualExclusion(DifficultyMode activeMode)
 	}
 
 	// Desactivar Hell si no es el modo activo
-	// TODO: Implementar cuando Hell module esté disponible
-	/*
-	if (activeMode != MODE_HELL && GetConVarBool(g_cvar_Hell_Enable))
+	if (g_hHell_Enable != INVALID_HANDLE && activeMode != MODE_HELL && GetConVarBool(g_hHell_Enable))
 	{
-		SetConVarBool(g_cvar_Hell_Enable, false);
+		SetConVarBool(g_hHell_Enable, false);
 		LogMessage("[Difficulty Orchestrator] Deactivating Hell (mutual exclusion)");
 	}
-	*/
 
 	// Desactivar Inferno si no es el modo activo
-	// TODO: Implementar cuando Inferno module esté disponible
-	/*
-	if (activeMode != MODE_INFERNO && GetConVarBool(g_cvar_Inferno_Enable))
+	if (g_hInferno_Enable != INVALID_HANDLE && activeMode != MODE_INFERNO && GetConVarBool(g_hInferno_Enable))
 	{
-		SetConVarBool(g_cvar_Inferno_Enable, false);
+		SetConVarBool(g_hInferno_Enable, false);
 		LogMessage("[Difficulty Orchestrator] Deactivating Inferno (mutual exclusion)");
 	}
-	*/
 
 	// Desactivar Cow Level si no es el modo activo
 	if (activeMode != MODE_COWLEVEL && GetConVarBool(g_hCowLevel_Enable))
@@ -371,7 +369,10 @@ void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 			// No active mode - ensure all are disabled
 			SetConVarBool(g_hBloodmoon_Enable, false);
 			SetConVarBool(g_hCowLevel_Enable, false);
-			// TODO: Hell, Inferno
+			if (g_hHell_Enable != INVALID_HANDLE)
+				SetConVarBool(g_hHell_Enable, false);
+			if (g_hInferno_Enable != INVALID_HANDLE)
+				SetConVarBool(g_hInferno_Enable, false);
 		}
 		case MODE_BLOODMOON:
 		{
@@ -382,13 +383,31 @@ void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 		}
 		case MODE_HELL:
 		{
-			// TODO: Activar Hell cuando esté implementado
-			LogMessage("[Difficulty Orchestrator] Hell mode not yet implemented");
+			if (g_hHell_Enable != INVALID_HANDLE)
+			{
+				// Forzar toggle para garantizar que el hook se dispare
+				if (GetConVarBool(g_hHell_Enable))
+					SetConVarBool(g_hHell_Enable, false);
+				SetConVarBool(g_hHell_Enable, true);
+			}
+			else
+			{
+				LogMessage("[Difficulty Orchestrator] Hell mode ConVar not found");
+			}
 		}
 		case MODE_INFERNO:
 		{
-			// TODO: Activar Inferno cuando esté implementado
-			LogMessage("[Difficulty Orchestrator] Inferno mode not yet implemented");
+			if (g_hInferno_Enable != INVALID_HANDLE)
+			{
+				// Forzar toggle para garantizar que el hook se dispare
+				if (GetConVarBool(g_hInferno_Enable))
+					SetConVarBool(g_hInferno_Enable, false);
+				SetConVarBool(g_hInferno_Enable, true);
+			}
+			else
+			{
+				LogMessage("[Difficulty Orchestrator] Inferno mode ConVar not found");
+			}
 		}
 		case MODE_COWLEVEL:
 		{
@@ -414,13 +433,13 @@ void DifficultyOrchestrator_DetectActiveMode()
 		return;
 	}
 
-	// Check en orden de prioridad
+	// Check en orden de prioridad (de mayor a menor dificultad)
 	if (GetConVarBool(g_hCowLevel_Enable))
 		detectedMode = MODE_COWLEVEL;
-	// TODO: else if (GetConVarBool(g_cvar_Inferno_Enable))
-	//	detectedMode = MODE_INFERNO;
-	// TODO: else if (GetConVarBool(g_cvar_Hell_Enable))
-	//	detectedMode = MODE_HELL;
+	else if (g_hInferno_Enable != INVALID_HANDLE && GetConVarBool(g_hInferno_Enable))
+		detectedMode = MODE_INFERNO;
+	else if (g_hHell_Enable != INVALID_HANDLE && GetConVarBool(g_hHell_Enable))
+		detectedMode = MODE_HELL;
 	else if (GetConVarBool(g_hBloodmoon_Enable))
 		detectedMode = MODE_BLOODMOON;
 
@@ -471,9 +490,12 @@ public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, c
 
 		if (convar == g_hBloodmoon_Enable)
 			activatedMode = MODE_BLOODMOON;
+		else if (convar == g_hHell_Enable)
+			activatedMode = MODE_HELL;
+		else if (convar == g_hInferno_Enable)
+			activatedMode = MODE_INFERNO;
 		else if (convar == g_hCowLevel_Enable)
 			activatedMode = MODE_COWLEVEL;
-		// TODO: Agregar Hell e Inferno cuando estén implementados
 
 		if (activatedMode != MODE_NONE)
 		{
@@ -494,6 +516,10 @@ public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, c
 
 		if (convar == g_hBloodmoon_Enable)
 			deactivatedMode = MODE_BLOODMOON;
+		else if (convar == g_hHell_Enable)
+			deactivatedMode = MODE_HELL;
+		else if (convar == g_hInferno_Enable)
+			deactivatedMode = MODE_INFERNO;
 		else if (convar == g_hCowLevel_Enable)
 			deactivatedMode = MODE_COWLEVEL;
 
