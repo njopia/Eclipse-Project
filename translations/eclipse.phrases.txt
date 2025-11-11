@@ -671,6 +671,118 @@
     "chi" "强制生成群体"
   }
 
+  // === HELL MODE ===
+  "Hell_Activated"
+  {
+    "#format" "{1:.2f}"
+    "en"  "Hell Mode ACTIVATED! The flames of hell will consume you (mult={1})"
+    "es"  "¡Modo Infierno ACTIVADO! Las llamas del infierno te consumirán (mult={1})"
+    "pt"  "Modo Inferno ATIVADO! As chamas do inferno irão consumi-lo (mult={1})"
+    "fr"  "Mode Enfer ACTIVÉ! Les flammes de l'enfer vous consumeront (mult={1})"
+    "de"  "Höllenmodus AKTIVIERT! Die Flammen der Hölle werden dich verzehren (mult={1})"
+    "ru"  "Режим Ада АКТИВИРОВАН! Пламя ада поглотит вас (множ={1})"
+    "it"  "Modalità Inferno ATTIVATA! Le fiamme dell'inferno ti consumeranno (molt={1})"
+    "pl"  "Tryb Piekło AKTYWNY! Płomienie piekła cię pochłoną (mnożnik={1})"
+    "tr"  "Cehennem Modu ETKİNLEŞTİRİLDİ! Cehennem alevleri seni yakacak (çarp={1})"
+    "chi" "地狱模式已激活！地狱之火将吞噬你（倍数={1}）"
+  }
+  "Hell_Deactivated"
+  {
+    "en"  "Hell Mode DEACTIVATED. You have escaped from hell."
+    "es"  "Modo Infierno DESACTIVADO. Has escapado del infierno."
+    "pt"  "Modo Inferno DESATIVADO. Você escapou do inferno."
+    "fr"  "Mode Enfer DÉSACTIVÉ. Vous avez échappé à l'enfer."
+    "de"  "Höllenmodus DEAKTIVIERT. Du bist der Hölle entkommen."
+    "ru"  "Режим Ада ОТКЛЮЧЕН. Вы сбежали из ада."
+    "it"  "Modalità Inferno DISATTIVATA. Sei scappato dall'inferno."
+    "pl"  "Tryb Piekło WYŁĄCZONY. Uciekłeś z piekła."
+    "tr"  "Cehennem Modu DEVRE DIŞI BIRAKILDI. Cehennemden kaçtın."
+    "chi" "地狱模式已停用。你已从地狱逃脱。"
+  }
+  "Hell_Status"
+  {
+    "#format" "{1:s},{2:.2f},{3:s}"
+    "en"  "Hell - Active: {1} | Damage Mult: {2} | Difficulty: {3}"
+    "es"  "Hell - Activo: {1} | Multiplicador: {2} | Dificultad: {3}"
+    "pt"  "Hell - Ativo: {1} | Mult. Dano: {2} | Dificuldade: {3}"
+    "fr"  "Hell - Actif: {1} | Mult. Dégâts: {2} | Difficulté: {3}"
+    "de"  "Hell - Aktiv: {1} | Schaden-Mult: {2} | Schwierigkeit: {3}"
+    "ru"  "Hell - Активен: {1} | Множ. урона: {2} | Сложность: {3}"
+    "it"  "Hell - Attivo: {1} | Molt. Danno: {2} | Difficoltà: {3}"
+    "pl"  "Hell - Aktywny: {1} | Mnożnik Obrażeń: {2} | Trudność: {3}"
+    "tr"  "Hell - Etkin: {1} | Hasar Çarpanı: {2} | Zorluk: {3}"
+    "chi" "地狱 - 激活：{1} | 伤害倍数：{2} | 难度：{3}"
+  }
+  "Hell_Disabled"
+  {
+    "en"  "Hell Mode system is disabled"
+    "es"  "Sistema de Hell Mode deshabilitado"
+    "pt"  "Sistema Hell Mode desabilitado"
+    "fr"  "Système Hell Mode désactivé"
+    "de"  "Hell Mode-System ist deaktiviert"
+    "ru"  "Система Hell Mode отключена"
+    "it"  "Sistema Hell Mode disabilitato"
+    "pl"  "System Hell Mode wyłączony"
+    "tr"  "Hell Mode sistemi devre dışı"
+    "chi" "地狱模式系统已禁用"
+  }
+
+  // === INFERNO MODE ===
+  "Inferno_Activated"
+  {
+    "#format" "{1:.2f}"
+    "en"  "SUPREME INFERNO ACTIVATED! The eternal fire awaits you (mult={1})"
+    "es"  "¡INFERNO SUPREMO ACTIVADO! El fuego eterno te aguarda (mult={1})"
+    "pt"  "INFERNO SUPREMO ATIVADO! O fogo eterno aguarda você (mult={1})"
+    "fr"  "ENFER SUPRÊME ACTIVÉ! Le feu éternel vous attend (mult={1})"
+    "de"  "HÖCHSTE HÖLLE AKTIVIERT! Das ewige Feuer erwartet dich (mult={1})"
+    "ru"  "ВЕРХОВНЫЙ АД АКТИВИРОВАН! Вечный огонь ждёт вас (множ={1})"
+    "it"  "INFERNO SUPREMO ATTIVATO! Il fuoco eterno ti aspetta (molt={1})"
+    "pl"  "NAJWYŻSZE PIEKŁO AKTYWNE! Wieczny ogień czeka na ciebie (mnożnik={1})"
+    "tr"  "YÜCE CEHENNEM ETKİNLEŞTİRİLDİ! Sonsuz ateş seni bekliyor (çarp={1})"
+    "chi" "至高地狱已激活！永恒之火在等待你（倍数={1}）"
+  }
+  "Inferno_Deactivated"
+  {
+    "en"  "Inferno DEACTIVATED. You have survived the eternal fire."
+    "es"  "Inferno DESACTIVADO. Has sobrevivido al fuego eterno."
+    "pt"  "Inferno DESATIVADO. Você sobreviveu ao fogo eterno."
+    "fr"  "Enfer DÉSACTIVÉ. Vous avez survécu au feu éternel."
+    "de"  "Inferno DEAKTIVIERT. Du hast das ewige Feuer überlebt."
+    "ru"  "Inferno ОТКЛЮЧЕН. Вы пережили вечный огонь."
+    "it"  "Inferno DISATTIVATO. Sei sopravvissuto al fuoco eterno."
+    "pl"  "Inferno WYŁĄCZONE. Przeżyłeś wieczny ogień."
+    "tr"  "Inferno DEVRE DIŞI BIRAKILDI. Sonsuz ateşten kurtuldun."
+    "chi" "地狱已停用。你已在永恒之火中幸存。"
+  }
+  "Inferno_Status"
+  {
+    "#format" "{1:s},{2:.2f},{3:s}"
+    "en"  "Inferno - Active: {1} | Damage Mult: {2} | Difficulty: {3}"
+    "es"  "Inferno - Activo: {1} | Multiplicador: {2} | Dificultad: {3}"
+    "pt"  "Inferno - Ativo: {1} | Mult. Dano: {2} | Dificuldade: {3}"
+    "fr"  "Inferno - Actif: {1} | Mult. Dégâts: {2} | Difficulté: {3}"
+    "de"  "Inferno - Aktiv: {1} | Schaden-Mult: {2} | Schwierigkeit: {3}"
+    "ru"  "Inferno - Активен: {1} | Множ. урона: {2} | Сложность: {3}"
+    "it"  "Inferno - Attivo: {1} | Molt. Danno: {2} | Difficoltà: {3}"
+    "pl"  "Inferno - Aktywny: {1} | Mnożnik Obrażeń: {2} | Trudność: {3}"
+    "tr"  "Inferno - Etkin: {1} | Hasar Çarpanı: {2} | Zorluk: {3}"
+    "chi" "地狱 - 激活：{1} | 伤害倍数：{2} | 难度：{3}"
+  }
+  "Inferno_Disabled"
+  {
+    "en"  "Inferno Mode system is disabled"
+    "es"  "Sistema de Inferno Mode deshabilitado"
+    "pt"  "Sistema Inferno Mode desabilitado"
+    "fr"  "Système Inferno Mode désactivé"
+    "de"  "Inferno Mode-System ist deaktiviert"
+    "ru"  "Система Inferno Mode отключена"
+    "it"  "Sistema Inferno Mode disabilitato"
+    "pl"  "System Inferno Mode wyłączony"
+    "tr"  "Inferno Mode sistemi devre dışı"
+    "chi" "地狱模式系统已禁用"
+  }
+
   // === GENERAL UI MESSAGES ===
   "UI_Player"
   {

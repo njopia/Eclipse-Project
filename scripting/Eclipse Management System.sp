@@ -91,6 +91,8 @@
 //==================================================
 #tryinclude "modules/modes/difficulty-orchestrator.module.sp"
 #tryinclude "modules/modes/bloodmoon.module.sp"
+#tryinclude "modules/modes/hell.module.sp"
+#tryinclude "modules/modes/inferno.module.sp"
 #tryinclude "modules/modes/cow-level.module.sp"
 
 //==================================================
@@ -307,6 +309,8 @@ public void OnPluginStart()
 
 	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
+	Hell_OnPluginStart();
+	Inferno_OnPluginStart();
 	CowLevel_OnPluginStart();
 
 	// Initialize frags system
@@ -399,6 +403,8 @@ public void OnMapStart()
 	DifficultyOrchestrator_OnMapStart();
 
 	Bloodmoon_OnMapStart();
+	Hell_OnMapStart();
+	Inferno_OnMapStart();
 	CowLevel_OnMapStart();
 	NuclearStrike_OnMapStart();
 
@@ -474,6 +480,8 @@ public void OnClientPutInServer(int client)
 
 	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
+	Hell_OnClientPutInServer(client);
+	Inferno_OnClientPutInServer(client);
 
 	// Hook for Cow Level
 	CowLevel_OnClientPutInServer(client);
