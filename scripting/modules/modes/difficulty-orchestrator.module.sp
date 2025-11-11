@@ -104,11 +104,16 @@ public void DifficultyOrchestrator_OnPluginStart()
 
 	// Comandos admin
 	RegAdminCmd("sm_diffmode", Command_DiffMode, ADMFLAG_ROOT, "Gestionar modos de dificultad");
+	RegAdminCmd("sm_mode", Command_DiffMode, ADMFLAG_ROOT, "Alias: Gestionar modos de dificultad");
 	RegAdminCmd("sm_resetprogression", Command_ResetProgression, ADMFLAG_ROOT, "Resetear progresión de dificultad");
 
-	// Alias cortos para comandos
+	// Alias cortos para modos
 	RegAdminCmd("sm_bm", Command_Alias_Bloodmoon, ADMFLAG_ROOT, "Alias: Activar Bloodmoon");
+	RegAdminCmd("sm_hell", Command_Alias_Hell, ADMFLAG_ROOT, "Alias: Activar Hell Mode");
+	RegAdminCmd("sm_inferno", Command_Alias_Inferno, ADMFLAG_ROOT, "Alias: Activar Inferno Mode");
 	RegAdminCmd("sm_cow", Command_Alias_CowLevel, ADMFLAG_ROOT, "Alias: Activar Cow Level");
+
+	// Alias cortos para comandos de gestión
 	RegAdminCmd("sm_diffstatus", Command_Alias_Status, ADMFLAG_ROOT, "Alias: Ver estado de dificultad");
 	RegAdminCmd("sm_diffreset", Command_Alias_Reset, ADMFLAG_ROOT, "Alias: Resetear progresión");
 }
@@ -617,6 +622,26 @@ public Action Command_Alias_Bloodmoon(int client, int args)
 {
 	DifficultyOrchestrator_SetMode(MODE_BLOODMOON);
 	ReplyToCommand(client, "[Difficulty] Bloodmoon activated");
+	return Plugin_Handled;
+}
+
+/**
+ * Alias: sm_hell - Activar Hell Mode
+ */
+public Action Command_Alias_Hell(int client, int args)
+{
+	DifficultyOrchestrator_SetMode(MODE_HELL);
+	ReplyToCommand(client, "[Difficulty] Hell Mode activated");
+	return Plugin_Handled;
+}
+
+/**
+ * Alias: sm_inferno - Activar Inferno Mode
+ */
+public Action Command_Alias_Inferno(int client, int args)
+{
+	DifficultyOrchestrator_SetMode(MODE_INFERNO);
+	ReplyToCommand(client, "[Difficulty] Inferno Mode activated");
 	return Plugin_Handled;
 }
 
