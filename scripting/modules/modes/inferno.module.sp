@@ -513,7 +513,7 @@ void Inferno_DoScreenFadeAll(bool activate)
 	int r = 255, g = 150, b = 0;  // Color amarillo-naranja (fuego intenso)
 	int alpha = GetConVarInt(g_cvar_Inferno_FadeAlpha);
 	int duration = GetConVarInt(g_cvar_Inferno_FadeDuration);
-	int hold = 0;
+	int hold = activate ? 999999 : 0;  // Hold infinito cuando se activa, 0 cuando se desactiva
 
 	// Purge previo
 	Handle hPurge = StartMessageAll("Fade");

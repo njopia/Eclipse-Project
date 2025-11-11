@@ -716,7 +716,7 @@ void Bloodmoon_DoScreenFadeAll(bool activate)
 	int r = 120, g = 0, b = 0;
 	int alpha = GetConVarInt(g_cvar_Bloodmoon_FadeAlpha);
 	int duration = GetConVarInt(g_cvar_Bloodmoon_FadeDuration);
-	int hold = 0;
+	int hold = activate ? 999999 : 0;  // Hold infinito cuando se activa, 0 cuando se desactiva
 
 	// Purge previo
 	Handle hPurge = StartMessageAll("Fade");

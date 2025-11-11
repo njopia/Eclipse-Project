@@ -513,7 +513,7 @@ void Hell_DoScreenFadeAll(bool activate)
 	int r = 255, g = 80, b = 20;  // Color naranja-rojo (fuego)
 	int alpha = GetConVarInt(g_cvar_Hell_FadeAlpha);
 	int duration = GetConVarInt(g_cvar_Hell_FadeDuration);
-	int hold = 0;
+	int hold = activate ? 999999 : 0;  // Hold infinito cuando se activa, 0 cuando se desactiva
 
 	// Purge previo
 	Handle hPurge = StartMessageAll("Fade");
