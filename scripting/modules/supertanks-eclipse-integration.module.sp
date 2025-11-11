@@ -262,6 +262,14 @@ public void SuperTanksEclipse_OnSuperTankKilled(int victim, int attacker)
 //==================================================
 
 /**
+ * Obtiene el multiplicador de dificultad del servidor (Easy x1, Normal x2, Advanced x3, Expert x4)
+ */
+int GetDifficultyMultiplier()
+{
+	return iDifficulty;
+}
+
+/**
  * Aplica bonus según el modo de dificultad Eclipse activo
  */
 int ApplyDifficultyModeBonus(int baseReward)

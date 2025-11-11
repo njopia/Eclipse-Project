@@ -625,6 +625,41 @@ stock PropaneExplode(client, Float:Origin[3])
 }
 
 // ============================================================================
+// DIFFICULTY SYSTEM FUNCTIONS
+// ============================================================================
+
+/**
+ * Sets the game difficulty multiplier based on z_difficulty cvar
+ * Updates the global iDifficulty variable
+ *
+ * @noreturn
+ */
+stock SetGameDifficulty()
+{
+	decl String:GameDifficulty[16];
+	GetConVarString(FindConVar("z_difficulty"), GameDifficulty, sizeof(GameDifficulty));
+	if (StrEqual(GameDifficulty, "Easy", false))
+	{
+		iDifficulty = 1;
+	}
+	else if (StrEqual(GameDifficulty, "Normal", false))
+	{
+		iDifficulty = 2;
+	}
+	else if (StrEqual(GameDifficulty, "Hard", false))
+	{
+		iDifficulty = 3;
+	}
+	else if (StrEqual(GameDifficulty, "Impossible", false))
+	{
+		if (!bNightmare)
+		{
+			iDifficulty = 4;
+		}
+	}
+}
+
+// ============================================================================
 // NOTES
 // ============================================================================
 /*
