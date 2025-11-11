@@ -446,3 +446,329 @@ stock ExecTankDeath(client)
 	}
 }
 
+/**
+ * Timer: Tank Spawn
+ * Called 0.1s after tank spawns to configure abilities
+ */
+public Action:TankSpawnTimer(Handle:timer, any:client)
+{
+	if (IsTank(client))
+	{
+		new index = GetSuperTankByRenderColor(GetEntRenderColor(client));
+		if (index >= 0 && index <= 16)
+		{
+			if (index != 0 || (index == 0 && bDefaultOverride))
+			{
+				switch(index)
+				{
+					case 1:
+					{
+						SetEntProp(client, Prop_Send, "m_iGlowType", 3);
+						new glowcolor = RGB_TO_INT(50, 50, 50);
+						SetEntProp(client, Prop_Send, "m_glowColorOverride", glowcolor);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Smasher Tank");
+						}
+					}
+					case 2:
+					{
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Warp Tank");
+						}
+					}
+					case 3:
+					{
+						CreateTimer(0.1, MeteorTankTimer, client, TIMER_FLAG_NO_MAPCHANGE);
+						CreateTimer(6.0, Timer_AttachMETEOR, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Meteor Tank");
+						}
+					}
+					case 4:
+					{
+						CreateTimer(2.0, Timer_AttachSPIT, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Spitter Tank");
+						}
+					}
+					case 5:
+					{
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Heal Tank");
+						}
+					}
+					case 6:
+					{
+						CreateTimer(0.8, Timer_AttachFIRE, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Fire Tank");
+						}
+					}
+					case 7:
+					{
+						CreateTimer(2.0, Timer_AttachICE, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Ice Tank");
+						}
+					}
+					case 8:
+					{
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Jockey Tank");
+						}
+					}
+					case 9:
+					{
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Ghost Tank");
+						}
+					}
+					case 10:
+					{
+						CreateTimer(0.8, Timer_AttachELEC, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Shock Tank");
+						}
+					}
+					case 11:
+					{
+						CreateTimer(2.0, Timer_AttachBLOOD, client, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Witch Tank");
+						}
+					}
+					case 12:
+					{
+						if (ShieldsUp[client] == 0)
+						{
+							ActivateShield(client);
+						}
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Shield Tank");
+						}
+					}
+					case 13:
+					{
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Cobalt Tank");
+						}
+					}
+					case 14:
+					{
+						CreateTimer(0.1, JumperTankTimer, client, TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Jumper Tank");
+						}
+					}
+					case 15:
+					{
+						CreateTimer(0.1, GravityTankTimer, client, TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Gravity Tank");
+						}
+					}
+					case 16:
+					{
+						SetDemonTankHealth(client);
+						CreateTimer(0.1, DemonTankTimer, client, TIMER_FLAG_NO_MAPCHANGE);
+						if (IsFakeClient(client))
+						{
+							SetClientInfo(client, "name", "Demon Tank");
+						}
+					}
+				}
+				if (iTankExtraHealth[index] > 0)
+				{
+					new health = GetEntProp(client, Prop_Send, "m_iHealth");
+					new maxhealth = GetEntProp(client, Prop_Send, "m_iMaxHealth");
+					SetEntProp(client, Prop_Send, "m_iMaxHealth", maxhealth + iTankExtraHealth[index]);
+					SetEntProp(client, Prop_Send, "m_iHealth", health + iTankExtraHealth[index]);
+				}
+				ResetInfectedAbility(client, flTankThrow[index]);
+			}
+		}
+	}
+	return Plugin_Stop;
+}
+
+/**
+ * Teleport Warp Tank to survivors
+ */
+stock TeleportTank(client)
+{
+	if (IsTank(client) && GetEntRenderColor(client) == 130130255)
+	{
+		new random = GetRandomInt(1,iWarpTeleportDelay);
+		if (random == 1)
+		{
+			new target = Pick();
+			if (target)
+			{
+				new Float:Origin[3], Float:Angles[3];
+				GetClientAbsOrigin(target, Origin);
+				GetClientAbsAngles(target, Angles);
+				CreateParticle(client, PARTICLE_WARP, 1.0, 0.0);
+				TeleportEntity(client, Origin, Angles, NULL_VECTOR);
+			}
+		}
+	}
+}
+
+/**
+ * Cloak special infected near Ghost Tank
+ */
+stock InfectedCloak(client)
+{
+	for (new i=1; i<=MaxClients; i++)
+	{
+		if (IsSpecialInfected(i))
+		{
+			decl Float:TankPos[3], Float:InfectedPos[3];
+			GetClientAbsOrigin(client, TankPos);
+			GetClientAbsOrigin(i, InfectedPos);
+			new Float:distance = GetVectorDistance(TankPos, InfectedPos);
+			if (distance < 500)
+			{
+				SetEntityRenderMode(i, RenderMode:3);
+				SetEntityRenderColor(i, 255, 255, 255, 50);
+			}
+			else
+			{
+				SetEntityRenderMode(i, RenderMode:3);
+				SetEntityRenderColor(i, 255, 255, 255, 255);
+			}
+		}
+	}
+}
+
+/**
+ * Check if survivor is in range of tank
+ */
+stock bool:SurvInRange(client, target, targetDist)
+{
+	if (IsSurvivor(target) && IsPlayerAlive(target))
+	{
+		decl Float:TankPos[3], Float:PlayerPos[3];
+		GetClientAbsOrigin(client, TankPos);
+		GetClientAbsOrigin(target, PlayerPos);
+		new Float:distance = GetVectorDistance(TankPos, PlayerPos);
+		if (distance <= targetDist)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Count survivors in range of tank
+ */
+stock CountSurvInRange(client, targetDist)
+{
+	new count = 0;
+	for (new i=1; i<=MaxClients; i++)
+	{
+		if (IsSurvivor(i) && IsPlayerAlive(i))
+		{
+			decl Float:TankPos[3], Float:PlayerPos[3];
+			GetClientAbsOrigin(client, TankPos);
+			GetClientAbsOrigin(i, PlayerPos);
+			new Float:distance = GetVectorDistance(TankPos, PlayerPos);
+			if (distance <= targetDist)
+			{
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+/**
+ * Count survivors out of range of tank
+ */
+stock CountSurvOutRange(client, targetDist)
+{
+	new count = 0;
+	for (new i=1; i<=MaxClients; i++)
+	{
+		if (IsSurvivor(i) && IsPlayerAlive(i))
+		{
+			decl Float:TankPos[3], Float:PlayerPos[3];
+			GetClientAbsOrigin(client, TankPos);
+			GetClientAbsOrigin(i, PlayerPos);
+			new Float:distance = GetVectorDistance(TankPos, PlayerPos);
+			if (distance > targetDist)
+			{
+				count++;
+			}
+		}
+	}
+	return count;
+}
+
+/**
+ * Blur effect for Cobalt Tank
+ */
+public Action:BlurEffect(Handle:timer, any:client)
+{
+	if (IsTank(client) && GetEntRenderColor(client) == 0105255 && TankAbility[client] == 1)
+	{
+		new Float:TankPos[3], Float:TankAng[3];
+		GetClientAbsOrigin(client, TankPos);
+		GetClientAbsAngles(client, TankAng);
+		new Anim = GetEntProp(client, Prop_Send, "m_nSequence");
+		new entity = CreateEntityByName("prop_dynamic");
+		if (IsValidEntity(entity))
+		{
+			DispatchKeyValue(entity, "model", "models/infected/hulk.mdl");
+			DispatchKeyValue(entity, "solid", "6");
+			DispatchSpawn(entity);
+			AcceptEntityInput(entity, "DisableCollision");
+			SetEntityRenderColor(entity, 0, 105, 255, 255);
+			SetEntProp(entity, Prop_Send, "m_nSequence", Anim);
+			SetEntPropFloat(entity, Prop_Send, "m_flPlaybackRate", 15.0);
+			TeleportEntity(entity, TankPos, TankAng, NULL_VECTOR);
+			CreateTimer(0.3, RemoveBlurEffect, entity, TIMER_FLAG_NO_MAPCHANGE);
+			return Plugin_Continue;
+		}
+	}
+	return Plugin_Stop;
+}
+
+/**
+ * Remove blur effect entity
+ */
+public Action:RemoveBlurEffect(Handle:timer, any:entity)
+{
+	if (IsValidEntity(entity))
+	{
+		new iAlpha = GetEntityRenderColor(entity);
+		if (iAlpha - 25 <= 0)
+		{
+			AcceptEntityInput(entity, "Kill");
+			return Plugin_Stop;
+		}
+		else
+		{
+			SetEntityRenderColor(entity, 0, 105, 255, iAlpha - 25);
+			CreateTimer(0.3, RemoveBlurEffect, entity, TIMER_FLAG_NO_MAPCHANGE);
+		}
+	}
+	return Plugin_Stop;
+}
+

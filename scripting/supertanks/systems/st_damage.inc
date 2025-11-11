@@ -312,21 +312,34 @@ public Action:OnPlayerTakeDamage(victim, &attacker, &inflictor, &Float:damage, &
 						{
 							if (bGhostDisarm)
 							{
-								if (weapon > 32 && IsValidEntity(weapon))
+								if (StrEqual(weaponname, "weapon_melee"))
 								{
-									new random = GetRandomInt(1,15);
+									new random = GetRandomInt(1,4);
 									if (random == 1)
 									{
 										ForceWeaponDrop(attacker);
+										EmitSoundToClient(attacker, "npc/infected/action/die/male/death_42.wav", victim);
 									}
 								}
 							}
 						}
 						case 135205255: // Shield Tank - damage blocking
 						{
-							if (ShieldsUp[victim] > 0)
+							if (damagetype == 134217792 || damagetype == 33554432 || damagetype == 16777280 ||
+							damagetype == -1602224062 || damagetype == -2139094974 || damagetype == -2122317758)
 							{
-								return Plugin_Handled;
+								ShieldState[victim] = 8;
+								if (ShieldsUp[victim] == 1)
+								{
+									DeactivateShield(victim, 8.0);
+								}
+							}
+							else
+							{
+								if (ShieldsUp[victim] == 1)
+								{
+									return Plugin_Handled;
+								}
 							}
 						}
 					}
@@ -336,5 +349,3 @@ public Action:OnPlayerTakeDamage(victim, &attacker, &inflictor, &Float:damage, &
 	}
 	return Plugin_Changed;
 }
-
-// IsSpecialInfected is now defined in utilities/st_utils.inc
