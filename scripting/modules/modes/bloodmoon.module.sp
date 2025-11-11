@@ -717,34 +717,43 @@ void Bloodmoon_DoScreenFadeAll(bool activate)
 	int alpha = GetConVarInt(g_cvar_Bloodmoon_FadeAlpha);
 	int duration = GetConVarInt(g_cvar_Bloodmoon_FadeDuration);
 	int hold = activate ? 999999 : 0;  // Hold infinito cuando se activa, 0 cuando se desactiva
-
-	// Purge previo
-	Handle hPurge = StartMessageAll("Fade");
-	if (hPurge != null)
-	{
-		BfWriteShort(hPurge, 0);
-		BfWriteShort(hPurge, 0);
-		BfWriteShort(hPurge, FFADE_PURGE);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		EndMessage();
-	}
-
 	int flags = activate ? (FFADE_IN | FFADE_STAYOUT) : FFADE_OUT;
 
-	Handle hFade = StartMessageAll("Fade");
-	if (hFade != null)
+	// Solo hacer purge al DESACTIVAR, no al activar
+	if (!activate)
 	{
-		BfWriteShort(hFade, duration);
-		BfWriteShort(hFade, hold);
-		BfWriteShort(hFade, flags);
-		BfWriteByte(hFade, r);
-		BfWriteByte(hFade, g);
-		BfWriteByte(hFade, b);
-		BfWriteByte(hFade, alpha);
-		EndMessage();
+		Handle hPurge = StartMessageAll("Fade");
+		if (hPurge != null)
+		{
+			BfWriteShort(hPurge, 0);
+			BfWriteShort(hPurge, 0);
+			BfWriteShort(hPurge, FFADE_PURGE);
+			BfWriteByte(hPurge, 0);
+			BfWriteByte(hPurge, 0);
+			BfWriteByte(hPurge, 0);
+			BfWriteByte(hPurge, 0);
+			EndMessage();
+		}
+	}
+
+	// Aplicar fade a cada jugador conectado
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i))
+			continue;
+
+		Handle hFade = StartMessageOne("Fade", i);
+		if (hFade != null)
+		{
+			BfWriteShort(hFade, duration);
+			BfWriteShort(hFade, hold);
+			BfWriteShort(hFade, flags);
+			BfWriteByte(hFade, r);
+			BfWriteByte(hFade, g);
+			BfWriteByte(hFade, b);
+			BfWriteByte(hFade, alpha);
+			EndMessage();
+		}
 	}
 
 	if (!activate)

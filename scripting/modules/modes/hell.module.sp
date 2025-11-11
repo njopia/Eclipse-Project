@@ -145,6 +145,12 @@ public void Hell_ConVarChanged(Handle convar, const char[] oldValue, const char[
 public void Hell_OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, Hell_OnTakeDamage);
+
+	// Si Hell está activo, aplicar fade al nuevo jugador
+	if (g_bHellActive && GetConVarBool(g_cvar_Hell_Fade))
+	{
+		CreateTimer(2.0, Hell_Timer_ApplyFadeToNewPlayer, GetClientUserId(client));
+	}
 }
 
 /**
@@ -514,24 +520,67 @@ void Hell_DoScreenFadeAll(bool activate)
 	int alpha = GetConVarInt(g_cvar_Hell_FadeAlpha);
 	int duration = GetConVarInt(g_cvar_Hell_FadeDuration);
 	int hold = activate ? 999999 : 0;  // Hold infinito cuando se activa, 0 cuando se desactiva
-
-	// Purge previo
-	Handle hPurge = StartMessageAll("Fade");
-	if (hPurge != null)
-	{
-		BfWriteShort(hPurge, 0);
-		BfWriteShort(hPurge, 0);
-		BfWriteShort(hPurge, FFADE_PURGE);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		EndMessage();
-	}
-
 	int flags = activate ? (FFADE_IN | FFADE_STAYOUT) : FFADE_OUT;
 
-	Handle hFade = StartMessageAll("Fade");
+	// Solo hacer purge al DESACTIVAR, no al activar
+	if (!activate)
+	{
+		Handle hPurge = StartMessageAll("Fade");
+		if (hPurge != null)
+		{
+			BfWriteShort(hPurge, 0);
+			BfWriteShort(hPurge, 0);
+			BfWriteShort(hPurge, FFADE_PURGE);
+			BfWriteByte(hPurge, 0);
+			BfWriteByte(hPurge, 0);
+			BfWriteByte(hPurge, 0);
+			BfWriteByte(hPurge, 0);
+			EndMessage();
+		}
+	}
+
+	// Aplicar fade a cada jugador conectado
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i))
+			continue;
+
+		Handle hFade = StartMessageOne("Fade", i);
+		if (hFade != null)
+		{
+			BfWriteShort(hFade, duration);
+			BfWriteShort(hFade, hold);
+			BfWriteShort(hFade, flags);
+			BfWriteByte(hFade, r);
+			BfWriteByte(hFade, g);
+			BfWriteByte(hFade, b);
+			BfWriteByte(hFade, alpha);
+			EndMessage();
+		}
+	}
+
+	if (!activate)
+	{
+		CreateTimer(float(duration) / 1000.0 + 0.05, Hell_Timer_PurgeFadeOnce);
+	}
+}
+
+public Action Hell_Timer_ApplyFadeToNewPlayer(Handle timer, int userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
+		return Plugin_Stop;
+
+	if (!g_bHellActive || !GetConVarBool(g_cvar_Hell_Fade))
+		return Plugin_Stop;
+
+	int r = 255, g = 80, b = 20;
+	int alpha = GetConVarInt(g_cvar_Hell_FadeAlpha);
+	int duration = GetConVarInt(g_cvar_Hell_FadeDuration);
+	int hold = 999999;  // Infinito
+	int flags = FFADE_IN | FFADE_STAYOUT;
+
+	Handle hFade = StartMessageOne("Fade", client);
 	if (hFade != null)
 	{
 		BfWriteShort(hFade, duration);
@@ -544,10 +593,7 @@ void Hell_DoScreenFadeAll(bool activate)
 		EndMessage();
 	}
 
-	if (!activate)
-	{
-		CreateTimer(float(duration) / 1000.0 + 0.05, Hell_Timer_PurgeFadeOnce);
-	}
+	return Plugin_Stop;
 }
 
 public Action Hell_Timer_PurgeFadeOnce(Handle t, any data)
