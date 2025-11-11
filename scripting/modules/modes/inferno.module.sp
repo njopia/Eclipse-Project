@@ -8,20 +8,6 @@
 // El modo más difícil - multiplicador máximo de daño, hordas masivas
 //==================================================
 
-// Fade flags
-#if !defined FFADE_OUT
-	#define FFADE_OUT	   0x0001
-#endif
-#if !defined FFADE_IN
-	#define FFADE_IN	   0x0002
-#endif
-#if !defined FFADE_STAYOUT
-	#define FFADE_STAYOUT  0x0008
-#endif
-#if !defined FFADE_PURGE
-	#define FFADE_PURGE	   0x0010
-#endif
-
 // ConVars del módulo
 Handle g_cvar_Inferno_Enable = INVALID_HANDLE;
 Handle g_cvar_Inferno_DmgMult = INVALID_HANDLE;

@@ -26,6 +26,23 @@ enum DifficultyMode
 #define PROGRESSION_HELL_TO_INFERNO			2	// Need 2 wins
 #define PROGRESSION_INFERNO_TO_COWLEVEL		2	// Need 2 wins
 
+// Fade flags (shared across all difficulty modes)
+#if !defined FFADE_IN
+	#define FFADE_IN       0x0001  // Fade from transparent to opaque
+#endif
+#if !defined FFADE_OUT
+	#define FFADE_OUT      0x0002  // Fade from opaque to transparent
+#endif
+#if !defined FFADE_MODULATE
+	#define FFADE_MODULATE 0x0004  // Modulate (don't blend)
+#endif
+#if !defined FFADE_STAYOUT
+	#define FFADE_STAYOUT  0x0008  // Stay faded until next usermessage
+#endif
+#if !defined FFADE_PURGE
+	#define FFADE_PURGE    0x0010  // Purge all other fades
+#endif
+
 //==================================================
 // VARIABLES GLOBALES
 //==================================================

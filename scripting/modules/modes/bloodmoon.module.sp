@@ -8,12 +8,6 @@
 // Dificultad aumentada, multiplicador de daño, efectos visuales
 //==================================================
 
-// Fade flags
-#define FFADE_OUT	   0x0001
-#define FFADE_IN	   0x0002
-#define FFADE_STAYOUT  0x0008
-#define FFADE_PURGE	   0x0010
-
 // ConVars del módulo
 Handle g_cvar_Bloodmoon_Enable = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_DmgMult = INVALID_HANDLE;

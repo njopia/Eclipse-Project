@@ -8,20 +8,6 @@
 // Mayor multiplicador de daño que Bloodmoon, efectos visuales de fuego
 //==================================================
 
-// Fade flags
-#if !defined FFADE_OUT
-	#define FFADE_OUT	   0x0001
-#endif
-#if !defined FFADE_IN
-	#define FFADE_IN	   0x0002
-#endif
-#if !defined FFADE_STAYOUT
-	#define FFADE_STAYOUT  0x0008
-#endif
-#if !defined FFADE_PURGE
-	#define FFADE_PURGE	   0x0010
-#endif
-
 // ConVars del módulo
 Handle g_cvar_Hell_Enable = INVALID_HANDLE;
 Handle g_cvar_Hell_DmgMult = INVALID_HANDLE;
