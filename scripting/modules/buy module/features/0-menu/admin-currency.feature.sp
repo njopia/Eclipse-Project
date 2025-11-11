@@ -32,7 +32,10 @@ public Action Command_GiveMoney(int client, int args)
 	// Check if feature is enabled
 	if (!GetConVarBool(cvar_AdminMoneyEnabled))
 	{
-		PrintToChat(client, "[Admin] El sistema de dinero para admins está deshabilitado");
+		SetGlobalTransTarget(client);
+		char message[128];
+		Format(message, sizeof(message), "%t", "AdminMoney_SystemDisabled");
+		PrintToChat(client, "[Admin] %s", message);
 		return Plugin_Handled;
 	}
 
@@ -45,7 +48,10 @@ public Action Command_GiveMoney(int client, int args)
 	// Check if client has admin flag
 	if (!CheckCommandAccess(client, "sm_givemoney", ADMFLAG_GENERIC, true))
 	{
-		PrintToChat(client, "[Admin] No tienes permisos para usar este comando");
+		SetGlobalTransTarget(client);
+		char message[128];
+		Format(message, sizeof(message), "%t", "AdminMoney_NoPermission");
+		PrintToChat(client, "[Admin] %s", message);
 		return Plugin_Handled;
 	}
 
@@ -61,7 +67,10 @@ public Action Command_GiveMoney(int client, int args)
 void ShowPlayerSelectionMenu(int client)
 {
 	Menu menu = new Menu(MenuHandler_SelectPlayer);
-	menu.SetTitle("Selecciona un jugador para darle dinero");
+	SetGlobalTransTarget(client);
+	char title[128];
+	Format(title, sizeof(title), "%t", "AdminMoney_SelectPlayer");
+	menu.SetTitle(title);
 
 	// Add all connected survivors (excluding bots)
 	for (int i = 1; i <= MaxClients; i++)
@@ -80,7 +89,9 @@ void ShowPlayerSelectionMenu(int client)
 	// If no survivors found
 	if (menu.ItemCount == 0)
 	{
-		menu.AddItem("", "No hay jugadores disponibles", ITEMDRAW_DISABLED);
+		char noPlayersText[64];
+		Format(noPlayersText, sizeof(noPlayersText), "%T", "AdminMoney_NoPlayers", client);
+		menu.AddItem("", noPlayersText, ITEMDRAW_DISABLED);
 	}
 
 	menu.Display(client, MENU_TIME_FOREVER);
@@ -107,7 +118,10 @@ public int MenuHandler_SelectPlayer(Menu menu, MenuAction action, int param1, in
 			}
 			else
 			{
-				PrintToChat(param1, "[Admin] El jugador se desconectó");
+				SetGlobalTransTarget(param1);
+				char message[128];
+				Format(message, sizeof(message), "%t", "AdminMoney_PlayerDisconnected");
+				PrintToChat(param1, "[Admin] %s", message);
 			}
 		}
 		case MenuAction_Cancel:
@@ -136,8 +150,9 @@ void ShowAmountSelectionMenu(int admin, int target)
 	char sPlayerName[MAX_NAME_LENGTH];
 	GetClientName(target, sPlayerName, sizeof(sPlayerName));
 
+	SetGlobalTransTarget(admin);
 	char sTitle[256];
-	Format(sTitle, sizeof(sTitle), "¿Cuánto dinero dar a %s?", sPlayerName);
+	Format(sTitle, sizeof(sTitle), "%t", "AdminMoney_HowMuch", sPlayerName);
 	menu.SetTitle(sTitle);
 
 	// Store the target client as user data so we can retrieve it later
@@ -153,12 +168,14 @@ void ShowAmountSelectionMenu(int admin, int target)
 	for (int i = 0; i < sizeof(amounts); i++)
 	{
 		IntToString(amounts[i], sAmount, sizeof(sAmount));
-		Format(sDisplay, sizeof(sDisplay), "%d dinero", amounts[i]);
+		Format(sDisplay, sizeof(sDisplay), "%T", "AdminMoney_AmountLabel", admin, amounts[i]);
 		menu.AddItem(sAmount, sDisplay);
 	}
 
 	// Add custom amount option
-	menu.AddItem("custom", "Cantidad personalizada");
+	char customText[64];
+	Format(customText, sizeof(customText), "%T", "AdminMoney_CustomAmount", admin);
+	menu.AddItem("custom", customText);
 
 	// Store target info in a separate variable for retrieval
 	g_iAdminMoneyTarget[admin] = target;
@@ -182,7 +199,10 @@ public int MenuHandler_SelectAmount(Menu menu, MenuAction action, int param1, in
 
 			if (target <= 0 || !IsClientInGame(target))
 			{
-				PrintToChat(param1, "[Admin] El jugador se desconectó");
+				SetGlobalTransTarget(param1);
+				char message[128];
+				Format(message, sizeof(message), "%t", "AdminMoney_PlayerDisconnected");
+				PrintToChat(param1, "[Admin] %s", message);
 				return 0;
 			}
 
@@ -229,8 +249,13 @@ void ShowCustomAmountPrompt(int admin, int target)
 	g_iAdminMoneyTarget[admin] = target;
 
 	// Use a chat message to prompt for input
-	PrintToChat(admin, "\n[Admin] Escribe en el chat la cantidad de dinero a dar (ejemplo: !givemoney 500)");
-	PrintToChat(admin, "[Admin] Jugador objetivo: %s", sPlayerName);
+	SetGlobalTransTarget(admin);
+	char instructions[256];
+	char targetText[128];
+	Format(instructions, sizeof(instructions), "%t", "AdminMoney_ChatInstructions");
+	Format(targetText, sizeof(targetText), "%t", "AdminMoney_TargetPlayer", sPlayerName);
+	PrintToChat(admin, "\n[Admin] %s", instructions);
+	PrintToChat(admin, "[Admin] %s", targetText);
 }
 
 /**
@@ -240,7 +265,10 @@ public Action Command_GiveMoneySub(int client, int args)
 {
 	if (args < 1)
 	{
-		PrintToChat(client, "[Admin] Uso: !givemoney <cantidad>");
+		SetGlobalTransTarget(client);
+		char message[128];
+		Format(message, sizeof(message), "%t", "AdminMoney_Usage");
+		PrintToChat(client, "[Admin] %s", message);
 		return Plugin_Handled;
 	}
 
@@ -252,13 +280,19 @@ public Action Command_GiveMoneySub(int client, int args)
 
 	if (target <= 0 || !IsClientInGame(target))
 	{
-		PrintToChat(client, "[Admin] El jugador se desconectó");
+		SetGlobalTransTarget(client);
+		char message[128];
+		Format(message, sizeof(message), "%t", "AdminMoney_PlayerDisconnected");
+		PrintToChat(client, "[Admin] %s", message);
 		return Plugin_Handled;
 	}
 
 	if (amount <= 0)
 	{
-		PrintToChat(client, "[Admin] Debes ingresar una cantidad válida (mayor a 0)");
+		SetGlobalTransTarget(client);
+		char message[128];
+		Format(message, sizeof(message), "%t", "AdminMoney_InvalidAmount");
+		PrintToChat(client, "[Admin] %s", message);
 		return Plugin_Handled;
 	}
 
@@ -274,7 +308,10 @@ void GivePlayerMoney(int admin, int target, int amount)
 {
 	if (target <= 0 || !IsClientInGame(target))
 	{
-		PrintToChat(admin, "[Admin] El jugador se desconectó");
+		SetGlobalTransTarget(admin);
+		char message[128];
+		Format(message, sizeof(message), "%t", "AdminMoney_PlayerDisconnected");
+		PrintToChat(admin, "[Admin] %s", message);
 		return;
 	}
 
@@ -291,8 +328,15 @@ void GivePlayerMoney(int admin, int target, int amount)
 	GetClientName(admin, adminName, sizeof(adminName));
 	GetClientName(target, targetName, sizeof(targetName));
 
-	PrintToChat(admin, "[Admin] \x04✓\x01 Diste %d dinero a %s (Total: %d)", amount, targetName, newCurrency);
-	PrintToChat(target, "[Admin] El admin %s te dio %d dinero (Total: %d)", adminName, amount, newCurrency);
+	SetGlobalTransTarget(admin);
+	char adminMessage[256];
+	Format(adminMessage, sizeof(adminMessage), "%t", "AdminMoney_GaveSuccess", amount, targetName, newCurrency);
+	PrintToChat(admin, "[Admin] \x04%s\x01", adminMessage);
+
+	SetGlobalTransTarget(target);
+	char targetMessage[256];
+	Format(targetMessage, sizeof(targetMessage), "%t", "AdminMoney_ReceivedMoney", adminName, amount, newCurrency);
+	PrintToChat(target, "[Admin] %s", targetMessage);
 
 	LogMessage("ADMIN_MONEY: %s gave %d money to %s (new total: %d)", adminName, amount, targetName, newCurrency);
 }

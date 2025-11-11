@@ -217,10 +217,10 @@ stock void Medic_GiveHealth(int client, int amount, bool permanent)
 	}
 	else
 	{
-		// Salud temporal
-		int currentTemp = GetEntProp(client, Prop_Send, "m_healthBuffer");
+		// Salud temporal (healthBuffer es float, no int)
+		float currentTemp = GetEntPropFloat(client, Prop_Send, "m_healthBuffer");
 		SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
-		SetEntProp(client, Prop_Send, "m_healthBuffer", currentTemp + amount);
+		SetEntPropFloat(client, Prop_Send, "m_healthBuffer", currentTemp + float(amount));
 	}
 }
 
