@@ -396,6 +396,9 @@ void Hell_RestoreLightStyle()
 
 int Hell_SpawnFogController()
 {
+	// Desactivar fog controllers nativos del mapa primero
+	Hell_DisableMapFogControllers();
+
 	int ent = CreateEntityByName("env_fog_controller");
 	if (ent == -1) return -1;
 
@@ -419,12 +422,34 @@ int Hell_SpawnFogController()
 	return ent;
 }
 
+/**
+ * Desactiva fog controllers nativos del mapa que pueden interferir
+ */
+void Hell_DisableMapFogControllers()
+{
+	int entity = -1;
+	int disabledCount = 0;
+	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
+	{
+		// No tocar nuestro propio fog controller
+		if (entity == EntRefToEntIndex(g_iFogRef_Hell))
+			continue;
+
+		// Desactivar fog controllers del mapa
+		AcceptEntityInput(entity, "TurnOff");
+		disabledCount++;
+	}
+
+	if (disabledCount > 0)
+		LogMessage("[Hell] Disabled %d map fog controller(s)", disabledCount);
+}
+
 void Hell_RemoveFogController()
 {
 	int ent = EntRefToEntIndex(g_iFogRef_Hell);
 	if (ent != -1 && IsValidEntity(ent))
 	{
-		AcceptEntityInput(ent, "TurnOff");
+		// Solo eliminar la entidad sin TurnOff para evitar desvanecimiento
 		RemoveEntity(ent);
 	}
 	g_iFogRef_Hell = -1;

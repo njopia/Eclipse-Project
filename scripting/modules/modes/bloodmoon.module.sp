@@ -579,6 +579,9 @@ int Bloodmoon_SpawnFogController()
 {
 	LogMessage("[Bloodmoon] Creating env_fog_controller entity...");
 
+	// Desactivar fog controllers nativos del mapa primero
+	Bloodmoon_DisableMapFogControllers();
+
 	int ent = CreateEntityByName("env_fog_controller");
 	if (ent == -1)
 	{
@@ -612,12 +615,34 @@ int Bloodmoon_SpawnFogController()
 	return ent;
 }
 
+/**
+ * Desactiva fog controllers nativos del mapa que pueden interferir
+ */
+void Bloodmoon_DisableMapFogControllers()
+{
+	int entity = -1;
+	int disabledCount = 0;
+	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
+	{
+		// No tocar nuestro propio fog controller
+		if (entity == EntRefToEntIndex(g_iFogRef))
+			continue;
+
+		// Desactivar fog controllers del mapa
+		AcceptEntityInput(entity, "TurnOff");
+		disabledCount++;
+	}
+
+	if (disabledCount > 0)
+		LogMessage("[Bloodmoon] Disabled %d map fog controller(s)", disabledCount);
+}
+
 void Bloodmoon_RemoveFogController()
 {
 	int ent = EntRefToEntIndex(g_iFogRef);
 	if (ent != -1 && IsValidEntity(ent))
 	{
-		AcceptEntityInput(ent, "TurnOff");
+		// Solo eliminar la entidad sin TurnOff para evitar desvanecimiento
 		RemoveEntity(ent);
 	}
 	g_iFogRef = -1;
