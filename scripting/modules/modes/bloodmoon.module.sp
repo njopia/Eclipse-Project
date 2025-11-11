@@ -724,11 +724,11 @@ void Bloodmoon_DoScreenFadeAll(bool activate)
 	{
 		BfWriteShort(hPurge, 0);
 		BfWriteShort(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
-		BfWriteByte(hPurge, 0);
 		BfWriteShort(hPurge, FFADE_PURGE);
+		BfWriteByte(hPurge, 0);
+		BfWriteByte(hPurge, 0);
+		BfWriteByte(hPurge, 0);
+		BfWriteByte(hPurge, 0);
 		EndMessage();
 	}
 
@@ -739,11 +739,11 @@ void Bloodmoon_DoScreenFadeAll(bool activate)
 	{
 		BfWriteShort(hFade, duration);
 		BfWriteShort(hFade, hold);
+		BfWriteShort(hFade, flags);
 		BfWriteByte(hFade, r);
 		BfWriteByte(hFade, g);
 		BfWriteByte(hFade, b);
 		BfWriteByte(hFade, alpha);
-		BfWriteShort(hFade, flags);
 		EndMessage();
 	}
 
@@ -760,11 +760,11 @@ public Action Bloodmoon_Timer_PurgeFadeOnce(Handle t, any data)
 	{
 		BfWriteShort(h, 0);
 		BfWriteShort(h, 0);
-		BfWriteByte(h, 0);
-		BfWriteByte(h, 0);
-		BfWriteByte(h, 0);
-		BfWriteByte(h, 0);
 		BfWriteShort(h, FFADE_PURGE);
+		BfWriteByte(h, 0);
+		BfWriteByte(h, 0);
+		BfWriteByte(h, 0);
+		BfWriteByte(h, 0);
 		EndMessage();
 	}
 	return Plugin_Stop;
