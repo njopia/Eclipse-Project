@@ -602,6 +602,11 @@ public Action:TankSpawnTimer(Handle:timer, any:client)
 				ResetInfectedAbility(client, flTankThrow[index]);
 			}
 		}
+
+		// Eclipse Integration: Modificar stats según modo de dificultad Eclipse
+		#if defined ECLIPSE_INTEGRATION
+		SuperTanksEclipse_ModifyTankStats(client);
+		#endif
 	}
 	return Plugin_Stop;
 }

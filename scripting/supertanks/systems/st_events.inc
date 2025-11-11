@@ -144,6 +144,15 @@ public Action:ST_Event_Player_Death(Handle:event, String:event_name[], bool:dont
 				{
 					if (IsTank(client))
 					{
+						// Eclipse Integration: Otorgar recompensas antes de limpiar el tank
+						#if defined ECLIPSE_INTEGRATION
+						new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+						if (attacker > 0 && GetClientTeam(attacker) == 2)
+						{
+							SuperTanksEclipse_OnSuperTankKilled(client, attacker);
+						}
+						#endif
+
 						ExecTankDeath(client);
 					}
 				}
