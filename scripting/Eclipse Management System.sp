@@ -106,6 +106,8 @@
 #include "supertanks/utilities/st_precache.inc"
 #include "supertanks/utilities/st_utils.inc"
 #include "supertanks/utilities/st_timers.inc"
+#include "supertanks/utilities/st_tank_attach_timers.inc"
+#include "supertanks/tanks/st_tank_gravity_timer.inc"
 #include "supertanks/systems/st_effects.inc"
 #include "supertanks/systems/st_damage.inc"
 #include "supertanks/systems/st_spawning.inc"

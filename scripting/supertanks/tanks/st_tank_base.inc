@@ -780,3 +780,26 @@ public Action:RemoveBlurEffect(Handle:timer, any:entity)
 }
 */
 
+/**
+ * Reset tank ability cooldown
+ *
+ * @param client    Tank client index
+ * @param time      Cooldown time in seconds
+ * @noreturn
+ */
+stock ResetInfectedAbility(client, Float:time)
+{
+	if (client > 0)
+	{
+		if (IsClientInGame(client) && IsPlayerAlive(client) && GetClientTeam(client) == 3)
+		{
+			new ability = GetEntPropEnt(client, Prop_Send, "m_customAbility");
+			if (ability > 0)
+			{
+				SetEntPropFloat(ability, Prop_Send, "m_duration", time);
+				SetEntPropFloat(ability, Prop_Send, "m_timestamp", GetGameTime() + time);
+			}
+		}
+	}
+}
+

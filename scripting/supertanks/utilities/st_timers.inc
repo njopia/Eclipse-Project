@@ -72,3 +72,49 @@ stock TimerUpdateClients()
 		UpdateTimers(i);
 	}
 }
+
+/**
+ * Rock Throw Timer
+ * Handles tank rock modifications based on tank type
+ */
+public Action:RockThrowTimer(Handle:timer)
+{
+	new entity = -1;
+	while ((entity = FindEntityByClassname(entity, "tank_rock")) != INVALID_ENT_REFERENCE)
+	{
+		new thrower = GetEntPropEnt(entity, Prop_Data, "m_hThrower");
+		if (thrower > 0 && thrower < 33 && IsTank(thrower))
+		{
+			new color = GetEntRenderColor(thrower);
+			switch(color)
+			{
+				//Fire Tank
+				case 12800:
+				{
+					SetEntityRenderColor(entity, 128, 0, 0, 255);
+					CreateTimer(0.8, Timer_AttachFIRE_Rock, entity, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				}
+				//Ice Tank
+				case 0100170:
+				{
+					SetEntityRenderMode(entity, RenderMode:3);
+					SetEntityRenderColor(entity, 0, 100, 170, 180);
+				}
+				//Spitter Tank
+				case 12115128:
+				{
+					SetEntityRenderMode(entity, RenderMode:3);
+					SetEntityRenderColor(entity, 121, 151, 28, 30);
+					CreateTimer(0.8, Timer_SpitSound, thrower, TIMER_FLAG_NO_MAPCHANGE);
+					CreateTimer(0.8, Timer_AttachSPIT_Rock, entity, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				}
+				//Shock Tank
+				case 100165255:
+				{
+					CreateTimer(0.8, Timer_AttachELEC_Rock, entity, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+				}
+			}
+		}
+	}
+	return Plugin_Continue;
+}

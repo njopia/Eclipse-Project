@@ -809,10 +809,16 @@ stock CloseSRDoor()
  */
 stock ReturnChapterData()
 {
-	if (IsMissionFinalMap())
-		bIsFinale = true;
-	else
-		bIsFinale = false;
+	bIsFinale = (L4D_IsMissionFinalMap() == true);
+}
+
+/**
+ * Wrapper for L4D IsMissionFinalMap
+ * @return    True if finale map, false otherwise
+ */
+stock bool:IsMissionFinalMap()
+{
+	return L4D_IsMissionFinalMap();
 }
 
 // ============================================================================
@@ -847,6 +853,102 @@ stock SetGameDifficulty()
 		{
 			iDifficulty = 4;
 		}
+	}
+}
+
+// ============================================================================
+// BOT MANAGEMENT FUNCTIONS
+// ============================================================================
+
+/**
+ * Kick excess AI bots (special infected)
+ * Used to prevent bot buildup
+ *
+ * @noreturn
+ */
+stock KickAIBots()
+{
+	for (new i=1; i<=MaxClients; i++)
+	{
+		if (IsSpecialInfected(i) && IsFakeClient(i))
+		{
+			if (CountInfectedAll() > 16)
+			{
+				KickClient(i);
+			}
+		}
+	}
+}
+
+/**
+ * Count all infected players
+ * @return    Number of infected team players
+ */
+stock CountInfectedAll()
+{
+	new count = 0;
+	for (new i=1; i<=MaxClients; i++)
+	{
+		if (IsClientInGame(i) && GetClientTeam(i) == 3)
+		{
+			count++;
+		}
+	}
+	return count;
+}
+
+// ============================================================================
+// RESET FUNCTIONS
+// ============================================================================
+
+/**
+ * Reset all SuperTanks global variables
+ * Called on round start
+ *
+ * @noreturn
+ */
+stock ResetVariables()
+{
+	iCountDownTimer = 0;
+	iSpawnBotTick = 0;
+	iFinaleStage = 0;
+	iCCEnt = 0;
+	iFogVolEnt = 0;
+	iSRDoor = 0;
+}
+
+/**
+ * Reset SuperTanks arrays for a specific client
+ *
+ * @param client    Client index
+ * @noreturn
+ */
+stock ResetClientArrays(client)
+{
+	GravityClaw[client] = 0;
+	PlayerSpeed[client] = 0;
+	ShieldsUp[client] = 0;
+	TankAbility[client] = 0;
+	TankAlive[client] = 0;
+	TankAbilityTimer[client] = 0;
+}
+
+/**
+ * Reset SuperTanks arrays for all clients
+ * Called on round start
+ *
+ * @noreturn
+ */
+stock ResetClientArraysAll()
+{
+	for (new client=1; client<=MaxClients; client++)
+	{
+		GravityClaw[client] = 0;
+		PlayerSpeed[client] = 0;
+		ShieldsUp[client] = 0;
+		TankAbility[client] = 0;
+		TankAlive[client] = 0;
+		TankAbilityTimer[client] = 0;
 	}
 }
 
