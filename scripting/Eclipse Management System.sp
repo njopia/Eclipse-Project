@@ -361,6 +361,12 @@ public void OnPluginStart()
 	SuperTanksEclipse_OnPluginStart();
 	RegConsoleCmd("sm_supertankstats", Command_SuperTankStats, "Ver tus estadísticas de SuperTanks");
 
+	// Initialize SuperTanks timers
+	PrintToServer("[Eclipse] Starting SuperTanks timers...");
+	CreateTimer(0.1, TimerUpdate01, _, TIMER_REPEAT);  // Health display & visual updates
+	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);   // Core game logic
+	CreateTimer(0.5, RockThrowTimer, _, TIMER_REPEAT); // Rock modifications
+
 	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
 	Hell_OnPluginStart();
