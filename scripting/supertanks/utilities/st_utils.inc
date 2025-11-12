@@ -120,7 +120,7 @@ stock bool:IsTank(client)
  */
 stock bool:IsInfected(entity)
 {
-	if (entity > 32 && IsValidEntity(entity))
+	if (entity > 32 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		decl String:classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
@@ -140,7 +140,7 @@ stock bool:IsInfected(entity)
  */
 stock bool:IsWitch(entity)
 {
-	if (entity > 32 && IsValidEntity(entity))
+	if (entity > 32 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		decl String:classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));

@@ -81,7 +81,7 @@ stock InfernoMeteorFall()
  */
 stock ExplodeInfernoMeteor(entity)
 {
-	if (entity > 32 && IsValidEntity(entity))
+	if (entity > 32 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		new attacker, target;
 		for (new i=1; i<=MaxClients; i++)
