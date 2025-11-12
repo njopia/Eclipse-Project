@@ -337,6 +337,7 @@ public Action:ST_Event_Round_Start(Handle:event, String:event_name[], bool:dontB
 	iRound++;
 	SetGameDifficulty();
 	ResetVariables();
+	ReturnChapterData();
 	IdentifySRDoor();
 
 	if (bSuperTanksEnabled)
