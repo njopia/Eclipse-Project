@@ -150,7 +150,8 @@
 // === SERVER MANAGEMENT SYSTEM CORE ===
 //==================================================
 #include "modules/management/afk-join.sp"
-#tryinclude "modules/management/scripted-hud.module.sp"
+// ScriptedHUD disabled - conflicts with SuperTanks health display
+// #tryinclude "modules/management/scripted-hud.module.sp"
 #tryinclude "modules/management/lang.module.sp"
 #tryinclude "modules/management/mapvote.module.sp"
 
