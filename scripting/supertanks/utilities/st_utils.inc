@@ -9,8 +9,19 @@
 // ============================================================================
 
 // ============================================================================
+// ECLIPSE INTEGRATION - Usar funciones de helpers cuando ECLIPSE_INTEGRATION está definido
+// ============================================================================
+#if defined ECLIPSE_INTEGRATION && !defined ST_SKIP_COMMON_FUNCTIONS
+	// Las funciones comunes ya están definidas en helpers/entities.helpers.sp
+	// No redefinir aquí para evitar conflictos
+	#define ST_SKIP_COMMON_FUNCTIONS
+#endif
+
+// ============================================================================
 // CLIENT VALIDATION FUNCTIONS
 // ============================================================================
+
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 
 /**
  * Check if a client index is valid and in game
@@ -57,8 +68,11 @@ stock bool:IsSpectator(client)
 	return false;
 }
 
+#endif // !ST_SKIP_COMMON_FUNCTIONS
+
 /**
  * Check if a client is a special infected (not tank)
+ * NOTE: SuperTanks always needs this function, so keep it outside guards
  *
  * @param client    Client index
  * @return          True if special infected, false otherwise
@@ -83,6 +97,7 @@ stock bool:IsSpecialInfected(client)
  * @param client    Client index
  * @return          True if tank, false otherwise
  */
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 stock bool:IsTank(client)
 {
 	if (client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) == 3 && !IsPlayerIncap(client) && TankAlive[client] == 1)
@@ -135,6 +150,7 @@ stock bool:IsWitch(entity)
 	}
 	return false;
 }
+#endif
 
 /**
  * Check if a witch entity is angry
@@ -309,6 +325,7 @@ stock Float:GetNearestSurvivorDistEnt(entity)
 // COLOR UTILITY FUNCTIONS
 // ============================================================================
 
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 /**
  * Convert RGB values to integer color value
  *
@@ -321,6 +338,7 @@ stock RGB_TO_INT(red, green, blue)
 {
 	return (blue * 65536) + (green * 256) + red;
 }
+#endif
 
 /**
  * Get entity render color as integer
@@ -447,6 +465,7 @@ stock ST_GetClientAimTarget(client)
 	return -1;
 }
 
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 /**
  * Trace ray filter callback - don't hit the client itself
  *
@@ -463,6 +482,7 @@ public bool:TraceRayDontHitSelf(entity, contentsMask, any:client)
 	}
 	return true;
 }
+#endif
 
 // ============================================================================
 // RANGE AND COUNTING FUNCTIONS (CONTINUED)
@@ -559,6 +579,7 @@ stock bool:IsPlayerBurning(client)
 	return false;
 }
 
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 /**
  * Update client timers (reduces timer counters)
  *
@@ -575,11 +596,13 @@ stock UpdateTimers(client)
 		}
 	}
 }
+#endif
 
 // ============================================================================
 // CHEAT COMMAND EXECUTION
 // ============================================================================
 
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 /**
  * Execute a cheat command by temporarily removing sv_cheats flag
  *
@@ -595,6 +618,7 @@ stock CheatCommand(client, const String:command[], const String:arguments[])
 	FakeClientCommand(client, "%s %s", command, arguments);
 	SetCommandFlags(command, flags);
 }
+#endif
 
 // ============================================================================
 // EXPLOSION UTILITY FUNCTIONS

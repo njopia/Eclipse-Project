@@ -8,6 +8,13 @@
 // Handles precaching of models, sounds, and particles
 // ============================================================================
 
+// ============================================================================
+// ECLIPSE INTEGRATION - Usar funciones de helpers cuando disponibles
+// ============================================================================
+#if defined ECLIPSE_INTEGRATION && !defined ST_SKIP_COMMON_FUNCTIONS
+	#define ST_SKIP_COMMON_FUNCTIONS
+#endif
+
 /**
  * Precache all resources required by the plugin
  * Called from OnMapStart()
@@ -176,6 +183,7 @@ stock CheckSoundPreCache(const String:Soundfile[])
  * @param ParticleName    Name of the particle effect
  * @noreturn
  */
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 stock PrecacheParticle(const String:ParticleName[])
 {
 	new particle = CreateEntityByName("info_particle_system");
@@ -190,3 +198,4 @@ stock PrecacheParticle(const String:ParticleName[])
 		AcceptEntityInput(particle, "FireUser1");
 	}
 }
+#endif

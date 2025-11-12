@@ -41,7 +41,8 @@
       "Bash(cmd /c \"cd c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting && dir /b supertanks\\tanks\\st_tank_*.inc\")",
       "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\natan_supertanks_modular_v2.smx 2>nul || dir /s /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\natan_supertanks_modular_v2.smx 2>nul\")",
       "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\*.smx\")",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(Select-String \"Errors|Code size\")"
     ],
     "deny": [],
     "ask": []

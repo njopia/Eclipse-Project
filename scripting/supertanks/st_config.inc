@@ -20,7 +20,7 @@ stock ST_Config_CreateConVars()
 	hWave1Cvar = CreateConVar("st_wave1_tanks", "1", "Default number of tanks in the 1st wave of finale.", FCVAR_NOTIFY, true, 0.0, true, 5.0);
 	hWave2Cvar = CreateConVar("st_wave2_tanks", "2", "Default number of tanks in the 2nd wave of finale.", FCVAR_NOTIFY, true, 0.0, true, 5.0);
 	hWave3Cvar = CreateConVar("st_wave3_tanks", "3", "Default number of tanks in the finale escape.", FCVAR_NOTIFY, true, 0.0, true, 5.0);
-	hFinaleOnly = CreateConVar("st_finale_only", "1", "Create Super Tanks in finale only?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	hFinaleOnly = CreateConVar("st_finale_only", "0", "Create Super Tanks in finale only?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hDefaultTanks = CreateConVar("st_default_tanks", "0", "Only use default tanks?", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	hGamemodeCvar = FindConVar("mp_gamemode");
 

@@ -7,12 +7,22 @@
 // CONSTANTS - Using #define for cross-file visibility
 // ============================================================================
 
-// Fade flags
-#define FFADE_IN 0x0001
-#define FFADE_OUT 0x0002
-#define FFADE_MODULATE 0x0004
-#define FFADE_STAYOUT 0x0008
-#define FFADE_PURGE 0x0010
+// Fade flags (con guards para evitar redefinición con otros módulos)
+#if !defined FFADE_IN
+	#define FFADE_IN 0x0001
+#endif
+#if !defined FFADE_OUT
+	#define FFADE_OUT 0x0002
+#endif
+#if !defined FFADE_MODULATE
+	#define FFADE_MODULATE 0x0004
+#endif
+#if !defined FFADE_STAYOUT
+	#define FFADE_STAYOUT 0x0008
+#endif
+#if !defined FFADE_PURGE
+	#define FFADE_PURGE 0x0010
+#endif
 
 // Survivor models
 #define MODEL_NICK "models/survivors/survivor_gambler.mdl"
@@ -44,19 +54,43 @@
 #define MODEL_GASCAN "models/props_junk/gascan001a.mdl"
 #define MODEL_PROPANE "models/props_junk/propanecanister001a.mdl"
 
-// Particle effects
-#define PARTICLE_LS_BOLT "storm_lightning_01_thin"
-#define PARTICLE_SMOKE "apc_wheel_smoke1"
-#define PARTICLE_FIRE "aircraft_destroy_fastFireTrail"
-#define PARTICLE_WARP "electrical_arc_01_system"
-#define PARTICLE_SPIT "spitter_areaofdenial_glow2"
-#define PARTICLE_SPITPROJ "spitter_projectile"
-#define PARTICLE_ELEC "electrical_arc_01_parent"
-#define PARTICLE_BLOOD_EXPLODE "boomer_explode_D"
-#define PARTICLE_EXPLODE "boomer_explode"
-#define PARTICLE_METEOR "smoke_medium_01"
-#define PARTICLE_FLARE "flare_burning"
-#define PARTICLE_DEMON_SMOKE "smoke_campfire"
+// Particle effects (con guards para evitar redefinición con otros módulos)
+#if !defined PARTICLE_LS_BOLT
+	#define PARTICLE_LS_BOLT "storm_lightning_01_thin"
+#endif
+#if !defined PARTICLE_SMOKE
+	#define PARTICLE_SMOKE "apc_wheel_smoke1"
+#endif
+#if !defined PARTICLE_FIRE
+	#define PARTICLE_FIRE "aircraft_destroy_fastFireTrail"
+#endif
+#if !defined PARTICLE_WARP
+	#define PARTICLE_WARP "electrical_arc_01_system"
+#endif
+#if !defined PARTICLE_SPIT
+	#define PARTICLE_SPIT "spitter_areaofdenial_glow2"
+#endif
+#if !defined PARTICLE_SPITPROJ
+	#define PARTICLE_SPITPROJ "spitter_projectile"
+#endif
+#if !defined PARTICLE_ELEC
+	#define PARTICLE_ELEC "electrical_arc_01_parent"
+#endif
+#if !defined PARTICLE_BLOOD_EXPLODE
+	#define PARTICLE_BLOOD_EXPLODE "boomer_explode_D"
+#endif
+#if !defined PARTICLE_EXPLODE
+	#define PARTICLE_EXPLODE "boomer_explode"
+#endif
+#if !defined PARTICLE_METEOR
+	#define PARTICLE_METEOR "smoke_medium_01"
+#endif
+#if !defined PARTICLE_FLARE
+	#define PARTICLE_FLARE "flare_burning"
+#endif
+#if !defined PARTICLE_DEMON_SMOKE
+	#define PARTICLE_DEMON_SMOKE "smoke_campfire"
+#endif
 
 // Weapon classnames array - Must be declared in main file or variables file
 // as arrays cannot be #defined
