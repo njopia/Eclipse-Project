@@ -382,7 +382,8 @@ public OnEntityDestroyed(entity)
 
 	if (bSuperTanksEnabled)
 	{
-		if (IsValidEntity(entity))
+		// Validate entity more strictly to prevent Invalid edict errors
+		if (entity > 0 && IsValidEdict(entity) && IsValidEntity(entity))
 		{
 			decl String:classname[64];
 			GetEdictClassname(entity, classname, sizeof(classname));
