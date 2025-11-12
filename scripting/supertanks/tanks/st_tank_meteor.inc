@@ -218,7 +218,7 @@ public Action:UpdateMeteorFall(Handle:timer, any:data)
  */
 stock ExplodeMeteor(entity, client)
 {
-	if (entity > 32 && IsValidEntity(entity) && IsTank(client))
+	if (entity > 32 && IsValidEdict(entity) && IsValidEntity(entity) && IsTank(client))
 	{
 		decl String:classname[16];
 		GetEdictClassname(entity, classname, 20);

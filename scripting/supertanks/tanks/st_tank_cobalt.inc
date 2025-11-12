@@ -53,7 +53,7 @@ public Action:BlurEffect(Handle:timer, any:client)
  */
 public Action:RemoveBlurEffect(Handle:timer, any:entity)
 {
-	if (IsValidEntity(entity))
+	if (entity > 0 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		decl String:classname[32];
 		GetEdictClassname(entity, classname, sizeof(classname));

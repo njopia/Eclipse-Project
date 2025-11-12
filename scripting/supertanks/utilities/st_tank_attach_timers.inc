@@ -24,7 +24,7 @@ public Action:Timer_AttachFIRE(Handle:timer, any:client)
 
 public Action:Timer_AttachFIRE_Rock(Handle:timer, any:entity)
 {
-	if (IsValidEntity(entity))
+	if (entity > 0 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		decl String:classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
@@ -76,7 +76,7 @@ public Action:Timer_SpitSound(Handle:timer, any:client)
 
 public Action:Timer_AttachSPIT_Rock(Handle:timer, any:entity)
 {
-	if (IsValidEntity(entity))
+	if (entity > 0 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		decl String:classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
@@ -105,7 +105,7 @@ public Action:Timer_AttachELEC(Handle:timer, any:client)
 
 public Action:Timer_AttachELEC_Rock(Handle:timer, any:entity)
 {
-	if (IsValidEntity(entity))
+	if (entity > 0 && IsValidEdict(entity) && IsValidEntity(entity))
 	{
 		decl String:classname[16];
 		GetEdictClassname(entity, classname, sizeof(classname));
