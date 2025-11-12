@@ -51,7 +51,6 @@ Version: 2.0-modular-complete
 #include "supertanks/nightmare/st_nightmare_difficulty.inc"
 #include "supertanks/nightmare/st_nightmare_spawning.inc"
 #include "supertanks/nightmare/st_nightmare_environment.inc"
-#include "supertanks/st_stubs.inc"
 
 #define PLUGIN_VERSION "2.0-modular-complete"
 

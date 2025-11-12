@@ -134,7 +134,6 @@
 #include "supertanks/nightmare/st_nightmare_difficulty.inc"
 #include "supertanks/nightmare/st_nightmare_spawning.inc"
 #include "supertanks/nightmare/st_nightmare_environment.inc"
-#include "supertanks/st_stubs.inc"
 #include "modules/supertanks-eclipse-integration.module.sp"
 
 //==================================================
