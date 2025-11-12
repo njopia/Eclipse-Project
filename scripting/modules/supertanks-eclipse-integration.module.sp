@@ -263,11 +263,9 @@ public void SuperTanksEclipse_OnSuperTankKilled(int victim, int attacker)
 
 /**
  * Obtiene el multiplicador de dificultad del servidor (Easy x1, Normal x2, Advanced x3, Expert x4)
+ * NOTA: Esta función ya existe en otros módulos, usar la función global definida allí
  */
-int GetDifficultyMultiplier()
-{
-	return iDifficulty;
-}
+// int GetDifficultyMultiplier() - ELIMINADA para evitar conflicto con módulos existentes
 
 /**
  * Aplica bonus según el modo de dificultad Eclipse activo
@@ -446,10 +444,6 @@ public Action Command_SuperTankStats(int client, int args)
 
 /**
  * Obtiene el color de render de una entidad
+ * NOTA: Esta función ya existe en supertanks/utilities/st_utils.inc
  */
-int GetEntRenderColor(int entity)
-{
-	int r, g, b, a;
-	GetEntityRenderColor(entity, r, g, b, a);
-	return r * 1000000 + g * 1000 + b;
-}
+// int GetEntRenderColor(int entity) - ELIMINADA para evitar conflicto con st_utils.inc

@@ -613,7 +613,9 @@ public Action:TankSpawnTimer(Handle:timer, any:client)
 
 /**
  * Teleport Warp Tank to survivors
+ * NOTA: Función movida a supertanks/tanks/st_tank_warp.inc
  */
+/*
 stock TeleportTank(client)
 {
 	if (IsTank(client) && GetEntRenderColor(client) == 130130255)
@@ -633,10 +635,13 @@ stock TeleportTank(client)
 		}
 	}
 }
+*/
 
 /**
  * Cloak special infected near Ghost Tank
+ * NOTA: Función movida a supertanks/tanks/st_tank_ghost.inc
  */
+/*
 stock InfectedCloak(client)
 {
 	for (new i=1; i<=MaxClients; i++)
@@ -660,10 +665,13 @@ stock InfectedCloak(client)
 		}
 	}
 }
+*/
 
 /**
  * Check if survivor is in range of tank
+ * NOTA: Funciones de rango movidas a supertanks/utilities/st_utils.inc (versiones compartidas)
  */
+/*
 stock bool:SurvInRange(client, target, targetDist)
 {
 	if (IsSurvivor(target) && IsPlayerAlive(target))
@@ -680,9 +688,6 @@ stock bool:SurvInRange(client, target, targetDist)
 	return false;
 }
 
-/**
- * Count survivors in range of tank
- */
 stock CountSurvInRange(client, targetDist)
 {
 	new count = 0;
@@ -703,9 +708,6 @@ stock CountSurvInRange(client, targetDist)
 	return count;
 }
 
-/**
- * Count survivors out of range of tank
- */
 stock CountSurvOutRange(client, targetDist)
 {
 	new count = 0;
@@ -725,10 +727,13 @@ stock CountSurvOutRange(client, targetDist)
 	}
 	return count;
 }
+*/
 
 /**
  * Blur effect for Cobalt Tank
+ * NOTA: Función movida a supertanks/tanks/st_tank_cobalt.inc
  */
+/*
 public Action:BlurEffect(Handle:timer, any:client)
 {
 	if (IsTank(client) && GetEntRenderColor(client) == 0105255 && TankAbility[client] == 1)
@@ -755,9 +760,6 @@ public Action:BlurEffect(Handle:timer, any:client)
 	return Plugin_Stop;
 }
 
-/**
- * Remove blur effect entity
- */
 public Action:RemoveBlurEffect(Handle:timer, any:entity)
 {
 	if (IsValidEntity(entity))
@@ -776,4 +778,5 @@ public Action:RemoveBlurEffect(Handle:timer, any:entity)
 	}
 	return Plugin_Stop;
 }
+*/
 

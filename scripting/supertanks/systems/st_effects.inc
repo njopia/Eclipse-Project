@@ -10,6 +10,13 @@ Handle msg		   = INVALID_HANDLE;
 // Visual effects, particles, screen effects
 // ============================================================================
 
+// ============================================================================
+// ECLIPSE INTEGRATION - Usar funciones de helpers cuando disponibles
+// ============================================================================
+#if defined ECLIPSE_INTEGRATION && !defined ST_SKIP_COMMON_FUNCTIONS
+	#define ST_SKIP_COMMON_FUNCTIONS
+#endif
+
 /**
  * Create a particle effect at a target entity's location
  *
@@ -54,6 +61,7 @@ stock  CreateParticle(int target, char[] ParticleName, float time, float origin)
  * @param z             Z-axis offset from entity origin
  * @noreturn
  */
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 stock AttachParticle(int target, const char[] ParticleName, float time, float x, float y, float z)
 {
 	if (target > 0 && IsValidEntity(target))
@@ -83,6 +91,7 @@ stock AttachParticle(int target, const char[] ParticleName, float time, float x,
 		}
 	}
 }
+#endif
 
 /**
  * Attach a particle effect at a specific location

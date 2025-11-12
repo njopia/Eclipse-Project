@@ -8,6 +8,13 @@
 // Damage dealing, damage hooks, fire immunity, shield mechanics
 // ============================================================================
 
+// ============================================================================
+// ECLIPSE INTEGRATION - Usar funciones de helpers cuando disponibles
+// ============================================================================
+#if defined ECLIPSE_INTEGRATION && !defined ST_SKIP_COMMON_FUNCTIONS
+	#define ST_SKIP_COMMON_FUNCTIONS
+#endif
+
 /**
  * Deal damage to a player using point_hurt entity
  *
@@ -54,6 +61,7 @@ stock DealDamagePlayer(target, attacker, dmgtype, dmg, String:inflictor[])
  * @param inflictor  Inflictor classname
  * @noreturn
  */
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 stock DealDamageEntity(target, attacker, dmgtype, dmg, String:inflictor[])
 {
 	if (target > 32)
@@ -89,6 +97,7 @@ stock DealDamageEntity(target, attacker, dmgtype, dmg, String:inflictor[])
 		}
 	}
 }
+#endif
 
 /**
  * Hook: Called when an entity takes damage

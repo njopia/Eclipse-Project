@@ -238,14 +238,14 @@ void ChangeLanguage(int client, int lang)
 		SetClientCookie(client, lang_cookie, code);
 		cLangPref[client] = code;
 
-		char msg[128];
-		Format(msg, sizeof(msg), "%T", "Lang_Changed", client, name, code, lang);
-		PrintToChat(client, "\x04[Language]\x01 %s", msg);
+		char message[128];
+		Format(message, sizeof(message), "%T", "Lang_Changed", client, name, code, lang);
+		PrintToChat(client, "\x04[Language]\x01 %s", message);
 	}
 	else
 	{
-		char msg[128];
-		Format(msg, sizeof(msg), "%T", "Lang_ErrorCode", client);
-		PrintToChat(client, "\x05[Language]\x01 %s", msg);
+		char message[128];
+		Format(message, sizeof(message), "%T", "Lang_ErrorCode", client);
+		PrintToChat(client, "\x05[Language]\x01 %s", message);
 	}
 }

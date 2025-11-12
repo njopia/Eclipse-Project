@@ -8,6 +8,13 @@
 // Infected bot spawning, special infected management
 // ============================================================================
 
+// ============================================================================
+// ECLIPSE INTEGRATION - Usar funciones de helpers cuando disponibles
+// ============================================================================
+#if defined ECLIPSE_INTEGRATION && !defined ST_SKIP_COMMON_FUNCTIONS
+	#define ST_SKIP_COMMON_FUNCTIONS
+#endif
+
 /**
  * Interval-based infected spawning logic
  * Called every second by main timer
@@ -161,12 +168,14 @@ stock CountTotal()
  * Helper functions for player state manipulation
  * These wrap netprop access for ghost/alive/life states
  */
+#if !defined ST_SKIP_COMMON_FUNCTIONS
 stock bool:IsPlayerGhost(client)
 {
 	if (GetEntProp(client, Prop_Send, "m_isGhost", 1))
 		return true;
 	return false;
 }
+#endif
 
 stock SetPlayerGhostStatus(client, bool:bIsGhost)
 {

@@ -144,7 +144,7 @@ public void buyMenuOnPluginStart()
 		}
 	}
 
-	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);
+	CreateTimer(1.0, BuyMenu_TimerUpdate, _, TIMER_REPEAT);
 }
 
 /**
@@ -272,7 +272,7 @@ stock void DealDamageEntity(int target, int attacker, int dmgtype, int dmg, cons
 	}
 }
 
-public Action TimerUpdate1(Handle timer)
+public Action BuyMenu_TimerUpdate(Handle timer)
 {
 	if (!IsServerProcessing())
 	{
@@ -281,7 +281,7 @@ public Action TimerUpdate1(Handle timer)
 
 	if (bMenuOn)
 	{
-		TimerUpdateClients();
+		BuyMenu_TimerUpdateClients();
 	}
 	return Plugin_Continue;
 }
@@ -317,7 +317,7 @@ stock void UpdateDeployable(int client, int deployable)
 		}
 	}
 }
-stock void TimerUpdateClients()
+stock void BuyMenu_TimerUpdateClients()
 {
 	for (int i = 1; i <= MaxClients; i++)
 	{
