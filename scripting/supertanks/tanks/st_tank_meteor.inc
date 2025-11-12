@@ -207,66 +207,7 @@ public Action:UpdateMeteorFall(Handle:timer, any:data)
 	CreateTimer(0.6, UpdateMeteorFall, Pack);
 }
 
-/**
- * Check distance from entity to ground
- *
- * @param i_Ent    Entity index
- * @return         Distance in units, or 0.0 if on ground
- */
-public Float:OnGroundUnits(i_Ent)
-{
-	if (!(GetEntityFlags(i_Ent) & (FL_ONGROUND)))
-	{
-		decl Handle:h_Trace, Float:f_Origin[3], Float:f_Position[3], Float:f_Down[3] = { 90.0, 0.0, 0.0 };
-		GetEntPropVector(i_Ent, Prop_Send, "m_vecOrigin", f_Origin);
-		h_Trace = TR_TraceRayFilterEx(f_Origin, f_Down, CONTENTS_SOLID|CONTENTS_MOVEABLE, RayType_Infinite, TraceRayDontHitSelfAndLive, i_Ent);
-		if (TR_DidHit(h_Trace))
-		{
-			decl Float:f_Units;
-			TR_GetEndPosition(f_Position, h_Trace);
-			f_Units = f_Origin[2] - f_Position[2];
-			CloseHandle(h_Trace);
-			return f_Units;
-		}
-		CloseHandle(h_Trace);
-	}
-
-	return 0.0;
-}
-
-/**
- * Get ray trace hit position
- *
- * @param pos          Start position
- * @param angle        Trace angle
- * @param hitpos       Output hit position
- * @param ent          Entity to exclude
- * @param useoffset    Use offset from hit position
- * @return             Hit entity index
- */
-stock GetRayHitPos(Float:pos[3], Float:angle[3], Float:hitpos[3], ent=0, bool:useoffset=false)
-{
-	new Handle:trace;
-	new hit=0;
-
-	trace = TR_TraceRayFilterEx(pos, angle, MASK_SOLID, RayType_Infinite, TraceRayDontHitSelfAndLive, ent);
-	if (TR_DidHit(trace))
-	{
-		TR_GetEndPosition(hitpos, trace);
-		hit=TR_GetEntityIndex( trace);
-	}
-	CloseHandle(trace);
-
-	if (useoffset)
-	{
-		decl Float:v[3];
-		MakeVectorFromPoints(hitpos, pos, v);
-		NormalizeVector(v, v);
-		ScaleVector(v, 15.0);
-		AddVectors(hitpos, v, hitpos);
-	}
-	return hit;
-}
+// OnGroundUnits, GetRayHitPos, and TraceRayDontHitSelfAndLive are now in utilities/st_utils.inc
 
 /**
  * Explode a meteor rock
@@ -316,26 +257,4 @@ stock ExplodeMeteor(entity, client)
 	}
 }
 
-/**
- * Trace ray filter - Don't hit self or alive players
- *
- * @param entity    Entity being tested
- * @param mask      Contents mask
- * @param data      Entity to exclude
- * @return          True to hit entity, false to ignore
- */
-public bool:TraceRayDontHitSelfAndLive(entity, mask, any:data)
-{
-	if (entity == data)
-	{
-		return false;
-	}
-	else if (entity > 0 && entity <= MaxClients)
-	{
-		if (IsClientInGame(entity))
-		{
-			return false;
-		}
-	}
-	return true;
-}
+// TraceRayDontHitSelfAndLive moved to utilities/st_utils.inc

@@ -36,18 +36,4 @@ stock TeleportTank(client)
 	}
 }
 
-/**
- * Pick a random alive survivor
- *
- * @return    Client index of random survivor, or 0 if none found
- */
-stock Pick()
-{
-    	new count, clients[MaxClients];
-    	for (new i=1; i<=MaxClients; i++)
-    	{
-        	if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 2)
-            		clients[count++] = i;
-    	}
-    	return clients[GetRandomInt(0,count-1)];
-}
+// Pick() moved to utilities/st_utils.inc

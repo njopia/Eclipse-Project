@@ -9,5 +9,5 @@
 // to their respective modules in future phases of modularization.
 // ============================================================================
 
-// Gamemode stubs - will be moved to nightmare modules
-stock ExecGameModes() { }
+// All stubs have been moved to their respective modules
+// ExecGameModes() -> nightmare/st_nightmare_environment.inc
