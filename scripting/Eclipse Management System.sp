@@ -96,47 +96,6 @@
 #tryinclude "modules/modes/cow-level.module.sp"
 
 //==================================================
-// === SUPERTANKS NIGHTMARE - ECLIPSE INTEGRATION ===
-//==================================================
-#define ECLIPSE_INTEGRATION  // Activa hooks de integración en SuperTanks
-#include "supertanks/st_constants.inc"
-#include "supertanks/st_variables.inc"
-#include "supertanks/st_config.inc"
-#include "supertanks/utilities/st_sdk.inc"
-#include "supertanks/utilities/st_precache.inc"
-#include "supertanks/utilities/st_utils.inc"
-#include "supertanks/utilities/st_timers.inc"
-#include "supertanks/utilities/st_tank_attach_timers.inc"
-#include "supertanks/tanks/st_tank_gravity_timer.inc"
-#include "supertanks/systems/st_effects.inc"
-#include "supertanks/systems/st_damage.inc"
-#include "supertanks/systems/st_spawning.inc"
-#include "supertanks/systems/st_finale.inc"
-#include "supertanks/systems/st_events.inc"
-#include "supertanks/tanks/st_tank_base.inc"
-#include "supertanks/tanks/st_tank_fire.inc"
-#include "supertanks/tanks/st_tank_ice.inc"
-#include "supertanks/tanks/st_tank_gravity.inc"
-#include "supertanks/tanks/st_tank_smasher.inc"
-#include "supertanks/tanks/st_tank_shock.inc"
-#include "supertanks/tanks/st_tank_warp.inc"
-#include "supertanks/tanks/st_tank_meteor.inc"
-#include "supertanks/tanks/st_tank_spitter.inc"
-#include "supertanks/tanks/st_tank_heal.inc"
-#include "supertanks/tanks/st_tank_jockey.inc"
-#include "supertanks/tanks/st_tank_ghost.inc"
-#include "supertanks/tanks/st_tank_witch.inc"
-#include "supertanks/tanks/st_tank_shield.inc"
-#include "supertanks/tanks/st_tank_cobalt.inc"
-#include "supertanks/tanks/st_tank_jumper.inc"
-#include "supertanks/tanks/st_tank_demon.inc"
-#include "supertanks/nightmare/st_nightmare_core.inc"
-#include "supertanks/nightmare/st_nightmare_difficulty.inc"
-#include "supertanks/nightmare/st_nightmare_spawning.inc"
-#include "supertanks/nightmare/st_nightmare_environment.inc"
-#include "modules/supertanks-eclipse-integration.module.sp"
-
-//==================================================
 // === FRAGS SYSTEM MODULE ===
 //==================================================
 #include "modules/frags-system.module.sp"
@@ -348,25 +307,6 @@ public void OnPluginStart()
 	// Initialize game mode orchestrator (MUST be before individual modes)
 	DifficultyOrchestrator_OnPluginStart();
 
-	// Initialize SuperTanks Nightmare system
-	PrintToServer("[Eclipse] Initializing SuperTanks Nightmare...");
-	ST_Config_CreateConVars();
-	ST_Config_LoadValues();
-	ST_Config_HookConVars();
-	ST_SDK_Init();
-	RegisterSuperTanksEvents();
-
-	// Initialize SuperTanks-Eclipse Integration
-	PrintToServer("[Eclipse] Initializing SuperTanks-Eclipse Integration...");
-	SuperTanksEclipse_OnPluginStart();
-	RegConsoleCmd("sm_supertankstats", Command_SuperTankStats, "Ver tus estadísticas de SuperTanks");
-
-	// Initialize SuperTanks timers
-	PrintToServer("[Eclipse] Starting SuperTanks timers...");
-	CreateTimer(0.1, TimerUpdate01, _, TIMER_REPEAT);  // Health display & visual updates
-	CreateTimer(1.0, TimerUpdate1, _, TIMER_REPEAT);   // Core game logic
-	CreateTimer(0.5, RockThrowTimer, _, TIMER_REPEAT); // Rock modifications
-
 	// Initialize game mode modules
 	Bloodmoon_OnPluginStart();
 	Hell_OnPluginStart();
@@ -455,10 +395,6 @@ public void OnMapStart()
 
 	// Reset frags system
 	FragsSystem_OnMapStart();
-
-	// Initialize SuperTanks system
-	ST_Precache_All();
-	SuperTanksEclipse_OnMapStart();
 
 	// Reset map vote system
 #if defined _MAPVOTE_MODULE_
