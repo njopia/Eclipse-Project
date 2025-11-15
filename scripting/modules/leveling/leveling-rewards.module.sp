@@ -44,6 +44,10 @@
 // --- ConVar para debug de rewards ---
 Handle cvar_Rewards_Debug = INVALID_HANDLE;
 
+// --- Throttling para evitar aplicar rewards múltiples veces ---
+float g_fLastRewardApply[MAXPLAYERS + 1];	// Último momento que se aplicaron rewards
+#define REWARD_APPLY_COOLDOWN 2.0			// Cooldown mínimo entre aplicaciones (segundos)
+
 /**
  * Inicializa el módulo de rewards
  * Debe ser llamado desde OnPluginStart()
@@ -172,6 +176,9 @@ public void LevelingRewards_OnClientDisconnect(int client)
 	LaserRounds_OnClientDisconnect(client);
 	DoubleJump_OnClientDisconnect(client);
 	DamageReduction_OnClientDisconnect(client);
+
+	// Reset throttling timestamp
+	g_fLastRewardApply[client] = 0.0;
 
 	// Debug
 	LevelingDebug_OnClientDisconnect(client);
@@ -343,6 +350,18 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return Plugin_Continue;
 
+	// Throttling: Evitar aplicar rewards múltiples veces en poco tiempo
+	// Esto previene spam de mensajes durante cinemáticas de inicio de mapa
+	float now = GetGameTime();
+	float timeSinceLastApply = now - g_fLastRewardApply[client];
+
+	if (timeSinceLastApply < REWARD_APPLY_COOLDOWN)
+	{
+		LogMessage("[REWARDS DEBUG] Throttling: Ignorando spawn múltiple de %N (%.1fs desde último apply)",
+			client, timeSinceLastApply);
+		return Plugin_Continue;
+	}
+
 	// Aplicar rewards según nivel (sin mostrar mensajes en spawn)
 	int playerLevel = Leveling_GetPlayerLevel(client);
 	LogMessage("[REWARDS DEBUG] Player_Spawn evento - %N con nivel %d", client, playerLevel);
@@ -350,6 +369,7 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 	if (playerLevel > 0)
 	{
 		LevelingRewards_ApplyRewardsSilent(client, playerLevel);
+		g_fLastRewardApply[client] = now;	// Actualizar timestamp
 	}
 	else
 	{
