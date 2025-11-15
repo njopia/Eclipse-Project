@@ -294,6 +294,14 @@ public Action:OnPlayerTakeDamage(victim, &attacker, &inflictor, &Float:damage, &
 					}
 				}
 
+				// Eclipse Integration: Aplicar bonus de daño según habilidades activas
+				#if defined ECLIPSE_INTEGRATION
+				if (IsSurvivor(attacker))
+				{
+					damage = SuperTanksEclipse_CalculateDamageBonus(attacker, victim, damage);
+				}
+				#endif
+
 				// Tank abilities triggered by taking damage
 				if (IsSurvivor(attacker))
 				{
