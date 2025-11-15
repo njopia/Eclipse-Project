@@ -631,15 +631,22 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 		// Ammo Pile (Nivel 1)
 		if (StrEqual(info, BM_CHOICE_3_1))
 		{
-			PrintToChatAll("Player level: %d", playerLevel);
 			if (playerLevel < 1)
 			{
-				PrintToChatAll("Player level: %d", playerLevel);
 				char errorMsg[128];
 				Format(errorMsg, sizeof(errorMsg), "%T", "Error_LevelRequired", client, 1, "Ammo Pile");
 				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
 				return 0;
 			}
+
+			// Verificar cooldown ANTES de cobrar
+			float cooldownLeft = AmmoPile_GetCooldown(client);
+			if (cooldownLeft > 0.0)
+			{
+				PrintToChat(client, "\x04[Ammo]\x01 Espera \x03%.1fs\x01 para usar \x05pile\x01 nuevamente.", cooldownLeft);
+				return 0;
+			}
+
 			int cost = GetConVarInt(cvar_CostAmmo);
 			if (PurchaseItem(client, cost, "Ammo Pile"))
 			{

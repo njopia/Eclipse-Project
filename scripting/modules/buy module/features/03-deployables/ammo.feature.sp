@@ -124,6 +124,22 @@ stock void AmmoPile_ResetCooldown(int client)
 	}
 }
 
+/**
+ * Verifica si el jugador puede usar Ammo Pile (cooldown disponible)
+ * @param client Cliente a verificar
+ * @return tiempo restante de cooldown (0.0 si puede usar)
+ */
+stock float AmmoPile_GetCooldown(int client)
+{
+	if (client <= 0 || client > MaxClients)
+		return 999.0;
+
+	float now = GetGameTime();
+	float last = g_LastUse[client][AMMO_PILE];
+	float left = (CONFIG_AMMO_PILE_COOLDOWN - (now - last));
+	return (left > 0.0) ? left : 0.0;
+}
+
 
 // ======================================================================
 // Helpers de debug
