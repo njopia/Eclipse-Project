@@ -405,6 +405,9 @@ public void OnPluginStart()
 
 	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
 	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
+	RegAdminCmd("sm_clearfade", Cmd_ClearFade, ADMFLAG_ROOT, "Purga todos los efectos de fade de pantalla (EMERGENCIA para pantalla blanca)");
+	RegAdminCmd("sm_clearfog", Cmd_ClearFog, ADMFLAG_ROOT, "Elimina todos los fog controllers (EMERGENCIA para pantalla blanca)");
+	RegAdminCmd("sm_fixwhitescreen", Cmd_FixWhiteScreen, ADMFLAG_ROOT, "Solución completa para pantalla blanca (fade + fog)");
 
 	// Create ConVars
 	g_cvarDebug = CreateConVar("sm_spawnammo_debug", "0", "Activa debug verboso (0/1).", 0, true, 0.0, true, 1.0);
@@ -440,6 +443,9 @@ public void OnMapStart()
 
 	// Clean up all timers from previous map
 	CleanupAllTimers();
+
+	// CRITICAL: Force cleanup any residual fog controllers
+	ForceCleanupAllFogControllers();
 
 	// Reset unified points system tracking flags
 	EclipsePointsUnified_OnMapStart();
@@ -498,6 +504,9 @@ public void OnMapStart()
 public void OnMapEnd()
 {
 	LogToFile(logfilepath, "|               MAP END                     |");
+
+	// CRITICAL: Force cleanup all fog controllers before map change
+	ForceCleanupAllFogControllers();
 
 	// Cleanup game modes
 	Bloodmoon_OnMapEnd();
@@ -716,6 +725,211 @@ stock void ResetAllPlayersState()
 	}
 
 	LogToFile(logfilepath, "[CLEANUP] Reseteo de cooldowns completado");
+}
+
+//==================================================
+// === EMERGENCY FADE PURGE SYSTEM ===
+//==================================================
+
+/**
+ * Emergency command to purge all screen fades
+ * Fixes white screen overlay issues caused by persistent fades
+ */
+public Action Cmd_ClearFade(int client, int args)
+{
+	// FFADE_PURGE ya está definido en difficulty-orchestrator.module.sp
+	// Purgar fades de todos los jugadores
+	int affectedPlayers = 0;
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i))
+			continue;
+
+		Handle hFade = StartMessageOne("Fade", i);
+		if (hFade != null)
+		{
+			BfWriteShort(hFade, 0);      // duration
+			BfWriteShort(hFade, 0);      // hold time
+			BfWriteShort(hFade, FFADE_PURGE); // flags
+			BfWriteByte(hFade, 0);       // r
+			BfWriteByte(hFade, 0);       // g
+			BfWriteByte(hFade, 0);       // b
+			BfWriteByte(hFade, 0);       // alpha
+			EndMessage();
+			affectedPlayers++;
+		}
+	}
+
+	// Mensaje de confirmación
+	if (client > 0)
+	{
+		PrintToChat(client, "\x04[Eclipse]\x01 Screen fades purgados para \x05%d\x01 jugadores", affectedPlayers);
+	}
+
+	PrintToServer("[Eclipse] Screen fades purgados por admin. Jugadores afectados: %d", affectedPlayers);
+	LogToFile(logfilepath, "[FADE PURGE] Admin %N purgó screen fades. Jugadores: %d", client > 0 ? client : 0, affectedPlayers);
+
+	return Plugin_Handled;
+}
+
+/**
+ * Emergency command to remove all fog controllers
+ * Fixes white screen caused by fog configuration issues
+ */
+public Action Cmd_ClearFog(int client, int args)
+{
+	int removedCount = 0;
+	int entity = -1;
+
+	// Find and remove all env_fog_controller entities
+	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
+	{
+		if (IsValidEntity(entity))
+		{
+			AcceptEntityInput(entity, "TurnOff");
+			AcceptEntityInput(entity, "Kill");
+			removedCount++;
+		}
+	}
+
+	// Also try to find and remove fog_volume entities
+	entity = -1;
+	while ((entity = FindEntityByClassname(entity, "fog_volume")) != -1)
+	{
+		if (IsValidEntity(entity))
+		{
+			AcceptEntityInput(entity, "Kill");
+			removedCount++;
+		}
+	}
+
+	// Reset light style to normal
+	SetLightStyle(0, "m");
+
+	// Mensaje de confirmación
+	if (client > 0)
+	{
+		PrintToChat(client, "\x04[Eclipse]\x01 Fog controllers eliminados: \x05%d\x01. Light style restaurado.", removedCount);
+	}
+
+	PrintToServer("[Eclipse] Fog controllers eliminados por admin. Total: %d", removedCount);
+	LogToFile(logfilepath, "[FOG CLEAR] Admin %N eliminó %d fog controllers", client > 0 ? client : 0, removedCount);
+
+	return Plugin_Handled;
+}
+
+/**
+ * Combined emergency command to fix white screen
+ * Clears both fades and fog controllers
+ */
+public Action Cmd_FixWhiteScreen(int client, int args)
+{
+	PrintToServer("[Eclipse] EMERGENCY FIX: Fixing white screen...");
+
+	if (client > 0)
+	{
+		PrintToChat(client, "\x04[Eclipse]\x01 Aplicando solución de emergencia para pantalla blanca...");
+	}
+
+	// Step 1: Clear all fades
+	int affectedPlayers = 0;
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || IsFakeClient(i))
+			continue;
+
+		Handle hFade = StartMessageOne("Fade", i);
+		if (hFade != null)
+		{
+			BfWriteShort(hFade, 0);
+			BfWriteShort(hFade, 0);
+			BfWriteShort(hFade, FFADE_PURGE);
+			BfWriteByte(hFade, 0);
+			BfWriteByte(hFade, 0);
+			BfWriteByte(hFade, 0);
+			BfWriteByte(hFade, 0);
+			EndMessage();
+			affectedPlayers++;
+		}
+	}
+
+	// Step 2: Remove all fog controllers
+	int removedFog = 0;
+	int entity = -1;
+	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
+	{
+		if (IsValidEntity(entity))
+		{
+			AcceptEntityInput(entity, "TurnOff");
+			AcceptEntityInput(entity, "Kill");
+			removedFog++;
+		}
+	}
+
+	entity = -1;
+	while ((entity = FindEntityByClassname(entity, "fog_volume")) != -1)
+	{
+		if (IsValidEntity(entity))
+		{
+			AcceptEntityInput(entity, "Kill");
+			removedFog++;
+		}
+	}
+
+	// Step 3: Reset light style
+	SetLightStyle(0, "m");
+
+	// Results
+	if (client > 0)
+	{
+		PrintToChat(client, "\x04[Eclipse]\x01 Solución aplicada:");
+		PrintToChat(client, " \x05→\x01 Screen fades purgados: \x05%d\x01 jugadores", affectedPlayers);
+		PrintToChat(client, " \x05→\x01 Fog controllers eliminados: \x05%d", removedFog);
+		PrintToChat(client, " \x05→\x01 Light style restaurado a normal");
+	}
+
+	PrintToServer("[Eclipse] WHITE SCREEN FIX COMPLETE - Fades: %d players, Fog: %d entities", affectedPlayers, removedFog);
+	LogToFile(logfilepath, "[WHITE SCREEN FIX] Admin %N - Fades: %d, Fog: %d", client > 0 ? client : 0, affectedPlayers, removedFog);
+
+	return Plugin_Handled;
+}
+
+/**
+ * Force cleanup all fog controllers
+ * Called on map start/end to prevent fog controller accumulation
+ */
+void ForceCleanupAllFogControllers()
+{
+	int removedCount = 0;
+	int entity = -1;
+
+	// Remove all env_fog_controller entities
+	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
+	{
+		if (IsValidEntity(entity))
+		{
+			AcceptEntityInput(entity, "TurnOff");
+			AcceptEntityInput(entity, "Kill");
+			removedCount++;
+		}
+	}
+
+	// Remove all fog_volume entities
+	entity = -1;
+	while ((entity = FindEntityByClassname(entity, "fog_volume")) != -1)
+	{
+		if (IsValidEntity(entity))
+		{
+			AcceptEntityInput(entity, "Kill");
+			removedCount++;
+		}
+	}
+
+	if (removedCount > 0)
+	{
+		LogToFile(logfilepath, "[FOG CLEANUP] Removed %d residual fog controllers", removedCount);
+		SetLightStyle(0, "m");  // Reset light style
+	}
 }
 
 //==================================================

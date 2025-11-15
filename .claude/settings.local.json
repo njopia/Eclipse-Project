@@ -42,7 +42,8 @@
       "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\natan_supertanks_modular_v2.smx 2>nul || dir /s /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\natan_supertanks_modular_v2.smx 2>nul\")",
       "Bash(cmd /c \"dir /b c:\\Users\\Socius\\Desktop\\Eclipse-Project\\scripting\\*.smx\")",
       "Bash(cmd /c:*)",
-      "Bash(Select-String \"Errors|Code size\")"
+      "Bash(Select-String \"Errors|Code size\")",
+      "Bash(\"/c/Program Files (x86)/Steam/steamapps/common/Left 4 Dead 2 Dedicated Server/left4dead2/addons/sourcemod/scripting/spcomp.exe\" \"scripting\\Eclipse Management System.sp\")"
     ],
     "deny": [],
     "ask": []
