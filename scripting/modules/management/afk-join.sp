@@ -169,43 +169,137 @@ void TryJoinSurvivors(int client)
 		return;
 	}
 
-	// Si hay bot disponible intenta tomarlo (Left4DHooks) o haz fallback a jointeam 2
-	bool taken = false;
+	LogMessage("[JOIN DEBUG] Client %d (team: %d) attempting to join survivors", client, GetClientTeam(client));
 
-	// Busca un bot de sobreviviente
-	int	 bot   = FindSurvivorBot();
-
-	LogMessage("[JOIN DEBUG] Client %d attempting to join survivors. Bot found: %d", client, bot);
+	// MÉTODO 1: Buscar un bot de sobreviviente y tomar su control
+	int bot = FindSurvivorBot();
+	LogMessage("[JOIN DEBUG] Survivor bot found: %d", bot);
 
 	if (bot > 0)
 	{
+		// Usar Left4DHooks si está disponible (método preferido)
 		#if defined _l4dh_included
-			taken = L4D_TakeOverBot(bot, client);  // FIX: Necesita bot como primer parámetro
-			LogMessage("[JOIN DEBUG] L4D_TakeOverBot result for client %d: %s", client, taken ? "SUCCESS" : "FAILED");
+			LogMessage("[JOIN DEBUG] Using L4D_SetHumanSpec method");
+			L4D_SetHumanSpec(bot, client);
+			L4D_TakeOverBot(client);
 		#else
-			LogMessage("[JOIN DEBUG] Left4DHooks NOT available. Using fallback method.");
+			LogMessage("[JOIN DEBUG] Left4DHooks NOT available. Using manual takeover.");
+
+			// MÉTODO 2: Cambio manual de equipo + tomar bot
+			ChangeClientTeam(client, TEAM_SURVIVOR);
+
+			// Dar un frame para que el cambio de equipo se procese
+			RequestFrame(Frame_TakeOverBot, GetClientUserId(client));
 		#endif
 	}
-
-	if (!taken)
+	else
 	{
-		LogMessage("[JOIN DEBUG] Using fallback method for client %d", client);
-
-		// Fallback: Cambiar a equipo de sobrevivientes
+		// MÉTODO 3: No hay bot, intentar unión directa (puede fallar si servidor está configurado así)
+		LogMessage("[JOIN DEBUG] No bot available. Attempting direct team join.");
 		ChangeClientTeam(client, TEAM_SURVIVOR);
-
-		// Intenta también el comando del juego como respaldo adicional
-		FakeClientCommand(client, "jointeam 2");
 	}
+
 	delete PanelTimer[client];
-	// Verifica tras un frame (aumentado a 0.5s para dar tiempo al cambio)
-	CreateTimer(0.5, PostJoinCheck, GetClientUserId(client));
+	// Verifica el resultado después de dar tiempo al proceso
+	CreateTimer(0.7, PostJoinCheck, GetClientUserId(client));
+}
+
+// Frame callback para tomar control del bot después de cambiar equipo
+void Frame_TakeOverBot(any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (!IsPlayer(client))
+		return;
+
+	LogMessage("[JOIN DEBUG] Frame_TakeOverBot executing for client %d", client);
+
+	// Intenta tomar un bot usando comando de consola
+	int bot = FindSurvivorBot();
+	if (bot > 0)
+	{
+		// Mata al bot para que el jugador pueda tomar su lugar
+		ForcePlayerSuicide(bot);
+
+		// Pequeño delay antes de verificar
+		CreateTimer(0.1, Timer_FinalCheck, userid);
+	}
+}
+
+// Timer para verificación final después del frame
+public Action Timer_FinalCheck(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (!IsPlayer(client))
+		return Plugin_Stop;
+
+	// Si todavía no es sobreviviente, forzar con comando de consola
+	if (GetClientTeam(client) != TEAM_SURVIVOR)
+	{
+		LogMessage("[JOIN DEBUG] Client %d still not survivor after frame. Forcing with console command.", client);
+		ClientCommand(client, "jointeam 2");
+	}
+
+	return Plugin_Stop;
 }
 
 public Action PostJoinCheck(Handle timer, any userid)
 {
 	int client = GetClientOfUserId(userid);
-	if (!IsPlayer(client)) return Plugin_Stop;
+	if (!IsPlayer(client))
+		return Plugin_Stop;
+
+	int currentTeam = GetClientTeam(client);
+	LogMessage("[JOIN DEBUG] PostJoinCheck - Client %d is now in team %d (expected %d)", client, currentTeam, TEAM_SURVIVOR);
+
+	if (currentTeam == TEAM_SURVIVOR)
+	{
+		// ÉXITO: El jugador logró unirse a sobrevivientes
+		char message[128];
+		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
+		PrintToChatAll("\x04[JOIN]\x01 %s", message);
+		delete PanelTimer[client];
+	}
+	else
+	{
+		// FALLO: Aún está en espectadores - último intento
+		LogMessage("[JOIN DEBUG] FAILED - Client %d could not join survivors (still in team %d)", client, currentTeam);
+
+		int bot = FindSurvivorBot();
+		if (bot > 0)
+		{
+			LogMessage("[JOIN DEBUG] Last attempt: Found bot %d, killing it to free slot", bot);
+
+			// Matar al bot para liberar el slot
+			ForcePlayerSuicide(bot);
+
+			// Forzar cambio de equipo
+			ChangeClientTeam(client, TEAM_SURVIVOR);
+
+			// Último intento con comando de consola
+			ClientCommand(client, "jointeam 2");
+
+			// Verificación final después de 0.5s
+			CreateTimer(0.5, Timer_FinalVerification, userid);
+		}
+		else
+		{
+			// No hay bots disponibles
+			char message[256];
+			Format(message, sizeof(message), "%T", "Join_Failed", client);
+			PrintToChat(client, "\x04[JOIN]\x01 %s", message);
+			PrintToChat(client, "\x03[DEBUG]\x01 Team: %d | Expected: %d | No survivor bots available", currentTeam, TEAM_SURVIVOR);
+			delete PanelTimer[client];
+		}
+	}
+	return Plugin_Stop;
+}
+
+// Verificación final después de todos los intentos
+public Action Timer_FinalVerification(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+	if (!IsPlayer(client))
+		return Plugin_Stop;
 
 	int currentTeam = GetClientTeam(client);
 
@@ -214,72 +308,17 @@ public Action PostJoinCheck(Handle timer, any userid)
 		char message[128];
 		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
 		PrintToChatAll("\x04[JOIN]\x01 %s", message);
-		delete PanelTimer[client];
-	}
-	else
-	{
-		// Si no logró unirse, intenta un método alternativo
-		LogMessage("[JOIN DEBUG] Client %d failed to join survivors (team: %d). Attempting alternative method.", client, currentTeam);
-
-		// Método alternativo: Buscar un bot y tomar su lugar
-		int bot = FindSurvivorBot();
-		if (bot > 0)
-		{
-			LogMessage("[JOIN DEBUG] Found survivor bot %d. Attempting takeover for client %d", bot, client);
-
-			// Intenta tomar control del bot nuevamente
-			#if defined _l4dh_included
-				bool retaken = L4D_TakeOverBot(bot, client);
-				if (retaken)
-				{
-					LogMessage("[JOIN DEBUG] Takeover successful on retry for client %d", client);
-				}
-				else
-				{
-					LogMessage("[JOIN DEBUG] Takeover failed on retry for client %d. Using ChangeClientTeam.", client);
-					ChangeClientTeam(client, TEAM_SURVIVOR);
-				}
-			#else
-				// Si Left4DHooks no está disponible, fuerza el cambio de equipo
-				ChangeClientTeam(client, TEAM_SURVIVOR);
-			#endif
-
-			// Verifica después de otro pequeño delay
-			CreateTimer(0.3, Timer_RetryTakeover, userid);
-		}
-		else
-		{
-			// No hay bots disponibles, muestra mensaje de error
-			char message[256];
-			Format(message, sizeof(message), "%T", "Join_Failed", client);
-			PrintToChat(client, "\x04[JOIN]\x01 %s", message);
-			PrintToChat(client, "\x03[DEBUG]\x01 Team: %d | Expected: %d | No survivor bots found", currentTeam, TEAM_SURVIVOR);
-			delete PanelTimer[client];
-		}
-	}
-	return Plugin_Stop;
-}
-
-// Timer de reintento para tomar control del bot
-public Action Timer_RetryTakeover(Handle timer, any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (!IsPlayer(client)) return Plugin_Stop;
-
-	// Verifica nuevamente después del reintento
-	if (GetClientTeam(client) == TEAM_SURVIVOR)
-	{
-		char message[128];
-		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
-		PrintToChatAll("\x04[JOIN]\x01 %s", message);
+		LogMessage("[JOIN DEBUG] SUCCESS (final) - Client %d joined survivors", client);
 	}
 	else
 	{
 		char message[256];
 		Format(message, sizeof(message), "%T", "Join_Failed", client);
 		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
+		LogMessage("[JOIN DEBUG] ULTIMATE FAILURE - Client %d could not join (team: %d)", client, currentTeam);
 	}
 
+	delete PanelTimer[client];
 	return Plugin_Stop;
 }
 
