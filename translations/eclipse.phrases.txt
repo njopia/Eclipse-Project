@@ -1553,6 +1553,19 @@
     "tr"  "Şu anda katılamadı. Bir slot müsait olduğunda tekrar deneyin."
     "chi" "现在无法加入。请在有空位时再试。"
   }
+  "Join_HintRejoin"
+  {
+    "en"  "Type !join to open the menu and rejoin survivors"
+    "es"  "Escribe !join para abrir el menú y unirte a sobrevivientes"
+    "pt"  "Digite !join para abrir o menu e entrar nos sobreviventes"
+    "fr"  "Tapez !join pour ouvrir le menu et rejoindre les survivants"
+    "de"  "Gib !join ein, um das Menü zu öffnen und den Überlebenden beizutreten"
+    "ru"  "Напишите !join, чтобы открыть меню и присоединиться к выжившим"
+    "it"  "Scrivi !join per aprire il menu e unirti ai sopravvissuti"
+    "pl"  "Wpisz !join, aby otworzyć menu i dołączyć do ocalałych"
+    "tr"  "Menüyü açmak ve hayatta kalanlara katılmak için !join yazın"
+    "chi" "输入 !join 打开菜单并加入幸存者"
+  }
 
   // === LEVELING SYSTEM ===
   "Leveling_LevelUp"

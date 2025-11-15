@@ -4,6 +4,7 @@
 #tryinclude < left4dhooks>
 
 Handle PanelTimer[MAXPLAYERS + 1];
+Handle HintTimer[MAXPLAYERS + 1];
 
 #define TEAM_SPECTATOR 1
 #define TEAM_SURVIVOR  2
@@ -70,6 +71,9 @@ public Action Timer_ShowPanel(Handle timer, int client)
 
 void afkShowMainMenu(int client)
 {
+	// Detener hint mientras el menú está abierto
+	StopHintTimer(client);
+
 	int survTotal, survHumans, specs;
 	CountTeams(survTotal, survHumans, specs);
 
@@ -110,14 +114,20 @@ public int PanelHandler(Menu menu, MenuAction action, int client, int item)
 		case 1:	   // Espectadores
 		{
 			ToSpectator(client, false);
+			// Iniciar hint permanente
+			StartHintTimer(client);
 		}
 		case 2:	   // Sobrevivientes
 		{
+			// Detener hint si está activo
+			StopHintTimer(client);
 			TryJoinSurvivors(client);
 		}
 		case 3:	   // Cerrar
 		{
 			delete PanelTimer[client];
+			// Iniciar hint permanente cuando cierra el panel
+			StartHintTimer(client);
 		}
 	}
 	return 0;
@@ -226,6 +236,7 @@ public Action PostJoinCheck(Handle timer, any userid)
 		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
 		PrintToChatAll("\x04[JOIN]\x01 %s", message);
 		delete PanelTimer[client];
+		StopHintTimer(client);  // Detener hint al unirse exitosamente
 	}
 	else
 	{
@@ -277,6 +288,7 @@ public Action Timer_FinalVerification(Handle timer, any userid)
 		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
 		PrintToChatAll("\x04[JOIN]\x01 %s", message);
 		LogMessage("[JOIN DEBUG] SUCCESS (final) - Client %d joined survivors", client);
+		StopHintTimer(client);  // Detener hint al unirse exitosamente
 	}
 	else
 	{
@@ -284,6 +296,8 @@ public Action Timer_FinalVerification(Handle timer, any userid)
 		Format(message, sizeof(message), "%T", "Join_Failed", client);
 		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
 		LogMessage("[JOIN DEBUG] ULTIMATE FAILURE - Client %d could not join (team: %d)", client, currentTeam);
+		// Si falla definitivamente, reiniciar el hint para que sepa que puede reintentar
+		StartHintTimer(client);
 	}
 
 	delete PanelTimer[client];
@@ -349,4 +363,73 @@ public int GetMaxPlayers()
 	}
 
 	return cvMaxPlayers.IntValue;
+}
+
+/* ===================== Sistema de Hints ===================== */
+
+// Inicia el timer de hint permanente
+void StartHintTimer(int client)
+{
+	if (!IsPlayer(client))
+		return;
+
+	// Si ya está en sobrevivientes, no mostrar hint
+	if (GetClientTeam(client) == TEAM_SURVIVOR)
+		return;
+
+	// Detener hint anterior si existe
+	StopHintTimer(client);
+
+	// Crear timer repetitivo que muestre el hint cada 5 segundos
+	HintTimer[client] = CreateTimer(5.0, Timer_ShowHint, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+
+	// Mostrar el hint inmediatamente también
+	ShowRejoinHint(client);
+}
+
+// Detiene el timer de hint
+void StopHintTimer(int client)
+{
+	if (HintTimer[client] != null)
+	{
+		KillTimer(HintTimer[client]);
+		HintTimer[client] = null;
+	}
+}
+
+// Timer que muestra el hint repetidamente
+public Action Timer_ShowHint(Handle timer, any userid)
+{
+	int client = GetClientOfUserId(userid);
+
+	if (!IsPlayer(client))
+	{
+		HintTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	// Si el jugador ya no está en espectadores, detener el hint
+	if (GetClientTeam(client) != TEAM_SPECTATOR)
+	{
+		HintTimer[client] = null;
+		return Plugin_Stop;
+	}
+
+	ShowRejoinHint(client);
+	return Plugin_Continue;
+}
+
+// Muestra el mensaje de hint traducido
+void ShowRejoinHint(int client)
+{
+	char message[128];
+	Format(message, sizeof(message), "%T", "Join_HintRejoin", client);
+	PrintHintText(client, message);
+}
+
+// Hook de desconexión para limpiar timers
+public void Afk_Join_OnClientDisconnect(int client)
+{
+	StopHintTimer(client);
+	delete PanelTimer[client];
 }
