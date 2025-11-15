@@ -97,6 +97,15 @@ public void AmmoPile_OnRoundStart()
 }
 
 /**
+ * Hook cuando jugador entra al servidor - Resetear cooldowns
+ */
+public void AmmoPile_OnClientPutInServer(int client)
+{
+	AmmoPile_ResetCooldown(client);
+	LogMessage("[AmmoPile] Cooldowns reset for client %d on connect", client);
+}
+
+/**
  * Hook de desconexión para limpiar cooldowns
  */
 public void AmmoPile_OnClientDisconnect(int client)

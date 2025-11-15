@@ -489,6 +489,9 @@ public void OnClientPutInServer(int client)
 	// Initialize Shoulder Cannon defaults
 	ShoulderCannon_InitializeDefaults(client);
 
+	// Reset Ammo Pile cooldowns on connect
+	AmmoPile_OnClientPutInServer(client);
+
 	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);
 	Hell_OnClientPutInServer(client);
