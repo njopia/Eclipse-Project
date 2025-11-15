@@ -151,11 +151,12 @@ public void buyMenuOnPluginStart()
 }
 
 /**
- * Evento de inicio de ronda - Restaurar cargas de Ion Cannon
+ * Evento de inicio de ronda - Resetear cooldowns de deployables
  */
 public void Event_RoundStart_IonCannon(Event event, const char[] name, bool dontBroadcast)
 {
 	IonCannon_OnRoundStart();
+	AmmoPile_OnRoundStart();
 }
 
 public void BuyMenu_OnClientPutInServer(int client)
@@ -223,8 +224,11 @@ public void DelegateBuyMenuModule()
 {
 	g_iBeaconBeamModel = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 
-	// Initialize Ion Cannon resources
+	// Initialize deployables - Precache resources and reset cooldowns
 	IonCannon_OnMapStart();
+	AmmoPile_OnMapStart();
+	DefenseGrid_OnMapStart();
+	NuclearStrike_OnMapStart();
 
 	for (int i = 1; i <= MaxClients; i++)
 	{

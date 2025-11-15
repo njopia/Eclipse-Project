@@ -70,6 +70,33 @@ public void AmmoPile_OnPluginStart()
 }
 
 /**
+ * Al inicio del mapa - Resetear cooldowns
+ */
+public void AmmoPile_OnMapStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		AmmoPile_ResetCooldown(i);
+	}
+	LogMessage("[AmmoPile] Cooldowns reset on map start");
+}
+
+/**
+ * Al inicio de ronda - Resetear cooldowns
+ */
+public void AmmoPile_OnRoundStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			AmmoPile_ResetCooldown(i);
+		}
+	}
+	LogMessage("[AmmoPile] Cooldowns reset on round start");
+}
+
+/**
  * Hook de desconexión para limpiar cooldowns
  */
 public void AmmoPile_OnClientDisconnect(int client)
