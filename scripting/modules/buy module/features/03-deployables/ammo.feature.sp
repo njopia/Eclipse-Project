@@ -50,6 +50,34 @@ static const char g_ClassIncendiary[][] = {
 float g_LastUse[MAXPLAYERS + 1][AMMO_KINDS_COUNT];
 
 /**
+ * Inicializa el módulo de Ammo Pile
+ */
+public void AmmoPile_OnPluginStart()
+{
+	// Crear ConVar de debug
+	g_cvarDebug = CreateConVar("ammo_pile_debug", "0", "Enable debug logging for Ammo Pile? (0 = disabled, 1 = enabled)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
+	// Registrar comando de spawn
+	RegConsoleCmd("sm_spawnammo", Cmd_SpawnAmmo, "Spawn ammo pile/explosive/incendiary at aim point");
+
+	// Inicializar cooldowns
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		AmmoPile_ResetCooldown(i);
+	}
+
+	LogMessage("[AmmoPile] Module initialized successfully");
+}
+
+/**
+ * Hook de desconexión para limpiar cooldowns
+ */
+public void AmmoPile_OnClientDisconnect(int client)
+{
+	AmmoPile_ResetCooldown(client);
+}
+
+/**
  * Resetea el cooldown de Ammo Pile para un jugador
  */
 stock void AmmoPile_ResetCooldown(int client)
@@ -141,8 +169,17 @@ stock void SpawnAmmoByName(int client, const char[] typeName)
 
 stock void SpawnAmmo(int client, AmmoKind kind)
 {
-	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
+	if (client <= 0 || !IsClientInGame(client))
+	{
+		DLog(client, "Invalid client or not in game");
 		return;
+	}
+
+	if (!IsPlayerAlive(client))
+	{
+		PrintToChat(client, "\x04[Ammo]\x01 Debes estar vivo para usar esto.");
+		return;
+	}
 
 	// Cooldown
 	float now  = GetGameTime();
@@ -150,7 +187,7 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 	float left = (CONFIG_AMMO_PILE_COOLDOWN - (now - last));
 	if (left > 0.0)
 	{
-		PrintToChat(client, "[Ammo] Espera %.1fs para %s.", left, g_AmmoAlias[kind]);
+		PrintToChat(client, "\x04[Ammo]\x01 Espera \x03%.1fs\x01 para usar \x05%s\x01 nuevamente.", left, g_AmmoAlias[kind]);
 		return;
 	}
 
@@ -158,16 +195,18 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 	if (!GetAimGroundPoint(client, hitPos, hitNormal))
 	{
 		ELog(client, "Raycast fallido (sin superficie).");
-		PrintToChat(client, "[Ammo] No encuentro una superficie valida frente a ti.");
+		PrintToChat(client, "\x04[Ammo]\x01 No encuentro una superficie valida. Apunta hacia el suelo.");
 		return;
 	}
 	hitPos[2] += 2.0;
+
+	DLog(client, "Attempting to spawn %s at position (%.1f, %.1f, %.1f)", g_AmmoAlias[kind], hitPos[0], hitPos[1], hitPos[2]);
 
 	int ent = SpawnEntityForKind(client, kind, hitPos);
 	if (ent == -1)
 	{
 		ELog(client, "Fallo total al crear entidad para tipo '%s'.", g_AmmoAlias[kind]);
-		PrintToChat(client, "[Ammo] No pude crear entidad para %s.", g_AmmoAlias[kind]);
+		PrintToChat(client, "\x04[Ammo]\x01 \x03ERROR:\x01 No pude crear \x05%s\x01. Revisa los logs del servidor.", g_AmmoAlias[kind]);
 		return;
 	}
 
@@ -175,7 +214,8 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 	CreateTimer(CONFIG_AMMO_PILE_LIFETIME, Timer_KillEntity, EntIndexToEntRef(ent));
 	g_LastUse[client][kind] = now;
 
-	PrintToChat(client, "[Ammo] %s creado. (vida %.0fs, cd %.0fs)", g_AmmoAlias[kind], CONFIG_AMMO_PILE_LIFETIME, CONFIG_AMMO_PILE_COOLDOWN);
+	DLog(client, "Successfully spawned %s (entity %d). Lifetime: %.0fs, Cooldown: %.0fs", g_AmmoAlias[kind], ent, CONFIG_AMMO_PILE_LIFETIME, CONFIG_AMMO_PILE_COOLDOWN);
+	PrintToChat(client, "\x04[Ammo]\x01 \x05%s\x01 desplegado. (Vida: \x03%.0fs\x01, Cooldown: \x03%.0fs\x01)", g_AmmoAlias[kind], CONFIG_AMMO_PILE_LIFETIME, CONFIG_AMMO_PILE_COOLDOWN);
 }
 
 // ======================================================================
