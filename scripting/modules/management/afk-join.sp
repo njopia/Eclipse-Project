@@ -177,20 +177,9 @@ void TryJoinSurvivors(int client)
 
 	if (bot > 0)
 	{
-		// Usar Left4DHooks si está disponible (método preferido)
-		#if defined _l4dh_included
-			LogMessage("[JOIN DEBUG] Using L4D_SetHumanSpec method");
-			L4D_SetHumanSpec(bot, client);
-			L4D_TakeOverBot(client);
-		#else
-			LogMessage("[JOIN DEBUG] Left4DHooks NOT available. Using manual takeover.");
-
-			// MÉTODO 2: Cambio manual de equipo + tomar bot
-			ChangeClientTeam(client, TEAM_SURVIVOR);
-
-			// Dar un frame para que el cambio de equipo se procese
-			RequestFrame(Frame_TakeOverBot, GetClientUserId(client));
-		#endif
+		LogMessage("[JOIN DEBUG] Using L4D_SetHumanSpec method");
+		L4D_SetHumanSpec(bot, client);
+		L4D_TakeOverBot(client);
 	}
 	else
 	{
@@ -202,27 +191,6 @@ void TryJoinSurvivors(int client)
 	delete PanelTimer[client];
 	// Verifica el resultado después de dar tiempo al proceso
 	CreateTimer(0.7, PostJoinCheck, GetClientUserId(client));
-}
-
-// Frame callback para tomar control del bot después de cambiar equipo
-void Frame_TakeOverBot(any userid)
-{
-	int client = GetClientOfUserId(userid);
-	if (!IsPlayer(client))
-		return;
-
-	LogMessage("[JOIN DEBUG] Frame_TakeOverBot executing for client %d", client);
-
-	// Intenta tomar un bot usando comando de consola
-	int bot = FindSurvivorBot();
-	if (bot > 0)
-	{
-		// Mata al bot para que el jugador pueda tomar su lugar
-		ForcePlayerSuicide(bot);
-
-		// Pequeño delay antes de verificar
-		CreateTimer(0.1, Timer_FinalCheck, userid);
-	}
 }
 
 // Timer para verificación final después del frame
