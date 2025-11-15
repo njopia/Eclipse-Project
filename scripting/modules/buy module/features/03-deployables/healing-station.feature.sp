@@ -13,6 +13,72 @@ bool  g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxima
 // --- Define local para anti-spam (basado en CONFIG_HEALINGSTATION_DURATION) ---
 #define COOLDOWN_TIME 2.0
 
+/**
+ * Inicializa el módulo de Healing Station al cargar el mapa
+ */
+public void HealingStation_OnMapStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		HealingStation_ResetClient(i);
+	}
+	LogMessage("[HealingStation] All client data reset on map start");
+}
+
+/**
+ * Hook de inicio de ronda - Resetear datos
+ */
+public void HealingStation_OnRoundStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			HealingStation_ResetClient(i);
+		}
+	}
+	LogMessage("[HealingStation] Client data reset on round start");
+}
+
+/**
+ * Hook cuando jugador entra al servidor - Inicializar variables
+ */
+public void HealingStation_OnClientPutInServer(int client)
+{
+	HealingStation_ResetClient(client);
+	LogMessage("[HealingStation] Client %d data initialized on connect", client);
+}
+
+/**
+ * Hook de desconexión para limpiar datos
+ */
+public void HealingStation_OnClientDisconnect(int client)
+{
+	// Destruir entidades si existen
+	if (HSModel[client] > 0 && IsValidEntity(HSModel[client]))
+	{
+		AcceptEntityInput(HSModel[client], "Kill");
+	}
+	if (HSTrigger[client] > 0 && IsValidEntity(HSTrigger[client]))
+	{
+		AcceptEntityInput(HSTrigger[client], "Kill");
+	}
+
+	HealingStation_ResetClient(client);
+}
+
+/**
+ * Resetea todos los datos de un cliente
+ */
+stock void HealingStation_ResetClient(int client)
+{
+	g_fNextHint[client] = 0.0;
+	g_bHadMaxHealth[client] = false;
+	HSTrigger[client] = 0;
+	HSModel[client] = 0;
+	HSTimer[client] = 0;
+}
+
 stock void SpawnHealingStation(int client)
 {
 	float Origin[3];

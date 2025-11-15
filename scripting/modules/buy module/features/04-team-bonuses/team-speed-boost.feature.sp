@@ -17,6 +17,42 @@ static float  g_fSpeedBoostEnd[MAXPLAYERS + 1];
 static float  g_fOriginalLaggedMovement[MAXPLAYERS + 1];
 
 /**
+ * Inicializa el módulo de Team Speed Boost al cargar el mapa
+ */
+public void TeamSpeedBoost_OnMapStart()
+{
+	CleanupTeamSpeedBoostTimers();
+	LogMessage("[TeamSpeedBoost] Timers and cooldowns reset on map start");
+}
+
+/**
+ * Hook de inicio de ronda - Resetear cooldowns
+ */
+public void TeamSpeedBoost_OnRoundStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			ResetTeamSpeedBoostCooldown(i);
+		}
+	}
+	LogMessage("[TeamSpeedBoost] Cooldowns reset on round start");
+}
+
+/**
+ * Hook cuando jugador entra al servidor - Resetear cooldowns
+ */
+public void TeamSpeedBoost_OnClientPutInServer(int client)
+{
+	ResetTeamSpeedBoostCooldown(client);
+	g_hTeamSpeedBoostTimer[client] = INVALID_HANDLE;
+	g_fSpeedBoostEnd[client] = 0.0;
+	g_fOriginalLaggedMovement[client] = 0.0;
+	LogMessage("[TeamSpeedBoost] Cooldown reset for client %d on connect", client);
+}
+
+/**
  * Activa la habilidad Team Speed Boost para un jugador.
  * Aumenta la velocidad de movimiento de todos los sobrevivientes 40% durante 5 minutos.
  *

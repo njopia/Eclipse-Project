@@ -19,6 +19,50 @@
 static float g_fNextFireYell[MAXPLAYERS + 1];
 
 /**
+ * Inicializa el módulo de Fire Yell al cargar el mapa
+ */
+public void FireYell_OnMapStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		ResetFireYellCooldown(i);
+	}
+	LogMessage("[FireYell] Cooldowns reset on map start");
+}
+
+/**
+ * Hook de inicio de ronda - Resetear cooldowns
+ */
+public void FireYell_OnRoundStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			ResetFireYellCooldown(i);
+		}
+	}
+	LogMessage("[FireYell] Cooldowns reset on round start");
+}
+
+/**
+ * Hook cuando jugador entra al servidor - Resetear cooldowns
+ */
+public void FireYell_OnClientPutInServer(int client)
+{
+	ResetFireYellCooldown(client);
+	LogMessage("[FireYell] Cooldown reset for client %d on connect", client);
+}
+
+/**
+ * Hook de desconexión para limpiar cooldowns
+ */
+public void FireYell_OnClientDisconnect(int client)
+{
+	ResetFireYellCooldown(client);
+}
+
+/**
  * Activa la habilidad Fire Yell para un jugador.
  * El jugador emite un grito que quema a los infectados comunes y especiales cercanos.
  *

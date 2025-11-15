@@ -151,12 +151,22 @@ public void buyMenuOnPluginStart()
 }
 
 /**
- * Evento de inicio de ronda - Resetear cooldowns de deployables
+ * Evento de inicio de ronda - Resetear cooldowns de deployables y habilidades
  */
 public void Event_RoundStart_IonCannon(Event event, const char[] name, bool dontBroadcast)
 {
+	// Deployables
 	IonCannon_OnRoundStart();
 	AmmoPile_OnRoundStart();
+	DefenseGrid_OnRoundStart();
+	HealingStation_OnRoundStart();
+
+	// Instants
+	FireYell_OnRoundStart();
+
+	// Team Bonuses
+	TeamHeal_OnRoundStart();
+	TeamSpeedBoost_OnRoundStart();
 }
 
 public void BuyMenu_OnClientPutInServer(int client)
@@ -182,6 +192,14 @@ public void BuyMenu_OnClientPutInServer(int client)
 		g_iPlayerLocalCurrency[client] = 0;
 	}
 
+	// Reset cooldowns and timers for all buy menu features
+	AmmoPile_OnClientPutInServer(client);
+	DefenseGrid_OnClientPutInServer(client);
+	FireYell_OnClientPutInServer(client);
+	TeamHeal_OnClientPutInServer(client);
+	TeamSpeedBoost_OnClientPutInServer(client);
+	HealingStation_OnClientPutInServer(client);
+
 	// Active Abilities OnClientConnect removidas
 	// Ahora son parte del sistema de Abilities
 }
@@ -202,10 +220,16 @@ public void OnClientDisconnect(int client)
 	g_fNextHint[client]		  = 0.0;
 	g_bHadMaxHealth[client]	  = false;
 	g_iPlayerLocalCurrency[client] = 0;	  // Reset local variable (pero ya guardado en cookie)
+
+	// Cleanup buy menu features
+	AmmoPile_OnClientDisconnect(client);
+	FireYell_OnClientDisconnect(client);
+	TeamHeal_OnClientDisconnect(client);
+	TeamSpeedBoost_OnClientDisconnect(client);
+	HealingStation_OnClientDisconnect(client);
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
 	DefenseGrid_OnClientDisconnect(client);
-	TeamHeal_OnClientDisconnect(client);
 	NuclearStrike_OnClientDisconnect(client);
 	ResetPlayerCurrencyStats(client);					// Reset currency stats on disconnect
 	AdminMoney_OnClientDisconnect(client);				// Reset admin money data on disconnect
@@ -224,11 +248,20 @@ public void DelegateBuyMenuModule()
 {
 	g_iBeaconBeamModel = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 
-	// Initialize deployables - Precache resources and reset cooldowns
+	// Initialize all buy menu features - Precache resources and reset cooldowns
+	// Deployables
 	IonCannon_OnMapStart();
 	AmmoPile_OnMapStart();
 	DefenseGrid_OnMapStart();
 	NuclearStrike_OnMapStart();
+	HealingStation_OnMapStart();
+
+	// Instants
+	FireYell_OnMapStart();
+
+	// Team Bonuses
+	TeamHeal_OnMapStart();
+	TeamSpeedBoost_OnMapStart();
 
 	for (int i = 1; i <= MaxClients; i++)
 	{

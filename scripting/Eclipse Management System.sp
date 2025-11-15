@@ -483,14 +483,11 @@ public void OnConfigsExecuted()
  */
 public void OnClientPutInServer(int client)
 {
-	// Hook damage for active abilities (in buy module)
+	// Hook damage for active abilities and reset all buy menu cooldowns
 	BuyMenu_OnClientPutInServer(client);
 
 	// Initialize Shoulder Cannon defaults
 	ShoulderCannon_InitializeDefaults(client);
-
-	// Reset Ammo Pile cooldowns on connect
-	AmmoPile_OnClientPutInServer(client);
 
 	// Hook for Bloodmoon
 	Bloodmoon_OnClientPutInServer(client);

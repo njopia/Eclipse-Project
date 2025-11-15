@@ -52,7 +52,7 @@ void DefenseGrid_Log(const char[] format, any ...)
 }
 
 /**
- * Precarga recursos del Defense Grid
+ * Precarga recursos del Defense Grid y resetea cooldowns
  */
 public void DefenseGrid_OnMapStart()
 {
@@ -76,6 +76,50 @@ public void DefenseGrid_OnMapStart()
 	// Precache particles
 	DefenseGrid_PrecacheParticle(PARTICLE_DEFENSEGRID_GLOW);
 	DefenseGrid_PrecacheParticle(PARTICLE_LS_BOLT);
+
+	// Reset all cooldowns and timers
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		DefenseGrid_ResetClient(i);
+	}
+	DefenseGrid_Log("All client data reset on map start");
+}
+
+/**
+ * Hook de inicio de ronda - Resetear cooldowns
+ */
+public void DefenseGrid_OnRoundStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			DefenseGrid_ResetClient(i);
+		}
+	}
+	DefenseGrid_Log("Client data reset on round start");
+}
+
+/**
+ * Hook cuando jugador entra al servidor - Inicializar variables
+ */
+public void DefenseGrid_OnClientPutInServer(int client)
+{
+	DefenseGrid_ResetClient(client);
+	DefenseGrid_Log("Client %d data initialized on connect", client);
+}
+
+/**
+ * Resetea todos los datos de un cliente
+ */
+stock void DefenseGrid_ResetClient(int client)
+{
+	g_iDefenseGridTimer[client] = 0;
+	g_fDefenseGridCooldown[client] = 0.0;
+	for (int i = 0; i < 6; i++)
+	{
+		g_iDefenseGridEnt[client][i] = 0;
+	}
 }
 
 /**

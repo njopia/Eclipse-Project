@@ -19,6 +19,42 @@ static bool g_bBotGlowVisible[MAXPLAYERS + 1];
 static int g_iMaxHealth[MAXPLAYERS + 1];
 
 /**
+ * Inicializa el módulo de Team Heal al cargar el mapa
+ */
+public void TeamHeal_OnMapStart()
+{
+	CleanupTeamHealTimers();
+	LogMessage("[TeamHeal] Timers and cooldowns reset on map start");
+}
+
+/**
+ * Hook de inicio de ronda - Resetear cooldowns
+ */
+public void TeamHeal_OnRoundStart()
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			ResetTeamHealCooldown(i);
+		}
+	}
+	LogMessage("[TeamHeal] Cooldowns reset on round start");
+}
+
+/**
+ * Hook cuando jugador entra al servidor - Resetear cooldowns
+ */
+public void TeamHeal_OnClientPutInServer(int client)
+{
+	ResetTeamHealCooldown(client);
+	g_hTeamHealTimer[client] = INVALID_HANDLE;
+	g_hBotGlowBlinkTimer[client] = INVALID_HANDLE;
+	g_bBotGlowVisible[client] = false;
+	LogMessage("[TeamHeal] Cooldown reset for client %d on connect", client);
+}
+
+/**
  * Activa la habilidad Team Heal para un jugador.
  * Cura a todos los sobrevivientes con ticks de sanación hasta llegar al máximo.
  * Los bots survivors reciben glow verde lima parpadeante.
