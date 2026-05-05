@@ -112,6 +112,7 @@
 #tryinclude "modules/management/scripted-hud.module.sp"
 #tryinclude "modules/management/lang.module.sp"
 #tryinclude "modules/management/mapvote.module.sp"
+#tryinclude "modules/management/admin-manager.sp"
 
 //==================================================
 // === MAIN MENU MODULE ===
@@ -321,6 +322,7 @@ public void OnPluginStart()
 
 	// Initialize server management system
 	Afk_Join_OnPluginStart();
+	AdminManager_OnPluginStart();
 
 	// Initialize HUD system
 #if defined _SCRIPTED_HUD_MODULE_

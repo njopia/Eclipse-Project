@@ -84,23 +84,10 @@ stock int GetClientTempHealth(int client)
 }
 stock void RemoveTempHealth(int client)
 {
-	if (!client
-		|| !IsValidEntity(client)
-		|| !IsClientInGame(client)
-		|| !IsPlayerAlive(client)
-		|| IsClientObserver(client)
-		|| GetClientTeam(client) != 2)
-	{
-		if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] RemoveTempHealth: El cliente %d no pasó la validación.", client);
-		return;
-	}
-	if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] RemoveTempHealth: Eliminando salud temporal para el cliente %d.", client);
-	CTerrorPlayer_SetHealthBuffer(client, 0.0, 0.0, 1.0);
-}
+    if (!client || !IsValidEntity(client) || !IsClientInGame(client)
+        || !IsPlayerAlive(client) || IsClientObserver(client)
+        || GetClientTeam(client) != 2)
+        return;
 
-stock void CTerrorPlayer_SetHealthBuffer(int client, float newBuffer, float decay, float extra /*o bool reset*/)
-{
-	if (client <= 0 || !IsClientInGame(client)) return;
-	SDKCall(g_hSetHB, client, newBuffer, decay, extra);
-	// Si fuera la versión (float,float) usa: SDKCall(g_hSetHB, client, newBuffer, decay);
+    L4D_SetTempHealth(client, 0.0);
 }
