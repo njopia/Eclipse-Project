@@ -272,7 +272,7 @@ public void OnPluginStart()
 	LogToFile(logfilepath, "|               PLUGIN START                |");
 
 	// Initialize SDK hooks
-	HandleSdk();
+	// HandleSdk();
 
 	// Initialize database connections
 	if (checkDBFile(PLAYERS_DB_NAME))
