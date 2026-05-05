@@ -124,7 +124,7 @@ public void buyMenuOnPluginStart()
 
 	// Initialize Ion Cannon module
 	IonCannon_OnPluginStart();
-
+	AmmoSpawn_OnPluginStart();
 	// Initialize Active Abilities
 	// Removidas - ahora son parte del sistema de Abilities
 	// (Berserker, AcidBath, LifeStealer, SpeedFreak, ShoulderCannon)

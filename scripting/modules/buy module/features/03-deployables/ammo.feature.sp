@@ -1,20 +1,37 @@
 /**
- * L4D2 - Spawn de pila/packs de munición donde apuntas, con cooldown, vida y DEBUG.
+ * ============================================================================
+ * ECLIPSE MANAGEMENT SYSTEM — AMMO SPAWN MODULE
+ * ============================================================================
+ * Spawnea pilas/packs de munición donde apunta el jugador.
+ * Límite de distancia: CONFIG_AMMO_MAX_DIST unidades (~3 metros = ~192 u.)
  *
- * Comando:
- *   sm_spawnammo <pile|explosive|incendiary>
- *
- * API:
- *   SpawnAmmoByName(int client, const char[] typeName);
- *   SpawnAmmo(int client, AmmoKind kind);
+ * API pública:
+ *   SpawnAmmo(int client, AmmoKind kind)
+ *   SpawnAmmoByName(int client, const char[] typeName)
+ *   AmmoPile_ResetCooldown(int client)
+ * ============================================================================
  */
 
-// ===== Config =====
-#define RAYCAST_MAXDIST 1200.0
+#if !defined EMS_MAIN_FILE
+	#error Compile from "Eclipse Management System.sp". Este es un módulo auxiliar.
+#endif
 
-ConVar g_cvarDebug;
+// ============================================================================
+// Defines (override desde main si es necesario)
+// ============================================================================
+#if !defined CONFIG_AMMO_PILE_COOLDOWN
+	#define CONFIG_AMMO_PILE_COOLDOWN 30.0
+#endif
+#if !defined CONFIG_AMMO_PILE_LIFETIME
+	#define CONFIG_AMMO_PILE_LIFETIME 60.0
+#endif
+#if !defined CONFIG_AMMO_MAX_DIST
+	#define CONFIG_AMMO_MAX_DIST 192.0	  // ~3 metros en unidades Hammer
+#endif
 
-// ===== Tipos =====
+// ============================================================================
+// Tipos
+// ============================================================================
 enum AmmoKind
 {
 	AMMO_PILE		= 0,
@@ -23,73 +40,70 @@ enum AmmoKind
 	AMMO_KINDS_COUNT
 };
 
+// ============================================================================
+// Constantes de classnames
+// ============================================================================
 static const char g_AmmoAlias[AMMO_KINDS_COUNT][] = {
 	"pile",
 	"explosive",
 	"incendiary"
 };
 
-// Pila estándar (1 candidato)
-static const char g_ClassPile[][] = {
+// Classnames ordenados por probabilidad de éxito (primero el más común)
+static const char g_ClassPile[1][] = {
 	"weapon_ammo_spawn"
 };
 
-// Explosive: probamos ambas familias
-static const char g_ClassExplosive[][] = {
-	"weapon_upgradepack_explosive",	   // carry/deploy
-	"upgrade_ammo_explosive_spawn"	   // spawn mapeable
+static const char g_ClassExplosive[2][] = {
+	"upgrade_ammo_explosive_spawn",
+	"weapon_upgradepack_explosive"
 };
 
-// Incendiary: probamos ambas familias
-static const char g_ClassIncendiary[][] = {
-	"weapon_upgradepack_incendiary",	// carry/deploy
-	"upgrade_ammo_incendiary_spawn"		// spawn mapeable
+static const char g_ClassIncendiary[2][] = {
+	"upgrade_ammo_incendiary_spawn",
+	"weapon_upgradepack_incendiary"
 };
 
-// cooldown por jugador y tipo
-float g_LastUse[MAXPLAYERS + 1][AMMO_KINDS_COUNT];
+// ============================================================================
+// Estado
+// ============================================================================
+static float  g_LastUse[MAXPLAYERS + 1][AMMO_KINDS_COUNT];
+static ConVar g_cvDebug;
 
-/**
- * Resetea el cooldown de Ammo Pile para un jugador
- */
-stock void AmmoPile_ResetCooldown(int client)
+// ============================================================================
+// Init
+// ============================================================================
+public void	  AmmoSpawn_OnPluginStart()
 {
-	for (int i = 0; i < view_as<int>(AMMO_KINDS_COUNT); i++)
-	{
-		g_LastUse[client][i] = 0.0;
-	}
+	g_cvDebug = CreateConVar("ems_ammo_debug", "0", "Debug del módulo de ammo spawn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	RegAdminCmd("sm_spawnammo", Cmd_SpawnAmmo, ADMFLAG_CHEATS, "Spawnea munición: sm_spawnammo <pile|explosive|incendiary>");
 }
 
-
-// ======================================================================
-// Helpers de debug
-
-static void DLog(int client, const char[] fmt, any...)
+// ============================================================================
+// Logging interno
+// ============================================================================
+static void _DLog(int client, const char[] fmt, any...)
 {
-	if (!g_cvarDebug.BoolValue) return;
-
+	if (!g_cvDebug.BoolValue) return;
 	char msg[256];
-	VFormat(msg, sizeof msg, fmt, 3);
-	LogMessage("%s", msg);
+	VFormat(msg, sizeof(msg), fmt, 3);
+	LogMessage("[AmmoSpawn] %s", msg);
 	if (client > 0 && IsClientInGame(client))
-	{
-		PrintToChat(client, "[SpawnAmmo DBG] %s", msg);
-	}
+		PrintToChat(client, "\x04[AmmoSpawn DBG]\x01 %s", msg);
 }
 
-static void ELog(int client, const char[] fmt, any...)
+static void _ELog(int client, const char[] fmt, any...)
 {
 	char msg[256];
-	VFormat(msg, sizeof msg, fmt, 3);
-	LogError("%s", msg);
+	VFormat(msg, sizeof(msg), fmt, 3);
+	LogError("[AmmoSpawn] %s", msg);
 	if (client > 0 && IsClientInGame(client))
-	{
-		PrintToChat(client, "[SpawnAmmo ERR] %s", msg);
-	}
+		PrintToChat(client, "\x02[AmmoSpawn ERR]\x01 %s", msg);
 }
 
-// ======================================================================
+// ============================================================================
 // Comando
+// ============================================================================
 public Action Cmd_SpawnAmmo(int client, int args)
 {
 	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
@@ -106,39 +120,43 @@ public Action Cmd_SpawnAmmo(int client, int args)
 
 	char arg[32];
 	GetCmdArg(1, arg, sizeof(arg));
-	ToLowerCase(arg);
-
 	SpawnAmmoByName(client, arg);
 	return Plugin_Handled;
 }
 
-// ======================================================================
-// API
+// ============================================================================
+// API pública
+// ============================================================================
 
+/**
+ * Resetea el cooldown de todos los tipos para un jugador.
+ */
+stock void AmmoPile_ResetCooldown(int client)
+{
+	for (int i = 0; i < view_as<int>(AMMO_KINDS_COUNT); i++)
+		g_LastUse[client][i] = 0.0;
+}
+
+/**
+ * Spawnea munición por nombre de tipo.
+ */
 stock void SpawnAmmoByName(int client, const char[] typeName)
 {
-	AmmoKind kind  = AMMO_PILE;
-	bool	 found = false;
-
 	for (int i = 0; i < view_as<int>(AMMO_KINDS_COUNT); i++)
 	{
 		if (StrEqual(typeName, g_AmmoAlias[i], false))
 		{
-			kind  = view_as<AmmoKind>(i);
-			found = true;
-			break;
+			SpawnAmmo(client, view_as<AmmoKind>(i));
+			return;
 		}
 	}
-
-	if (!found)
-	{
-		PrintToChat(client, "[Ammo] Tipo invalido: %s (usa: pile | explosive | incendiary)", typeName);
-		return;
-	}
-
-	SpawnAmmo(client, kind);
+	PrintToChat(client, "[Ammo] Tipo inválido: '%s' (pile | explosive | incendiary)", typeName);
 }
 
+/**
+ * Spawnea munición del tipo dado en el punto de mira del cliente.
+ * Respeta cooldown y límite de distancia (CONFIG_AMMO_MAX_DIST).
+ */
 stock void SpawnAmmo(int client, AmmoKind kind)
 {
 	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
@@ -146,250 +164,171 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 
 	// Cooldown
 	float now  = GetGameTime();
-	float last = g_LastUse[client][kind];
-	float left = (CONFIG_AMMO_PILE_COOLDOWN - (now - last));
+	float left = CONFIG_AMMO_PILE_COOLDOWN - (now - g_LastUse[client][kind]);
 	if (left > 0.0)
 	{
-		PrintToChat(client, "[Ammo] Espera %.1fs para %s.", left, g_AmmoAlias[kind]);
+		PrintToChat(client, "[Ammo] Espera \x05%.1fs\x01 para \x04%s\x01.", left, g_AmmoAlias[kind]);
 		return;
 	}
 
-	float hitPos[3], hitNormal[3];
-	if (!GetAimGroundPoint(client, hitPos, hitNormal))
+	// Raycast con validación de distancia
+	float hitPos[3];
+	if (!_GetAimPoint(client, hitPos))
 	{
-		ELog(client, "Raycast fallido (sin superficie).");
-		PrintToChat(client, "[Ammo] No encuentro una superficie valida frente a ti.");
+		PrintToChat(client, "[Ammo] No hay superficie válida frente a ti.");
 		return;
 	}
-	hitPos[2] += 2.0;
 
-	int ent = SpawnEntityForKind(client, kind, hitPos);
+	// Crear entidad
+	int ent = _SpawnEntity(client, kind, hitPos);
 	if (ent == -1)
 	{
-		ELog(client, "Fallo total al crear entidad para tipo '%s'.", g_AmmoAlias[kind]);
-		PrintToChat(client, "[Ammo] No pude crear entidad para %s.", g_AmmoAlias[kind]);
+		PrintToChat(client, "[Ammo] No se pudo crear la entidad para '%s'.", g_AmmoAlias[kind]);
 		return;
 	}
 
-	// Vida y cooldown
-	CreateTimer(CONFIG_AMMO_PILE_LIFETIME, Timer_KillEntity, EntIndexToEntRef(ent));
 	g_LastUse[client][kind] = now;
-
-	PrintToChat(client, "[Ammo] %s creado. (vida %.0fs, cd %.0fs)", g_AmmoAlias[kind], CONFIG_AMMO_PILE_LIFETIME, CONFIG_AMMO_PILE_COOLDOWN);
+	CreateTimer(CONFIG_AMMO_PILE_LIFETIME, _Timer_KillEnt, EntIndexToEntRef(ent));
+	PrintToChat(client, "[Ammo] \x04%s\x01 spawneado. (vida \x05%.0fs\x01, cd \x05%.0fs\x01)",
+				g_AmmoAlias[kind], CONFIG_AMMO_PILE_LIFETIME, CONFIG_AMMO_PILE_COOLDOWN);
 }
 
-// ======================================================================
-// Núcleo de spawn con fallbacks y logs
+// ============================================================================
+// Raycast
+// ============================================================================
 
-static int SpawnEntityForKind(int client, AmmoKind kind, const float pos[3])
-{
-	char classname[64];
-	int	 ent = -1;
-
-	if (kind == AMMO_PILE)
-	{
-		for (int i = 0; i < sizeof(g_ClassPile); i++)
-		{
-			strcopy(classname, sizeof(classname), g_ClassPile[i]);
-			ent = TryCreateBaseEntity(client, classname, pos);
-			if (ent != -1) return ent;
-		}
-		return -1;
-	}
-
-	if (kind == AMMO_EXPLOSIVE)
-	{
-		for (int i = 0; i < sizeof(g_ClassExplosive); i++)
-		{
-			strcopy(classname, sizeof(classname), g_ClassExplosive[i]);
-			ent = TryCreateUpgradeEntity(client, classname, pos);
-			if (ent != -1) return ent;
-		}
-		return -1;
-	}
-
-	if (kind == AMMO_INCENDIARY)
-	{
-		for (int i = 0; i < sizeof(g_ClassIncendiary); i++)
-		{
-			strcopy(classname, sizeof(classname), g_ClassIncendiary[i]);
-			ent = TryCreateUpgradeEntity(client, classname, pos);
-			if (ent != -1) return ent;
-		}
-		return -1;
-	}
-
-	return -1;
-}
-
-// Crea entidad pila básica
-static int TryCreateBaseEntity(int client, const char[] classname, const float pos[3])
-{
-	DLog(client, "Intentando crear '%s' ...", classname);
-
-	int ent = CreateEntityByName(classname);
-	if (ent == -1 || !IsValidEntity(ent))
-	{
-		ELog(client, "CreateEntityByName('%s') devolvio %d (invalido).", classname, ent);
-		return -1;
-	}
-
-	// Para la pila base suele bastar con solid y spawn
-	DispatchKeyValue(ent, "solid", "6");	// SOLID_VPHYSICS
-
-	if (!DispatchSpawnSafe(client, ent, classname))
-		return -1;
-
-	float ang[3] = { 0.0, 0.0, 0.0 };
-	TeleportEntity(ent, pos, ang, NULL_VECTOR);
-	SetEntityMoveType(ent, MOVETYPE_NONE);
-
-	DLog(client, "OK '%s' entindex=%d, pos=(%.1f, %.1f, %.1f)", classname, ent, pos[0], pos[1], pos[2]);
-	return ent;
-}
-
-// Crea packs mejorados (ambas familias).
-static int TryCreateUpgradeEntity(int client, const char[] classname, const float pos[3])
-{
-	DLog(client, "Intentando crear upgrade '%s' ...", classname);
-
-	int ent = CreateEntityByName(classname);
-	if (ent == -1 || !IsValidEntity(ent))
-	{
-		ELog(client, "CreateEntityByName('%s') devolvio %d (invalido).", classname, ent);
-		return -1;
-	}
-
-	// Algunos mapas esperan ciertos spawnflags; poner 0 es seguro.
-	DispatchKeyValue(ent, "spawnflags", "0");
-
-	// Los 'upgrade_ammo_*_spawn' aceptan un 'count' (cuantos usan) en ciertos entornos.
-	// No todos lo usan; seteamos 1 por si aplica. No falla si no existe.
-	DispatchKeyValue(ent, "count", "1");
-
-	// Poner solidez estable
-	DispatchKeyValue(ent, "solid", "6");
-
-	if (!DispatchSpawnSafe(client, ent, classname))
-		return -1;
-
-	float ang[3] = { 0.0, 0.0, 0.0 };
-	TeleportEntity(ent, pos, ang, NULL_VECTOR);
-	SetEntityMoveType(ent, MOVETYPE_NONE);
-
-	// Para algunas variantes conviene activarlas explícitamente
-	AcceptEntityInput(ent, "Enable");
-	AcceptEntityInput(ent, "TurnOn");
-	AcceptEntityInput(ent, "Activate");
-
-	DLog(client, "OK '%s' entindex=%d, pos=(%.1f, %.1f, %.1f)", classname, ent, pos[0], pos[1], pos[2]);
-	return ent;
-}
-
-static bool DispatchSpawnSafe(int client, int ent, const char[] classname)
-{
-	DispatchSpawn(ent);
-	if (!IsValidEntity(ent))
-	{
-		ELog(client, "Despues de DispatchSpawn, entidad '%s' se invalido.", classname);
-		return false;
-	}
-
-	// Comprobar networkeable (útil para detectar fallos silenciosos)
-	bool net = IsEntNetworkable(ent);
-	DLog(client, "Post-Spawn '%s' net=%d", classname, net ? 1 : 0);
-	return true;
-}
-
-// ======================================================================
-// Timers
-public Action Timer_KillEntity(Handle timer, any entRef)
-{
-	int ent = EntRefToEntIndex(entRef);
-	if (ent != -1 && IsValidEntity(ent))
-	{
-		char cls[64];
-		GetEntityClassname(ent, cls, sizeof cls);
-		AcceptEntityInput(ent, "Kill");
-		LogMessage("[SpawnAmmo] Autodestruyo entindex=%d classname=%s", ent, cls);
-	}
-	return Plugin_Stop;
-}
-
-// ======================================================================
-// Raycast util
-
-static bool GetAimGroundPoint(int client, float outPos[3], float outNormal[3])
+/**
+ * Lanza un ray desde los ojos del cliente y devuelve el punto de impacto
+ * si está dentro de CONFIG_AMMO_MAX_DIST. Devuelve false si no hay impacto
+ * o si está fuera de rango.
+ */
+static bool _GetAimPoint(int client, float outPos[3])
 {
 	float eyePos[3], eyeAng[3];
 	GetClientEyePosition(client, eyePos);
 	GetClientEyeAngles(client, eyeAng);
 
-	DLog(client, "Raycast desde (%.1f, %.1f, %.1f) ang(%.1f, %.1f, %.1f)",
-		 eyePos[0], eyePos[1], eyePos[2], eyeAng[0], eyeAng[1], eyeAng[2]);
+	_DLog(client, "Raycast desde (%.1f, %.1f, %.1f)", eyePos[0], eyePos[1], eyePos[2]);
 
-	Handle trace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_SOLID, RayType_Infinite, TraceRayDontHitSelf, client);
-
-	bool   hit	 = false;
-	if (TR_DidHit(trace))
-	{
+	Handle trace = TR_TraceRayFilterEx(eyePos, eyeAng, MASK_SOLID, RayType_Infinite, _TraceFilter, client);
+	bool   hit	 = TR_DidHit(trace);
+	if (hit)
 		TR_GetEndPosition(outPos, trace);
-		TR_GetPlaneNormal(trace, outNormal);
-		hit = true;
-		DLog(client, "Raycast HIT pos=(%.1f, %.1f, %.1f) n=(%.2f, %.2f, %.2f)",
-			 outPos[0], outPos[1], outPos[2], outNormal[0], outNormal[1], outNormal[2]);
-	}
-	CloseHandle(trace);
+	delete trace;
 
 	if (!hit)
 	{
-		float fwd[3];
-		GetAngleVectors(eyeAng, fwd, NULL_VECTOR, NULL_VECTOR);
-
-		float ahead[3];
-		ahead[0] = eyePos[0] + fwd[0] * RAYCAST_MAXDIST;
-		ahead[1] = eyePos[1] + fwd[1] * RAYCAST_MAXDIST;
-		ahead[2] = eyePos[2] + fwd[2] * RAYCAST_MAXDIST;
-
-		float down[3];
-		float dest[3];
-		down[0]	  = ahead[0];
-		down[1]	  = ahead[1];
-		down[2]	  = ahead[2] + 32.0;
-		dest[0]	  = ahead[0];
-		dest[1]	  = ahead[1];
-		dest[2]	  = ahead[2] - 4096.0;
-
-		Handle t2 = TR_TraceRayFilterEx(down, dest, MASK_SOLID_BRUSHONLY, RayType_EndPoint, TraceRayDontHitSelf, client);
-		if (TR_DidHit(t2))
-		{
-			TR_GetEndPosition(outPos, t2);
-			TR_GetPlaneNormal(t2, outNormal);
-			hit = true;
-			DLog(client, "Fallback HIT pos=(%.1f, %.1f, %.1f) n=(%.2f, %.2f, %.2f)",
-				 outPos[0], outPos[1], outPos[2], outNormal[0], outNormal[1], outNormal[2]);
-		}
-		CloseHandle(t2);
+		_DLog(client, "Raycast sin impacto.");
+		return false;
 	}
 
-	return hit;
-}
+	// Validar distancia
+	float dist = GetVectorDistance(eyePos, outPos);
+	_DLog(client, "Impacto a %.1f unidades (máx %.1f)", dist, CONFIG_AMMO_MAX_DIST);
 
-public bool TraceRayDontHitSelf(int entity, int contentsMask, any data)
-{
-	int client = data;
-	if (entity == client) return false;
+	if (dist > CONFIG_AMMO_MAX_DIST)
+	{
+		PrintToChat(client, "[Ammo] Superficie demasiado lejos (%.1f u. / máx %.0f u.).", dist, CONFIG_AMMO_MAX_DIST);
+		return false;
+	}
+
+	outPos[2] += 2.0;	 // pequeño offset para que no quede enterrado
 	return true;
 }
 
-// ======================================================================
-// Utils
-
-stock void ToLowerCase(char[] str)
+public bool _TraceFilter(int entity, int contentsMask, any data)
 {
-	int len = strlen(str);
-	for (int i = 0; i < len; i++)
+	return entity != data;	  // ignorar al propio cliente
+}
+
+// ============================================================================
+// Spawn de entidades
+// ============================================================================
+
+static int _SpawnEntity(int client, AmmoKind kind, const float pos[3])
+{
+	switch (kind)
 	{
-		str[i] = CharToLower(str[i]);
+		case AMMO_PILE:
+		{
+			for (int i = 0; i < sizeof(g_ClassPile); i++)
+			{
+				int ent = _TrySpawn(client, g_ClassPile[i], pos, false);
+				if (ent != -1) return ent;
+			}
+		}
+		case AMMO_EXPLOSIVE:
+		{
+			for (int i = 0; i < sizeof(g_ClassExplosive); i++)
+			{
+				int ent = _TrySpawn(client, g_ClassExplosive[i], pos, true);
+				if (ent != -1) return ent;
+			}
+		}
+		case AMMO_INCENDIARY:
+		{
+			for (int i = 0; i < sizeof(g_ClassIncendiary); i++)
+			{
+				int ent = _TrySpawn(client, g_ClassIncendiary[i], pos, true);
+				if (ent != -1) return ent;
+			}
+		}
 	}
+	return -1;
+}
+
+/**
+ * Intenta crear y spawnear una entidad.
+ * isUpgrade=true activa inputs adicionales para packs de upgrade.
+ */
+static int _TrySpawn(int client, const char[] classname, const float pos[3], bool isUpgrade)
+{
+	_DLog(client, "Intentando '%s' (upgrade=%d)...", classname, isUpgrade ? 1 : 0);
+
+	int ent = CreateEntityByName(classname);
+	if (ent == -1)
+	{
+		_ELog(client, "CreateEntityByName('%s') falló.", classname);
+		return -1;
+	}
+
+	DispatchKeyValue(ent, "solid", "6");	// SOLID_VPHYSICS
+
+	if (isUpgrade)
+	{
+		DispatchKeyValue(ent, "spawnflags", "0");
+		DispatchKeyValue(ent, "count", "1");
+	}
+
+	DispatchSpawn(ent);
+
+	if (!IsValidEntity(ent))
+	{
+		_ELog(client, "DispatchSpawn('%s') invalidó la entidad.", classname);
+		return -1;
+	}
+
+	float ang[3];	 // {0,0,0}
+	TeleportEntity(ent, pos, ang, NULL_VECTOR);
+	SetEntityMoveType(ent, MOVETYPE_NONE);
+
+	if (isUpgrade)
+	{
+		AcceptEntityInput(ent, "Enable");
+		AcceptEntityInput(ent, "TurnOn");
+	}
+
+	_DLog(client, "OK '%s' ent=%d pos=(%.1f, %.1f, %.1f)", classname, ent, pos[0], pos[1], pos[2]);
+	return ent;
+}
+
+// ============================================================================
+// Timer autodestrucción
+// ============================================================================
+public Action _Timer_KillEnt(Handle timer, any entRef)
+{
+	int ent = EntRefToEntIndex(entRef);
+	if (ent != -1 && IsValidEntity(ent))
+		AcceptEntityInput(ent, "Kill");
+	return Plugin_Stop;
 }

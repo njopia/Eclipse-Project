@@ -128,15 +128,15 @@
 static char logfilepath[PLATFORM_MAX_PATH];
 
 // Snow system
-ConVar cvar_preciptype;
-ConVar cvar_density;
-ConVar cvar_color;
-ConVar cvar_render;
-char   sMap[96];
+ConVar		cvar_preciptype;
+ConVar		cvar_density;
+ConVar		cvar_color;
+ConVar		cvar_render;
+char		sMap[96];
 
 // Dynamic hostname
-#define UPDATE_INTERVAL 5.0                // Seconds between updates
-#define BASE_HOSTNAME	"[US-EAST] Coop"   // Base server name
+#define UPDATE_INTERVAL 5.0					// Seconds between updates
+#define BASE_HOSTNAME	"[US-EAST] Coop"	// Base server name
 Handle g_hTimer = INVALID_HANDLE;
 
 //==================================================
@@ -282,11 +282,11 @@ public void OnPluginStart()
 	}
 	if (checkDBFile(ADMIN_DB_NAME))
 	{
-		doSqlConnection(ADMIN_DB_NAME);				// Handle for admins
+		doSqlConnection(ADMIN_DB_NAME);	   // Handle for admins
 	}
 	if (checkDBFile(DB_HUD_MESSAGES))
 	{
-		doSqlConnection(DB_HUD_MESSAGES);			// Handle for HUD messages
+		doSqlConnection(DB_HUD_MESSAGES);	 // Handle for HUD messages
 	}
 
 	// Initialize buy menu
@@ -351,9 +351,6 @@ public void OnPluginStart()
 	RegAdminCmd("sm_clearfog", Cmd_ClearFog, ADMFLAG_ROOT, "Elimina todos los fog controllers (EMERGENCIA para pantalla blanca)");
 	RegAdminCmd("sm_fixwhitescreen", Cmd_FixWhiteScreen, ADMFLAG_ROOT, "Solución completa para pantalla blanca (fade + fog)");
 
-	// Create ConVars
-	g_cvarDebug = CreateConVar("sm_spawnammo_debug", "0", "Activa debug verboso (0/1).", 0, true, 0.0, true, 1.0);
-
 	// Load translations
 	LoadTranslations("eclipse.phrases");
 
@@ -362,9 +359,9 @@ public void OnPluginStart()
 
 	// Snow system ConVars
 	cvar_preciptype = CreateConVar("snow_type", "3", "Type of the precipitation (https://developer.valvesoftware.com/wiki/Func_precipitation)");
-	cvar_density    = CreateConVar("snow_density", "75", "Density of the precipitation");
-	cvar_color      = CreateConVar("snow_color", "255 255 255", "Color of the precipitation");
-	cvar_render     = CreateConVar("snow_renderamt", "5", "Render of the precipitation");
+	cvar_density	= CreateConVar("snow_density", "75", "Density of the precipitation");
+	cvar_color		= CreateConVar("snow_color", "255 255 255", "Color of the precipitation");
+	cvar_render		= CreateConVar("snow_renderamt", "5", "Render of the precipitation");
 
 	// Precache all resources
 	PrecacheAll();
@@ -686,13 +683,13 @@ public Action Cmd_ClearFade(int client, int args)
 		Handle hFade = StartMessageOne("Fade", i);
 		if (hFade != null)
 		{
-			BfWriteShort(hFade, 0);      // duration
-			BfWriteShort(hFade, 0);      // hold time
-			BfWriteShort(hFade, FFADE_PURGE); // flags
-			BfWriteByte(hFade, 0);       // r
-			BfWriteByte(hFade, 0);       // g
-			BfWriteByte(hFade, 0);       // b
-			BfWriteByte(hFade, 0);       // alpha
+			BfWriteShort(hFade, 0);				 // duration
+			BfWriteShort(hFade, 0);				 // hold time
+			BfWriteShort(hFade, FFADE_PURGE);	 // flags
+			BfWriteByte(hFade, 0);				 // r
+			BfWriteByte(hFade, 0);				 // g
+			BfWriteByte(hFade, 0);				 // b
+			BfWriteByte(hFade, 0);				 // alpha
 			EndMessage();
 			affectedPlayers++;
 		}
@@ -717,7 +714,7 @@ public Action Cmd_ClearFade(int client, int args)
 public Action Cmd_ClearFog(int client, int args)
 {
 	int removedCount = 0;
-	int entity = -1;
+	int entity		 = -1;
 
 	// Find and remove all env_fog_controller entities
 	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
@@ -793,7 +790,7 @@ public Action Cmd_FixWhiteScreen(int client, int args)
 
 	// Step 2: Remove all fog controllers
 	int removedFog = 0;
-	int entity = -1;
+	int entity	   = -1;
 	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
 	{
 		if (IsValidEntity(entity))
@@ -839,7 +836,7 @@ public Action Cmd_FixWhiteScreen(int client, int args)
 void ForceCleanupAllFogControllers()
 {
 	int removedCount = 0;
-	int entity = -1;
+	int entity		 = -1;
 
 	// Remove all env_fog_controller entities
 	while ((entity = FindEntityByClassname(entity, "env_fog_controller")) != -1)
@@ -866,7 +863,7 @@ void ForceCleanupAllFogControllers()
 	if (removedCount > 0)
 	{
 		LogToFile(logfilepath, "[FOG CLEANUP] Removed %d residual fog controllers", removedCount);
-		SetLightStyle(0, "m");  // Reset light style
+		SetLightStyle(0, "m");	  // Reset light style
 	}
 }
 
@@ -947,7 +944,7 @@ public Action CreateSnowFall(Handle timer)
 public Action Timer_UpdateHostname(Handle timer)
 {
 	int maxplayers = GetMaxHumanPlayers();
-	int humans     = 0;
+	int humans	   = 0;
 
 	// Count human players
 	for (int i = 1; i <= maxplayers; i++)
