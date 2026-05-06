@@ -1,6 +1,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+#define _LEVELING_UI_MODULE_
 
 //==================================================
 // === LEVELING UI MODULE ===
@@ -41,11 +42,6 @@ public void LevelingUI_OnPluginStart()
 		"Mostrar barra de progreso en formato ASCII (0/1)",
 		FCVAR_PLUGIN
 	);
-
-	// Registrar comando para ver info de nivel
-	RegConsoleCmd("sm_level", Cmd_ShowLevelInfo);
-	RegConsoleCmd("sm_xp", Cmd_ShowLevelInfo);
-	RegConsoleCmd("sm_exp", Cmd_ShowLevelInfo);
 }
 
 /**

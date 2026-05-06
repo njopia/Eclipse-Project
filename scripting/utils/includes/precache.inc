@@ -49,7 +49,10 @@ static const char g_DefaultSounds[][] = {
 	"weapons/grenade_launcher/grenade_launcher_explode.wav",
 	"weapons/grenade_launcher/grenade_launcher_reload.wav",
 	"vehicles/airboat/fan_blade_fullthrottle_loop1.wav",
+	"ambient/energy/zap5.wav",
+	"ambient/energy/zap6.wav",
 	"ambient/energy/zap7.wav",
+	"ambient/energy/zap8.wav",
 	"ambient/energy/zap9.wav",
 	// Nuclear Strike sounds
 	"ambient/fire/fire_small_loop2.wav",

@@ -265,8 +265,8 @@ public void DeployablesMenu(int client)
 	int costDG = GetConVarInt(cvar_CostDefenseGrid);
 	if (playerLevel >= requiredLevelDG)
 	{
-		int dgCooldown = DefenseGrid_GetCooldown(client);
-		int dgTime	   = DefenseGrid_GetTimeRemaining(client);
+		int	 dgCooldown = DefenseGrid_GetCooldown(client);
+		int	 dgTime		= DefenseGrid_GetTimeRemaining(client);
 		char activeText[32], readyText[32];
 		Format(activeText, sizeof(activeText), "%T", "UI_Active", client);
 		Format(readyText, sizeof(readyText), "%T", "UI_Ready", client);
@@ -396,7 +396,7 @@ public void TeamBonusesMenu(int client)
 	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_5_1, client);
 	int	  costTSB			  = GetConVarInt(cvar_CostTeamSpeedBoost);
 	float speedBoostRemaining = GetTeamSpeedBoostRemaining(client);
-	char activeText[32];
+	char  activeText[32];
 	Format(activeText, sizeof(activeText), "%T", "UI_Active", client);
 
 	if (speedBoostRemaining > 0.0)
@@ -516,7 +516,7 @@ public void SpecialsMenu(int client)
 	GetClientName(client, playerName, sizeof(playerName));
 	SetGlobalTransTarget(client);
 	Format(title, sizeof(title), "%t", "Menu_Specials");
-	int	 playerLevel  = Leveling_GetPlayerLevel(client);
+	int	 playerLevel = Leveling_GetPlayerLevel(client);
 	char fullTitle[256];
 	char playerText[32], levelText[32];
 	Format(playerText, sizeof(playerText), "%T", "UI_Player", client);
@@ -541,7 +541,7 @@ public void SpecialsMenu(int client)
 	}
 
 	g_SpecialsMenu.ExitBackButton = true;
-	g_SpecialsMenu.ExitButton	 = true;
+	g_SpecialsMenu.ExitButton	  = true;
 }
 
 public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int param)
@@ -619,7 +619,6 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 }
 
 // MenuHandler_LongActions removido - reemplazado por ShowAbilitiesMenu()
-
 public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
 {
 	if (action == MenuAction_Select)
@@ -631,13 +630,18 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 		// Ammo Pile (Nivel 1)
 		if (StrEqual(info, BM_CHOICE_3_1))
 		{
-			PrintToChatAll("Player level: %d", playerLevel);
+			// PrintToChatAll("Player level: %d", playerLevel);
 			if (playerLevel < 1)
 			{
 				PrintToChatAll("Player level: %d", playerLevel);
 				char errorMsg[128];
 				Format(errorMsg, sizeof(errorMsg), "%T", "Error_LevelRequired", client, 1, "Ammo Pile");
 				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
+				return 0;
+			}
+			if (!AmmoPile_IsReady(client, AMMO_PILE))
+			{
+				PrintToChat(client, "\x05[Eclipse]\x01 Ammo Pile aún en cooldown.");
 				return 0;
 			}
 			int cost = GetConVarInt(cvar_CostAmmo);
@@ -736,6 +740,8 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
 				return 0;
 			}
+			if (!DefenseGrid_CanDeploy(client))
+				return 0;
 			int cost = GetConVarInt(cvar_CostDefenseGrid);
 			if (PurchaseItem(client, cost, "Defense Grid"))
 			{

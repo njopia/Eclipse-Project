@@ -7,6 +7,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+#define _LANGUAGE_MODULE_
 
 //==================================================
 // === LANGUAGE MODULE ===
@@ -22,9 +23,6 @@ char cLangPref[MAXPLAYERS + 1][4];
 public void Language_OnPluginStart()
 {
 	LoadTranslations("eclipse.phrases");
-
-	RegConsoleCmd("sm_lang", Command_Language, "Show/set own client language setting");
-	RegConsoleCmd("sm_language", Command_Language, "Show/set own client language setting");
 
 	lang_cookie = RegClientCookie("client_lang", "Saved client language", CookieAccess_Private);
 	SetCookieMenuItem(LanguageCookieMenu, 0, "Language");

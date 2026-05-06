@@ -1,6 +1,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+#define _ABILITIES_SYSTEM_MODULE_
 
 //==================================================
 // === ABILITIES SYSTEM MODULE ===
@@ -54,33 +55,8 @@ public void Abilities_OnPluginStart()
 	cvar_AbilitiesEnabled = CreateConVar("abilities_enabled", "1", "Habilita el sistema de abilities (1 = habilitado, 0 = deshabilitado)", FCVAR_PLUGIN);
 	cvar_AbilitiesDebug = CreateConVar("abilities_debug", "0", "Modo debug para abilities", FCVAR_PLUGIN);
 
-	// Comandos
-	RegConsoleCmd("sm_abilities", Command_AbilitiesMenu, "Abre el menú de abilities");
-	RegConsoleCmd("sm_ability", Command_AbilitiesMenu, "Abre el menú de abilities");
-
 	// Timer para actualizar velocidad de melee (Berserker)
 	CreateTimer(0.1, Timer_UpdateAbilities, _, TIMER_REPEAT);
-
-	// Comandos individuales para cada ability
-	RegConsoleCmd("sm_detectzombie", Command_ActivateAbility_DetectZombie);
-	RegConsoleCmd("sm_berserker", Command_ActivateAbility_Berserker);
-	RegConsoleCmd("sm_acidbath", Command_ActivateAbility_AcidBath);
-	RegConsoleCmd("sm_lifestealer", Command_ActivateAbility_Lifestealer);
-	RegConsoleCmd("sm_flameshield", Command_ActivateAbility_Flameshield);
-	RegConsoleCmd("sm_nightcrawler", Command_ActivateAbility_Nightcrawler);
-	RegConsoleCmd("sm_rapidfire", Command_ActivateAbility_RapidFire);
-	RegConsoleCmd("sm_chainsaw", Command_ActivateAbility_ChainsawMassacre);
-	RegConsoleCmd("sm_heatseeker", Command_ActivateAbility_HeatSeeker);
-	RegConsoleCmd("sm_speedfreak", Command_ActivateAbility_SpeedFreak);
-	RegConsoleCmd("sm_healingaura", Command_ActivateAbility_HealingAura);
-	// sm_shouldercannon removed - Shoulder Cannon now available in !buy -> Specials
-	RegConsoleCmd("sm_soulshield", Command_ActivateAbility_Soulshield);
-	RegConsoleCmd("sm_polymorph", Command_ActivateAbility_Polymorph);
-	RegConsoleCmd("sm_instagib", Command_ActivateAbility_Instagib);
-
-	// Shoulder Cannon menu command
-	RegConsoleCmd("shouldercannon", Command_ShoulderCannonMenu, "Abre el menú de configuración de Shoulder Cannon");
-	RegConsoleCmd("sm_cannonmenu", Command_ShoulderCannonMenu, "Abre el menú de configuración de Shoulder Cannon");
 
 	// Precache de Shoulder Cannon
 	Ability_ShoulderCannon_Precache();

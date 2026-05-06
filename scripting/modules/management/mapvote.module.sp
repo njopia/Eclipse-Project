@@ -36,9 +36,6 @@ public void MapVote_OnPluginStart()
 		g_MapVote_game_l4d2 = true;
 	}
 
-	RegAdminCmd("sm_cancelvote", MapVote_Command_CancelVote, ADMFLAG_VOTE, "Cancel current vote");
-	RegConsoleCmd("sm_custom", MapVote_Command_MapVote, "Open map vote menu");
-
 	g_MapVote_yes = 0;
 	g_MapVote_no = 0;
 

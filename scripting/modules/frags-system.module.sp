@@ -1,6 +1,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+#define _FRAGS_SYSTEM_MODULE_
 
 //==================================================
 // === FRAGS SYSTEM MODULE ===
@@ -26,9 +27,6 @@ bool ShowInfo[MAXPLAYERS_PLUS1];
  */
 public void FragsSystem_OnPluginStart()
 {
-	// Comandos
-	RegConsoleCmd("sm_frags", FragsSystem_Command_Frags, "Muestra panel de frags");
-
 	// Eventos
 	HookEvent("player_death", FragsSystem_Event_PlayerDeath);
 	HookEvent("player_hurt", FragsSystem_Event_PlayerHurt);

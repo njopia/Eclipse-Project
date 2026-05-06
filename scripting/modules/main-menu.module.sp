@@ -1,6 +1,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+#define _MAIN_MENU_MODULE_
 
 //==================================================
 // === MAIN MENU MODULE ===
@@ -13,10 +14,7 @@
  */
 public void MainMenu_OnPluginStart()
 {
-	// Registrar comandos
-	RegConsoleCmd("menu", Command_MainMenu, "Opens the main menu");
-	RegConsoleCmd("sm_menu", Command_MainMenu, "Opens the main menu");
-	RegConsoleCmd("sm_mainmenu", Command_MainMenu, "Opens the main menu");
+	// Comandos ahora registrados centralizadamente en commands.helpers.sp
 }
 
 /**

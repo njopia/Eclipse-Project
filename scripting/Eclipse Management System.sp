@@ -23,7 +23,6 @@
 //==================================================
 #tryinclude "helpers/commons.helpers.sp"
 #tryinclude "helpers/entities.helpers.sp"
-#tryinclude "helpers/commands.helpers.sp"
 #tryinclude "helpers/sdks.helpers.sp"
 #tryinclude "helpers/beacons.helpers.sp"
 
@@ -118,6 +117,11 @@
 // === MAIN MENU MODULE ===
 //==================================================
 #tryinclude "modules/main-menu.module.sp"
+
+//==================================================
+// === COMMANDS REGISTRATION ===
+//==================================================
+#tryinclude "helpers/commands.helpers.sp"
 
 //==================================================
 // === GLOBAL VARIABLES ===
@@ -340,23 +344,15 @@ public void OnPluginStart()
 	// Initialize main menu
 	MainMenu_OnPluginStart();
 
-	// Register commands
-	RegConsoleCmd("buy", Cmd_Buy);
-	RegConsoleCmd("sm_buy", Cmd_Buy);
-	RegConsoleCmd("sm_givemoney", Command_GiveMoneySub);
-
-	RegAdminCmd("rp", Cmd_Reload_Plugins, ADMFLAG_ROOT);
-	RegAdminCmd("rt", Cmd_Reload_Translations, ADMFLAG_ROOT);
-	RegAdminCmd("sm_clearfade", Cmd_ClearFade, ADMFLAG_ROOT, "Purga todos los efectos de fade de pantalla (EMERGENCIA para pantalla blanca)");
-	RegAdminCmd("sm_clearfog", Cmd_ClearFog, ADMFLAG_ROOT, "Elimina todos los fog controllers (EMERGENCIA para pantalla blanca)");
-	RegAdminCmd("sm_fixwhitescreen", Cmd_FixWhiteScreen, ADMFLAG_ROOT, "Solución completa para pantalla blanca (fade + fog)");
+	// Centralized Command Registration
+	RegisterEMSCommands();
 
 	// Load translations
 	LoadTranslations("eclipse.phrases");
 
 	// Hook events
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
-
+	HookEvent("player_spawn", Event_OnPlayerSpawn, EventHookMode_Post);
 	// Snow system ConVars
 	cvar_preciptype = CreateConVar("snow_type", "3", "Type of the precipitation (https://developer.valvesoftware.com/wiki/Func_precipitation)");
 	cvar_density	= CreateConVar("snow_density", "75", "Density of the precipitation");
@@ -633,33 +629,31 @@ stock void CleanupBuyMenuTimers()
 /**
  * Resets all players state (cooldowns, variables, etc.)
  */
+stock void ResetPlayerCooldowns(int client)
+{
+	ResetTeamHealCooldown(client);
+	ResetTeamSpeedBoostCooldown(client);
+	ResetFireYellCooldown(client);
+	ResetPowerYellCooldown(client);
+	DefenseGrid_ResetCooldown(client);
+	IonCannon_ResetCooldown(client);
+	AmmoPile_ResetCooldown(client);
+}
+
 stock void ResetAllPlayersState()
 {
 	LogToFile(logfilepath, "[CLEANUP] Reseteando estado de todos los jugadores...");
-
 	for (int i = 1; i <= MaxClients; i++)
-	{
 		if (IsClientInGame(i))
-		{
-			// === TEAM BONUSES COOLDOWNS ===
-			ResetTeamHealCooldown(i);
-			ResetTeamSpeedBoostCooldown(i);
-
-			// === INSTANTS COOLDOWNS ===
-			ResetFireYellCooldown(i);
-			ResetPowerYellCooldown(i);
-
-			// === LONG ACTIONS COOLDOWNS ===
-			// Removidas - ahora son parte del sistema de Abilities
-
-			// === DEPLOYABLES COOLDOWNS ===
-			DefenseGrid_ResetCooldown(i);
-			IonCannon_ResetCooldown(i);
-			AmmoPile_ResetCooldown(i);
-		}
-	}
-
+			ResetPlayerCooldowns(i);
 	LogToFile(logfilepath, "[CLEANUP] Reseteo de cooldowns completado");
+}
+
+public void Event_OnPlayerSpawn(Event event, const char[] name, bool dontBroadcast)
+{
+    int client = GetClientOfUserId(event.GetInt("userid"));
+    if (client > 0 && IsClientInGame(client) && IsPlayerAlive(client))
+        ResetPlayerCooldowns(client);
 }
 
 //==================================================

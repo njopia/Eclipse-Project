@@ -239,9 +239,6 @@ void ScriptedHUD_OnPluginStart()
 	g_hCvar_HUD1_Width.AddChangeHook(ScriptedHUD_OnCvarChanged);
 	g_hCvar_HUD1_Height.AddChangeHook(ScriptedHUD_OnCvarChanged);
 
-	// Register admin commands
-	RegAdminCmd("sm_reload_hud", ScriptedHUD_Cmd_ReloadMessages, ADMFLAG_ROOT, "Recargar mensajes del HUD desde la base de datos");
-
 	// Initialize message rotation
 	ScriptedHUD_AdvanceMessage();
 	CreateTimer(ROTATE_INTERVAL, ScriptedHUD_Timer_RotateMessage, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);

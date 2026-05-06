@@ -2,6 +2,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
+#define _BUY_MENU_MODULE_
 
 #include <clientprefs>
 
