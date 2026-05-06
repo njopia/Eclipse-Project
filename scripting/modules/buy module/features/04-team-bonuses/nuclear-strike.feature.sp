@@ -8,11 +8,11 @@
 //////////////////////////////////////////
 
 // --- Defines ---
-#define NUKE_COUNTDOWN_TIME			5.0			// Tiempo de countdown antes de explosión (segundos)
+#define NUKE_COUNTDOWN_TIME			12.0		// Tiempo de countdown antes de explosión (segundos)
 #define NUKE_EFFECT_DURATION		20.0		// Duración total de efectos de daño (segundos)
 #define NUKE_DAMAGE_TICK_INTERVAL	0.3			// Intervalo entre ticks de daño (segundos)
-#define NUKE_DAMAGE_PER_TICK		300			// Daño por tick
-#define NUKE_RADIUS					2500.0		// Radio de efecto (unidades)
+#define NUKE_DAMAGE_PER_TICK		800			// DAÑO EXTREMO: Mata Tanks en segundos
+#define NUKE_RADIUS					2000.0		// RADIO MODERADO: Equilibrio de impacto
 #define NUKE_SHAKE_RADIUS_1			1200.0		// Radio para shake intenso
 #define NUKE_SHAKE_RADIUS_2			2500.0		// Radio para shake medio
 #define NUKE_SHAKE_RADIUS_3			4000.0		// Radio para shake suave
@@ -35,7 +35,7 @@
 #define NUKE_MAX_SPECIAL_KILLS_PER_TICK	2		// Máximo especiales a dañar por tick
 
 // Colores para efectos
-#define GLOW_COLOR_RED				RGB_TO_INT(255, 50, 50)
+#define GLOW_COLOR_RED				0xFF3232	// Representación hex directa para claridad
 #define GLOW_COLOR_ORANGE			RGB_TO_INT(255, 150, 0)
 #define GLOW_COLOR_WHITE			RGB_TO_INT(255, 255, 255)
 #define FLARE_COLOR					"200 20 15"	// Color rojo intenso para bengala
@@ -51,6 +51,9 @@ static float  g_fNukeEndTime[MAXPLAYERS + 1];		// Tiempo cuando termina el nuke
 static int    g_iNukeUsedThisMap[MAXPLAYERS + 1];	// Contador de usos por mapa
 static int    g_iNukeCountdown[MAXPLAYERS + 1];	// Contador de countdown
 static float  g_fNukeExplosionTime[MAXPLAYERS + 1]; // Tiempo de la explosión
+static Handle g_hCountdownTimer[MAXPLAYERS + 1];    // Handle para el timer de cuenta regresiva
+static int    g_iNukeTotalCountdown[MAXPLAYERS + 1]; // Almacena el tiempo inicial para cálculos
+static bool   g_bNukeSoundsStarted[MAXPLAYERS + 1]; // Control para no duplicar sonidos
 
 // Modelos y sonidos
 static const char NUKE_MODEL_FLARE[] = "models/props_lighting/light_flares.mdl";
@@ -59,6 +62,15 @@ static const char NUKE_SOUND_RUMBLE[] = "ambient/levels/caves/rumble3.wav";
 static const char NUKE_SOUND_EXPLODE[] = "weapons/grenade_launcher/grenadefire/grenade_launcher_explode_1.wav";
 static const char NUKE_SOUND_ALARM[] = "ambient/alarms/klaxon1.wav";
 static const char NUKE_SOUND_WIND[] = "ambient/wind/wind_hit1.wav";
+static const char NUKE_SOUND_PLANE[] = "vehicles/airboat/fan_blade_fullthrottle_loop1.wav";
+static const char NUKE_SOUND_TINNITUS[] = "ambient/energy/zap1.wav"; // Pitido de aturdimiento
+
+static const char SURVIVOR_REACT_SOUNDS[][] = {
+	"player/survivor/voice/mechanic/taunt02.wav",
+	"player/survivor/voice/gambler/battlecry04.wav",
+	"player/survivor/voice/gambler/battlecry01.wav",
+	"player/survivor/voice/gambler/battlecry02.wav"
+};
 
 // Partículas de nuclear strike (EXPANDIDAS)
 static const char PARTICLE_NUKE_HIT[] = "gen_hit_up";
@@ -150,7 +162,9 @@ stock void Activate_NuclearStrike(int client)
 	// 7. Marcar como usado
 	g_iNukeUsedThisMap[client] = 1;
 	g_bNukeActive[client] = true;
-	g_iNukeCountdown[client] = 5;
+	g_iNukeCountdown[client] = RoundToFloor(NUKE_COUNTDOWN_TIME);
+	g_iNukeTotalCountdown[client] = g_iNukeCountdown[client];
+	g_bNukeSoundsStarted[client] = false;
 	NukeLog("Nuclear Strike activado - Countdown iniciado");
 
 	// 8. Crear bengala de señal
@@ -166,11 +180,8 @@ stock void Activate_NuclearStrike(int client)
 	PrintToChatAll("\x05[Eclipse]\x01 \x03¡¡¡EVACÚEN EL ÁREA INMEDIATAMENTE!!!");
 
 	// 11. Countdown visual
-	CreateTimer(1.0, Timer_NukeCountdown, client, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(2.0, Timer_NukeCountdown, client, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(3.0, Timer_NukeCountdown, client, TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(4.0, Timer_NukeCountdown, client, TIMER_FLAG_NO_MAPCHANGE);
-
+	g_hCountdownTimer[client] = CreateTimer(1.0, Timer_NukeCountdown, client, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+    
 	// 12. Lanzar nuke después de 5 segundos
 	CreateTimer(NUKE_COUNTDOWN_TIME, Timer_LaunchNuke, client, TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -234,30 +245,56 @@ public Action Timer_AlertPulse(Handle timer, int client)
 public Action Timer_NukeCountdown(Handle timer, int client)
 {
 	if (!g_bNukeActive[client])
+	{
+		g_hCountdownTimer[client] = INVALID_HANDLE;
 		return Plugin_Stop;
+	}
 
 	g_iNukeCountdown[client]--;
 
-	// Anuncio en chat
-	if (g_iNukeCountdown[client] > 0)
+	// Cálculo de intensidad y Logging
+	float progress = 1.0 - (float(g_iNukeCountdown[client]) / float(g_iNukeTotalCountdown[client]));
+	NukeLog("[DEBUG-TICK] T-%d seg. Progreso: %.2f", g_iNukeCountdown[client], progress);
+
+	float planeVol = 0.5; // Volumen fijo solicitado
+	float rumbleVol = 0.05 + (progress * progress * 0.95); // Crecimiento exponencial
+
+	// Gestión de flags para evitar el loop infinito (stacking)
+	int soundFlags = SND_NOFLAGS;
+	if (!g_bNukeSoundsStarted[client])
 	{
-		PrintToChatAll("\x05[Eclipse]\x01 \x04IMPACTO EN %d...", g_iNukeCountdown[client]);
+		g_bNukeSoundsStarted[client] = true;
+		NukeLog("[DEBUG] Iniciando canales de sonido para el avión");
+	}
+	else
+	{
+		soundFlags = SND_CHANGEVOL | SND_CHANGEPITCH;
 	}
 
-	// Sonido de rumble intenso
-	EmitSoundToAll(NUKE_SOUND_RUMBLE, client, SNDCHAN_AUTO, SNDLEVEL_NORMAL, SND_NOFLAGS, 0.8);
-
-	// Shake creciente
-	for (int i = 1; i <= MaxClients; i++)
+	// Anuncio en chat (Cada 3 segundos, y luego cada segundo al final)
+	if (g_iNukeCountdown[client] > 0 && (g_iNukeCountdown[client] % 3 == 0 || g_iNukeCountdown[client] <= 5))
 	{
-		if (IsClientInGame(i) && IsPlayerAlive(i))
-		{
-			float amplitude = (6.0 - g_iNukeCountdown[client]) * 0.5;
-			ScreenShake(i, amplitude);
-		}
+		PrintToChatAll("\x05[Eclipse]\x01 \x04OBJETIVO FIJADO. IMPACTO EN %d...", g_iNukeCountdown[client]);
 	}
 
-	return Plugin_Stop;
+	// Sonido de avión acercándose (Progresivo)
+	EmitSoundToAll(NUKE_SOUND_PLANE, client, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, soundFlags, planeVol, 80 + RoundToFloor(progress * 45));
+	
+	// Sonido de estruendo (Rumble) que crece exponencialmente
+	EmitSoundToAll(NUKE_SOUND_RUMBLE, client, SNDCHAN_AUTO, SNDLEVEL_NORMAL, soundFlags, rumbleVol, 100);
+
+	if (g_iNukeCountdown[client] <= 0)
+	{
+		NukeLog("[DEBUG] Deteniendo sonidos de aproximación para %N", client);
+		StopSound(client, SNDCHAN_AUTO, NUKE_SOUND_PLANE);
+		StopSound(client, SNDCHAN_AUTO, NUKE_SOUND_RUMBLE);
+		g_bNukeSoundsStarted[client] = false;
+
+		g_hCountdownTimer[client] = INVALID_HANDLE;
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
 }
 
 /**
@@ -290,6 +327,34 @@ public Action Timer_LaunchNuke(Handle timer, int client)
 	}
 	NukeLog("Flash aplicado a %d clientes", flashCount);
 
+	// === FASE 1.5: REACCIONES DE SOBREVIVIENTES (ASOMBRO/GRITOS) ===
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsSurvivor(i) && IsPlayerAlive(i))
+		{
+			float playerOrigin[3];
+			GetClientAbsOrigin(i, playerOrigin);
+			// Ajuste de radio: Solo gritan los que están cerca del área de impacto
+			if (GetVectorDistance(g_fNukeOrigin[client], playerOrigin) <= NUKE_RADIUS * 1.2)
+			{
+				// Grito inicial (Impacto)
+				EmitSoundToAll(SURVIVOR_REACT_SOUNDS[GetRandomInt(0, sizeof(SURVIVOR_REACT_SOUNDS) - 1)], i);
+			}
+		}
+
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			// SHAKE CONSTANTE: Se inicia aquí con la duración total del efecto
+			float playerOrigin[3]; GetClientAbsOrigin(i, playerOrigin);
+			float distFactor = 1.0 - (GetVectorDistance(g_fNukeOrigin[client], playerOrigin) / NUKE_SHAKE_RADIUS_3);
+			ScreenShake(i, 70.0 * (distFactor < 0.2 ? 0.2 : distFactor), NUKE_EFFECT_DURATION);
+
+			// TINNITUS: Ensordecer a los jugadores por el estruendo
+			ClientCommand(i, "play %s", NUKE_SOUND_TINNITUS);
+			L4D_ScreenFade(i, 255, 255, 255, 255, 3.0, FADE_IN); // Flash blanco más persistente
+		}
+	}
+
 	// === FASE 2: SONIDOS APOCALÍPTICOS ===
 	NukeLog("FASE 2: Reproduciendo sonidos de explosión...");
 	EmitSoundToAll(NUKE_SOUND_EXPLODE, client, SNDCHAN_AUTO, SNDLEVEL_SCREAMING, SND_NOFLAGS, 1.0);
@@ -298,6 +363,9 @@ public Action Timer_LaunchNuke(Handle timer, int client)
 	// === FASE 3: DESTRUIR BENGALA ===
 	NukeLog("FASE 3: Destruyendo bengala...");
 	DestroyNukeFlare(client);
+
+	// === FASE 3.5: ATMÓSFERA OSCURA ===
+	SetLightStyle(0, "a"); // Oscurecer el mapa instantáneamente (simulando eclipse por humo)
 
 	// === FASE 4: EFECTOS VISUALES CATACLÍSMICOS ===
 	NukeLog("FASE 4: Creando efectos visuales de explosión...");
@@ -694,25 +762,14 @@ public Action Timer_NukeVisualEffects(Handle timer, int client)
 		GetClientAbsOrigin(i, playerOrigin);
 		float distance = GetVectorDistance(g_fNukeOrigin[client], playerOrigin);
 
-		// Shake variable por distancia
+		// Glow dinámico para sobrevivientes cerca del área
 		if (distance <= NUKE_SHAKE_RADIUS_1)
 		{
-			ScreenShake(i, GetRandomFloat(7.0, 10.0));
-
-			// Glow naranja intenso para sobrevivientes muy cerca
 			if (IsSurvivor(i))
 			{
 				SetEntProp(i, Prop_Send, "m_glowColorOverride", GLOW_COLOR_ORANGE);
 				SetEntProp(i, Prop_Send, "m_iGlowType", 3);
 			}
-		}
-		else if (distance <= NUKE_SHAKE_RADIUS_2)
-		{
-			ScreenShake(i, GetRandomFloat(4.0, 7.0));
-		}
-		else if (distance <= NUKE_SHAKE_RADIUS_3)
-		{
-			ScreenShake(i, GetRandomFloat(2.0, 4.0));
 		}
 
 		// Fade naranja-rojo pulsante para los que están en el radio
@@ -780,6 +837,25 @@ public Action Timer_NukeDamage(Handle timer, int client)
 		// Terminar efectos
 		g_bNukeActive[client] = false;
 		g_hNukeDamageTimer[client] = INVALID_HANDLE;
+
+		// Restaurar luz normal
+		SetLightStyle(0, "m");
+
+		// === REACCIONES FINALES DE SOBREVIVIENTES ===
+		for (int i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && IsSurvivor(i) && IsPlayerAlive(i))
+			{
+				float playerOrigin[3];
+				GetClientAbsOrigin(i, playerOrigin);
+				// Ajuste de radio para el grito final
+				if (GetVectorDistance(g_fNukeOrigin[client], playerOrigin) <= NUKE_RADIUS * 1.2)
+				{
+					// Grito final al ver que la devastación cesa
+					EmitSoundToAll(SURVIVOR_REACT_SOUNDS[GetRandomInt(0, sizeof(SURVIVOR_REACT_SOUNDS) - 1)], i);
+				}
+			}
+		}
 
 		// Remover glows
 		int glowsRemoved = 0;
@@ -960,14 +1036,14 @@ static void CreateParticle(int entity, const char[] particleName, float lifetime
 /**
  * Helper: Screen shake effect
  */
-static void ScreenShake(int client, float amplitude)
+static void ScreenShake(int client, float amplitude, float duration = 3.0)
 {
 	Handle hBf = StartMessageOne("Shake", client);
 	if (hBf != INVALID_HANDLE)
 	{
 		BfWriteByte(hBf, 0);
 		BfWriteFloat(hBf, amplitude);
-		BfWriteFloat(hBf, 3.0);
+		BfWriteFloat(hBf, duration);
 		BfWriteFloat(hBf, 1.0);
 		EndMessage();
 	}
@@ -1009,6 +1085,24 @@ static bool IsAnyBombardmentActive()
  */
 stock void NuclearStrike_OnMapStart()
 {
+	NukeLog("[DEBUG] Precaching Nuclear Strike resources...");
+	// Precache de modelos
+	PrecacheModel(NUKE_MODEL_FLARE, true);
+	
+	// Precache de sonidos esenciales
+	PrecacheSound(NUKE_SOUND_CRACKLE, true);
+	PrecacheSound(NUKE_SOUND_RUMBLE, true);
+	PrecacheSound(NUKE_SOUND_EXPLODE, true);
+	PrecacheSound(NUKE_SOUND_ALARM, true);
+	PrecacheSound(NUKE_SOUND_WIND, true);
+	PrecacheSound(NUKE_SOUND_PLANE, true);
+	PrecacheSound(NUKE_SOUND_TINNITUS, true);
+
+	for (int i = 0; i < sizeof(SURVIVOR_REACT_SOUNDS); i++)
+	{
+		PrecacheSound(SURVIVOR_REACT_SOUNDS[i], true);
+	}
+
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		g_iNukeUsedThisMap[i] = 0;
@@ -1017,6 +1111,7 @@ stock void NuclearStrike_OnMapStart()
 		g_fNukeEndTime[i] = 0.0;
 		g_iNukeCountdown[i] = 0;
 		g_fNukeExplosionTime[i] = 0.0;
+		g_bNukeSoundsStarted[i] = false;
 	}
 }
 
@@ -1025,6 +1120,10 @@ stock void NuclearStrike_OnMapStart()
  */
 stock void NuclearStrike_OnClientDisconnect(int client)
 {
+	NukeLog("[DEBUG] Limpieza por desconexión del cliente %d", client);
+	StopSound(client, SNDCHAN_AUTO, NUKE_SOUND_PLANE);
+	StopSound(client, SNDCHAN_AUTO, NUKE_SOUND_RUMBLE);
+
 	// Limpiar timers
 	if (g_hNukeDamageTimer[client] != INVALID_HANDLE)
 	{
@@ -1051,6 +1150,7 @@ stock void NuclearStrike_OnClientDisconnect(int client)
 	g_bNukeActive[client] = false;
 	g_iNukeUsedThisMap[client] = 0;
 	g_fNukeEndTime[client] = 0.0;
+	g_bNukeSoundsStarted[client] = false;
 	g_iNukeCountdown[client] = 0;
 	g_fNukeExplosionTime[client] = 0.0;
 }
@@ -1060,6 +1160,7 @@ stock void NuclearStrike_OnClientDisconnect(int client)
  */
 stock void CleanupNuclearStrikeTimers()
 {
+	NukeLog("[DEBUG] Cleanup nuclear strike timers (Global)");
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (g_hNukeDamageTimer[i] != INVALID_HANDLE)
@@ -1080,6 +1181,8 @@ stock void CleanupNuclearStrikeTimers()
 			g_hNukeSirenTimer[i] = INVALID_HANDLE;
 		}
 
+		StopSound(i, SNDCHAN_AUTO, NUKE_SOUND_PLANE);
+		StopSound(i, SNDCHAN_AUTO, NUKE_SOUND_RUMBLE);
 		DestroyNukeFlare(i);
 		g_bNukeActive[i] = false;
 		g_iNukeUsedThisMap[i] = 0;

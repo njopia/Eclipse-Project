@@ -60,6 +60,8 @@ static const char g_DefaultSounds[][] = {
 	"weapons/grenade_launcher/grenadefire/grenade_launcher_explode_1.wav",
 	"ambient/alarms/klaxon1.wav",
 	"ambient/wind/wind_hit1.wav",
+	"player/adrenaline_inject.wav",
+
 	// Sonido de shoulderCannon
 	"weapons/machinegun_m60/gunfire/machinegun_fire_1.wav"
 	// agrega más si quieres…

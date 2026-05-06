@@ -380,7 +380,7 @@ public void OnMapStart()
 	CleanupAllTimers();
 
 	// CRITICAL: Force cleanup any residual fog controllers
-	ForceCleanupAllFogControllers();
+	// ForceCleanupAllFogControllers(); // Comentado para preservar la niebla original del mapa
 
 	// Reset unified points system tracking flags
 	EclipsePointsUnified_OnMapStart();
@@ -437,7 +437,7 @@ public void OnMapEnd()
 	LogToFile(logfilepath, "|               MAP END                     |");
 
 	// CRITICAL: Force cleanup all fog controllers before map change
-	ForceCleanupAllFogControllers();
+	// ForceCleanupAllFogControllers(); // Comentado para evitar reseteos de iluminación al salir
 
 	// Cleanup game modes
 	Bloodmoon_OnMapEnd();
@@ -827,7 +827,7 @@ public Action Cmd_FixWhiteScreen(int client, int args)
  * Force cleanup all fog controllers
  * Called on map start/end to prevent fog controller accumulation
  */
-void ForceCleanupAllFogControllers()
+/* void ForceCleanupAllFogControllers()
 {
 	int removedCount = 0;
 	int entity		 = -1;
@@ -860,7 +860,7 @@ void ForceCleanupAllFogControllers()
 		SetLightStyle(0, "m");	  // Reset light style
 	}
 }
-
+ */
 //==================================================
 // === SNOW SYSTEM ===
 //==================================================
