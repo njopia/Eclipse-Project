@@ -40,9 +40,10 @@ Handle g_cvar_Bloodmoon_TankSpawn         = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_TankInterval      = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_PanicEvents       = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_PanicInterval     = INVALID_HANDLE;
-Handle g_cvar_Bloodmoon_ColorCorrection   = INVALID_HANDLE;
-Handle g_cvar_Bloodmoon_ColorFile         = INVALID_HANDLE;
-Handle g_cvar_Bloodmoon_ColorWeight       = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_TonemapEnable     = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_BloomScale        = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_ExposureMin       = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_ExposureMax       = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_UsePrecipitation  = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_PrecipType        = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_BreederEvents     = INVALID_HANDLE;
@@ -67,8 +68,7 @@ Handle g_hFogTimer_BM     = null;
 Handle g_hEventTimer_BM   = null;
 int    g_iParticleRefs_BM[16];
 int    g_iParticleTotal_BM  = 0;
-int    g_iColorCorrectionRef_BM = -1;
-int    g_iFogVolumeRef_BM       = -1;
+int    g_iTonemapRef_BM         = -1;
 int    g_iPrecipitationRef_BM   = -1;
 int    g_iTankCount_BM      = 0;
 float  g_fLastTankSpawn_BM  = 0.0;
@@ -115,9 +115,10 @@ public void Bloodmoon_OnPluginStart()
 	g_cvar_Bloodmoon_TankInterval = CreateConVar("bloodmoon_tank_interval",   "60.0",         "Intervalo spawn de tanks (s)",     FCVAR_PLUGIN, true, 0.0);
 	g_cvar_Bloodmoon_PanicEvents = CreateConVar("bloodmoon_panic_events",     "1",            "Panic events periodicos",          FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_Bloodmoon_PanicInterval = CreateConVar("bloodmoon_panic_interval", "45.0",         "Intervalo panic events (s)",       FCVAR_PLUGIN, true, 0.0);
-	g_cvar_Bloodmoon_ColorCorrection = CreateConVar("bloodmoon_color_correction","1",         "Usar color correction",            FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	g_cvar_Bloodmoon_ColorFile   = CreateConVar("bloodmoon_color_file",       "materials/correction/ghost.raw", "Archivo color correction", FCVAR_PLUGIN);
-	g_cvar_Bloodmoon_ColorWeight = CreateConVar("bloodmoon_color_weight",     "0.4",          "Intensidad color correction",      FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Bloodmoon_TonemapEnable = CreateConVar("bloodmoon_tonemap_enable",  "1",            "Tonemap (bloom/exposicion)",        FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Bloodmoon_BloomScale  = CreateConVar("bloodmoon_bloom_scale",      "2.5",          "Intensidad bloom",                 FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Bloodmoon_ExposureMin = CreateConVar("bloodmoon_exposure_min",     "0.7",          "Exposicion minima",                FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Bloodmoon_ExposureMax = CreateConVar("bloodmoon_exposure_max",     "1.8",          "Exposicion maxima",                FCVAR_PLUGIN, true, 0.0);
 	g_cvar_Bloodmoon_UsePrecipitation = CreateConVar("bloodmoon_use_precipitation","1",       "Usar precipitacion en vez de particulas", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_Bloodmoon_PrecipType  = CreateConVar("bloodmoon_precip_type",      "3",            "Tipo: 1=lluvia 2=ceniza 3=nieve 4=lluvia_l4d", FCVAR_PLUGIN, true, 1.0, true, 4.0);
 	g_cvar_Bloodmoon_BreederEvents = CreateConVar("bloodmoon_breeder_events", "1",            "Spawn aleatorio de especiales extra", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -159,11 +160,12 @@ public void Bloodmoon_OnMapStart()
 	g_fLastPanicEvent_BM   = 0.0;
 	g_iTankCount_BM        = 0;
 	g_iFogRef_BM           = -1;
-	g_iColorCorrectionRef_BM = g_iFogVolumeRef_BM = g_iPrecipitationRef_BM = -1;
+	g_iTonemapRef_BM = g_iPrecipitationRef_BM = -1;
 	for (int i = 0; i < 16; i++) g_iParticleRefs_BM[i] = -1;
 	g_iParticleTotal_BM    = 0;
 
 	PrecacheSound("npc/mega_mob/mega_mob_incoming.wav", true);
+
 }
 
 public void Bloodmoon_OnMapEnd()
@@ -265,15 +267,12 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	GetConVarString(g_cvar_Bloodmoon_LightStyle, ls, sizeof(ls));
 	DiffBase_ApplyLightStyle(ls);
 
-	if (GetConVarBool(g_cvar_Bloodmoon_ColorCorrection))
-	{
-		char colorFile[PLATFORM_MAX_PATH];
-		GetConVarString(g_cvar_Bloodmoon_ColorFile, colorFile, sizeof(colorFile));
-		DiffBase_CreateColorCorrection(
-			colorFile, GetConVarFloat(g_cvar_Bloodmoon_ColorWeight),
-			g_iColorCorrectionRef_BM, g_iFogVolumeRef_BM,
-			"bm_colorcorrection");
-	}
+	if (GetConVarBool(g_cvar_Bloodmoon_TonemapEnable))
+		DiffBase_CreateTonemapController(
+			GetConVarFloat(g_cvar_Bloodmoon_BloomScale),
+			GetConVarFloat(g_cvar_Bloodmoon_ExposureMin),
+			GetConVarFloat(g_cvar_Bloodmoon_ExposureMax),
+			g_iTonemapRef_BM);
 
 	if (GetConVarBool(g_cvar_Bloodmoon_UsePrecipitation))
 	{
@@ -342,7 +341,7 @@ void Bloodmoon_Deactivate(const char[] reason = "manual")
 
 	BM_StopEventTimer();
 
-	DiffBase_RemoveColorCorrection(g_iColorCorrectionRef_BM, g_iFogVolumeRef_BM);
+	DiffBase_RemoveTonemapController(g_iTonemapRef_BM);
 	BM_RemovePrecipitation();
 	DiffBase_RemoveAmbientParticles(g_iParticleRefs_BM, g_iParticleTotal_BM);
 
@@ -470,24 +469,16 @@ public Action BM_Timer_Events(Handle timer)
 // SPAWNING DE TANKS Y ESPECIALES
 // =============================================================================
 
-bool BM_GetSurvivorPosition(float pos[3], float ang[3])
-{
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i))
-		{
-			GetClientAbsOrigin(i, pos);
-			GetClientAbsAngles(i, ang);
-			return true;
-		}
-	}
-	return false;
-}
-
 void BM_SpawnTank()
 {
+	int target = DiffBase_FindSurvivorTarget();
+	if (target == -1) return;
+
 	float pos[3], ang[3];
-	if (!BM_GetSurvivorPosition(pos, ang)) return;
+	if (!L4D_GetRandomPZSpawnPosition(target, view_as<int>(L4D2ZombieClass_Tank), 10, pos))
+		return;
+
+	GetClientAbsAngles(target, ang);
 	int tank = L4D2_SpawnTank(pos, ang);
 	if (tank > 0) g_iTankCount_BM++;
 }
@@ -499,10 +490,19 @@ void BM_ForcePanicEvent()
 
 void BM_CreateBreederEvent()
 {
-	float pos[3], ang[3];
-	if (!BM_GetSurvivorPosition(pos, ang)) return;
+	int target = DiffBase_FindSurvivorTarget();
+	if (target == -1) return;
+
+	float ang[3];
+	GetClientAbsAngles(target, ang);
 	for (int n = 0; n < 2; n++)
-		L4D2_SpawnSpecial(GetRandomInt(1, 6), pos, ang);
+	{
+		int zombieClass = GetRandomInt(1, 6);
+		float pos[3];
+		if (!L4D_GetRandomPZSpawnPosition(target, zombieClass, 10, pos))
+			continue;
+		L4D2_SpawnSpecial(zombieClass, pos, ang);
+	}
 }
 
 // =============================================================================

@@ -16,9 +16,10 @@
 // ConVars
 Handle g_cvar_CowLevel_Enable = INVALID_HANDLE;
 Handle g_cvar_CowLevel_PanicInterval = INVALID_HANDLE;
-Handle g_cvar_CowLevel_ColorCorrection = INVALID_HANDLE;
-Handle g_cvar_CowLevel_ColorFile = INVALID_HANDLE;
-Handle g_cvar_CowLevel_ColorWeight = INVALID_HANDLE;
+Handle g_cvar_CowLevel_TonemapEnable = INVALID_HANDLE;
+Handle g_cvar_CowLevel_BloomScale = INVALID_HANDLE;
+Handle g_cvar_CowLevel_ExposureMin = INVALID_HANDLE;
+Handle g_cvar_CowLevel_ExposureMax = INVALID_HANDLE;
 Handle g_cvar_CowLevel_MegaMobSound = INVALID_HANDLE;
 Handle g_cvar_CowLevel_MegaMobSoundChance = INVALID_HANDLE;
 Handle g_cvar_CowLevel_RemoveSpecials = INVALID_HANDLE;
@@ -39,8 +40,7 @@ char   g_sOrigDifficulty_CowLevel[16];
 
 // Estado
 bool   g_bCowLevelActive = false;
-int    g_iCowLevel_ColorCorrectionRef = -1;
-int    g_iCowLevel_FogVolumeRef = -1;
+int    g_iCowLevel_TonemapRef = -1;
 int    g_iCowLevelSpawns = 0;
 float  g_fCowLevel_LastPanicEvent = 0.0;
 float  g_fCowLevel_MapStartTime = 0.0;
@@ -58,10 +58,11 @@ public void CowLevel_OnPluginStart()
 	g_cvar_CowLevel_Enable = CreateConVar("cowlevel_enable", "0", "Habilita el Secret Cow Level", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_CowLevel_PanicInterval = CreateConVar("cowlevel_panic_interval", "45.0", "Intervalo en segundos para panic events (0=disable)", FCVAR_PLUGIN, true, 0.0);
 
-	// Color Correction
-	g_cvar_CowLevel_ColorCorrection = CreateConVar("cowlevel_color_correction", "1", "Usar color correction (post-processing)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	g_cvar_CowLevel_ColorFile = CreateConVar("cowlevel_color_file", "materials/correction/thirdstrike.raw", "Archivo de color correction", FCVAR_PLUGIN);
-	g_cvar_CowLevel_ColorWeight = CreateConVar("cowlevel_color_weight", "0.5", "Intensidad del color correction (0.0-1.0)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	// Tonemap
+	g_cvar_CowLevel_TonemapEnable = CreateConVar("cowlevel_tonemap_enable", "1",   "Tonemap (bloom/exposicion)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_CowLevel_BloomScale    = CreateConVar("cowlevel_bloom_scale",    "1.5", "Intensidad bloom",           FCVAR_PLUGIN, true, 0.0);
+	g_cvar_CowLevel_ExposureMin   = CreateConVar("cowlevel_exposure_min",   "1.0", "Exposicion minima",          FCVAR_PLUGIN, true, 0.0);
+	g_cvar_CowLevel_ExposureMax   = CreateConVar("cowlevel_exposure_max",   "2.5", "Exposicion maxima",          FCVAR_PLUGIN, true, 0.0);
 
 	// Mega Mob Sound
 	g_cvar_CowLevel_MegaMobSound = CreateConVar("cowlevel_megamob_sound", "1", "Reproducir sonido de mega mob aleatorio", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -130,8 +131,7 @@ public void CowLevel_OnMapStart()
 
 	// Reset estado
 	g_iCowLevelSpawns = 0;
-	g_iCowLevel_ColorCorrectionRef = -1;
-	g_iCowLevel_FogVolumeRef = -1;
+	g_iCowLevel_TonemapRef = -1;
 
 	// Limpiar array de cows
 	if (g_aCowEntities != null)
@@ -238,6 +238,7 @@ void CowLevel_Activate()
 	// Cow Level no modifica el director, pero guardamos los valores por si acaso
 
 	// Preparar timestamp (NO activar aun)
+	g_iCowLevelSpawns = 0;
 	g_fCowLevel_LastPanicEvent = GetGameTime();
 
 	// Anunciar activacion
@@ -254,19 +255,13 @@ void CowLevel_Activate()
 	LogMessage("[Cow Level] Loading cow spawns...");
 	CowLevel_LoadCowSpawns();
 
-	// Crear color correction
-	if (GetConVarBool(g_cvar_CowLevel_ColorCorrection))
-	{
-		char colorFile[PLATFORM_MAX_PATH];
-		GetConVarString(g_cvar_CowLevel_ColorFile, colorFile, sizeof(colorFile));
-		float weight = GetConVarFloat(g_cvar_CowLevel_ColorWeight);
-		LogMessage("[Cow Level] Creating color correction: file=%s, weight=%.2f", colorFile, weight);
-		CowLevel_CreateColorCorrection(colorFile, weight);
-	}
-	else
-	{
-		LogMessage("[Cow Level] Color correction disabled");
-	}
+	// Tonemap
+	if (GetConVarBool(g_cvar_CowLevel_TonemapEnable))
+		DiffBase_CreateTonemapController(
+			GetConVarFloat(g_cvar_CowLevel_BloomScale),
+			GetConVarFloat(g_cvar_CowLevel_ExposureMin),
+			GetConVarFloat(g_cvar_CowLevel_ExposureMax),
+			g_iCowLevel_TonemapRef);
 
 	// Iniciar timer de eventos
 	if (g_hCowLevel_EventTimer == null)
@@ -303,8 +298,8 @@ void CowLevel_Deactivate()
 	// Remover cows
 	CowLevel_RemoveCowSpawns();
 
-	// Remover color correction
-	CowLevel_RemoveColorCorrection();
+	// Remover tonemap
+	DiffBase_RemoveTonemapController(g_iCowLevel_TonemapRef);
 
 	// Anunciar desactivacion
 	SetGlobalTransTarget(LANG_SERVER);
@@ -497,7 +492,7 @@ void CowLevel_CreateDefaultSpawns()
 
 	for (int i = 1; i <= MaxClients && spawned < 10; i++)
 	{
-		if (IsClientInGame(i) && IsSurvivor(i) && IsPlayerAlive(i))
+		if (IsPlayerAlive(i) && DiffBase_IsSurvivor(i))
 		{
 			float vPos[3], vAng[3];
 			GetClientAbsOrigin(i, vPos);
@@ -580,115 +575,6 @@ void CowLevel_RemoveCowSpawns()
 
 	g_aCowEntities.Clear();
 	g_iCowLevelSpawns = 0;
-}
-
-/**
- * Crea el sistema de color correction
- */
-void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
-{
-	// Limpiar anteriores
-	CowLevel_RemoveColorCorrection();
-
-	LogMessage("[Cow Level] Creating color_correction entity...");
-
-	// Crear color_correction entity
-	int colorEnt = CreateEntityByName("color_correction");
-	if (colorEnt == -1)
-	{
-		LogMessage("[Cow Level] ERROR: Failed to create color_correction entity!");
-		return;
-	}
-
-	LogMessage("[Cow Level] color_correction entity created: %d", colorEnt);
-
-	DispatchKeyValue(colorEnt, "targetname", "cowlevel_colorcorrection");
-	DispatchKeyValue(colorEnt, "filename", fileName);
-
-	char sWeight[16];
-	FloatToString(weight, sWeight, sizeof(sWeight));
-	DispatchKeyValue(colorEnt, "maxweight", sWeight);
-	DispatchKeyValue(colorEnt, "maxfalloff", "-1");
-	DispatchKeyValue(colorEnt, "minfalloff", "0");
-
-	DispatchSpawn(colorEnt);
-	ActivateEntity(colorEnt);
-	AcceptEntityInput(colorEnt, "Enable");
-
-	// Validate entity index is in valid range and entity is valid
-	if (colorEnt > 0 && IsValidEntity(colorEnt))
-	{
-		g_iCowLevel_ColorCorrectionRef = EntIndexToEntRef(colorEnt);
-		LogMessage("[Cow Level] color_correction spawned and enabled (ref: %d)", g_iCowLevel_ColorCorrectionRef);
-	}
-	else
-	{
-		LogMessage("[Cow Level] ERROR: color_correction entity became invalid after spawn (index: %d)!", colorEnt);
-		g_iCowLevel_ColorCorrectionRef = -1;
-	}
-
-	// Crear fog_volume para que el color correction funcione
-	LogMessage("[Cow Level] Creating fog_volume entity...");
-	int fogVolEnt = CreateEntityByName("fog_volume");
-	if (fogVolEnt == -1)
-	{
-		LogMessage("[Cow Level] ERROR: Failed to create fog_volume entity!");
-		// Limpiar color_correction huerfano
-		CowLevel_RemoveColorCorrection();
-		return;
-	}
-
-	LogMessage("[Cow Level] fog_volume entity created: %d", fogVolEnt);
-
-	DispatchKeyValue(fogVolEnt, "targetname",          "cowlevel_fogvolume");
-	DispatchKeyValue(fogVolEnt, "ColorCorrectionName", "cowlevel_colorcorrection");
-
-	// Cubrir todo el mapa - DEBE hacerse ANTES de DispatchSpawn
-	DispatchKeyValue(fogVolEnt, "mins", "-10000 -10000 -10000");
-	DispatchKeyValue(fogVolEnt, "maxs", "10000 10000 10000");
-
-	DispatchSpawn(fogVolEnt);
-	ActivateEntity(fogVolEnt);
-
-	// Validate entity index is in valid range and entity is valid
-	if (fogVolEnt > 0 && IsValidEntity(fogVolEnt))
-	{
-		g_iCowLevel_FogVolumeRef = EntIndexToEntRef(fogVolEnt);
-		LogMessage("[Cow Level] fog_volume spawned (ref: %d)", g_iCowLevel_FogVolumeRef);
-	}
-	else
-	{
-		LogMessage("[Cow Level] ERROR: fog_volume entity became invalid after spawn (index: %d)!", fogVolEnt);
-		g_iCowLevel_FogVolumeRef = -1;
-	}
-}
-
-/**
- * Remueve el color correction
- */
-void CowLevel_RemoveColorCorrection()
-{
-	// Remover color_correction
-	if (g_iCowLevel_ColorCorrectionRef != -1)
-	{
-		int entity = EntRefToEntIndex(g_iCowLevel_ColorCorrectionRef);
-		if (entity != INVALID_ENT_REFERENCE && IsValidEntity(entity))
-		{
-			AcceptEntityInput(entity, "Kill");
-		}
-		g_iCowLevel_ColorCorrectionRef = -1;
-	}
-
-	// Remover fog_volume
-	if (g_iCowLevel_FogVolumeRef != -1)
-	{
-		int entity = EntRefToEntIndex(g_iCowLevel_FogVolumeRef);
-		if (entity != INVALID_ENT_REFERENCE && IsValidEntity(entity))
-		{
-			AcceptEntityInput(entity, "Kill");
-		}
-		g_iCowLevel_FogVolumeRef = -1;
-	}
 }
 
 //==================================================

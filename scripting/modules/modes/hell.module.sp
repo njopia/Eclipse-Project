@@ -34,7 +34,20 @@ Handle g_cvar_Hell_SoundStart        = INVALID_HANDLE;
 Handle g_cvar_Hell_SoundLoop         = INVALID_HANDLE;
 Handle g_cvar_Hell_FadeAlpha         = INVALID_HANDLE;
 Handle g_cvar_Hell_FadeDuration      = INVALID_HANDLE;
-Handle g_cvar_Hell_DebugDamage       = INVALID_HANDLE;
+Handle g_cvar_Hell_DebugDamage           = INVALID_HANDLE;
+Handle g_cvar_Hell_TankSpawn             = INVALID_HANDLE;
+Handle g_cvar_Hell_TankInterval          = INVALID_HANDLE;
+Handle g_cvar_Hell_PanicEvents           = INVALID_HANDLE;
+Handle g_cvar_Hell_PanicInterval         = INVALID_HANDLE;
+Handle g_cvar_Hell_WitchEnable           = INVALID_HANDLE;
+Handle g_cvar_Hell_WitchMax              = INVALID_HANDLE;
+Handle g_cvar_Hell_WitchRecycleDist      = INVALID_HANDLE;
+Handle g_cvar_Hell_MegaMobSound          = INVALID_HANDLE;
+Handle g_cvar_Hell_MegaMobSoundChance    = INVALID_HANDLE;
+Handle g_cvar_Hell_TonemapEnable         = INVALID_HANDLE;
+Handle g_cvar_Hell_BloomScale            = INVALID_HANDLE;
+Handle g_cvar_Hell_ExposureMin           = INVALID_HANDLE;
+Handle g_cvar_Hell_ExposureMax           = INVALID_HANDLE;
 
 // ConVars del juego
 Handle g_zCVAR_CommonLimit_Hell = INVALID_HANDLE;
@@ -58,6 +71,13 @@ int  g_iOrigMobMin_Hell      = -1;
 int  g_iOrigMobMax_Hell      = -1;
 int  g_iOrigMegaMob_Hell     = -1;
 char g_sOrigDifficulty_Hell[16];
+
+Handle g_hEventTimer_Hell    = null;
+int    g_iTankCount_Hell     = 0;
+float  g_fLastTankSpawn_Hell = 0.0;
+float  g_fLastPanic_Hell     = 0.0;
+float  g_fMapStart_Hell      = 0.0;
+int    g_iTonemapRef_Hell    = -1;
 
 // =============================================================================
 // INICIALIZACION
@@ -87,7 +107,20 @@ public void Hell_OnPluginStart()
 	g_cvar_Hell_SoundLoop   = CreateConVar("hell_sound_loop",       "",           "Sonido loop",                      FCVAR_PLUGIN);
 	g_cvar_Hell_FadeAlpha   = CreateConVar("hell_fade_alpha",       "100",        "Alpha overlay 0-255",              FCVAR_PLUGIN);
 	g_cvar_Hell_FadeDuration = CreateConVar("hell_fade_duration",   "1500",       "Duracion transicion ms",           FCVAR_PLUGIN);
-	g_cvar_Hell_DebugDamage = CreateConVar("hell_debug_damage",     "0",          "Debug dano",                       FCVAR_PLUGIN);
+	g_cvar_Hell_DebugDamage           = CreateConVar("hell_debug_damage",           "0",    "Debug dano",                       FCVAR_PLUGIN);
+	g_cvar_Hell_TankSpawn             = CreateConVar("hell_tank_spawn",             "1",    "Spawn automatico de tanks",          FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Hell_TankInterval          = CreateConVar("hell_tank_interval",          "60.0", "Intervalo spawn de tanks (s)",       FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Hell_PanicEvents           = CreateConVar("hell_panic_events",           "1",    "Panic events periodicos",            FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Hell_PanicInterval         = CreateConVar("hell_panic_interval",         "45.0", "Intervalo panic events (s)",         FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Hell_WitchEnable           = CreateConVar("hell_witch_enable",           "1",    "Sistema de witches activo",          FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Hell_WitchMax              = CreateConVar("hell_witch_max",              "33",   "Max witches simultaneas",            FCVAR_PLUGIN, true, 1.0);
+	g_cvar_Hell_WitchRecycleDist      = CreateConVar("hell_witch_recycle_dist",     "1000", "Distancia (u) para reciclar witches",FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Hell_MegaMobSound          = CreateConVar("hell_megamob_sound",          "1",    "Sonido aleatorio mega mob",          FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Hell_MegaMobSoundChance    = CreateConVar("hell_megamob_sound_chance",   "20",   "Probabilidad 1/N sonido mega mob",   FCVAR_PLUGIN, true, 1.0);
+	g_cvar_Hell_TonemapEnable         = CreateConVar("hell_tonemap_enable",         "1",    "Tonemap (bloom/exposicion)",          FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Hell_BloomScale            = CreateConVar("hell_bloom_scale",            "4.0",  "Intensidad bloom",                   FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Hell_ExposureMin           = CreateConVar("hell_exposure_min",           "0.3",  "Exposicion minima",                  FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Hell_ExposureMax           = CreateConVar("hell_exposure_max",           "0.7",  "Exposicion maxima",                  FCVAR_PLUGIN, true, 0.0);
 
 	g_zCVAR_CommonLimit_Hell = FindConVar("z_common_limit");
 	g_zCVAR_MobMin_Hell      = FindConVar("z_mob_spawn_min_size");
@@ -98,6 +131,9 @@ public void Hell_OnPluginStart()
 	for (int i = 1; i <= MaxClients; i++)
 		if (IsClientInGame(i))
 			SDKHook(i, SDKHook_OnTakeDamage, Hell_OnTakeDamage);
+
+	HookEvent("player_death", Hell_Event_PlayerDeath);
+	HookEvent("tank_killed",  Hell_Event_TankKilled);
 
 	RegAdminCmd("sm_hell_on",     Cmd_HellOn,     ADMFLAG_GENERIC, "Activa Hell Mode");
 	RegAdminCmd("sm_hell_off",    Cmd_HellOff,    ADMFLAG_GENERIC, "Desactiva Hell Mode");
@@ -116,6 +152,11 @@ public void Hell_OnMapStart()
 	g_iFogRef_Hell = -1;
 	for (int i = 0; i < 16; i++) g_iParticleRefs_Hell[i] = -1;
 	g_iParticleTotal_Hell = 0;
+	g_fMapStart_Hell      = GetGameTime();
+	g_iTankCount_Hell     = 0;
+	g_fLastTankSpawn_Hell = g_fLastPanic_Hell = 0.0;
+	g_iTonemapRef_Hell    = -1;
+	PrecacheSound("npc/mega_mob/mega_mob_incoming.wav", true);
 }
 
 public void Hell_OnMapEnd()
@@ -187,11 +228,21 @@ void Hell_Activate(const char[] reason = "manual")
 		GetConVarInt(g_cvar_Hell_MobMax),
 		GetConVarInt(g_cvar_Hell_MegaMob));
 
-	g_bHellActive = true;
+	g_bHellActive         = true;
+	g_iTankCount_Hell     = 0;
+	g_fLastTankSpawn_Hell = g_fLastPanic_Hell = GetGameTime();
+	Hell_StartEventTimer();
 
 	char ls[8];
 	GetConVarString(g_cvar_Hell_LightStyle, ls, sizeof(ls));
 	DiffBase_ApplyLightStyle(ls);
+
+	if (GetConVarBool(g_cvar_Hell_TonemapEnable))
+		DiffBase_CreateTonemapController(
+			GetConVarFloat(g_cvar_Hell_BloomScale),
+			GetConVarFloat(g_cvar_Hell_ExposureMin),
+			GetConVarFloat(g_cvar_Hell_ExposureMax),
+			g_iTonemapRef_Hell);
 
 	if (GetConVarBool(g_cvar_Hell_FogEnable))
 	{
@@ -238,7 +289,9 @@ void Hell_Deactivate(const char[] reason = "manual")
 	if (!g_bHellActive) return;
 	#pragma unused reason
 
-	g_bHellActive = false;
+	g_bHellActive     = false;
+	g_iTankCount_Hell = 0;
+	Hell_StopEventTimer();
 
 	DiffBase_RestoreDirector(
 		g_zCVAR_CommonLimit_Hell, g_zCVAR_MobMin_Hell, g_zCVAR_MobMax_Hell,
@@ -246,6 +299,7 @@ void Hell_Deactivate(const char[] reason = "manual")
 		g_iOrigCommonLimit_Hell,  g_iOrigMobMin_Hell,      g_iOrigMobMax_Hell,
 		g_iOrigMegaMob_Hell,      g_sOrigDifficulty_Hell);
 
+	DiffBase_RemoveTonemapController(g_iTonemapRef_Hell);
 	DiffBase_RemoveAmbientParticles(g_iParticleRefs_Hell, g_iParticleTotal_Hell);
 	Hell_StopFogTimer();
 	DiffBase_RemoveFogController(g_iFogRef_Hell);
@@ -351,6 +405,103 @@ public Action Cmd_HellStatus(int client, int args)
 		GetConVarFloat(g_cvar_Hell_DmgMult),
 		diff[0] ? diff : "n/a");
 	return Plugin_Handled;
+}
+
+// =============================================================================
+// EVENT TIMER (tanks, panic, witches, mega mob sound)
+// =============================================================================
+
+void Hell_StartEventTimer()
+{
+	if (g_hEventTimer_Hell != null) return;
+	g_hEventTimer_Hell = CreateTimer(5.0, Hell_Timer_Events, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+}
+
+void Hell_StopEventTimer()
+{
+	if (g_hEventTimer_Hell != null) { KillTimer(g_hEventTimer_Hell); g_hEventTimer_Hell = null; }
+}
+
+public Action Hell_Timer_Events(Handle timer)
+{
+	if (!g_bHellActive) return Plugin_Continue;
+	float now = GetGameTime();
+	if (now - g_fMapStart_Hell < 10.0) return Plugin_Continue;
+
+	// 1. Tank (max 1)
+	if (GetConVarBool(g_cvar_Hell_TankSpawn))
+	{
+		float interval = GetConVarFloat(g_cvar_Hell_TankInterval);
+		if (interval > 0.0 && (now - g_fLastTankSpawn_Hell) >= interval
+			&& g_iTankCount_Hell < 1 && !DiffBase_IsFinaleActive())
+		{
+			int target = DiffBase_FindSurvivorTarget();
+			if (target != -1)
+			{
+				float pos[3], ang[3];
+				if (L4D_GetRandomPZSpawnPosition(target, view_as<int>(L4D2ZombieClass_Tank), 10, pos))
+				{
+					GetClientAbsAngles(target, ang);
+					int tank = L4D2_SpawnTank(pos, ang);
+					if (tank > 0) g_iTankCount_Hell++;
+				}
+			}
+			g_fLastTankSpawn_Hell = now;
+		}
+	}
+
+	// 2. Panic
+	if (GetConVarBool(g_cvar_Hell_PanicEvents))
+	{
+		float interval = GetConVarFloat(g_cvar_Hell_PanicInterval);
+		if (interval > 0.0 && (now - g_fLastPanic_Hell) >= interval)
+		{
+			L4D_ForcePanicEvent();
+			g_fLastPanic_Hell = now;
+		}
+	}
+
+	// 3. Witches
+	if (GetConVarBool(g_cvar_Hell_WitchEnable))
+	{
+		int witchMax   = GetConVarInt(g_cvar_Hell_WitchMax);
+		int witchCount = L4D2_GetWitchCount();
+		if (witchCount < witchMax)
+		{
+			DiffBase_SpawnWitch();
+			if (witchCount < witchMax / 2)
+				DiffBase_SpawnWitch();
+		}
+		DiffBase_RecycleWitches(float(GetConVarInt(g_cvar_Hell_WitchRecycleDist)));
+		DiffBase_EnrageWitches(GetRandomInt(2, 6));
+	}
+
+	// 4. Mega mob sound
+	if (GetConVarBool(g_cvar_Hell_MegaMobSound))
+	{
+		int chance = GetConVarInt(g_cvar_Hell_MegaMobSoundChance);
+		if (chance > 0 && GetRandomInt(1, chance) == 1)
+			EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav", SOUND_FROM_PLAYER, SNDCHAN_STATIC, SNDLEVEL_RAIDSIREN);
+	}
+
+	return Plugin_Continue;
+}
+
+public void Hell_Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!g_bHellActive) return;
+	int victim = GetClientOfUserId(event.GetInt("userid"));
+	if (victim > 0 && IsClientInGame(victim)
+		&& GetClientTeam(victim) == 3
+		&& GetEntProp(victim, Prop_Send, "m_zombieClass") == 8
+		&& g_iTankCount_Hell > 0)
+		g_iTankCount_Hell--;
+}
+
+public void Hell_Event_TankKilled(Event event, const char[] name, bool dontBroadcast)
+{
+	if (!g_bHellActive) return;
+	if (g_iTankCount_Hell > 0) g_iTankCount_Hell--;
 }
 
 // =============================================================================

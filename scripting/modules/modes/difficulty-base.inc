@@ -372,6 +372,34 @@ stock void DiffBase_RemoveColorCorrection(int& colorCorrectionRef, int& fogVolum
 }
 
 // =============================================================================
+// TONEMAP CONTROLLER
+// =============================================================================
+
+stock void DiffBase_CreateTonemapController(
+	float bloomScale, float exposureMin, float exposureMax,
+	int& tonemapRef)
+{
+	int ent = CreateEntityByName("env_tonemap_controller");
+	if (ent < 1) { tonemapRef = -1; return; }
+	DispatchSpawn(ent);
+	ActivateEntity(ent);
+
+	char buf[32];
+	FloatToString(bloomScale,   buf, sizeof(buf)); SetVariantString(buf); AcceptEntityInput(ent, "SetBloomScale");
+	FloatToString(exposureMin,  buf, sizeof(buf)); SetVariantString(buf); AcceptEntityInput(ent, "SetAutoExposureMin");
+	FloatToString(exposureMax,  buf, sizeof(buf)); SetVariantString(buf); AcceptEntityInput(ent, "SetAutoExposureMax");
+
+	tonemapRef = (ent > 0 && IsValidEntity(ent)) ? EntIndexToEntRef(ent) : -1;
+}
+
+stock void DiffBase_RemoveTonemapController(int& tonemapRef)
+{
+	int ent = EntRefToEntIndex(tonemapRef);
+	if (ent > 0 && IsValidEntity(ent)) RemoveEntity(ent);
+	tonemapRef = -1;
+}
+
+// =============================================================================
 // UTILITY
 // =============================================================================
 
@@ -389,4 +417,86 @@ stock bool DiffBase_IsFinaleActive()
 	int ent = -1;
 	ent = FindEntityByClassname(ent, "trigger_finale");
 	return ent != -1;
+}
+
+// Retorna true si el cliente es un survivor en juego
+stock bool DiffBase_IsSurvivor(int client)
+{
+	return client > 0 && client <= MaxClients && IsClientInGame(client) && GetClientTeam(client) == 2;
+}
+
+// Retorna el primer survivor vivo, o -1 si no hay ninguno
+stock int DiffBase_FindSurvivorTarget()
+{
+	for (int i = 1; i <= MaxClients; i++)
+		if (IsClientInGame(i) && GetClientTeam(i) == 2 && IsPlayerAlive(i))
+			return i;
+	return -1;
+}
+
+// Distancia al survivor mas cercano desde una posicion dada
+stock float DiffBase_GetNearestSurvivorDist(const float pos[3])
+{
+	float minDist = 99999.0;
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (!IsClientInGame(i) || GetClientTeam(i) != 2 || !IsPlayerAlive(i)) continue;
+		float survivorPos[3];
+		GetClientAbsOrigin(i, survivorPos);
+		float dist = GetVectorDistance(pos, survivorPos);
+		if (dist < minDist) minDist = dist;
+	}
+	return minDist;
+}
+
+// Spawna una witch en una posicion valida del navmesh cerca de un survivor
+stock bool DiffBase_SpawnWitch()
+{
+	int target = DiffBase_FindSurvivorTarget();
+	if (target == -1) return false;
+	float pos[3], ang[3];
+	if (!L4D_GetRandomPZSpawnPosition(target, view_as<int>(L4D2ZombieClass_Witch), 10, pos))
+		return false;
+	GetClientAbsAngles(target, ang);
+	L4D2_SpawnWitch(pos, ang);
+	return true;
+}
+
+// Elimina witches que estan a mas de maxDist unidades de cualquier survivor
+stock void DiffBase_RecycleWitches(float maxDist)
+{
+	int entity = -1;
+	while ((entity = FindEntityByClassname(entity, "witch")) != INVALID_ENT_REFERENCE)
+	{
+		if (GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll") != 0) continue;
+		float witchPos[3];
+		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", witchPos);
+		if (DiffBase_GetNearestSurvivorDist(witchPos) > maxDist)
+			AcceptEntityInput(entity, "Kill");
+	}
+}
+
+// Enrabia hasta maxCount witches sin target usando vomit jar
+stock void DiffBase_EnrageWitches(int maxCount)
+{
+	int count = 0;
+	int entity = -1;
+	while ((entity = FindEntityByClassname(entity, "witch")) != INVALID_ENT_REFERENCE)
+	{
+		if (count >= maxCount) break;
+		if (GetEntProp(entity, Prop_Data, "m_bClientSideRagdoll") != 0) continue;
+		if (GetEntProp(entity, Prop_Send, "m_hOwnerEntity") > 0) continue;
+		int target = DiffBase_FindSurvivorTarget();
+		if (target == -1) break;
+		L4D2_Infected_OnHitByVomitJar(entity, target);
+		count++;
+	}
+}
+
+// Elimina todos los infected comunes activos
+stock void DiffBase_RemoveCommonInfected()
+{
+	int entity = -1;
+	while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
+		AcceptEntityInput(entity, "Kill");
 }
