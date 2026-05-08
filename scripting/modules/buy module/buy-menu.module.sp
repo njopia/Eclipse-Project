@@ -11,33 +11,33 @@
 //==================================================
 
 // --- Long Actions Cooldowns ---
-#define CONFIG_SURV_SPEEDBOOST_DURATION		 30.0	 // Duración del speed boost de sobreviviente (segundos)
+#define CONFIG_SURV_SPEEDBOOST_DURATION		 30.0	 // Duracion del speed boost de sobreviviente (segundos)
 
 // --- Deployables Cooldowns ---
 #define CONFIG_AMMO_PILE_COOLDOWN			 180.0	  // Cooldown para usar Ammo Pile (segundos)
 #define CONFIG_AMMO_PILE_LIFETIME			 30.0	  // Tiempo de vida de la entidad Ammo Pile (segundos)
-#define CONFIG_UVLIGHT_DURATION				 300	  // Duración de la UV Light (segundos)
-#define CONFIG_HEALINGSTATION_DURATION		 300	  // Duración de la Healing Station (segundos)
+#define CONFIG_UVLIGHT_DURATION				 300	  // Duracion de la UV Light (segundos)
+#define CONFIG_HEALINGSTATION_DURATION		 300	  // Duracion de la Healing Station (segundos)
 #define CONFIG_IONCANNON_BUY_COOLDOWN		 5.0	  // Cooldown de compra para Ion Cannon (segundos)
 
 // --- Team Bonuses Cooldowns ---
 #define CONFIG_TEAM_HEAL_COOLDOWN			 60.0	 // Cooldown entre activaciones de Team Heal (segundos)
-#define CONFIG_TEAM_HEAL_TICK_INTERVAL		 0.25	 // Intervalo entre ticks de sanación (segundos)
+#define CONFIG_TEAM_HEAL_TICK_INTERVAL		 0.25	 // Intervalo entre ticks de sanacion (segundos)
 #define CONFIG_TEAM_HEAL_PER_TICK			 5		 // HP curados por tick
 
 #define CONFIG_TEAM_SPEEDBOOST_COOLDOWN		 60.0	  // Cooldown entre activaciones de Team Speed Boost (segundos)
-#define CONFIG_TEAM_SPEEDBOOST_DURATION		 300.0	  // Duración del efecto Team Speed Boost (segundos)
-#define CONFIG_TEAM_SPEEDBOOST_AMOUNT		 1.40	  // Multiplicador de velocidad (1.0 = normal, 1.40 = 40% más)
+#define CONFIG_TEAM_SPEEDBOOST_DURATION		 300.0	  // Duracion del efecto Team Speed Boost (segundos)
+#define CONFIG_TEAM_SPEEDBOOST_AMOUNT		 1.40	  // Multiplicador de velocidad (1.0 = normal, 1.40 = 40% mas)
 #define CONFIG_TEAM_SPEEDBOOST_TICK_INTERVAL 0.1	  // Intervalo para mantener el boost (segundos)
 
 //==================================================
 
 // ================== CURRENCY SYSTEM ==================
-// Currency persiste durante toda la sesión del jugador (se mantiene entre mapas)
+// Currency persiste durante toda la sesion del jugador (se mantiene entre mapas)
 // Se mantiene incluso al cambiar de mapa usando cookies de SourceMod
 // Se resetea solo al desconectarse completamente del servidor
 // NO se guarda en base de datos
-int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency de sesión (se mantiene entre mapas con cookies)
+int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency de sesion (se mantiene entre mapas con cookies)
 Handle g_hCurrencyCookie = INVALID_HANDLE;			 // Cookie para persistir currency entre cambios de mapa
 
 // Buy Cost ConVars
@@ -136,7 +136,7 @@ public void buyMenuOnPluginStart()
 	HookEvent("infected_hurt", Event_BuyMenu_InfectedHurt, EventHookMode_Post);
 	HookEvent("player_hurt", Event_BuyMenu_PlayerHurt, EventHookMode_Post);
 
-	// Hook para daño
+	// Hook para dano
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i))
@@ -333,15 +333,15 @@ stock void UpdateTimers(int client)
 	if (IsSurvivor(client) || IsSpectator(client))
 	{
 		// --- UV Light Timer ---
-		// Si el timer está corriendo, actualiza el estado.
+		// Si el timer esta corriendo, actualiza el estado.
 		if (UVLightTimer[client] > 0)
 		{
-			UpdateUVLight(client);	  // Esta función ya resta 1 al timer.
+			UpdateUVLight(client);	  // Esta funcion ya resta 1 al timer.
 		}
-		// Si el timer llega a cero, destrúyelo.
+		// Si el timer llega a cero, destruyelo.
 		else if (UVLightTimer[client] == 0)
 		{
-			DestroyUVLight(client);	   // Esta función pone el timer en -1 para marcarlo como destruido.
+			DestroyUVLight(client);	   // Esta funcion pone el timer en -1 para marcarlo como destruido.
 		}
 
 		// --- Healing Station Timer ---
@@ -371,7 +371,7 @@ stock bool CanAffordPurchase(int client, int cost)
 	if (client <= 0 || !IsClientInGame(client))
 		return false;
 
-	// Currency persiste durante la sesión
+	// Currency persiste durante la sesion
 	return g_iPlayerLocalCurrency[client] >= cost;
 }
 
@@ -379,12 +379,12 @@ stock bool CanAffordPurchase(int client, int cost)
  * Attempt to purchase an item
  * Returns true if purchase was successful, false otherwise
  *
- * NOTA: Currency persiste durante toda la sesión (se mantiene entre mapas, se pierde al desconectar)
- * Durante eventos especiales (Nightmare), el currency está congelado y no se puede comprar.
+ * NOTA: Currency persiste durante toda la sesion (se mantiene entre mapas, se pierde al desconectar)
+ * Durante eventos especiales (Nightmare), el currency esta congelado y no se puede comprar.
  */
 stock bool PurchaseItem(int client, int cost, const char[] itemName)
 {
-	// Si el currency está congelado (evento especial activo), no permitir compras
+	// Si el currency esta congelado (evento especial activo), no permitir compras
 	if (Leveling_IsCurrencyFrozen())
 	{
 		SetGlobalTransTarget(client);
@@ -417,15 +417,15 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 /**
  * Award currency to player
  *
- * NOTA: Currency persiste durante la sesión (se mantiene entre mapas, se resetea al desconectar)
- * Durante eventos especiales (Nightmare), el currency está congelado y no se otorgan puntos.
+ * NOTA: Currency persiste durante la sesion (se mantiene entre mapas, se resetea al desconectar)
+ * Durante eventos especiales (Nightmare), el currency esta congelado y no se otorgan puntos.
  */
 stock void AwardCurrency(int client, int amount, const char[] reason = "")
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return;
 
-	// Si el currency está congelado (evento especial activo), no otorgar puntos
+	// Si el currency esta congelado (evento especial activo), no otorgar puntos
 	if (Leveling_IsCurrencyFrozen())
 	{
 		return;
@@ -437,10 +437,10 @@ stock void AwardCurrency(int client, int amount, const char[] reason = "")
 	// Actualizar cookie para persistir entre cambios de mapa
 	UpdateCurrencyCookie(client);
 
-	// Registrar en estadísticas
+	// Registrar en estadisticas
 	CurrencyStats_AddEarnings(client, amount);
 
-// El parámetro 'reason' se usa en llamadas externas para logging/estadísticas
+// El parametro 'reason' se usa en llamadas externas para logging/estadisticas
 #pragma unused reason
 }
 
@@ -459,7 +459,7 @@ stock void UpdateCurrencyCookie(int client)
 
 /**
  * Mostrar mensaje de evento de frags/muerte con puntos ganados
- * Esta función centraliza todos los mensajes de kills, frags y puntos
+ * Esta funcion centraliza todos los mensajes de kills, frags y puntos
  */
 stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int topPosition, int pointsGained)
 {
@@ -486,27 +486,27 @@ stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int top
 
 /**
  * Get player's current currency balance
- * NOTA: Currency persiste durante la sesión (entre mapas)
+ * NOTA: Currency persiste durante la sesion (entre mapas)
  */
 stock int GetPlayerCurrency(int client)
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return 0;
 
-	// Currency persiste durante la sesión
+	// Currency persiste durante la sesion
 	return g_iPlayerLocalCurrency[client];
 }
 
 /**
  * Set player's currency directly (for admin commands, etc.)
- * NOTA: Currency persiste durante la sesión (entre mapas con cookies)
+ * NOTA: Currency persiste durante la sesion (entre mapas con cookies)
  */
 stock void SetPlayerCurrency(int client, int amount)
 {
 	if (client <= 0 || !IsClientInGame(client))
 		return;
 
-	// Currency persiste durante la sesión
+	// Currency persiste durante la sesion
 	g_iPlayerLocalCurrency[client] = amount;
 
 	// Actualizar cookie para persistir entre cambios de mapa
@@ -531,7 +531,7 @@ public Action Event_BuyMenu_PlayerDeath(Event event, const char[] name, bool don
 }
 
 /**
- * Hook cuando un infectado común recibe daño
+ * Hook cuando un infectado comun recibe dano
  * NOTA: LifeStealer ahora es parte del sistema de Abilities
  */
 public Action Event_BuyMenu_InfectedHurt(Event event, const char[] name, bool dontBroadcast)
@@ -541,7 +541,7 @@ public Action Event_BuyMenu_InfectedHurt(Event event, const char[] name, bool do
 }
 
 /**
- * Hook cuando un jugador (infectado especial/tank) recibe daño
+ * Hook cuando un jugador (infectado especial/tank) recibe dano
  * NOTA: LifeStealer ahora es parte del sistema de Abilities
  */
 public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
@@ -551,30 +551,30 @@ public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dont
 }
 
 /**
- * Hook para manejar daño (para todas las habilidades)
+ * Hook para manejar dano (para todas las habilidades)
  * NOTA: Berserker, Acid Bath, Lifestealer y Speed Freak ahora son parte del sistema de Abilities
  */
 public Action Hook_BuyMenu_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	Action result = Plugin_Continue;
 
-	// Acid Bath: Convierte daño de ácido en curación
+	// Acid Bath: Convierte dano de acido en curacion
 	Action acidResult = AcidBath_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
 	if (acidResult > result)
 		result = acidResult;
 
-	// Lifestealer: Roba vida al hacer daño
+	// Lifestealer: Roba vida al hacer dano
 	Action lifeResult = Lifestealer_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
 	if (lifeResult > result)
 		result = lifeResult;
 
-	// Instagib: Multiplica daño masivamente
+	// Instagib: Multiplica dano masivamente
 	Action instaResult = Instagib_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);
 	if (instaResult > result)
 		result = instaResult;
 
-	// Soulshield: Bloquea todo el daño
-	// Nota: Soulshield usa su propio hook cuando está activo
+	// Soulshield: Bloquea todo el dano
+	// Nota: Soulshield usa su propio hook cuando esta activo
 
 	return result;
 }
@@ -585,12 +585,12 @@ public Action Hook_BuyMenu_OnTakeDamage(int victim, int &attacker, int &inflicto
 // NOTA: Estas funciones ya no se usan - las abilities fueron movidas al sistema de Abilities
 
 /**
- * Obtiene información de habilidad para el menú de compra (solo estado)
+ * Obtiene informacion de habilidad para el menu de compra (solo estado)
  * DEPRECADA: Las abilities ahora son parte del sistema de Abilities (!abilities)
  */
 public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer, int maxlen, const char[] abilityName)
 {
-	// Función deprecada - abilities movidas al sistema de Abilities
+	// Funcion deprecada - abilities movidas al sistema de Abilities
 	Format(buffer, maxlen, "[Ver !abilities]");
 }
 
@@ -600,7 +600,7 @@ public void ActiveAbilities_GetAbilityInfo(int client, int level, char[] buffer,
  */
 public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName)
 {
-	// Función deprecada - abilities movidas al sistema de Abilities
+	// Funcion deprecada - abilities movidas al sistema de Abilities
 	SetGlobalTransTarget(client);
 	char message[256];
 	Format(message, sizeof(message), "%t", "Ability_MovedToAbilities");
@@ -614,7 +614,7 @@ public bool ActiveAbilities_ActivateAbility(int client, const char[] abilityName
  */
 public bool ActiveAbilities_CanUseAbility(int client, int level, const char[] abilityName)
 {
-	// Función deprecada - abilities movidas al sistema de Abilities
+	// Funcion deprecada - abilities movidas al sistema de Abilities
 	return false;
 }
 

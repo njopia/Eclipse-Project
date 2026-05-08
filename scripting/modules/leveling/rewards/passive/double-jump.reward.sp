@@ -17,7 +17,7 @@ int g_iDoubleJump_JumpsUsed[MAXPLAYERS + 1];
 bool g_bDoubleJump_LastButtonState[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Double Jump
+ * Inicializa el modulo de Double Jump
  */
 public void DoubleJump_OnPluginStart()
 {
@@ -77,11 +77,11 @@ public void DoubleJump_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_DoubleJump_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bDoubleJump_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste el \x05Doble Salto\x01!");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste el \x05Doble Salto\x01!");
 	}
 	else if (level > requiredLevel)
 	{
@@ -115,15 +115,15 @@ public Action DoubleJump_OnPlayerRunCmd(int client, int &buttons, int &impulse, 
 
 	int flags = GetEntityFlags(client);
 
-	// Si está en el suelo, resetear contador de saltos
+	// Si esta en el suelo, resetear contador de saltos
 	if (flags & FL_ONGROUND)
 	{
 		g_iDoubleJump_JumpsUsed[client] = 0;
 		g_bDoubleJump_LastButtonState[client] = false;
 	}
-	else  // Está en el aire
+	else  // Esta en el aire
 	{
-		// Detectar cuando se presiona el botón de salto (rising edge)
+		// Detectar cuando se presiona el boton de salto (rising edge)
 		bool isPressingJump = (buttons & IN_JUMP) != 0;
 
 		if (isPressingJump && !g_bDoubleJump_LastButtonState[client])
@@ -139,7 +139,7 @@ public Action DoubleJump_OnPlayerRunCmd(int client, int &buttons, int &impulse, 
 				velocity[2] = GetConVarFloat(cvar_DoubleJump_JumpForce);
 				TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, velocity);
 
-				// Incrementar para evitar múltiples saltos
+				// Incrementar para evitar multiples saltos
 				g_iDoubleJump_JumpsUsed[client]++;
 			}
 		}
@@ -151,7 +151,7 @@ public Action DoubleJump_OnPlayerRunCmd(int client, int &buttons, int &impulse, 
 }
 
 /**
- * Obtiene si el doble salto está habilitado para un jugador
+ * Obtiene si el doble salto esta habilitado para un jugador
  */
 public bool DoubleJump_IsEnabled(int client)
 {

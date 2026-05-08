@@ -17,7 +17,7 @@ Handle cvar_SizeMatters_GLAmmo = INVALID_HANDLE;
 bool g_bSizeMatters_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Size Matters
+ * Inicializa el modulo de Size Matters
  */
 public void SizeMatters_OnPluginStart()
 {
@@ -31,14 +31,14 @@ public void SizeMatters_OnPluginStart()
 	cvar_SizeMatters_M60Ammo = CreateConVar(
 		"reward_sizematters_m60",
 		"150",
-		"Munición del cargador M60 en ammo pile",
+		"Municion del cargador M60 en ammo pile",
 		FCVAR_PLUGIN
 	);
 
 	cvar_SizeMatters_GLAmmo = CreateConVar(
 		"reward_sizematters_gl",
 		"30",
-		"Munición del Grenade Launcher en ammo pile",
+		"Municion del Grenade Launcher en ammo pile",
 		FCVAR_PLUGIN
 	);
 
@@ -83,7 +83,7 @@ public void SizeMatters_OnLevelUp(int client, int level)
 	if (level == requiredLevel)
 	{
 		g_bSizeMatters_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Size Matters\x01! (Refill M60 y Grenade Launcher en ammo piles)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Size Matters\x01! (Refill M60 y Grenade Launcher en ammo piles)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -160,7 +160,7 @@ stock void SizeMatters_RefillHeavyWeapons(int client)
 }
 
 /**
- * Obtiene si Size Matters está habilitado para un jugador
+ * Obtiene si Size Matters esta habilitado para un jugador
  */
 public bool SizeMatters_IsEnabled(int client)
 {

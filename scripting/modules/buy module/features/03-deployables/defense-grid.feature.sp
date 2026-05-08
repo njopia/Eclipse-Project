@@ -4,7 +4,7 @@
 
 //==================================================
 // === DEFENSE GRID DEPLOYABLE ===
-// Sistema de defensa eléctrica que repele enemigos
+// Sistema de defensa electrica que repele enemigos
 //==================================================
 
 // Models
@@ -24,13 +24,13 @@
 #define SOUND_ZAP5				  "ambient/energy/zap9.wav"
 
 // Configuration
-#define DEFENSEGRID_MAX_DURATION  300	   // 5 minutos de duración
+#define DEFENSEGRID_MAX_DURATION  300	   // 5 minutos de duracion
 #define DEFENSEGRID_COOLDOWN	  300.0	   // 5 minutos de cooldown
 #define DEFENSEGRID_LOG_FILE	  "logs/defense_grid_debug.log"
 
 // Global arrays
 static int	 g_iDefenseGridEnt[MAXPLAYERS + 1][6];	  // [0]=base, [1]=lamp, [2-5]=triggers
-static int	 g_iDefenseGridTimer[MAXPLAYERS + 1];	  // Duración restante del deployable
+static int	 g_iDefenseGridTimer[MAXPLAYERS + 1];	  // Duracion restante del deployable
 static bool	 g_bDefenseGridReady[MAXPLAYERS + 1];	  // true = puede desplegar
 static float g_fDefenseGridCooldownEnd[MAXPLAYERS + 1];
 // Logging
@@ -87,7 +87,7 @@ public void DefenseGrid_OnClientDisconnect(int client)
 }
 
 // ============================================================================
-// API pública
+// API publica
 // ============================================================================
 
 /**
@@ -117,7 +117,7 @@ public bool DefenseGrid_CanDeploy(int client)
 {
 	if (!g_bDefenseGridReady[client])
 	{
-		PrintToChat(client, "\x04[Defense Grid]\x01 Aún en cooldown.");
+		PrintToChat(client, "\x04[Defense Grid]\x01 Aun en cooldown.");
 		return false;
 	}
 
@@ -164,7 +164,7 @@ public void DefenseGrid_Deploy(int client)
 		g_iDefenseGridEnt[client][0] = entity;
 		g_iDefenseGridTimer[client]	 = DEFENSEGRID_MAX_DURATION;
 
-		// Crear lámpara
+		// Crear lampara
 		entity						 = CreateEntityByName("prop_dynamic_override");
 		if (entity > 0 && IsValidEntity(entity))
 		{
@@ -199,7 +199,7 @@ public void DefenseGrid_Deploy(int client)
 	CreateTimer(DEFENSEGRID_COOLDOWN, _Timer_DefenseGridCooldown, client);
 
 	DefenseGrid_Log("Deployed by %N at [%.1f, %.1f, %.1f]", client, origin[0], origin[1], origin[2]);
-	PrintToChat(client, "\x04[Defense Grid]\x01 Desplegado. Duración: \x03%d\x01 segundos.", DEFENSEGRID_MAX_DURATION);
+	PrintToChat(client, "\x04[Defense Grid]\x01 Desplegado. Duracion: \x03%d\x01 segundos.", DEFENSEGRID_MAX_DURATION);
 }
 
 // ============================================================================
@@ -355,7 +355,7 @@ int DefenseGrid_GetDamageType(int owner, int entity)
 }
 
 /**
- * Otorga currency al dueño según el tipo de enemigo bloqueado.
+ * Otorga currency al dueno segun el tipo de enemigo bloqueado.
  */
 void DefenseGrid_AwardXP(int client, int type)
 {

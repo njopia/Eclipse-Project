@@ -18,7 +18,7 @@ bool g_bShownOnSpawn[MAXPLAYERS + 1];
 float g_fLastSpawnTime[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de UI
+ * Inicializa el modulo de UI
  */
 public void LevelingUI_OnPluginStart()
 {
@@ -63,7 +63,7 @@ public void LevelingUI_OnClientDisconnect(int client)
 }
 
 /**
- * Muestra la información de nivel en chat al spawn (llamado desde rewards)
+ * Muestra la informacion de nivel en chat al spawn (llamado desde rewards)
  * @param client - ID del cliente
  */
 public void LevelingUI_ShowOnSpawn(int client)
@@ -78,12 +78,12 @@ public void LevelingUI_ShowOnSpawn(int client)
 	float currentTime = GetGameTime();
 	if (currentTime - g_fLastSpawnTime[client] < 2.0)
 	{
-		return; // Ya se mostró recientemente
+		return; // Ya se mostro recientemente
 	}
 
 	g_fLastSpawnTime[client] = currentTime;
 
-	// Mostrar info con pequeño delay
+	// Mostrar info con pequeno delay
 	CreateTimer(0.5, Timer_ShowSpawnInfo, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -103,7 +103,7 @@ public Action Timer_ShowSpawnInfo(Handle timer, any userid)
 }
 
 /**
- * Muestra la información de nivel en chat
+ * Muestra la informacion de nivel en chat
  * @param client - ID del cliente
  */
 public void LevelingUI_DisplayLevelInfo(int client)
@@ -137,7 +137,7 @@ public void LevelingUI_DisplayLevelInfo(int client)
 	Format(totalXPMsg, sizeof(totalXPMsg), "%T", "Leveling_InfoTotalXP", client, totalXP);
 	PrintToChat(client, "\x04%s", totalXPMsg);
 
-	// Barra de progreso (si está habilitada)
+	// Barra de progreso (si esta habilitada)
 	if (GetConVarBool(cvar_UIShowProgressBar))
 	{
 		char progressBar[256];
@@ -158,7 +158,7 @@ public void LevelingUI_DisplayLevelInfo(int client)
  * Muestra XP ganado (llamado cuando el jugador gana XP)
  * @param client - ID del cliente
  * @param xp_gained - XP ganado
- * @param reason - Razón del XP
+ * @param reason - Razon del XP
  */
 public void LevelingUI_DisplayXPGain(int client, int xp_gained, const char[] reason)
 {
@@ -181,7 +181,7 @@ public void LevelingUI_DisplayXPGain(int client, int xp_gained, const char[] rea
  * Crea una barra de progreso en ASCII
  * @param progress - Porcentaje de progreso (0-100)
  * @param buffer - Buffer para almacenar la barra
- * @param buflen - Tamaño del buffer
+ * @param buflen - Tamano del buffer
  */
 stock void LevelingUI_CreateProgressBar(int progress, char[] buffer, int buflen)
 {
@@ -205,7 +205,7 @@ stock void LevelingUI_CreateProgressBar(int progress, char[] buffer, int buflen)
 
 /**
  * Comando: sm_level / sm_xp / sm_exp
- * Muestra la información de nivel del jugador
+ * Muestra la informacion de nivel del jugador
  */
 public Action Cmd_ShowLevelInfo(int client, int args)
 {

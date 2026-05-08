@@ -114,9 +114,9 @@ void Ability_RapidFire_Deactivate(int client)
 void RapidFire_ModifyWeapon(int client, int weapon)
 {
 	// Modificar el delay entre disparos (m_flNextPrimaryAttack)
-	SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", 3.0);  // Velocidad de animación 3x
+	SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", 3.0);  // Velocidad de animacion 3x
 
-	// Dar munición completa
+	// Dar municion completa
 	int ammoType = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
 	if (ammoType != -1)
 	{
@@ -139,7 +139,7 @@ void RapidFire_RestoreWeapon(int weapon)
 }
 
 /**
- * Timer: Auto-resupply de munición
+ * Timer: Auto-resupply de municion
  */
 public Action Timer_RapidFire_Ammo(Handle timer, int userid)
 {
@@ -168,7 +168,7 @@ public Action Timer_RapidFire_Ammo(Handle timer, int userid)
 		SetEntProp(client, Prop_Send, "m_iAmmo", 999, _, ammoType);
 	}
 
-	// Acelerar la siguiente acción
+	// Acelerar la siguiente accion
 	SetEntPropFloat(weapon, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + (0.1 * RAPID_FIRE_MULTIPLIER));
 
 	return Plugin_Continue;

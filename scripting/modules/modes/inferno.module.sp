@@ -5,10 +5,10 @@
 //==================================================
 // === INFERNO MODE MODULE ===
 // Modo infernal supremo con fuego devastador
-// El modo más difícil - multiplicador máximo de daño, hordas masivas
+// El modo mas dificil - multiplicador maximo de dano, hordas masivas
 //==================================================
 
-// ConVars del módulo
+// ConVars del modulo
 Handle g_cvar_Inferno_Enable = INVALID_HANDLE;
 Handle g_cvar_Inferno_DmgMult = INVALID_HANDLE;
 Handle g_cvar_Inferno_Fade = INVALID_HANDLE;
@@ -55,13 +55,13 @@ int	   g_iFogRef_Inferno = -1;
 Handle g_hFogTimer_Inferno = null;
 
 /**
- * Inicializa el módulo de Inferno
+ * Inicializa el modulo de Inferno
  */
 public void Inferno_OnPluginStart()
 {
 	// ConVars principales
 	g_cvar_Inferno_Enable = CreateConVar("inferno_enable", "1", "Habilita el sistema de Inferno Mode", FCVAR_PLUGIN);
-	g_cvar_Inferno_DmgMult = CreateConVar("inferno_damage_mult", "2.0", "Multiplicador de daño a Survivors", FCVAR_PLUGIN);
+	g_cvar_Inferno_DmgMult = CreateConVar("inferno_damage_mult", "2.0", "Multiplicador de dano a Survivors", FCVAR_PLUGIN);
 	g_cvar_Inferno_Fade = CreateConVar("inferno_fade", "1", "Fade amarillo-naranja persistente", FCVAR_PLUGIN);
 	g_cvar_Inferno_ChangeDiff = CreateConVar("inferno_change_difficulty", "1", "Cambiar a Experto", FCVAR_PLUGIN);
 
@@ -71,7 +71,7 @@ public void Inferno_OnPluginStart()
 	g_cvar_Inferno_MobMax = CreateConVar("inferno_mob_max", "50", "z_mob_spawn_max_size", FCVAR_PLUGIN);
 	g_cvar_Inferno_MegaMob = CreateConVar("inferno_mega_mob", "80", "z_mega_mob_size", FCVAR_PLUGIN);
 
-	// Ambientación
+	// Ambientacion
 	g_cvar_Inferno_LightStyle = CreateConVar("inferno_lightstyle", "c", "LightStyle a aplicar", FCVAR_PLUGIN);
 	g_cvar_Inferno_LightStyleRestore = CreateConVar("inferno_lightstyle_restore", "m", "LightStyle a restaurar", FCVAR_PLUGIN);
 	g_cvar_Inferno_FogEnable = CreateConVar("inferno_fog_enable", "1", "Crear Fog", FCVAR_PLUGIN);
@@ -79,16 +79,16 @@ public void Inferno_OnPluginStart()
 	g_cvar_Inferno_FogStart = CreateConVar("inferno_fog_start", "30", "Fog start distance", FCVAR_PLUGIN);
 	g_cvar_Inferno_FogEnd = CreateConVar("inferno_fog_end", "800", "Fog end distance", FCVAR_PLUGIN);
 	g_cvar_Inferno_FogDensity = CreateConVar("inferno_fog_density", "0.85", "Fog max density 0..1", FCVAR_PLUGIN);
-	g_cvar_Inferno_ParticleName = CreateConVar("inferno_particle", "env_fire_medium_smoke", "Partícula ambiental", FCVAR_PLUGIN);
+	g_cvar_Inferno_ParticleName = CreateConVar("inferno_particle", "env_fire_medium_smoke", "Particula ambiental", FCVAR_PLUGIN);
 	g_cvar_Inferno_ParticleCount = CreateConVar("inferno_particle_count", "6", "Cantidad de emisores", FCVAR_PLUGIN);
 	g_cvar_Inferno_SoundStart = CreateConVar("inferno_sound_start", "", "Sonido al activar", FCVAR_PLUGIN);
 	g_cvar_Inferno_SoundLoop = CreateConVar("inferno_sound_loop", "", "Sonido loop", FCVAR_PLUGIN);
 	g_cvar_Inferno_FadeAlpha = CreateConVar("inferno_fade_alpha", "130", "Alpha del overlay naranja-amarillo 0..255", FCVAR_PLUGIN);
-	g_cvar_Inferno_FadeDuration = CreateConVar("inferno_fade_duration", "1500", "Duración ms de transición", FCVAR_PLUGIN);
+	g_cvar_Inferno_FadeDuration = CreateConVar("inferno_fade_duration", "1500", "Duracion ms de transicion", FCVAR_PLUGIN);
 	g_cvar_Inferno_FogTick = CreateConVar("inferno_fog_tick", "3.0", "Intervalo para re-aplicar fog", FCVAR_PLUGIN);
 
 	// Debug
-	g_cvar_Inferno_DebugDamage = CreateConVar("inferno_debug_damage", "0", "Debug de daño", FCVAR_PLUGIN);
+	g_cvar_Inferno_DebugDamage = CreateConVar("inferno_debug_damage", "0", "Debug de dano", FCVAR_PLUGIN);
 
 	// Obtener ConVars del juego
 	z_common_limit_inferno = FindConVar("z_common_limit");
@@ -97,7 +97,7 @@ public void Inferno_OnPluginStart()
 	z_mega_mob_size_inferno = FindConVar("z_mega_mob_size");
 	z_difficulty_inferno = FindConVar("z_difficulty");
 
-	// Hooks de daño
+	// Hooks de dano
 	for (int i = 1; i <= MaxClients; i++)
 		if (IsClientInGame(i))
 			SDKHook(i, SDKHook_OnTakeDamage, Inferno_OnTakeDamage);
@@ -108,7 +108,7 @@ public void Inferno_OnPluginStart()
 	RegAdminCmd("sm_inferno_toggle", Cmd_InfernoToggle, ADMFLAG_GENERIC, "Alterna Inferno Mode");
 	RegAdminCmd("sm_inferno_status", Cmd_InfernoStatus, ADMFLAG_GENERIC, "Estado Inferno Mode");
 
-	// Hook ConVar para detectar activación/desactivación
+	// Hook ConVar para detectar activacion/desactivacion
 	HookConVarChange(g_cvar_Inferno_Enable, Inferno_ConVarChanged);
 
 	g_sOrigDifficulty_Inferno[0] = '\0';
@@ -168,7 +168,7 @@ public void Inferno_OnMapStart()
  */
 public void Inferno_OnMapEnd()
 {
-	// Desactivar Inferno si está activo al cambiar de mapa
+	// Desactivar Inferno si esta activo al cambiar de mapa
 	if (g_bInfernoActive)
 	{
 		LogMessage("[Inferno] Map ending, deactivating Inferno");
@@ -177,7 +177,7 @@ public void Inferno_OnMapEnd()
 }
 
 /**
- * Hook de daño - Multiplicador de Inferno
+ * Hook de dano - Multiplicador de Inferno
  */
 public Action Inferno_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
@@ -212,7 +212,7 @@ public Action Inferno_OnTakeDamage(int victim, int &attacker, int &inflictor, fl
 		{
 			char vName[64];
 			GetClientName(victim, vName, sizeof(vName));
-			PrintToChatAll("\x05[Inferno:DMG]\x01 %s recibió %.1f daño (mult=%.2f)", vName, damage, mult);
+			PrintToChatAll("\x05[Inferno:DMG]\x01 %s recibio %.1f dano (mult=%.2f)", vName, damage, mult);
 		}
 		return Plugin_Changed;
 	}
@@ -275,7 +275,7 @@ void Inferno_Activate(const char[] reason = "manual")
 
 	g_bInfernoActive = true;
 
-	// Ambientación
+	// Ambientacion
 	Inferno_ApplyLightStyle();
 
 	if (GetConVarBool(g_cvar_Inferno_FogEnable))
@@ -295,7 +295,7 @@ void Inferno_Activate(const char[] reason = "manual")
 
 	Inferno_DoScreenFadeAll(true);
 
-	PrintToChatAll("\x04[Inferno]\x01 ¡INFERNO SUPREMO ACTIVADO! El fuego eterno te aguarda (mult=%.2f)",
+	PrintToChatAll("\x04[Inferno]\x01 INFERNO SUPREMO ACTIVADO! El fuego eterno te aguarda (mult=%.2f)",
 		GetConVarFloat(g_cvar_Inferno_DmgMult));
 
 	if (GetConVarBool(g_cvar_Inferno_ChangeDiff))
@@ -642,7 +642,7 @@ void Inferno_StopFogEnforcerTimer()
 }
 
 /**
- * Obtiene si Inferno está activo
+ * Obtiene si Inferno esta activo
  */
 public bool Inferno_IsActive()
 {

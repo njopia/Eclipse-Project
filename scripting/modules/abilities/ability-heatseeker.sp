@@ -111,7 +111,7 @@ void Ability_HeatSeeker_Deactivate(int client)
 }
 
 /**
- * Timer: Munición infinita
+ * Timer: Municion infinita
  */
 public Action Timer_HeatSeeker_Ammo(Handle timer, int userid)
 {
@@ -126,7 +126,7 @@ public Action Timer_HeatSeeker_Ammo(Handle timer, int userid)
 	if (weapon == INVALID_ENT_REFERENCE)
 		return Plugin_Stop;
 
-	// Munición infinita
+	// Municion infinita
 	SetEntProp(weapon, Prop_Send, "m_iClip1", 1);
 
 	int ammoType = GetEntProp(weapon, Prop_Send, "m_iPrimaryAmmoType");
@@ -170,14 +170,14 @@ void HeatSeeker_ShowPriority(int client)
 	{
 		case Target_SpecialInfected: strcopy(priority, sizeof(priority), "Infectados Especiales");
 		case Target_Tank: strcopy(priority, sizeof(priority), "Tanks");
-		case Target_Nearest: strcopy(priority, sizeof(priority), "Más Cercano");
+		case Target_Nearest: strcopy(priority, sizeof(priority), "Mas Cercano");
 	}
 
 	PrintHintText(client, "Prioridad: %s", priority);
 }
 
 /**
- * Busca el mejor target según la prioridad
+ * Busca el mejor target segun la prioridad
  */
 int HeatSeeker_FindTarget(int client)
 {
@@ -193,7 +193,7 @@ int HeatSeeker_FindTarget(int client)
 		{
 			int zombieClass = GetEntProp(i, Prop_Send, "m_zombieClass");
 
-			// Filtrar según prioridad
+			// Filtrar segun prioridad
 			bool isValid = false;
 			switch (g_iHeatSeeker_Priority[client])
 			{
@@ -261,7 +261,7 @@ public void HeatSeeker_OnProjectile(int entity, int client)
 	GetEntPropVector(entity, Prop_Send, "m_vecOrigin", projectilePos);
 	GetClientAbsOrigin(target, targetPos);
 
-	// Calcular vector dirección
+	// Calcular vector direccion
 	float direction[3];
 	SubtractVectors(targetPos, projectilePos, direction);
 	NormalizeVector(direction, direction);

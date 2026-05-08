@@ -5,7 +5,7 @@
 //==================================================
 // === DIFFICULTY ORCHESTRATOR MODULE ===
 // Orquestador central de modos de dificultad
-// Gestiona mutual exclusion, progresión y coordinación
+// Gestiona mutual exclusion, progresion y coordinacion
 //==================================================
 
 //==================================================
@@ -61,14 +61,14 @@ bool g_bFinaleCompleted = false;
 // Modo anterior (para tracking)
 DifficultyMode g_PreviousMode = MODE_NONE;
 
-// Handles para ConVars de modos (obtenidos dinámicamente)
+// Handles para ConVars de modos (obtenidos dinamicamente)
 Handle g_hBloodmoon_Enable = INVALID_HANDLE;
 Handle g_hCowLevel_Enable = INVALID_HANDLE;
 Handle g_hHell_Enable = INVALID_HANDLE;
 Handle g_hInferno_Enable = INVALID_HANDLE;
 
 //==================================================
-// FUNCIONES PÚBLICAS
+// FUNCIONES PUBLICAS
 //==================================================
 
 /**
@@ -88,7 +88,7 @@ public void DifficultyOrchestrator_OnPluginStart()
 	g_cvar_DiffOrch_ProgressionEnable = CreateConVar(
 		"difficulty_progression_enable",
 		"1",
-		"Habilita progresión automática de dificultad al ganar campañas",
+		"Habilita progresion automatica de dificultad al ganar campanas",
 		FCVAR_PLUGIN,
 		true, 0.0, true, 1.0
 	);
@@ -104,7 +104,7 @@ public void DifficultyOrchestrator_OnPluginStart()
 	g_cvar_DiffOrch_AutoUnlock = CreateConVar(
 		"difficulty_auto_unlock",
 		"1",
-		"Desbloqueo automático al cumplir requisitos",
+		"Desbloqueo automatico al cumplir requisitos",
 		FCVAR_PLUGIN,
 		true, 0.0, true, 1.0
 	);
@@ -122,7 +122,7 @@ public void DifficultyOrchestrator_OnPluginStart()
 	// Comandos admin
 	RegAdminCmd("sm_diffmode", Command_DiffMode, ADMFLAG_ROOT, "Gestionar modos de dificultad");
 	RegAdminCmd("sm_mode", Command_DiffMode, ADMFLAG_ROOT, "Alias: Gestionar modos de dificultad");
-	RegAdminCmd("sm_resetprogression", Command_ResetProgression, ADMFLAG_ROOT, "Resetear progresión de dificultad");
+	RegAdminCmd("sm_resetprogression", Command_ResetProgression, ADMFLAG_ROOT, "Resetear progresion de dificultad");
 
 	// Alias cortos para modos
 	RegAdminCmd("sm_bm", Command_Alias_Bloodmoon, ADMFLAG_ROOT, "Alias: Activar Bloodmoon");
@@ -130,18 +130,18 @@ public void DifficultyOrchestrator_OnPluginStart()
 	RegAdminCmd("sm_inferno", Command_Alias_Inferno, ADMFLAG_ROOT, "Alias: Activar Inferno Mode");
 	RegAdminCmd("sm_cow", Command_Alias_CowLevel, ADMFLAG_ROOT, "Alias: Activar Cow Level");
 
-	// Alias cortos para comandos de gestión
+	// Alias cortos para comandos de gestion
 	RegAdminCmd("sm_diffstatus", Command_Alias_Status, ADMFLAG_ROOT, "Alias: Ver estado de dificultad");
-	RegAdminCmd("sm_diffreset", Command_Alias_Reset, ADMFLAG_ROOT, "Alias: Resetear progresión");
+	RegAdminCmd("sm_diffreset", Command_Alias_Reset, ADMFLAG_ROOT, "Alias: Resetear progresion");
 }
 
 /**
  * Timer para encontrar y hookear ConVars de modos
- * Delay necesario porque los módulos se inicializan después del orquestador
+ * Delay necesario porque los modulos se inicializan despues del orquestador
  */
 public Action Timer_FindModeConVars(Handle timer)
 {
-	// Buscar ConVars registrados por los módulos
+	// Buscar ConVars registrados por los modulos
 	g_hBloodmoon_Enable = FindConVar("bloodmoon_enable");
 	g_hCowLevel_Enable = FindConVar("cowlevel_enable");
 	g_hHell_Enable = FindConVar("hell_enable");
@@ -188,12 +188,12 @@ public void Event_FinaleWin(Event event, const char[] name, bool dontBroadcast)
 
 	g_bFinaleCompleted = true;
 
-	// Procesar progresión en el siguiente mapa
+	// Procesar progresion en el siguiente mapa
 	CreateTimer(5.0, Timer_ProcessProgression, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 /**
- * Hook: Misión perdida
+ * Hook: Mision perdida
  */
 public void Event_MissionLost(Event event, const char[] name, bool dontBroadcast)
 {
@@ -202,7 +202,7 @@ public void Event_MissionLost(Event event, const char[] name, bool dontBroadcast
 }
 
 /**
- * Timer: Procesar progresión de dificultad
+ * Timer: Procesar progresion de dificultad
  */
 public Action Timer_ProcessProgression(Handle timer)
 {
@@ -214,7 +214,7 @@ public Action Timer_ProcessProgression(Handle timer)
 }
 
 /**
- * Procesa la progresión de dificultad después de ganar
+ * Procesa la progresion de dificultad despues de ganar
  */
 void DifficultyOrchestrator_ProcessProgression()
 {
@@ -336,7 +336,7 @@ public void DifficultyOrchestrator_SetMode(DifficultyMode mode)
  */
 void DifficultyOrchestrator_EnforceMutualExclusion(DifficultyMode activeMode)
 {
-	// Verificar que los handles estén inicializados
+	// Verificar que los handles esten inicializados
 	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
 	{
 		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, skipping mutual exclusion");
@@ -377,7 +377,7 @@ void DifficultyOrchestrator_EnforceMutualExclusion(DifficultyMode activeMode)
  */
 void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 {
-	// Verificar que los handles estén inicializados
+	// Verificar que los handles esten inicializados
 	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
 	{
 		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, cannot activate mode");
@@ -442,13 +442,13 @@ void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
 }
 
 /**
- * Detecta qué modo está activo actualmente
+ * Detecta que modo esta activo actualmente
  */
 void DifficultyOrchestrator_DetectActiveMode()
 {
 	DifficultyMode detectedMode = MODE_NONE;
 
-	// Verificar que los handles estén inicializados
+	// Verificar que los handles esten inicializados
 	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
 	{
 		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, skipping detection");
@@ -487,7 +487,7 @@ public void ConVarChanged_MutualExclusion(Handle convar, const char[] oldValue, 
 }
 
 /**
- * Hook: Cambio en ConVars de activación de modos individuales
+ * Hook: Cambio en ConVars de activacion de modos individuales
  * Detecta cuando un modo es activado manualmente y aplica mutual exclusion
  */
 public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, const char[] newValue)
@@ -507,7 +507,7 @@ public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, c
 
 	if (newVal == 1)
 	{
-		// Determinar qué modo fue activado
+		// Determinar que modo fue activado
 		DifficultyMode activatedMode = MODE_NONE;
 
 		if (convar == g_hBloodmoon_Enable)
@@ -615,7 +615,7 @@ public Action Command_DiffMode(int client, int args)
 }
 
 /**
- * Comando: Resetear progresión
+ * Comando: Resetear progresion
  */
 public Action Command_ResetProgression(int client, int args)
 {
@@ -691,7 +691,7 @@ public Action Command_Alias_Status(int client, int args)
 }
 
 /**
- * Alias: sm_diffreset - Resetear progresión
+ * Alias: sm_diffreset - Resetear progresion
  */
 public Action Command_Alias_Reset(int client, int args)
 {

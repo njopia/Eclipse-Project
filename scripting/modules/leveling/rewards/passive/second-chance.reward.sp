@@ -4,7 +4,7 @@
 
 //==================================================
 // === SECOND CHANCE PASSIVE REWARD ===
-// Auto-revive una vez por ronda después de morir
+// Auto-revive una vez por ronda despues de morir
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -19,7 +19,7 @@ bool g_bSecondChance_Used[MAXPLAYERS + 1];
 int g_iSecondChance_InvulnTimer[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Second Chance
+ * Inicializa el modulo de Second Chance
  */
 public void SecondChance_OnPluginStart()
 {
@@ -40,7 +40,7 @@ public void SecondChance_OnPluginStart()
 	cvar_SecondChance_InvulnTime = CreateConVar(
 		"reward_secondchance_invuln",
 		"4",
-		"Segundos de invulnerabilidad después de revivir",
+		"Segundos de invulnerabilidad despues de revivir",
 		FCVAR_PLUGIN
 	);
 
@@ -90,7 +90,7 @@ public void SecondChance_OnLevelUp(int client, int level)
 	if (level == requiredLevel)
 	{
 		g_bSecondChance_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Second Chance\x01! (Auto-revive una vez por ronda)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Second Chance\x01! (Auto-revive una vez por ronda)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -184,7 +184,7 @@ public Action Timer_SecondChance_Revive(Handle timer, int userid)
 }
 
 /**
- * Encuentra el superviviente vivo más cercano a una posición
+ * Encuentra el superviviente vivo mas cercano a una posicion
  */
 stock int SecondChance_FindClosestSurvivor(int client)
 {
@@ -224,8 +224,8 @@ stock int SecondChance_FindClosestSurvivor(int client)
  */
 stock void SDKCall_L4D2_RespawnPlayer(int client)
 {
-	// Nota: Esta función asume que el SDKCall para L4D2_Respawn
-	// está configurado en el archivo principal
+	// Nota: Esta funcion asume que el SDKCall para L4D2_Respawn
+	// esta configurado en el archivo principal
 	// Por ahora usaremos el comando cheat como fallback
 	int flags = GetCommandFlags("sb_takecontrol");
 	SetCommandFlags("sb_takecontrol", flags & ~FCVAR_CHEAT);
@@ -234,7 +234,7 @@ stock void SDKCall_L4D2_RespawnPlayer(int client)
 }
 
 /**
- * Obtiene si el jugador está en tiempo de invulnerabilidad
+ * Obtiene si el jugador esta en tiempo de invulnerabilidad
  */
 public bool SecondChance_IsInvulnerable(int client)
 {
@@ -254,7 +254,7 @@ public void SecondChance_OnSecondTick(int client)
 }
 
 /**
- * Obtiene si Second Chance está habilitado para un jugador
+ * Obtiene si Second Chance esta habilitado para un jugador
  */
 public bool SecondChance_IsEnabled(int client)
 {
@@ -265,7 +265,7 @@ public bool SecondChance_IsEnabled(int client)
 }
 
 /**
- * Obtiene si el jugador ya usó Second Chance en esta ronda
+ * Obtiene si el jugador ya uso Second Chance en esta ronda
  */
 public bool SecondChance_WasUsed(int client)
 {

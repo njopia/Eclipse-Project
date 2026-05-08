@@ -8,7 +8,7 @@ public void ConvertHealth(int client)
 {
 	if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] ConvertHealth: Iniciando para el cliente %d.", client);
 	int TempHealth = GetClientTempHealth(client);
-	if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] ConvertHealth: GetClientTempHealth devolvió %d.", TempHealth);
+	if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] ConvertHealth: GetClientTempHealth devolvio %d.", TempHealth);
 	if (TempHealth > 0)
 	{
 		int PermHealth = GetClientHealth(client);
@@ -31,7 +31,7 @@ stock int GetClientTempHealth(int client)
 		|| IsClientObserver(client)
 		|| GetClientTeam(client) != 2)
 	{
-		if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] GetClientTempHealth: El cliente %d no pasó la validación inicial.", client);
+		if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] GetClientTempHealth: El cliente %d no paso la validacion inicial.", client);
 		return -1;
 	}
 
@@ -64,7 +64,7 @@ stock int GetClientTempHealth(int client)
 		// This is a constant we create to determine the amount of health. This is the amount of time it has to pass
 		// before 1 Temporal HP is consumed.
 		float constant = 1.0 / decay;
-		if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] GetClientTempHealth: Constante de cálculo: %f.", constant);
+		if (g_bDebugConvertHP) PrintToChatAll("[DEBUG] GetClientTempHealth: Constante de calculo: %f.", constant);
 
 		// Then we do the calcs
 		TempHealth = buffer - (difference / constant);

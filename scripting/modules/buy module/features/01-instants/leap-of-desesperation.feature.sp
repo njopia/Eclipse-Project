@@ -9,12 +9,12 @@ public void Activate_LeapOfDesperation(int client)
 	// Creamos un DataPack para pasar el cliente y el contador al timer
 	DataPack pack = new DataPack();
 	pack.WriteCell(client);
-	pack.WriteCell(7);	  // Duración total en segundos
+	pack.WriteCell(7);	  // Duracion total en segundos
 	pack.WriteCell(0);	  // Contador de gritos
 
 	// Iniciamos el timer repetitivo
 	CreateTimer(1.0, Timer_LeapOfDesperation, pack, TIMER_REPEAT);
-	PrintToChat(client, "\x05[Eclipse]\x01 ¡Activando Salto de Desesperación!");
+	PrintToChat(client, "\x05[Eclipse]\x01 Activando Salto de Desesperacion!");
 }
 
 public Action Timer_LeapOfDesperation(Handle timer, DataPack pack)

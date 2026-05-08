@@ -5,32 +5,32 @@
 //==================================================
 // === ION CANNON MODULE (INTEGRATED) ===
 // Sistema de Ion Cannon integrado en Eclipse
-// Versión simplificada sin comandos ni API externa
+// Version simplificada sin comandos ni API externa
 //==================================================
 
 // ===================== Configuracion ======================
 #define ION_DELAY 10.0              // Delay hasta el impacto (segundos)
-#define ION_DURATION 26.0           // Duración total del efecto
+#define ION_DURATION 26.0           // Duracion total del efecto
 #define ION_COOLDOWN 45.0           // Cooldown entre usos (segundos)
-#define ION_MAX_CHARGES 3           // Máximo de cargas por jugador
+#define ION_MAX_CHARGES 3           // Maximo de cargas por jugador
 #define ION_CHARGES_PER_ROUND 1     // Cargas restauradas por ronda
-#define ION_DAMAGE_COMMON 10        // Daño a infectados comunes
-#define ION_DAMAGE_SI 10            // Daño a infectados especiales
+#define ION_DAMAGE_COMMON 10        // Dano a infectados comunes
+#define ION_DAMAGE_SI 10            // Dano a infectados especiales
 #define ION_BEAM_RADIUS 1800.0      // Radio de los beams
 #define ION_SHAKE_NEAR 900.0        // Radio de shake cercano
 #define ION_SHAKE_MID 1800.0        // Radio de shake medio
 #define ION_SHAKE_FAR 2600.0        // Radio de shake lejano
-#define ION_PULSE_INTERVAL 3.0      // Intervalo de pulsos de daño
-#define ION_TICK_ROTATE 0.5         // Tick de rotación de beams
+#define ION_PULSE_INTERVAL 3.0      // Intervalo de pulsos de dano
+#define ION_TICK_ROTATE 0.5         // Tick de rotacion de beams
 #define ION_TICK_RING 5.0           // Tick de anillos grandes
 #define ION_TICK_CENTER 1.5         // Tick de beam central
 #define ION_BLAST_RINGS 3           // Cantidad de anillos en blast
 #define ION_BLAST_GAP 0.3           // Gap entre anillos del blast
 
-// === OPTIMIZACIÓN: Límites de muertes por tick ===
-#define ION_MAX_COMMON_KILLS_PER_TICK   10  // Máximo zombies comunes a matar por tick
-#define ION_MAX_WITCH_KILLS_PER_TICK    2   // Máximo witches a matar por tick
-#define ION_MAX_SPECIAL_KILLS_PER_TICK  3   // Máximo especiales a dañar por tick
+// === OPTIMIZACION: Limites de muertes por tick ===
+#define ION_MAX_COMMON_KILLS_PER_TICK   10  // Maximo zombies comunes a matar por tick
+#define ION_MAX_WITCH_KILLS_PER_TICK    2   // Maximo witches a matar por tick
+#define ION_MAX_SPECIAL_KILLS_PER_TICK  3   // Maximo especiales a danar por tick
 
 // ===================== ESTADO DEL JUGADOR ======================
 bool   g_bIonActive[MAXPLAYERS + 1];
@@ -59,7 +59,7 @@ char   SPRITE_BEAM[] = "materials/sprites/laserbeam.vmt";
 char   SPRITE_HALO[] = "materials/sprites/halo01.vmt";
 
 /**
- * Inicializa el módulo de Ion Cannon
+ * Inicializa el modulo de Ion Cannon
  */
 public void IonCannon_OnPluginStart()
 {
@@ -214,7 +214,7 @@ public bool IonCannon_Activate(int client)
 	if (!IonCannon_CanUse(client))
 		return false;
 
-	// CONTROL GLOBAL: Verificar si hay algún bombardeo activo (Nuclear Strike u otro Ion Cannon)
+	// CONTROL GLOBAL: Verificar si hay algun bombardeo activo (Nuclear Strike u otro Ion Cannon)
 	if (NuclearStrike_IsAnyActive())
 	{
 		PrintToChat(client, "\x04[Eclipse]\x01 Ya hay un bombardeo activo (Nuclear Strike). Espera a que termine.");
@@ -314,7 +314,7 @@ void IonCannon_CreateFlare(int client)
 }
 
 /**
- * Timer: Inicia el Ion Cannon (después del delay)
+ * Timer: Inicia el Ion Cannon (despues del delay)
  */
 public Action IonCannon_Timer_Start(Handle timer, any data)
 {
@@ -384,7 +384,7 @@ public Action IonCannon_Timer_CreateBlast(Handle timer, any data)
 		0, 10, 6.0, 400.0, 450.0, 10, 4.0, {160,145,255,200}, 0);
 	TE_SendToAll();
 
-	// Explosión grande
+	// Explosion grande
 	IonCannon_CreateExplosion(flarePos, true);
 	IonCannon_PlayExplosionSound(flarePos);
 	IonCannon_IgniteInfectedInRadius(flarePos, 1000.0, 10.0);
@@ -426,7 +426,7 @@ public Action IonCannon_Timer_BlastRing(Handle timer, any data)
 }
 
 /**
- * Timer: Anillos grandes periódicos
+ * Timer: Anillos grandes periodicos
  */
 public Action IonCannon_Timer_RingTick(Handle timer, any data)
 {
@@ -450,7 +450,7 @@ public Action IonCannon_Timer_RingTick(Handle timer, any data)
 	IonCannon_PlayExplosionSound(p);
 	IonCannon_IgniteInfectedInRadius(p, 500.0, 4.0);
 
-	// Terminar después del 3er anillo
+	// Terminar despues del 3er anillo
 	if (g_iRingCount[client] >= 3)
 	{
 		CreateTimer(0.5, IonCannon_Timer_ForceCleanup, data, TIMER_FLAG_NO_MAPCHANGE);
@@ -489,7 +489,7 @@ public Action IonCannon_Timer_CenterBeam(Handle timer, any data)
 		0, 10, 3.0, 350.0, 420.0, 10, 4.0, {160, 145, 255, 160}, 50);
 	TE_SendToAll();
 
-	// Explosión ocasional
+	// Explosion ocasional
 	if (GetRandomInt(0, 100) < 20)
 	{
 		IonCannon_CreateExplosion(flarePos, false);
@@ -533,7 +533,7 @@ public Action IonCannon_Timer_LaserRotate(Handle timer, any data)
 			0, 0, 1.2, 25.0, 25.0, 0, 0.0, {160, 145, 255, 120}, 10);
 		TE_SendToAll();
 
-		// Mini explosión ocasional
+		// Mini explosion ocasional
 		if (GetRandomInt(0, 100) < 15)
 		{
 			IonCannon_CreateExplosion(g_vBeamOrigin[client][i], false);
@@ -545,7 +545,7 @@ public Action IonCannon_Timer_LaserRotate(Handle timer, any data)
 }
 
 /**
- * Timer: Pulso de daño a infectados
+ * Timer: Pulso de dano a infectados
  */
 public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 {
@@ -555,10 +555,10 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 	if (IonCannon_IsStale(client, token) || !IonCannon_WindowTick(client))
 		return Plugin_Stop;
 
-	// Quemar infectados en el área
+	// Quemar infectados en el area
 	IonCannon_IgniteInfectedInRadius(g_vIonOrigin[client], 800.0, 5.0);
 
-	// Daño a infectados comunes (LIMITADO a N por tick para evitar sobrecarga)
+	// Dano a infectados comunes (LIMITADO a N por tick para evitar sobrecarga)
 	int ent = -1;
 	int commonProcessedThisTick = 0;
 	while ((ent = FindEntityByClassname(ent, "infected")) != INVALID_ENT_REFERENCE)
@@ -566,7 +566,7 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (!IsValidEntity(ent))
 			continue;
 
-		// LÍMITE: Solo procesar X zombies comunes por tick
+		// LIMITE: Solo procesar X zombies comunes por tick
 		if (commonProcessedThisTick >= ION_MAX_COMMON_KILLS_PER_TICK)
 			break;
 
@@ -574,7 +574,7 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		commonProcessedThisTick++;
 	}
 
-	// Daño a witches (LIMITADO a N por tick)
+	// Dano a witches (LIMITADO a N por tick)
 	ent = -1;
 	int witchProcessedThisTick = 0;
 	while ((ent = FindEntityByClassname(ent, "witch")) != INVALID_ENT_REFERENCE)
@@ -582,7 +582,7 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (!IsValidEntity(ent))
 			continue;
 
-		// LÍMITE: Solo procesar X witches por tick
+		// LIMITE: Solo procesar X witches por tick
 		if (witchProcessedThisTick >= ION_MAX_WITCH_KILLS_PER_TICK)
 			break;
 
@@ -590,7 +590,7 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		witchProcessedThisTick++;
 	}
 
-	// Daño a infectados especiales (LIMITADO a N por tick)
+	// Dano a infectados especiales (LIMITADO a N por tick)
 	int specialProcessedThisTick = 0;
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -603,7 +603,7 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (GetEntProp(i, Prop_Send, "m_isGhost") != 0)
 			continue;
 
-		// LÍMITE: Solo procesar X especiales por tick
+		// LIMITE: Solo procesar X especiales por tick
 		if (specialProcessedThisTick >= ION_MAX_SPECIAL_KILLS_PER_TICK)
 			break;
 
@@ -637,7 +637,7 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 }
 
 /**
- * Timer: Forzar cleanup después del 3er anillo
+ * Timer: Forzar cleanup despues del 3er anillo
  */
 public Action IonCannon_Timer_ForceCleanup(Handle timer, any data)
 {
@@ -666,7 +666,7 @@ bool IonCannon_WindowTick(int client)
 }
 
 /**
- * Verifica si el token es válido
+ * Verifica si el token es valido
  */
 bool IonCannon_IsStale(int client, int token)
 {
@@ -770,17 +770,17 @@ void IonCannon_SetupOrbitBeams(int client)
 }
 
 /**
- * Crea una explosión visual
+ * Crea una explosion visual
  */
 void IonCannon_CreateExplosion(const float pos[3], bool bigExplosion = false)
 {
-	// env_explosion (sin daño)
+	// env_explosion (sin dano)
 	int explosion = CreateEntityByName("env_explosion");
 	if (explosion > MaxClients && IsValidEntity(explosion))
 	{
 		DispatchKeyValue(explosion, "iMagnitude", bigExplosion ? "500" : "300");
 		DispatchKeyValue(explosion, "iRadiusOverride", bigExplosion ? "600" : "400");
-		DispatchKeyValue(explosion, "spawnflags", "1");  // Sin daño
+		DispatchKeyValue(explosion, "spawnflags", "1");  // Sin dano
 		DispatchSpawn(explosion);
 		TeleportEntity(explosion, pos, NULL_VECTOR, NULL_VECTOR);
 		AcceptEntityInput(explosion, "Explode");
@@ -789,7 +789,7 @@ void IonCannon_CreateExplosion(const float pos[3], bool bigExplosion = false)
 }
 
 /**
- * Reproduce sonido de explosión
+ * Reproduce sonido de explosion
  */
 void IonCannon_PlayExplosionSound(const float pos[3])
 {
@@ -927,7 +927,7 @@ void IonCannon_UnpackData(any packed, int &client, int &token)
 }
 
 /**
- * Verifica si hay algún Ion Cannon activo
+ * Verifica si hay algun Ion Cannon activo
  * Usado por el sistema de control global de bombardeos
  */
 stock bool IonCannon_IsAnyActive()

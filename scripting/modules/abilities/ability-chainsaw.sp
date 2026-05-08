@@ -59,7 +59,7 @@ void Ability_ChainsawMassacre_Deactivate(int client)
 	if (!IsClientInGame(client))
 		return;
 
-	// Mostrar estadísticas
+	// Mostrar estadisticas
 	if (g_iChainsaw_Kills[client] > 0)
 	{
 		int totalXP = g_iChainsaw_Kills[client] * CHAINSAW_BONUS_XP;
@@ -121,7 +121,7 @@ public Action Timer_GetChainsawRef(Handle timer, int userid)
 		{
 			g_iChainsaw_WeaponRef[client] = EntIndexToEntRef(weapon);
 
-			// Hacer que el chainsaw tenga munición infinita
+			// Hacer que el chainsaw tenga municion infinita
 			CreateTimer(0.1, Timer_InfiniteChainsaw, GetClientUserId(client), TIMER_REPEAT);
 		}
 	}
@@ -130,7 +130,7 @@ public Action Timer_GetChainsawRef(Handle timer, int userid)
 }
 
 /**
- * Timer: Mantener chainsaw con munición infinita
+ * Timer: Mantener chainsaw con municion infinita
  */
 public Action Timer_InfiniteChainsaw(Handle timer, int userid)
 {

@@ -4,7 +4,7 @@
 
 //==================================================
 // === HARD TO KILL PASSIVE REWARD ===
-// Aumenta el HP cuando estás incapacitado
+// Aumenta el HP cuando estas incapacitado
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -16,7 +16,7 @@ Handle cvar_HardToKill_IncapHP = INVALID_HANDLE;
 bool g_bHardToKill_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Hard to Kill
+ * Inicializa el modulo de Hard to Kill
  */
 public void HardToKill_OnPluginStart()
 {
@@ -34,7 +34,7 @@ public void HardToKill_OnPluginStart()
 		FCVAR_PLUGIN
 	);
 
-	// Hook para evento de incapacitación
+	// Hook para evento de incapacitacion
 	HookEvent("player_incapacitated_start", Event_HardToKill_IncapStart, EventHookMode_Post);
 }
 
@@ -72,12 +72,12 @@ public void HardToKill_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_HardToKill_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bHardToKill_Enabled[client] = true;
 		int incapHP = GetConVarInt(cvar_HardToKill_IncapHP);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Hard to Kill\x01! (HP de incapacitación aumentado a \x03%d\x01)", incapHP);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Hard to Kill\x01! (HP de incapacitacion aumentado a \x03%d\x01)", incapHP);
 	}
 	else if (level > requiredLevel)
 	{
@@ -94,7 +94,7 @@ public bool HardToKill_IsUnlocked(int client, int level)
 }
 
 /**
- * Evento: Player Incapacitated Start - Ajusta el HP de incapacitación
+ * Evento: Player Incapacitated Start - Ajusta el HP de incapacitacion
  */
 public Action Event_HardToKill_IncapStart(Event event, const char[] name, bool dontBroadcast)
 {
@@ -106,14 +106,14 @@ public Action Event_HardToKill_IncapStart(Event event, const char[] name, bool d
 	if (GetClientTeam(client) != 2) // Solo survivors
 		return Plugin_Continue;
 
-	// Ajustar el HP de incapacitación según el nivel
+	// Ajustar el HP de incapacitacion segun el nivel
 	HardToKill_UpdateIncapHealth(client);
 
 	return Plugin_Continue;
 }
 
 /**
- * Actualiza el HP de incapacitación global
+ * Actualiza el HP de incapacitacion global
  */
 stock void HardToKill_UpdateIncapHealth(int client)
 {
@@ -129,7 +129,7 @@ stock void HardToKill_UpdateIncapHealth(int client)
 	}
 	else
 	{
-		targetHP = 300; // HP de incapacitación por defecto
+		targetHP = 300; // HP de incapacitacion por defecto
 	}
 
 	// Solo actualizar si es diferente
@@ -141,7 +141,7 @@ stock void HardToKill_UpdateIncapHealth(int client)
 }
 
 /**
- * Obtiene si Hard to Kill está habilitado para un jugador
+ * Obtiene si Hard to Kill esta habilitado para un jugador
  */
 public bool HardToKill_IsEnabled(int client)
 {

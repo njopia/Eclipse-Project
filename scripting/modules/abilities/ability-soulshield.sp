@@ -38,10 +38,10 @@ bool Ability_Soulshield_Activate(int client)
 		EndMessage();
 	}
 
-	// Hook de daño para trackear bloques
+	// Hook de dano para trackear bloques
 	SDKHook(client, SDKHook_OnTakeDamage, Soulshield_OnTakeDamage);
 
-	PrintToChat(client, "\x04[Soulshield]\x01 Invulnerabilidad total! No recibes daño.");
+	PrintToChat(client, "\x04[Soulshield]\x01 Invulnerabilidad total! No recibes dano.");
 	return true;
 }
 
@@ -59,10 +59,10 @@ void Ability_Soulshield_Deactivate(int client)
 	// Unhook
 	SDKUnhook(client, SDKHook_OnTakeDamage, Soulshield_OnTakeDamage);
 
-	// Mostrar estadísticas
+	// Mostrar estadisticas
 	if (g_iSoulshield_DamageBlocked[client] > 0)
 	{
-		PrintToChat(client, "\x04[Soulshield]\x01 Daño bloqueado: \x03%d", g_iSoulshield_DamageBlocked[client]);
+		PrintToChat(client, "\x04[Soulshield]\x01 Dano bloqueado: \x03%d", g_iSoulshield_DamageBlocked[client]);
 	}
 
 	// Limpiar efecto visual
@@ -87,14 +87,14 @@ void Ability_Soulshield_Deactivate(int client)
 }
 
 /**
- * Hook: Bloquear todo el daño y mostrar efecto visual
+ * Hook: Bloquear todo el dano y mostrar efecto visual
  */
 public Action Soulshield_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	if (!Abilities_IsActive(victim, Ability_Soulshield))
 		return Plugin_Continue;
 
-	// Trackear daño bloqueado
+	// Trackear dano bloqueado
 	g_iSoulshield_DamageBlocked[victim] += RoundToFloor(damage);
 
 	// Efecto visual en cada bloqueo
@@ -102,17 +102,17 @@ public Action Soulshield_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	GetClientAbsOrigin(victim, victimPos);
 	victimPos[2] += 50.0; // Elevar el efecto
 
-	// Anillo dorado expandiéndose
+	// Anillo dorado expandiendose
 	TE_SetupBeamRingPoint(victimPos, 10.0, 120.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.3, 8.0, 0.0, {255, 255, 200, 255}, 10, 0);
 	TE_SendToAll();
 
-	// Feedback cada 100 de daño bloqueado
+	// Feedback cada 100 de dano bloqueado
 	if (g_iSoulshield_DamageBlocked[victim] % 100 <= RoundToFloor(damage))
 	{
-		PrintHintText(victim, "Soulshield: %d daño bloqueado", g_iSoulshield_DamageBlocked[victim]);
+		PrintHintText(victim, "Soulshield: %d dano bloqueado", g_iSoulshield_DamageBlocked[victim]);
 	}
 
-	// Bloquear todo el daño
+	// Bloquear todo el dano
 	damage = 0.0;
 	return Plugin_Changed;
 }

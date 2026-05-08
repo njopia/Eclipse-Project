@@ -19,7 +19,7 @@ bool Ability_HealingAura_Activate(int client)
 {
 	g_iHealingAura_TotalHealed[client] = 0;
 
-	// Iniciar timer de curación
+	// Iniciar timer de curacion
 	g_hHealingAura_Timer[client] = CreateTimer(HEALING_AURA_TICK_INTERVAL, Timer_HealingAura, GetClientUserId(client), TIMER_REPEAT);
 
 	// Efecto visual verde
@@ -60,7 +60,7 @@ void Ability_HealingAura_Deactivate(int client)
 	if (!IsClientInGame(client))
 		return;
 
-	// Mostrar estadísticas
+	// Mostrar estadisticas
 	if (g_iHealingAura_TotalHealed[client] > 0)
 	{
 		PrintToChat(client, "\x04[Healing Aura]\x01 HP total curado: \x03%d", g_iHealingAura_TotalHealed[client]);
@@ -99,7 +99,7 @@ public Action Timer_HealingAura(Handle timer, int userid)
 	if (!Abilities_IsActive(client, Ability_HealingAura))
 		return Plugin_Stop;
 
-	// Obtener posición del jugador
+	// Obtener posicion del jugador
 	float clientPos[3];
 	GetClientAbsOrigin(client, clientPos);
 
@@ -117,7 +117,7 @@ public Action Timer_HealingAura(Handle timer, int userid)
 		float distance = GetVectorDistance(clientPos, targetPos);
 		if (distance <= HEALING_AURA_RADIUS)
 		{
-			// Curar más mientras más cerca esté (10 HP max a distancia 0, 1 HP min en el borde)
+			// Curar mas mientras mas cerca este (10 HP max a distancia 0, 1 HP min en el borde)
 			int healAmount = RoundToFloor(10.0 * (1.0 - (distance / HEALING_AURA_RADIUS)));
 
 			if (healAmount > 0)
@@ -134,7 +134,7 @@ public Action Timer_HealingAura(Handle timer, int userid)
 					SetEntityHealth(i, newHealth);
 					healedThisTick += healAmount;
 
-					// Efecto visual de curación
+					// Efecto visual de curacion
 					TE_SetupBeamRingPoint(targetPos, 10.0, 100.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.5, 5.0, 0.0, {0, 255, 100, 255}, 10, 0);
 					TE_SendToAll();
 				}
@@ -142,12 +142,12 @@ public Action Timer_HealingAura(Handle timer, int userid)
 		}
 	}
 
-	// También curar al jugador mismo
+	// Tambien curar al jugador mismo
 	int health = GetClientHealth(client);
 	int maxHealth = GetEntProp(client, Prop_Data, "m_iMaxHealth");
 	if (health < maxHealth)
 	{
-		int selfHeal = 5; // Auto-curación moderada
+		int selfHeal = 5; // Auto-curacion moderada
 		int newHealth = health + selfHeal;
 		if (newHealth > maxHealth)
 			newHealth = maxHealth;

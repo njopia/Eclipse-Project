@@ -5,10 +5,10 @@
 //==================================================
 // === BLOODMOON MODE MODULE ===
 // Luna de sangre manual con efectos ambientales
-// Dificultad aumentada, multiplicador de daño, efectos visuales
+// Dificultad aumentada, multiplicador de dano, efectos visuales
 //==================================================
 
-// ConVars del módulo
+// ConVars del modulo
 Handle g_cvar_Bloodmoon_Enable = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_DmgMult = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_Fade = INVALID_HANDLE;
@@ -33,7 +33,7 @@ Handle g_cvar_Bloodmoon_FadeAlpha = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_FadeDuration = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_FogTick = INVALID_HANDLE;
 
-// === NUEVAS CONVARS - Características Avanzadas ===
+// === NUEVAS CONVARS - Caracteristicas Avanzadas ===
 Handle g_cvar_Bloodmoon_TankSpawn = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_TankInterval = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_PanicEvents = INVALID_HANDLE;
@@ -70,23 +70,23 @@ int	   g_iFogRef = -1;
 Handle g_hFogTimer = null;
 
 // === NUEVAS VARIABLES - Sistemas Avanzados ===
-Handle g_hEventTimer = null;						// Timer para eventos periódicos (tanks, panic, etc)
+Handle g_hEventTimer = null;						// Timer para eventos periodicos (tanks, panic, etc)
 int	   g_iColorCorrectionRef = -1;					// Reference para color correction entity
 int	   g_iFogVolumeRef = -1;						// Reference para fog_volume entity
 int	   g_iPrecipitationRef = -1;					// Reference para func_precipitation entity
 int	   g_iTankCount = 0;							// Contador de tanks vivos
-float  g_fLastTankSpawn = 0.0;						// Timestamp del último spawn de tank
-float  g_fLastPanicEvent = 0.0;						// Timestamp del último panic event
+float  g_fLastTankSpawn = 0.0;						// Timestamp del ultimo spawn de tank
+float  g_fLastPanicEvent = 0.0;						// Timestamp del ultimo panic event
 float  g_fMapStartTime = 0.0;						// Timestamp del inicio del mapa
 
 /**
- * Inicializa el módulo de Bloodmoon
+ * Inicializa el modulo de Bloodmoon
  */
 public void Bloodmoon_OnPluginStart()
 {
 	// ConVars principales
 	g_cvar_Bloodmoon_Enable = CreateConVar("bloodmoon_enable", "0", "Habilita el sistema de Bloodmoon", FCVAR_PLUGIN);
-	g_cvar_Bloodmoon_DmgMult = CreateConVar("bloodmoon_damage_mult", "1.35", "Multiplicador de daño a Survivors", FCVAR_PLUGIN);
+	g_cvar_Bloodmoon_DmgMult = CreateConVar("bloodmoon_damage_mult", "1.35", "Multiplicador de dano a Survivors", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_Fade = CreateConVar("bloodmoon_fade", "1", "Fade rojo persistente", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_ChangeDiff = CreateConVar("bloodmoon_change_difficulty", "1", "Cambiar a Experto", FCVAR_PLUGIN);
 
@@ -96,7 +96,7 @@ public void Bloodmoon_OnPluginStart()
 	g_cvar_Bloodmoon_MobMax = CreateConVar("bloodmoon_mob_max", "35", "z_mob_spawn_max_size", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_MegaMob = CreateConVar("bloodmoon_mega_mob", "60", "z_mega_mob_size", FCVAR_PLUGIN);
 
-	// Ambientación
+	// Ambientacion
 	g_cvar_Bloodmoon_LightStyle = CreateConVar("bloodmoon_lightstyle", "b", "LightStyle a aplicar", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_LightStyleRestore = CreateConVar("bloodmoon_lightstyle_restore", "m", "LightStyle a restaurar", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_FogEnable = CreateConVar("bloodmoon_fog_enable", "1", "Crear Fog", FCVAR_PLUGIN);
@@ -104,24 +104,24 @@ public void Bloodmoon_OnPluginStart()
 	g_cvar_Bloodmoon_FogStart = CreateConVar("bloodmoon_fog_start", "50", "Fog start distance", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_FogEnd = CreateConVar("bloodmoon_fog_end", "1200", "Fog end distance", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_FogDensity = CreateConVar("bloodmoon_fog_density", "0.7", "Fog max density 0..1", FCVAR_PLUGIN);
-	g_cvar_Bloodmoon_ParticleName = CreateConVar("bloodmoon_particle", "env_snow_128", "Partícula ambiental", FCVAR_PLUGIN);
+	g_cvar_Bloodmoon_ParticleName = CreateConVar("bloodmoon_particle", "env_snow_128", "Particula ambiental", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_ParticleCount = CreateConVar("bloodmoon_particle_count", "3", "Cantidad de emisores", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_SoundStart = CreateConVar("bloodmoon_sound_start", "", "Sonido al activar", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_SoundLoop = CreateConVar("bloodmoon_sound_loop", "", "Sonido loop", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_FadeAlpha = CreateConVar("bloodmoon_fade_alpha", "120", "Alpha del overlay rojo 0..255", FCVAR_PLUGIN);
-	g_cvar_Bloodmoon_FadeDuration = CreateConVar("bloodmoon_fade_duration", "1500", "Duración ms de transición", FCVAR_PLUGIN);
+	g_cvar_Bloodmoon_FadeDuration = CreateConVar("bloodmoon_fade_duration", "1500", "Duracion ms de transicion", FCVAR_PLUGIN);
 	g_cvar_Bloodmoon_FogTick = CreateConVar("bloodmoon_fog_tick", "3.0", "Intervalo para re-aplicar fog", FCVAR_PLUGIN);
 
 	// Debug
-	g_cvar_Bloodmoon_DebugDamage = CreateConVar("bloodmoon_debug_damage", "0", "Debug de daño", FCVAR_PLUGIN);
+	g_cvar_Bloodmoon_DebugDamage = CreateConVar("bloodmoon_debug_damage", "0", "Debug de dano", FCVAR_PLUGIN);
 
-	// === NUEVAS CONVARS - Características Avanzadas ===
+	// === NUEVAS CONVARS - Caracteristicas Avanzadas ===
 	// Tank Spawning
-	g_cvar_Bloodmoon_TankSpawn = CreateConVar("bloodmoon_tank_spawn", "1", "Spawn automático de tanks durante Bloodmoon", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Bloodmoon_TankSpawn = CreateConVar("bloodmoon_tank_spawn", "1", "Spawn automatico de tanks durante Bloodmoon", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_Bloodmoon_TankInterval = CreateConVar("bloodmoon_tank_interval", "60.0", "Intervalo en segundos para spawn de tanks (0=disable)", FCVAR_PLUGIN, true, 0.0);
 
 	// Panic Events
-	g_cvar_Bloodmoon_PanicEvents = CreateConVar("bloodmoon_panic_events", "1", "Forzar panic events periódicos", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Bloodmoon_PanicEvents = CreateConVar("bloodmoon_panic_events", "1", "Forzar panic events periodicos", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_Bloodmoon_PanicInterval = CreateConVar("bloodmoon_panic_interval", "45.0", "Intervalo en segundos para panic events (0=disable)", FCVAR_PLUGIN, true, 0.0);
 
 	// Color Correction
@@ -131,7 +131,7 @@ public void Bloodmoon_OnPluginStart()
 
 	// Precipitation
 	g_cvar_Bloodmoon_UsePrecipitation = CreateConVar("bloodmoon_use_precipitation", "1", "Usar func_precipitation en vez de particulas", FCVAR_PLUGIN, true, 0.0, true, 1.0);
-	g_cvar_Bloodmoon_PrecipType = CreateConVar("bloodmoon_precip_type", "3", "Tipo precipitación: 1=lluvia 2=ceniza 3=nieve 4=lluvia_l4d", FCVAR_PLUGIN, true, 1.0, true, 4.0);
+	g_cvar_Bloodmoon_PrecipType = CreateConVar("bloodmoon_precip_type", "3", "Tipo precipitacion: 1=lluvia 2=ceniza 3=nieve 4=lluvia_l4d", FCVAR_PLUGIN, true, 1.0, true, 4.0);
 
 	// Breeder Events
 	g_cvar_Bloodmoon_BreederEvents = CreateConVar("bloodmoon_breeder_events", "1", "Spawn aleatorio de infectados especiales extra", FCVAR_PLUGIN, true, 0.0, true, 1.0);
@@ -148,7 +148,7 @@ public void Bloodmoon_OnPluginStart()
 	z_mega_mob_size = FindConVar("z_mega_mob_size");
 	z_difficulty = FindConVar("z_difficulty");
 
-	// Hooks de daño
+	// Hooks de dano
 	for (int i = 1; i <= MaxClients; i++)
 		if (IsClientInGame(i))
 			SDKHook(i, SDKHook_OnTakeDamage, Bloodmoon_OnTakeDamage);
@@ -164,7 +164,7 @@ public void Bloodmoon_OnPluginStart()
 	RegAdminCmd("sm_bloodmoon_status", Cmd_BloodmoonStatus, ADMFLAG_GENERIC, "Estado Bloodmoon");
 	RegAdminCmd("sm_bloodmoon_testmob", Cmd_BloodmoonTestMob, ADMFLAG_GENERIC, "Fuerza una horda");
 
-	// Hook ConVar para detectar activación/desactivación
+	// Hook ConVar para detectar activacion/desactivacion
 	HookConVarChange(g_cvar_Bloodmoon_Enable, Bloodmoon_ConVarChanged);
 
 	g_sOrigDifficulty[0] = '\0';
@@ -211,7 +211,7 @@ public void Bloodmoon_OnMapStart()
  */
 public void Bloodmoon_OnMapEnd()
 {
-	// Desactivar Bloodmoon si está activo al cambiar de mapa
+	// Desactivar Bloodmoon si esta activo al cambiar de mapa
 	if (g_bBloodmoonActive)
 	{
 		LogMessage("[Bloodmoon] Map ending, deactivating Bloodmoon");
@@ -260,7 +260,7 @@ public void Bloodmoon_OnClientDisconnect(int client)
 }
 
 /**
- * Hook de daño - Multiplicador de Bloodmoon
+ * Hook de dano - Multiplicador de Bloodmoon
  */
 public Action Bloodmoon_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
@@ -295,7 +295,7 @@ public Action Bloodmoon_OnTakeDamage(int victim, int &attacker, int &inflictor, 
 		{
 			char vName[64];
 			GetClientName(victim, vName, sizeof(vName));
-			PrintToChatAll("\x05[Bloodmoon:DMG]\x01 %s recibió %.1f daño (mult=%.2f)", vName, damage, mult);
+			PrintToChatAll("\x05[Bloodmoon:DMG]\x01 %s recibio %.1f dano (mult=%.2f)", vName, damage, mult);
 		}
 		return Plugin_Changed;
 	}
@@ -401,7 +401,7 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	g_fLastPanicEvent = GetGameTime();
 	g_iTankCount = 0;
 
-	// Ambientación
+	// Ambientacion
 	LogMessage("[Bloodmoon] Applying light style...");
 	Bloodmoon_ApplyLightStyle();
 
@@ -449,7 +449,7 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 		LogMessage("[Bloodmoon] Fog disabled");
 	}
 
-	// Iniciar timer de eventos periódicos (tanks, panic, breeder, sonidos)
+	// Iniciar timer de eventos periodicos (tanks, panic, breeder, sonidos)
 	LogMessage("[Bloodmoon] Starting event timer...");
 	Bloodmoon_StartEventTimer();
 
@@ -461,7 +461,7 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 
 	Bloodmoon_DoScreenFadeAll(true);
 
-	PrintToChatAll("\x04[Bloodmoon]\x01 ¡Luna de Sangre ACTIVADA! Hordas y daño incrementados (mult=%.2f)",
+	PrintToChatAll("\x04[Bloodmoon]\x01 Luna de Sangre ACTIVADA! Hordas y dano incrementados (mult=%.2f)",
 		GetConVarFloat(g_cvar_Bloodmoon_DmgMult));
 
 	if (GetConVarBool(g_cvar_Bloodmoon_ChangeDiff))
@@ -494,7 +494,7 @@ void Bloodmoon_Deactivate(const char[] reason = "manual")
 	Bloodmoon_RestoreDirector();
 	g_bBloodmoonActive = false;
 
-	// Resetear variables de estado para reactivación limpia
+	// Resetear variables de estado para reactivacion limpia
 	g_iTankCount = 0;
 	g_fLastTankSpawn = 0.0;
 	g_fLastPanicEvent = 0.0;
@@ -686,7 +686,7 @@ void Bloodmoon_RemoveAmbientParticles()
 			AcceptEntityInput(ent, "Stop");
 			RemoveEntity(ent);
 		}
-		// Invalidar la referencia después de remover
+		// Invalidar la referencia despues de remover
 		g_iParticleRefs[i] = -1;
 	}
 	g_iParticleTotal = 0;
@@ -845,7 +845,7 @@ void Bloodmoon_StopFogEnforcerTimer()
 }
 
 /**
- * Obtiene si Bloodmoon está activo
+ * Obtiene si Bloodmoon esta activo
  */
 public bool Bloodmoon_IsActive()
 {
@@ -865,7 +865,7 @@ bool bloodmoon_IsValidClient(int client)
 //==================================================
 
 /**
- * Inicia el timer de eventos periódicos
+ * Inicia el timer de eventos periodicos
  * Maneja: Tank spawning, Panic events, Breeder events, Mega mob sounds
  */
 void Bloodmoon_StartEventTimer()
@@ -878,7 +878,7 @@ void Bloodmoon_StartEventTimer()
 }
 
 /**
- * Detiene el timer de eventos periódicos
+ * Detiene el timer de eventos periodicos
  */
 void Bloodmoon_StopEventTimer()
 {
@@ -890,7 +890,7 @@ void Bloodmoon_StopEventTimer()
 }
 
 /**
- * Timer principal de eventos periódicos
+ * Timer principal de eventos periodicos
  */
 public Action Bloodmoon_Timer_Events(Handle timer)
 {
@@ -955,7 +955,7 @@ public Action Bloodmoon_Timer_Events(Handle timer)
 
 /**
  * Spawnea un Tank usando fake client
- * TODO: Agregar soporte para left4dhooks cuando esté disponible
+ * TODO: Agregar soporte para left4dhooks cuando este disponible
  */
 void Bloodmoon_SpawnTank()
 {
@@ -979,7 +979,7 @@ public Action Timer_SpawnTank(Handle timer, int userid)
 		FakeClientCommand(client, "z_spawn_old tank auto");
 		SetCommandFlags("z_spawn_old", flags);
 
-		// Kickear el bot después de spawn
+		// Kickear el bot despues de spawn
 		CreateTimer(0.5, Timer_KickBot, userid);
 	}
 	return Plugin_Stop;
@@ -997,7 +997,7 @@ public Action Timer_KickBot(Handle timer, int userid)
 
 /**
  * Fuerza un panic event usando comando director
- * TODO: Agregar soporte para left4dhooks cuando esté disponible
+ * TODO: Agregar soporte para left4dhooks cuando este disponible
  */
 void Bloodmoon_ForcePanicEvent()
 {
@@ -1063,7 +1063,7 @@ public Action Timer_SpawnSpecial(Handle timer, int userid)
 }
 
 /**
- * Verifica si el finale está activo
+ * Verifica si el finale esta activo
  */
 bool Bloodmoon_IsFinaleActive()
 {
@@ -1138,7 +1138,7 @@ void Bloodmoon_CreateColorCorrection(const char[] fileName, float weight)
 	DispatchKeyValue(fogVolEnt, "targetname", "bloodmoon_fogvolume");
 	DispatchKeyValue(fogVolEnt, "ColorCorrectionName", tName);
 
-	// Usar DispatchKeyValue en vez de SetEntPropVector (más seguro)
+	// Usar DispatchKeyValue en vez de SetEntPropVector (mas seguro)
 	DispatchKeyValue(fogVolEnt, "mins", "-10000 -10000 -10000");
 	DispatchKeyValue(fogVolEnt, "maxs", "10000 10000 10000");
 
@@ -1192,7 +1192,7 @@ void Bloodmoon_RemoveColorCorrection()
 
 /**
  * Crea func_precipitation (nieve/lluvia en TODO el mapa)
- * Mucho más eficiente que particulas localizadas
+ * Mucho mas eficiente que particulas localizadas
  */
 void Bloodmoon_CreatePrecipitation(int precipType)
 {
@@ -1208,7 +1208,7 @@ void Bloodmoon_CreatePrecipitation(int precipType)
 
 	DispatchKeyValue(entity, "model", mapPath);
 
-	// Tipo de precipitación: 1=lluvia, 2=ceniza, 3=nieve, 4=lluvia L4D
+	// Tipo de precipitacion: 1=lluvia, 2=ceniza, 3=nieve, 4=lluvia L4D
 	char sType[4];
 	IntToString(precipType, sType, sizeof(sType));
 	DispatchKeyValue(entity, "preciptype", sType);

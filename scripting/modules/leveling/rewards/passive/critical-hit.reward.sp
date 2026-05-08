@@ -4,7 +4,7 @@
 
 //==================================================
 // === CRITICAL HIT PASSIVE REWARD ===
-// 10% de probabilidad de hacer 1.5x-3.0x daño
+// 10% de probabilidad de hacer 1.5x-3.0x dano
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -18,7 +18,7 @@ Handle cvar_CriticalHit_MaxMultiplier = INVALID_HANDLE;
 bool g_bCriticalHit_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Critical Hit
+ * Inicializa el modulo de Critical Hit
  */
 public void CriticalHit_OnPluginStart()
 {
@@ -39,14 +39,14 @@ public void CriticalHit_OnPluginStart()
 	cvar_CriticalHit_MinMultiplier = CreateConVar(
 		"reward_criticalhit_min_multiplier",
 		"1.5",
-		"Multiplicador mínimo de daño crítico",
+		"Multiplicador minimo de dano critico",
 		FCVAR_PLUGIN
 	);
 
 	cvar_CriticalHit_MaxMultiplier = CreateConVar(
 		"reward_criticalhit_max_multiplier",
 		"3.0",
-		"Multiplicador máximo de daño crítico",
+		"Multiplicador maximo de dano critico",
 		FCVAR_PLUGIN
 	);
 }
@@ -89,7 +89,7 @@ public void CriticalHit_OnLevelUp(int client, int level)
 	{
 		g_bCriticalHit_Enabled[client] = true;
 		int chance = GetConVarInt(cvar_CriticalHit_Chance);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Critical Hit!\x01 (%d%% de probabilidad de daño crítico)", chance);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Critical Hit!\x01 (%d%% de probabilidad de dano critico)", chance);
 	}
 	else if (level > requiredLevel)
 	{
@@ -107,7 +107,7 @@ public bool CriticalHit_IsUnlocked(int client, int level)
 
 /**
  * Intenta aplicar critical hit
- * Retorna el nuevo daño si es crítico, 0.0 si no
+ * Retorna el nuevo dano si es critico, 0.0 si no
  * Debe ser llamado desde OnTakeDamage
  */
 public float CriticalHit_TryApply(int attacker, float damage)
@@ -136,7 +136,7 @@ public float CriticalHit_TryApply(int attacker, float damage)
 }
 
 /**
- * Obtiene si Critical Hit está habilitado para un jugador
+ * Obtiene si Critical Hit esta habilitado para un jugador
  */
 public bool CriticalHit_IsEnabled(int client)
 {

@@ -4,23 +4,23 @@
 ╚═══════════════════════════════════════════════════════════════════════════════╝
 
 ===================================================================================
-                              DESCRIPCIÓN GENERAL
+                              DESCRIPCION GENERAL
 ===================================================================================
 
 Sistema de leveling completo para L4D2 que permite a los jugadores ganar XP por
 realizar acciones en el juego, subir de nivel y obtener beneficios/rewards.
 
-Características principales:
-✓ Sistema de XP con progresión configurable por dificultad
-✓ 4 modos de dificultad (Fácil, Normal, Avanzado, Experto)
+Caracteristicas principales:
+✓ Sistema de XP con progresion configurable por dificultad
+✓ 4 modos de dificultad (Facil, Normal, Avanzado, Experto)
 ✓ Base de datos persistente (MySQL/SQLite)
-✓ Sincronización en tiempo real
+✓ Sincronizacion en tiempo real
 ✓ Sistema de rewards por niveles
 ✓ UI en chat con barra de progreso
-✓ Comandos para ver estadísticas
+✓ Comandos para ver estadisticas
 
 ===================================================================================
-                           ARQUITECTURA DE MÓDULOS
+                           ARQUITECTURA DE MODULOS
 ===================================================================================
 
 📁 modules/leveling/
@@ -52,24 +52,24 @@ Características principales:
        "host"      "tu-servidor-mysql.com"
        "database"  "nombre_base_datos"
        "user"      "usuario"
-       "pass"      "contraseña"
+       "pass"      "contrasena"
        "port"      "3306"
    }
 
 ===================================================================================
-                              FORMULAS DE PROGRESIÓN
+                              FORMULAS DE PROGRESION
 ===================================================================================
 
 El XP requerido para subir de nivel se calcula con:
 
     XP_Requerido = base_xp * (nivel + 1)^exponente
 
-Donde el exponente cambia según la dificultad:
+Donde el exponente cambia segun la dificultad:
 
 ┌─────────────┬────────────┬────────────────────────────────────────────────┐
 │ DIFICULTAD  │ EXPONENTE  │ EJEMPLO (base_xp = 800)                        │
 ├─────────────┼────────────┼────────────────────────────────────────────────┤
-│ Fácil       │ 1.1        │ Nivel 1: 800 XP | Nivel 5: 5,217 XP            │
+│ Facil       │ 1.1        │ Nivel 1: 800 XP | Nivel 5: 5,217 XP            │
 │ Normal      │ 1.25       │ Nivel 1: 800 XP | Nivel 5: 7,465 XP            │
 │ Avanzado    │ 1.4        │ Nivel 1: 800 XP | Nivel 5: 10,702 XP           │
 │ Experto     │ 1.6        │ Nivel 1: 800 XP | Nivel 5: 16,646 XP           │
@@ -82,13 +82,13 @@ Donde el exponente cambia según la dificultad:
 ┌─────────────────────────────┬────────────┬──────────────────────────┐
 │ EVENTO                      │ XP         │ CONVAR                   │
 ├─────────────────────────────┼────────────┼──────────────────────────┤
-│ Matar infectado común       │ 5 XP       │ xp_common_kill           │
+│ Matar infectado comun       │ 5 XP       │ xp_common_kill           │
 │ Matar infectado especial    │ 15 XP      │ xp_special_kill          │
 │ Matar Tank                  │ 50 XP      │ xp_tank_kill             │
 │ Matar Witch                 │ 40 XP      │ xp_witch_kill            │
 │ Headshot (bonus)            │ 10 XP      │ xp_headshot              │
-│ Revivir compañero           │ 20 XP      │ xp_revive                │
-│ Curar compañero             │ 5 XP       │ xp_heal                  │
+│ Revivir companero           │ 20 XP      │ xp_revive                │
+│ Curar companero             │ 5 XP       │ xp_heal                  │
 │ Usar desfibrilador          │ 25 XP      │ xp_defibrillator         │
 └─────────────────────────────┴────────────┴──────────────────────────┘
 
@@ -97,7 +97,7 @@ Donde el exponente cambia según la dificultad:
 ===================================================================================
 
 ┌────────┬─────────────────────────┬──────────────────────────────────────┐
-│ NIVEL  │ REWARD                  │ DESCRIPCIÓN                          │
+│ NIVEL  │ REWARD                  │ DESCRIPCION                          │
 ├────────┼─────────────────────────┼──────────────────────────────────────┤
 │ 1      │ Doble Salto             │ Permite saltar una segunda vez       │
 │        │                         │ en el aire                           │
@@ -107,7 +107,7 @@ Donde el exponente cambia según la dificultad:
 │ 3      │ +25 HP                  │ Otorga 25 puntos de salud            │
 │        │                         │ adicionales al aparecer              │
 ├────────┼─────────────────────────┼──────────────────────────────────────┤
-│ 4      │ Resistencia a Daño      │ Reduce el daño recibido en 5%        │
+│ 4      │ Resistencia a Dano      │ Reduce el dano recibido en 5%        │
 └────────┴─────────────────────────┴──────────────────────────────────────┘
 
 ===================================================================================
@@ -117,16 +117,16 @@ Donde el exponente cambia según la dificultad:
 CORE SYSTEM:
 -------------
 leveling_base_xp                "800"       - XP base para nivel 1
-leveling_formula_easy           "1.1"       - Exponente fórmula Fácil
-leveling_formula_normal         "1.25"      - Exponente fórmula Normal
-leveling_formula_advanced       "1.4"       - Exponente fórmula Avanzado
-leveling_formula_expert         "1.6"       - Exponente fórmula Experto
+leveling_formula_easy           "1.1"       - Exponente formula Facil
+leveling_formula_normal         "1.25"      - Exponente formula Normal
+leveling_formula_advanced       "1.4"       - Exponente formula Avanzado
+leveling_formula_expert         "1.6"       - Exponente formula Experto
 leveling_difficulty             "0"         - Dificultad actual (0-3)
 leveling_debug                  "0"         - Debug verboso (0/1)
 
 XP EVENTS:
 -----------
-xp_common_kill                  "5"         - XP por infectado común
+xp_common_kill                  "5"         - XP por infectado comun
 xp_special_kill                 "15"        - XP por infectado especial
 xp_tank_kill                    "50"        - XP por Tank
 xp_witch_kill                   "40"        - XP por Witch
@@ -143,7 +143,7 @@ reward_speed_boost_value        "1.1"       - Multiplicador velocidad
 reward_health_level             "3"         - Nivel para +HP
 reward_health_value             "25"        - HP adicional
 reward_damage_reduction_level   "4"         - Nivel para resistencia
-reward_damage_reduction_value   "0.95"      - Multiplicador daño
+reward_damage_reduction_value   "0.95"      - Multiplicador dano
 
 UI:
 ----
@@ -157,13 +157,13 @@ leveling_ui_progress_bar        "1"         - Mostrar barra progreso
 
 COMANDOS DE JUGADOR:
 ---------------------
-sm_level    - Muestra información de nivel actual
+sm_level    - Muestra informacion de nivel actual
 sm_xp       - Alias de sm_level
 sm_exp      - Alias de sm_level
 
 OUTPUT EJEMPLO:
 ---------------
-=== INFORMACIÓN DE NIVEL ===
+=== INFORMACION DE NIVEL ===
 Level: 2
 XP Actual: 450 / 1662
 XP Total: 2250
@@ -179,7 +179,7 @@ Configuracion INICIAL:
 2. Configurar databases.cfg con los datos de tu BD remota
 3. Crear la tabla player_levels en tu base de datos
 4. Reiniciar el servidor o ejecutar: sm plugins load "Eclipse Management System"
-5. Configurar ConVars en server.cfg según preferencias
+5. Configurar ConVars en server.cfg segun preferencias
 
 EJEMPLO server.cfg:
 -------------------
@@ -203,7 +203,7 @@ leveling_ui_show_kill "1"
 1. JUGADOR SE CONECTA
    └─> Se carga su nivel/XP desde la base de datos
 
-2. JUGADOR REALIZA ACCIÓN (ej: matar Tank)
+2. JUGADOR REALIZA ACCION (ej: matar Tank)
    └─> leveling-xp-events.module.sp detecta el evento
        └─> Leveling_AwardXP(client, 50, "Matar Tank")
            └─> Se actualiza g_iPlayerXP[client]
@@ -215,7 +215,7 @@ leveling_ui_show_kill "1"
            └─> Se muestra XP ganado en chat
 
 3. JUGADOR APARECE EN MAPA
-   └─> Se aplican rewards según nivel
+   └─> Se aplican rewards segun nivel
    └─> Se muestra info de nivel/XP
 
 4. JUGADOR SE DESCONECTA
@@ -240,14 +240,14 @@ EJEMPLO OUTPUT DEBUG:
 [INIT] Leveling System v1.0.0 inicializado
 [LOAD] Player - Nivel: 2, XP: 450/1662, Total: 2250
 [XP] Player +15 XP (Matar infectado especial) - Nivel: 2, XP: 465/1662
-[LEVELUP] Player alcanzó Nivel 3
+[LEVELUP] Player alcanzo Nivel 3
 [ERROR] Fallo al cargar datos de nivel: Connection timeout
 
 ===================================================================================
-                         INTEGRACIÓN CON CURRENCY
+                         INTEGRACION CON CURRENCY
 ===================================================================================
 
-El sistema de leveling está SEPARADO del sistema de currency:
+El sistema de leveling esta SEPARADO del sistema de currency:
 
 - CURRENCY (dinero) → Se usa para comprar items en el buy menu
 - LEVELING (XP)     → Se usa para subir de nivel y ganar rewards
@@ -262,24 +262,24 @@ independiente. Por ejemplo:
 ===================================================================================
 
 PROBLEMA: Los jugadores no ganan XP
-SOLUCIÓN:
-  - Verificar que la BD esté conectada correctamente
+SOLUCION:
+  - Verificar que la BD este conectada correctamente
   - Revisar logs en addons/sourcemod/logs/Leveling_System.log
   - Activar debug: sm_cvar leveling_debug 1
 
 PROBLEMA: El doble salto no funciona
-SOLUCIÓN:
+SOLUCION:
   - Verificar que el jugador sea nivel 1 o superior
   - Revisar que no haya conflictos con otros plugins de movimiento
 
 PROBLEMA: Los datos no persisten entre mapas
-SOLUCIÓN:
-  - Verificar conexión a BD remota en databases.cfg
+SOLUCION:
+  - Verificar conexion a BD remota en databases.cfg
   - Verificar que la tabla player_levels exista
 
 PROBLEMA: Error "symbol already defined: OnClientDisconnect"
-SOLUCIÓN:
-  - Ya está resuelto: la llamada se agregó al OnClientDisconnect existente
+SOLUCION:
+  - Ya esta resuelto: la llamada se agrego al OnClientDisconnect existente
     en buy-menu.module.sp
 
 ===================================================================================
@@ -287,7 +287,7 @@ SOLUCIÓN:
 ===================================================================================
 
 Autor: Eclipse Team
-Versión: 1.0.0
+Version: 1.0.0
 Compatible con: L4D2, SourceMod 1.11+
 
 ===================================================================================

@@ -105,8 +105,8 @@ void ShowLanguagePanel(int client)
 		"en", "es", "pt", "fr", "de", "ru", "it", "pl", "tr", "chi"
 	};
 	char langNames[][] = {
-		"English", "Español", "Português", "Français", "Deutsch",
-		"Русский", "Italiano", "Polski", "Türkçe", "中文"
+		"English", "Espanol", "Português", "Français", "Deutsch",
+		"Русский", "Italiano", "Polski", "Turkçe", "中文"
 	};
 
 	for (int i = 0; i < sizeof(supportedLangs); i++)

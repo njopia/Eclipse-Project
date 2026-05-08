@@ -45,7 +45,7 @@ public Action CmdJoin(int client, int args)
 {
 	if (!IsPlayer(client)) return Plugin_Handled;
 	if (GetClientTeam(client) == TEAM_SURVIVOR) return Plugin_Handled;
-	// Muestra un panel con info y opciones rápidas
+	// Muestra un panel con info y opciones rapidas
 	afkShowMainMenu(client);
 	return Plugin_Handled;
 }
@@ -66,7 +66,7 @@ public Action Timer_ShowPanel(Handle timer, int client)
 	return Plugin_Continue;
 }
 
-/* ===================== Lógica ===================== */
+/* ===================== Logica ===================== */
 
 void afkShowMainMenu(int client)
 {

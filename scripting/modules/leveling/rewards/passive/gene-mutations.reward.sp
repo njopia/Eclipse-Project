@@ -4,7 +4,7 @@
 
 //==================================================
 // === GENE MUTATIONS PASSIVE REWARD ===
-// Aumenta HP máximo y otorga regeneración de salud
+// Aumenta HP maximo y otorga regeneracion de salud
 // Based on Master_3_46 implementation
 // Niveles: 10 (+100HP, +1 regen), 20 (+200HP, +2 regen), 30 (+300HP, +3 regen), 40 (+400HP, +4 regen)
 //==================================================
@@ -21,10 +21,10 @@ Handle cvar_GeneMutations_BonusHP4 = INVALID_HANDLE;
 Handle cvar_GeneMutations_ShowRegen = INVALID_HANDLE;
 
 // --- Estado del jugador ---
-int g_iGeneMutations_Level[MAXPLAYERS + 1]; // 0 = sin, 1-4 = nivel de mutación
+int g_iGeneMutations_Level[MAXPLAYERS + 1]; // 0 = sin, 1-4 = nivel de mutacion
 
 /**
- * Inicializa el módulo de Gene Mutations
+ * Inicializa el modulo de Gene Mutations
  */
 public void GeneMutations_OnPluginStart()
 {
@@ -91,7 +91,7 @@ public void GeneMutations_OnPluginStart()
 		FCVAR_PLUGIN
 	);
 
-	// Crear timer de regeneración (cada 5 segundos)
+	// Crear timer de regeneracion (cada 5 segundos)
 	CreateTimer(5.0, Timer_GeneMutations_Regeneration, _, TIMER_REPEAT);
 }
 
@@ -133,7 +133,7 @@ public void GeneMutations_OnLevelUp(int client, int level)
 	int oldMutationLevel = g_iGeneMutations_Level[client];
 	int newMutationLevel = GeneMutations_GetMutationLevel(level);
 
-	// Solo mostrar mensaje si alcanzó un nuevo nivel de mutación
+	// Solo mostrar mensaje si alcanzo un nuevo nivel de mutacion
 	if (newMutationLevel > oldMutationLevel)
 	{
 		g_iGeneMutations_Level[client] = newMutationLevel;
@@ -150,7 +150,7 @@ public void GeneMutations_OnLevelUp(int client, int level)
 			case 4: mutationName = "Gene Mutations IV";
 		}
 
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05%s\x01! (+%d HP máximo y regeneración +%d HP/5s)", mutationName, bonusHP, newMutationLevel);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05%s\x01! (+%d HP maximo y regeneracion +%d HP/5s)", mutationName, bonusHP, newMutationLevel);
 	}
 	else
 	{
@@ -167,7 +167,7 @@ public bool GeneMutations_IsUnlocked(int client, int level)
 }
 
 /**
- * Obtiene el nivel de mutación según el nivel del jugador
+ * Obtiene el nivel de mutacion segun el nivel del jugador
  */
 stock int GeneMutations_GetMutationLevel(int playerLevel)
 {
@@ -184,7 +184,7 @@ stock int GeneMutations_GetMutationLevel(int playerLevel)
 }
 
 /**
- * Obtiene el bonus de HP según el nivel de mutación
+ * Obtiene el bonus de HP segun el nivel de mutacion
  */
 stock int GeneMutations_GetBonusHP(int mutationLevel)
 {
@@ -218,7 +218,7 @@ stock void GeneMutations_ApplyHealthBonus(int client, int mutationLevel)
 }
 
 /**
- * Timer: Regeneración de salud
+ * Timer: Regeneracion de salud
  */
 public Action Timer_GeneMutations_Regeneration(Handle timer)
 {
@@ -230,7 +230,7 @@ public Action Timer_GeneMutations_Regeneration(Handle timer)
 		if (GetClientTeam(client) != 2) // Solo survivors
 			continue;
 
-		// Verificar si está incapacitado o siendo sujetado
+		// Verificar si esta incapacitado o siendo sujetado
 		if (GeneMutations_IsPlayerIncapacitated(client) || GeneMutations_IsPlayerHeld(client))
 			continue;
 
@@ -256,32 +256,32 @@ stock void GeneMutations_RegenerateHealth(int client, int mutationLevel)
 	int currentTemp = RoundToFloor(rawTempHealth);
 	int totalHealth = currentHealth + currentTemp;
 
-	// Calcular HP máximo
+	// Calcular HP maximo
 	int maxHealth = 100 + GeneMutations_GetBonusHP(mutationLevel);
 
-	// Si ya está al máximo, no regenerar
+	// Si ya esta al maximo, no regenerar
 	if (totalHealth >= maxHealth)
 		return;
 
-	// Regenerar según el nivel de mutación
+	// Regenerar segun el nivel de mutacion
 	float regenAmount = float(mutationLevel);
 
-	// IMPORTANTE: Añadir directamente sobre el valor RAW, resetear el timer
-	// Esto evita que el decay previo afecte la regeneración
+	// IMPORTANTE: Anadir directamente sobre el valor RAW, resetear el timer
+	// Esto evita que el decay previo afecte la regeneracion
 	float newTempHealth = rawTempHealth + regenAmount;
 
-	// Limitar para no exceder HP máximo
+	// Limitar para no exceder HP maximo
 	float maxTempHealth = float(maxHealth - currentHealth);
 	if (newTempHealth > maxTempHealth)
 		newTempHealth = maxTempHealth;
 
-	// Aplicar regeneración y resetear timer de decay
+	// Aplicar regeneracion y resetear timer de decay
 	SetEntPropFloat(client, Prop_Send, "m_healthBuffer", newTempHealth);
 	SetEntPropFloat(client, Prop_Send, "m_healthBufferTime", GetGameTime());
 
 	int newTotalHealth = currentHealth + RoundToFloor(newTempHealth);
 
-	// Mostrar mensaje si está habilitado
+	// Mostrar mensaje si esta habilitado
 	if (GetConVarBool(cvar_GeneMutations_ShowRegen))
 	{
 		PrintToChat(client, "\x04[Gene Mutations Lv%d]\x01 +%d HP regenerated (\x05%d\x01/\x03%d\x01)",
@@ -314,7 +314,7 @@ stock float GeneMutations_GetTempHealth(int client)
 }
 
 /**
- * Verifica si el jugador está incapacitado
+ * Verifica si el jugador esta incapacitado
  */
 stock bool GeneMutations_IsPlayerIncapacitated(int client)
 {
@@ -322,7 +322,7 @@ stock bool GeneMutations_IsPlayerIncapacitated(int client)
 }
 
 /**
- * Verifica si el jugador está siendo sujetado por un infectado
+ * Verifica si el jugador esta siendo sujetado por un infectado
  */
 stock bool GeneMutations_IsPlayerHeld(int client)
 {
@@ -342,7 +342,7 @@ stock bool GeneMutations_IsPlayerHeld(int client)
 }
 
 /**
- * Obtiene el nivel de mutación del jugador
+ * Obtiene el nivel de mutacion del jugador
  */
 public int GeneMutations_GetLevel(int client)
 {

@@ -16,21 +16,21 @@ Handle cvar_SleightOfHand_ReloadRate = INVALID_HANDLE;
 bool g_bSleightOfHand_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Sleight of Hand
+ * Inicializa el modulo de Sleight of Hand
  */
 public void SleightOfHand_OnPluginStart()
 {
 	cvar_SleightOfHand_RequiredLevel = CreateConVar(
 		"reward_sleightofhand_level",
 		"13",
-		"Nivel requerido para desbloquear Sleight of Hand (recarga rápida)",
+		"Nivel requerido para desbloquear Sleight of Hand (recarga rapida)",
 		FCVAR_PLUGIN
 	);
 
 	cvar_SleightOfHand_ReloadRate = CreateConVar(
 		"reward_sleightofhand_reload_rate",
 		"0.5",
-		"Multiplicador de velocidad de recarga (0.5 = mitad del tiempo, 0.25 = 4x más rápido)",
+		"Multiplicador de velocidad de recarga (0.5 = mitad del tiempo, 0.25 = 4x mas rapido)",
 		FCVAR_PLUGIN
 	);
 
@@ -72,11 +72,11 @@ public void SleightOfHand_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_SleightOfHand_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bSleightOfHand_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Sleight of Hand\x01! (Recarga más rápida)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Sleight of Hand\x01! (Recarga mas rapida)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -161,8 +161,8 @@ stock void SleightOfHand_SetReloadRate(int weapon, float rate)
 	if (!IsValidEntity(weapon))
 		return;
 
-	// Establecer el playback rate (velocidad de animación)
-	// Valores menores = más rápido (0.5 = mitad del tiempo)
+	// Establecer el playback rate (velocidad de animacion)
+	// Valores menores = mas rapido (0.5 = mitad del tiempo)
 	SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", 1.0 / rate);
 
 	// Ajustar el tiempo de recarga
@@ -177,7 +177,7 @@ stock void SleightOfHand_SetReloadRate(int weapon, float rate)
 }
 
 /**
- * Obtiene si Sleight of Hand está habilitado para un jugador
+ * Obtiene si Sleight of Hand esta habilitado para un jugador
  */
 public bool SleightOfHand_IsEnabled(int client)
 {

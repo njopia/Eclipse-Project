@@ -4,7 +4,7 @@
 
 //==================================================
 // === ECLIPSE POINTS UNIFIED MODULE ===
-// Sistema unificado de puntos que reemplaza los módulos
+// Sistema unificado de puntos que reemplaza los modulos
 // currency-events y leveling-xp-events
 //
 // Un solo evento otorga AMBOS tipos de puntos:
@@ -37,10 +37,10 @@ bool g_bMapCompleteAwarded[MAXPLAYERS + 1];
 Handle g_hCvarDifficulty = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de puntos unificados
+ * Inicializa el modulo de puntos unificados
  * Debe ser llamado desde OnPluginStart()
  *
- * IMPORTANTE: Este módulo reemplaza:
+ * IMPORTANTE: Este modulo reemplaza:
  * - CurrencyEvents_OnPluginStart()
  * - LevelingXPEvents_OnPluginStart()
  */
@@ -49,14 +49,14 @@ public void EclipsePointsUnified_OnPluginStart()
 	// === CONVARS UNIFICADOS ===
 	// Cada ConVar controla AMBOS sistemas (Currency + XP)
 
-	// IMPORTANTE: Los valores configurados aquí son para dificultad EASY
-	// Se multiplican automáticamente según la dificultad:
+	// IMPORTANTE: Los valores configurados aqui son para dificultad EASY
+	// Se multiplican automaticamente segun la dificultad:
 	// Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
 
 	cvar_PointsCommonKill = CreateConVar(
 		"eclipse_points_common_kill",
 		"1",
-		"Puntos BASE (Currency + XP) por matar un infectado común (Easy=1, Normal=2, Advanced=3, Expert=4)",
+		"Puntos BASE (Currency + XP) por matar un infectado comun (Easy=1, Normal=2, Advanced=3, Expert=4)",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
@@ -104,7 +104,7 @@ public void EclipsePointsUnified_OnPluginStart()
 	cvar_PointsRevive = CreateConVar(
 		"eclipse_points_revive",
 		"75",
-		"Puntos (Currency + XP) por revivir a un compañero",
+		"Puntos (Currency + XP) por revivir a un companero",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
@@ -112,7 +112,7 @@ public void EclipsePointsUnified_OnPluginStart()
 	cvar_PointsHeal = CreateConVar(
 		"eclipse_points_heal",
 		"30",
-		"Puntos (Currency + XP) por curar a un compañero",
+		"Puntos (Currency + XP) por curar a un companero",
 		FCVAR_PLUGIN,
 		true, 0.0
 	);
@@ -167,7 +167,7 @@ public void EclipsePointsUnified_OnPluginStart()
 
 	// === REGISTRAR EVENT HOOKS ===
 
-	// Eventos básicos de combate
+	// Eventos basicos de combate
 	HookEvent("infected_death", EclipsePoints_Event_InfectedDeath, EventHookMode_Pre);
 	HookEvent("player_death", EclipsePoints_Event_PlayerDeath, EventHookMode_Pre);
 	HookEvent("tank_killed", EclipsePoints_Event_TankKilled, EventHookMode_Pre);
@@ -234,7 +234,7 @@ public void EclipsePointsUnified_OnClientDisconnect(int client)
  * NOTA: Este multiplicador afecta tanto a Currency como a XP
  * Currency persiste entre mapas (se resetea al desconectar), XP se guarda en BD
  *
- * @return Multiplicador de puntos según dificultad
+ * @return Multiplicador de puntos segun dificultad
  */
 int GetDifficultyMultiplier()
 {
@@ -259,7 +259,7 @@ int GetDifficultyMultiplier()
 
 /**
  * Verifica si la dificultad actual es Easy
- * NOTA: Esta función se mantiene por compatibilidad
+ * NOTA: Esta funcion se mantiene por compatibilidad
  * Currency persiste entre mapas pero no se guarda en BD
  *
  * @return true si es Easy, false en caso contrario
@@ -276,21 +276,21 @@ int GetDifficultyMultiplier()
 } */
 
 //==================================================
-// === FUNCIÓN CENTRAL DE OTORGAMIENTO DE PUNTOS ===
+// === FUNCION CENTRAL DE OTORGAMIENTO DE PUNTOS ===
 //==================================================
 
 /**
  * Otorga puntos UNIFICADOS a un jugador
- * Esta función otorga AMBOS tipos de puntos simultáneamente:
+ * Esta funcion otorga AMBOS tipos de puntos simultaneamente:
  * - Currency (para compras) - Persiste entre mapas, se resetea al desconectar (NO se guarda en BD)
  * - XP (para niveles) - Se guarda en BD
  *
- * Los puntos se multiplican según la dificultad:
+ * Los puntos se multiplican segun la dificultad:
  * Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
  *
  * @param client        Cliente que recibe los puntos
  * @param points        Cantidad de puntos BASE a otorgar (se multiplica por dificultad)
- * @param reason        Razón del otorgamiento (para logs/mensajes)
+ * @param reason        Razon del otorgamiento (para logs/mensajes)
  */
 void AwardUnifiedPoints(int client, int points, const char[] reason)
 {
@@ -307,8 +307,8 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 	// Otorgar Currency Points (sistema de compras)
 	AwardCurrency(client, finalPoints, reason);
 
-	// Actualizar estadísticas de currency según el tipo de evento
-	if (StrContains(reason, "común", false) != -1 || StrContains(reason, "comun", false) != -1)
+	// Actualizar estadisticas de currency segun el tipo de evento
+	if (StrContains(reason, "comun", false) != -1 || StrContains(reason, "comun", false) != -1)
 		CurrencyStats_AddCommonKill(client);
 	else if (StrContains(reason, "Headshot", false) != -1)
 		CurrencyStats_AddHeadshot(client);
@@ -321,7 +321,7 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 	Leveling_AwardXP(client, finalPoints, reason);
 
 	// Log para debugging con dificultad
-	// LogMessage("[Eclipse Points] %N recibió %d puntos (%d base x%d dificultad) por: %s",
+	// LogMessage("[Eclipse Points] %N recibio %d puntos (%d base x%d dificultad) por: %s",
 	//            client, finalPoints, points, difficultyMultiplier, reason);
 }
 
@@ -349,19 +349,19 @@ public Action EclipsePoints_Event_InfectedDeath(Event event, const char[] name, 
 	if (GetEngineVersion() == Engine_Left4Dead2)
 	{
 		// Los uncommon tienen la propiedad "type" en el evento
-		// Valor 0 = común, valor > 0 = uncommon (riot, clown, mudman, etc.)
+		// Valor 0 = comun, valor > 0 = uncommon (riot, clown, mudman, etc.)
 		int type = event.GetInt("type", 0);
 		isUncommon = (type > 0);
 	}
 
-	// Seleccionar puntos base según tipo
+	// Seleccionar puntos base segun tipo
 	int points = isUncommon ? cvar_PointsUncommonKill.IntValue : cvar_PointsCommonKill.IntValue;
 
 	// Otorgar puntos base por infectado
 	if (isUncommon)
 		AwardUnifiedPoints(attacker, points, "Matar infectado uncommon");
 	else
-		AwardUnifiedPoints(attacker, points, "Matar infectado común");
+		AwardUnifiedPoints(attacker, points, "Matar infectado comun");
 
 	// Bonus por headshot
 	if (isHeadshot)
@@ -387,7 +387,7 @@ public Action EclipsePoints_Event_InfectedDeath(Event event, const char[] name, 
 /**
  * Evento: Player Death (para infectados especiales)
  * Nota: Este evento NO se usa para otorgar puntos directamente,
- * los eventos específicos (tank_killed, witch_killed) se manejan por separado
+ * los eventos especificos (tank_killed, witch_killed) se manejan por separado
  */
 public Action EclipsePoints_Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
@@ -400,7 +400,7 @@ public Action EclipsePoints_Event_PlayerDeath(Event event, const char[] name, bo
 	if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
 		return Plugin_Continue;
 
-	// Si el atacante es survivor y la víctima es infectado especial
+	// Si el atacante es survivor y la victima es infectado especial
 	if (GetClientTeam(attacker) == 2 && GetClientTeam(victim) == 3)
 	{
 		// Verificar que NO sea Tank ni Witch (esos tienen eventos propios)
@@ -485,13 +485,13 @@ public Action EclipsePoints_Event_HealSuccess(Event event, const char[] name, bo
 		return Plugin_Continue;
 
 	int points = cvar_PointsHeal.IntValue;
-	AwardUnifiedPoints(healer, points, "Curar compañero");
+	AwardUnifiedPoints(healer, points, "Curar companero");
 
 	return Plugin_Continue;
 }
 
 /**
- * Evento: Revive Success (levantar a compañero)
+ * Evento: Revive Success (levantar a companero)
  */
 public Action EclipsePoints_Event_ReviveSuccess(Event event, const char[] name, bool dontBroadcast)
 {
@@ -501,7 +501,7 @@ public Action EclipsePoints_Event_ReviveSuccess(Event event, const char[] name, 
 		return Plugin_Continue;
 
 	int points = cvar_PointsRevive.IntValue;
-	AwardUnifiedPoints(reviver, points, "Revivir compañero");
+	AwardUnifiedPoints(reviver, points, "Revivir companero");
 
 	return Plugin_Continue;
 }
@@ -594,7 +594,7 @@ public Action EclipsePoints_Event_LeftSafeArea(Event event, const char[] name, b
 }
 
 /**
- * Evento: Map Complete (finale o transición)
+ * Evento: Map Complete (finale o transicion)
  * Solo otorga XP (NO currency) a jugadores que salieron del safe area inicial
  */
 public Action EclipsePoints_Event_MapComplete(Event event, const char[] name, bool dontBroadcast)
@@ -610,7 +610,7 @@ public Action EclipsePoints_Event_MapComplete(Event event, const char[] name, bo
 	{
 		if (IsClientInGame(client) && !IsFakeClient(client) && GetClientTeam(client) == 2)
 		{
-			// Solo otorgar si el jugador salió del safe area y no ha recibido el premio
+			// Solo otorgar si el jugador salio del safe area y no ha recibido el premio
 			if (g_bPlayerLeftSafeArea[client] && !g_bMapCompleteAwarded[client])
 			{
 				// SOLO otorgar XP, NO currency

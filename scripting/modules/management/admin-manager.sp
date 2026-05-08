@@ -1,11 +1,11 @@
 /**
  * admin_manager_menu.sp
- * Gestión completa de admins SQL desde un menú in-game.
+ * Gestion completa de admins SQL desde un menu in-game.
  * Requiere: sql-admin-manager.smx cargado y DB "admins" configurada.
  * Acceso: solo ROOT (flag z)
  *
  * Comandos:
- *   sm_adminmenu  →  abre el menú principal
+ *   sm_adminmenu  →  abre el menu principal
  */
 
 #pragma semicolon 1
@@ -22,7 +22,7 @@ char g_TempAlias[MAXPLAYERS+1][64];
 char g_TempFlags[MAXPLAYERS+1][32];
 char g_TempGroup[MAXPLAYERS+1][64];
 int  g_TempImmunity[MAXPLAYERS+1];
-int  g_FlowState[MAXPLAYERS+1];   // qué paso del flujo está haciendo el cliente
+int  g_FlowState[MAXPLAYERS+1];   // que paso del flujo esta haciendo el cliente
 
 // Estados del flujo
 enum {
@@ -44,7 +44,7 @@ enum {
 // ─────────────────────────────────────────────
 public void AdminManager_OnPluginStart()
 {
-    RegConsoleCmd("sm_adminmenu", Cmd_AdminMenu, "Abre el menú de gestión de admins SQL");
+    RegConsoleCmd("sm_adminmenu", Cmd_AdminMenu, "Abre el menu de gestion de admins SQL");
     DB_Connect();
 }
 
@@ -70,12 +70,12 @@ public Action Cmd_AdminMenu(int client, int args)
 }
 
 // ─────────────────────────────────────────────
-// MENÚ PRINCIPAL
+// MENU PRINCIPAL
 // ─────────────────────────────────────────────
 void OpenMainMenu(int client)
 {
     Menu menu = new Menu(MainMenu_Handler_Admin_Manager);
-    menu.SetTitle("=== Gestión de Admins SQL ===");
+    menu.SetTitle("=== Gestion de Admins SQL ===");
     menu.AddItem("list_admins",   "Ver admins actuales");
     menu.AddItem("add_steam",     "Agregar admin (SteamID de jugador conectado)");
     menu.AddItem("add_manual",    "Agregar admin (SteamID manual)");
@@ -114,7 +114,7 @@ public int MainMenu_Handler_Admin_Manager(Menu menu, MenuAction action, int clie
 // ─────────────────────────────────────────────
 void OpenListAdmins(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
 
     char query[256];
     Format(query, sizeof(query), "SELECT name, authtype, identity, flags, immunity FROM sm_admins ORDER BY name");
@@ -199,12 +199,12 @@ void StartFlowManual(int client)
 {
     g_FlowState[client] = FLOW_NONE;
     PrintToChat(client, "[AdminMenu] Escribe el SteamID (ej: STEAM_0:1:12345) en el chat:");
-    // El SteamID vendrá como primer mensaje; usamos OnClientSayCommand
-    g_FlowState[client] = -1; // señal: esperando SteamID manual
+    // El SteamID vendra como primer mensaje; usamos OnClientSayCommand
+    g_FlowState[client] = -1; // senal: esperando SteamID manual
 }
 
 // ─────────────────────────────────────────────
-// FLUJO COMÚN: pedir alias, flags, immunity
+// FLUJO COMUN: pedir alias, flags, immunity
 // ─────────────────────────────────────────────
 void AskAlias(int client)
 {
@@ -221,12 +221,12 @@ void AskFlags(int client)
 void AskImmunity(int client)
 {
     g_FlowState[client] = FLOW_ADD_IMMUNITY;
-    PrintToChat(client, "[AdminMenu] Escribe el nivel de inmunidad (número, 0 = sin inmunidad):");
+    PrintToChat(client, "[AdminMenu] Escribe el nivel de inmunidad (numero, 0 = sin inmunidad):");
 }
 
 void ConfirmAndAddAdmin(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
 
     char esc_identity[130], esc_alias[130], esc_flags[66];
     g_db.Escape(g_TempSteamID[client], esc_identity, sizeof(esc_identity));
@@ -256,7 +256,7 @@ public void CB_AddAdmin(Database db, DBResultSet results, const char[] error, an
 // ─────────────────────────────────────────────
 void OpenDelAdminMenu(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
     g_db.Query(CB_DelAdminList, "SELECT id, name, identity FROM sm_admins ORDER BY name", GetClientUserId(client));
 }
 
@@ -299,7 +299,7 @@ public int DelAdmin_Handler(Menu menu, MenuAction action, int client, int item)
         Format(query, sizeof(query), "DELETE FROM sm_admins WHERE id = %d", id);
         g_db.Query(CB_DelAdmin, query, GetClientUserId(client));
 
-        // También limpiar grupos asignados
+        // Tambien limpiar grupos asignados
         char query2[128];
         Format(query2, sizeof(query2), "DELETE FROM sm_admins_groups WHERE admin_id = %d", id);
         g_db.Query(CB_Silent, query2, 0);
@@ -323,7 +323,7 @@ public void CB_DelAdmin(Database db, DBResultSet results, const char[] error, an
 // ─────────────────────────────────────────────
 void OpenListGroups(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
     g_db.Query(CB_ListGroups, "SELECT name, flags, immunity_level FROM sm_groups ORDER BY name", GetClientUserId(client));
 }
 
@@ -373,12 +373,12 @@ void AskGroupFlags(int client)
 void AskGroupImmunity(int client)
 {
     g_FlowState[client] = FLOW_ADD_GROUP_IMMUNITY;
-    PrintToChat(client, "[AdminMenu] Escribe el nivel de inmunidad del grupo (número):");
+    PrintToChat(client, "[AdminMenu] Escribe el nivel de inmunidad del grupo (numero):");
 }
 
 void ConfirmAndAddGroup(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
 
     char esc_name[242], esc_flags[66];
     g_db.Escape(g_TempGroup[client], esc_name,  sizeof(esc_name));
@@ -408,7 +408,7 @@ public void CB_AddGroup(Database db, DBResultSet results, const char[] error, an
 // ─────────────────────────────────────────────
 void StartFlowDelGroup(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
     g_db.Query(CB_DelGroupList, "SELECT id, name FROM sm_groups ORDER BY name", GetClientUserId(client));
 }
 
@@ -470,7 +470,7 @@ public void CB_DelGroup(Database db, DBResultSet results, const char[] error, an
 // ─────────────────────────────────────────────
 void StartFlowSetAdminGroup(int client)
 {
-    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexión a DB."); return; }
+    if (g_db == null) { PrintToChat(client, "[AdminMenu] Sin conexion a DB."); return; }
     g_db.Query(CB_SetAdminGroupAdminList, "SELECT id, name, identity FROM sm_admins ORDER BY name", GetClientUserId(client));
 }
 
@@ -625,7 +625,7 @@ public Action OnClientSayCommand(int client, const char[] command, const char[] 
 }
 
 // ─────────────────────────────────────────────
-// Handlers genéricos
+// Handlers genericos
 // ─────────────────────────────────────────────
 public int GenericBack_Handler(Menu menu, MenuAction action, int client, int item)
 {

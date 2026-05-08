@@ -7,8 +7,8 @@ int	  HSModel[33];
 int	  HSTimer[33];
 
 // --- Globals anti-spam para Healing station ---
-float g_fNextHint[MAXPLAYERS + 1];		 // próximo momento permitido para mostrar hint
-bool  g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida máxima
+float g_fNextHint[MAXPLAYERS + 1];		 // proximo momento permitido para mostrar hint
+bool  g_bHadMaxHealth[MAXPLAYERS + 1];	 // record de si ya estuvo a vida maxima
 
 // --- Define local para anti-spam (basado en CONFIG_HEALINGSTATION_DURATION) ---
 #define COOLDOWN_TIME 2.0
@@ -51,7 +51,7 @@ stock void SpawnHealingStation(int client)
 	{
 		DispatchKeyValue(item2, "model", "models/props_unique/hospital/iv_pole.mdl");
 		DispatchKeyValue(item2, "solid", "2");
-		DispatchKeyValue(item2, "use_string", "Curandose como un campeón");
+		DispatchKeyValue(item2, "use_string", "Curandose como un campeon");
 		DispatchKeyValue(item2, "use_time", "2");
 		DispatchKeyValue(item2, "auto_disable", "0");
 		DispatchSpawn(item2);
@@ -116,7 +116,7 @@ public Action HSOnPressed(int entity, int activator, int caller, UseType type, f
 			{
 				if (now >= g_fNextHint[activator])
 				{
-					PrintToChat(activator, "Tienes salud máxima papi: %i / %i", health, maxhealth);
+					PrintToChat(activator, "Tienes salud maxima papi: %i / %i", health, maxhealth);
 					g_fNextHint[activator] = now + COOLDOWN_TIME;
 				}
 				g_bHadMaxHealth[activator] = true;
@@ -128,7 +128,7 @@ public Action HSOnPressed(int entity, int activator, int caller, UseType type, f
 
 		if (now >= g_fNextHint[activator])
 		{
-			PrintToChat(activator, "Salud actual: %i - Salud máxima: %i", health, maxhealth);
+			PrintToChat(activator, "Salud actual: %i - Salud maxima: %i", health, maxhealth);
 			g_fNextHint[activator] = now + COOLDOWN_TIME;
 		}
 

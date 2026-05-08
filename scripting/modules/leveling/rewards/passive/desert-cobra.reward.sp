@@ -15,7 +15,7 @@ Handle cvar_DesertCobra_RequiredLevel = INVALID_HANDLE;
 bool g_bDesertCobra_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Desert Cobra
+ * Inicializa el modulo de Desert Cobra
  */
 public void DesertCobra_OnPluginStart()
 {
@@ -26,7 +26,7 @@ public void DesertCobra_OnPluginStart()
 		FCVAR_PLUGIN
 	);
 
-	// Hook para evento de incapacitación
+	// Hook para evento de incapacitacion
 	HookEvent("player_incapacitated", Event_DesertCobra_Incapacitated, EventHookMode_Post);
 }
 
@@ -64,11 +64,11 @@ public void DesertCobra_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_DesertCobra_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bDesertCobra_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Desert Cobra\x01! (Magnum Pistol al incapacitar)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Desert Cobra\x01! (Magnum Pistol al incapacitar)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -100,14 +100,14 @@ public Action Event_DesertCobra_Incapacitated(Event event, const char[] name, bo
 	if (!g_bDesertCobra_Enabled[client])
 		return Plugin_Continue;
 
-	// Dar un pequeño delay para que el juego termine de incapacitar
+	// Dar un pequeno delay para que el juego termine de incapacitar
 	CreateTimer(0.1, Timer_DesertCobra_GiveMagnum, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 
 	return Plugin_Continue;
 }
 
 /**
- * Timer: Otorga Magnum después de incapacitar
+ * Timer: Otorga Magnum despues de incapacitar
  */
 public Action Timer_DesertCobra_GiveMagnum(Handle timer, int userid)
 {
@@ -160,7 +160,7 @@ stock void DesertCobra_GiveMagnum(int client)
 }
 
 /**
- * Obtiene si Desert Cobra está habilitado para un jugador
+ * Obtiene si Desert Cobra esta habilitado para un jugador
  */
 public bool DesertCobra_IsEnabled(int client)
 {

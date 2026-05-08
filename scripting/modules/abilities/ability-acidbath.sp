@@ -27,7 +27,7 @@ void Ability_AcidBath_Deactivate(int client)
 }
 
 /**
- * Hook de daño para Acid Bath
+ * Hook de dano para Acid Bath
  */
 public Action AcidBath_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
@@ -38,11 +38,11 @@ public Action AcidBath_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 	if (!Abilities_IsActive(victim, Ability_AcidBath))
 		return Plugin_Continue;
 
-	// Verificar si el daño es de Spitter (ácido)
-	// damagetype 1056 es ácido de spitter
+	// Verificar si el dano es de Spitter (acido)
+	// damagetype 1056 es acido de spitter
 	if (damagetype & DMG_RADIATION || damagetype & DMG_ACID)
 	{
-		// Convertir daño en curación
+		// Convertir dano en curacion
 		int health	   = GetClientHealth(victim);
 		int maxHealth  = GetEntProp(victim, Prop_Data, "m_iMaxHealth");
 		int healAmount = RoundToFloor(damage);
@@ -58,7 +58,7 @@ public Action AcidBath_OnTakeDamage(int victim, int &attacker, int &inflictor, f
 			PrintHintText(victim, "Acid Bath: +%d HP", healAmount);
 		}
 
-		// Bloquear el daño original
+		// Bloquear el dano original
 		damage = 0.0;
 		return Plugin_Changed;
 	}

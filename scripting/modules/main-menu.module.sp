@@ -5,12 +5,12 @@
 
 //==================================================
 // === MAIN MENU MODULE ===
-// Menú principal que unifica el acceso a todas las funcionalidades
+// Menu principal que unifica el acceso a todas las funcionalidades
 // Similar al sistema del backup Master_3_46
 //==================================================
 
 /**
- * Inicializa el módulo de Main Menu
+ * Inicializa el modulo de Main Menu
  */
 public void MainMenu_OnPluginStart()
 {
@@ -19,7 +19,7 @@ public void MainMenu_OnPluginStart()
 
 /**
  * Comando: !menu / menu
- * Abre el menú principal con acceso a todas las funcionalidades
+ * Abre el menu principal con acceso a todas las funcionalidades
  */
 public Action Command_MainMenu(int client, int args)
 {
@@ -34,13 +34,13 @@ public Action Command_MainMenu(int client, int args)
 }
 
 /**
- * Muestra el menú principal al jugador
+ * Muestra el menu principal al jugador
  */
 void ShowMainMenu(int client)
 {
 	Menu menu = new Menu(MainMenu_Handler);
 
-	// Obtener información del jugador
+	// Obtener informacion del jugador
 	char playerName[MAX_NAME_LENGTH];
 	GetClientName(client, playerName, sizeof(playerName));
 
@@ -48,7 +48,7 @@ void ShowMainMenu(int client)
 	int currentXP = Leveling_GetPlayerCurrentXP(client);
 	int currency = GetPlayerCurrency(client);
 
-	// Título del menú con información del jugador
+	// Titulo del menu con informacion del jugador
 	char title[256];
 	SetGlobalTransTarget(client);
 	Format(title, sizeof(title), "%t", "MainMenu_Title", playerName, level, currentXP, Leveling_GetXPRequiredForNextLevel(client), currency);
@@ -69,7 +69,7 @@ void ShowMainMenu(int client)
 	menu.AddItem("abilities", text);
 	menu.AddItem("", "", ITEMDRAW_SPACER);
 
-	// === INFORMACIÓN & ESTADÍSTICAS ===
+	// === INFORMACION & ESTADISTICAS ===
 	Format(text, sizeof(text), "%T", "MainMenu_FragsPanel", client);
 	menu.AddItem("frags", text);
 
@@ -105,7 +105,7 @@ void ShowMainMenu(int client)
 }
 
 /**
- * Handler del menú principal
+ * Handler del menu principal
  */
 public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2)
 {
@@ -123,9 +123,9 @@ public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2
 			}
 			else if (StrEqual(info, "level"))
 			{
-				// Mostrar información de nivel
+				// Mostrar informacion de nivel
 				FakeClientCommand(client, "sm_level");
-				// Reabrir menú después de mostrar info
+				// Reabrir menu despues de mostrar info
 				CreateTimer(0.1, Timer_ReopenMenu, GetClientUserId(client));
 			}
 			else if (StrEqual(info, "rewards"))
@@ -135,7 +135,7 @@ public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2
 			}
 			else if (StrEqual(info, "abilities"))
 			{
-				// Abrir menú de abilities
+				// Abrir menu de abilities
 				FakeClientCommand(client, "sm_abilities");
 			}
 			else if (StrEqual(info, "frags"))
@@ -150,12 +150,12 @@ public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2
 			}
 			else if (StrEqual(info, "mapvote"))
 			{
-				// Abrir votación de mapas
+				// Abrir votacion de mapas
 				FakeClientCommand(client, "sm_custom");
 			}
 			else if (StrEqual(info, "language"))
 			{
-				// Abrir menú de idiomas
+				// Abrir menu de idiomas
 				FakeClientCommand(client, "sm_lang");
 			}
 			else if (StrEqual(info, "join"))
@@ -180,8 +180,8 @@ public int MainMenu_Handler(Menu menu, MenuAction action, int client, int param2
 }
 
 /**
- * Timer: Reabrir el menú principal
- * Se usa después de comandos que muestran información en chat
+ * Timer: Reabrir el menu principal
+ * Se usa despues de comandos que muestran informacion en chat
  */
 public Action Timer_ReopenMenu(Handle timer, int userid)
 {
@@ -196,7 +196,7 @@ public Action Timer_ReopenMenu(Handle timer, int userid)
 }
 
 /**
- * Muestra el menú de rewards activos con botón de retorno al menú principal
+ * Muestra el menu de rewards activos con boton de retorno al menu principal
  */
 void ShowActiveRewardsMenuWithBackButton(int client)
 {
@@ -355,7 +355,7 @@ void ShowActiveRewardsMenuWithBackButton(int client)
 }
 
 /**
- * Handler del menú de rewards activos desde el menú principal
+ * Handler del menu de rewards activos desde el menu principal
  */
 public int ActiveRewards_MainMenuHandler(Menu menu, MenuAction action, int client, int param)
 {
@@ -372,7 +372,7 @@ public int ActiveRewards_MainMenuHandler(Menu menu, MenuAction action, int clien
 	}
 	else if (action == MenuAction_Cancel && param == MenuCancel_ExitBack)
 	{
-		// Volver al menú principal
+		// Volver al menu principal
 		ShowMainMenu(client);
 	}
 	else if (action == MenuAction_End)
@@ -384,7 +384,7 @@ public int ActiveRewards_MainMenuHandler(Menu menu, MenuAction action, int clien
 }
 
 /**
- * Muestra un panel con información detallada del reward
+ * Muestra un panel con informacion detallada del reward
  */
 void ShowRewardDetailPanel(int client, int rewardLevel)
 {
@@ -426,7 +426,7 @@ public int RewardDetailPanelHandler(Menu menu, MenuAction action, int client, in
 {
 	if (action == MenuAction_Select)
 	{
-		// Volver al menú de rewards activos
+		// Volver al menu de rewards activos
 		ShowActiveRewardsMenuWithBackButton(client);
 	}
 
@@ -434,7 +434,7 @@ public int RewardDetailPanelHandler(Menu menu, MenuAction action, int client, in
 }
 
 /**
- * Obtiene información detallada de un reward (basado en backup)
+ * Obtiene informacion detallada de un reward (basado en backup)
  */
 void GetRewardDetailedInfo(int level, char[] name, int nameLen, char[] description, int descLen)
 {

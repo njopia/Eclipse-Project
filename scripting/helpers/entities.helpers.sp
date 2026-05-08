@@ -1,7 +1,7 @@
 #if !defined EMS_MAIN_FILE
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
-// Zombie Classes (para claridad al leer el código)
+// Zombie Classes (para claridad al leer el codigo)
 #define ZOMBIECLASS_SMOKER	1
 #define ZOMBIECLASS_BOOMER	2
 #define ZOMBIECLASS_HUNTER	3
@@ -74,7 +74,7 @@ stock void L4D_SetPlayerSpeed(int client, float speed)
 #include <sourcemod>
 #include <sdktools>
 
-// Flags para tipo de fade (según engine)
+// Flags para tipo de fade (segun engine)
 #define FADE_IN	   (0x0001)
 #define FADE_OUT   (0x0002)
 #define FADE_PURGE (0x0010)
@@ -84,7 +84,7 @@ stock void L4D_SetPlayerSpeed(int client, float speed)
  *
  * @param client    Jugador
  * @param r, g, b, a  Color (0–255)
- * @param duration   Duración del fade (en segundos)
+ * @param duration   Duracion del fade (en segundos)
  * @param flags      Tipo (FADE_IN, FADE_OUT, etc.)
  */
 stock void L4D_ScreenFade(int client, int r, int g, int b, int a, float duration, int flags = FADE_IN)
@@ -96,13 +96,13 @@ stock void L4D_ScreenFade(int client, int r, int g, int b, int a, float duration
 	if (hFade == null)
 		return;
 
-	// El mensaje espera 4 shorts (duración y hold)
+	// El mensaje espera 4 shorts (duracion y hold)
 	// luego 4 bytes de color y 2 bytes de flags
 
 	int durationMS = RoundFloat(duration * 1000.0);
-	int holdTimeMS = 0;	   // cuánto tiempo mantener antes de revertir
+	int holdTimeMS = 0;	   // cuanto tiempo mantener antes de revertir
 
-	// Duración / hold
+	// Duracion / hold
 	BfWriteShort(hFade, durationMS);
 	BfWriteShort(hFade, holdTimeMS);
 

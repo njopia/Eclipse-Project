@@ -5,10 +5,10 @@
 //==================================================
 // === HELL MODE MODULE ===
 // Modo infernal con efectos de fuego y dificultad extrema
-// Mayor multiplicador de daño que Bloodmoon, efectos visuales de fuego
+// Mayor multiplicador de dano que Bloodmoon, efectos visuales de fuego
 //==================================================
 
-// ConVars del módulo
+// ConVars del modulo
 Handle g_cvar_Hell_Enable = INVALID_HANDLE;
 Handle g_cvar_Hell_DmgMult = INVALID_HANDLE;
 Handle g_cvar_Hell_Fade = INVALID_HANDLE;
@@ -55,13 +55,13 @@ int	   g_iFogRef_Hell = -1;
 Handle g_hFogTimer_Hell = null;
 
 /**
- * Inicializa el módulo de Hell
+ * Inicializa el modulo de Hell
  */
 public void Hell_OnPluginStart()
 {
 	// ConVars principales
 	g_cvar_Hell_Enable = CreateConVar("hell_enable", "1", "Habilita el sistema de Hell Mode", FCVAR_PLUGIN);
-	g_cvar_Hell_DmgMult = CreateConVar("hell_damage_mult", "1.5", "Multiplicador de daño a Survivors", FCVAR_PLUGIN);
+	g_cvar_Hell_DmgMult = CreateConVar("hell_damage_mult", "1.5", "Multiplicador de dano a Survivors", FCVAR_PLUGIN);
 	g_cvar_Hell_Fade = CreateConVar("hell_fade", "1", "Fade rojo-naranja persistente", FCVAR_PLUGIN);
 	g_cvar_Hell_ChangeDiff = CreateConVar("hell_change_difficulty", "1", "Cambiar a Experto", FCVAR_PLUGIN);
 
@@ -71,7 +71,7 @@ public void Hell_OnPluginStart()
 	g_cvar_Hell_MobMax = CreateConVar("hell_mob_max", "40", "z_mob_spawn_max_size", FCVAR_PLUGIN);
 	g_cvar_Hell_MegaMob = CreateConVar("hell_mega_mob", "70", "z_mega_mob_size", FCVAR_PLUGIN);
 
-	// Ambientación
+	// Ambientacion
 	g_cvar_Hell_LightStyle = CreateConVar("hell_lightstyle", "a", "LightStyle a aplicar", FCVAR_PLUGIN);
 	g_cvar_Hell_LightStyleRestore = CreateConVar("hell_lightstyle_restore", "m", "LightStyle a restaurar", FCVAR_PLUGIN);
 	g_cvar_Hell_FogEnable = CreateConVar("hell_fog_enable", "1", "Crear Fog", FCVAR_PLUGIN);
@@ -79,16 +79,16 @@ public void Hell_OnPluginStart()
 	g_cvar_Hell_FogStart = CreateConVar("hell_fog_start", "40", "Fog start distance", FCVAR_PLUGIN);
 	g_cvar_Hell_FogEnd = CreateConVar("hell_fog_end", "1000", "Fog end distance", FCVAR_PLUGIN);
 	g_cvar_Hell_FogDensity = CreateConVar("hell_fog_density", "0.75", "Fog max density 0..1", FCVAR_PLUGIN);
-	g_cvar_Hell_ParticleName = CreateConVar("hell_particle", "env_fire_small_smoke", "Partícula ambiental", FCVAR_PLUGIN);
+	g_cvar_Hell_ParticleName = CreateConVar("hell_particle", "env_fire_small_smoke", "Particula ambiental", FCVAR_PLUGIN);
 	g_cvar_Hell_ParticleCount = CreateConVar("hell_particle_count", "4", "Cantidad de emisores", FCVAR_PLUGIN);
 	g_cvar_Hell_SoundStart = CreateConVar("hell_sound_start", "", "Sonido al activar", FCVAR_PLUGIN);
 	g_cvar_Hell_SoundLoop = CreateConVar("hell_sound_loop", "", "Sonido loop", FCVAR_PLUGIN);
 	g_cvar_Hell_FadeAlpha = CreateConVar("hell_fade_alpha", "100", "Alpha del overlay rojo-naranja 0..255", FCVAR_PLUGIN);
-	g_cvar_Hell_FadeDuration = CreateConVar("hell_fade_duration", "1500", "Duración ms de transición", FCVAR_PLUGIN);
+	g_cvar_Hell_FadeDuration = CreateConVar("hell_fade_duration", "1500", "Duracion ms de transicion", FCVAR_PLUGIN);
 	g_cvar_Hell_FogTick = CreateConVar("hell_fog_tick", "3.0", "Intervalo para re-aplicar fog", FCVAR_PLUGIN);
 
 	// Debug
-	g_cvar_Hell_DebugDamage = CreateConVar("hell_debug_damage", "0", "Debug de daño", FCVAR_PLUGIN);
+	g_cvar_Hell_DebugDamage = CreateConVar("hell_debug_damage", "0", "Debug de dano", FCVAR_PLUGIN);
 
 	// Obtener ConVars del juego
 	z_common_limit_hell = FindConVar("z_common_limit");
@@ -97,7 +97,7 @@ public void Hell_OnPluginStart()
 	z_mega_mob_size_hell = FindConVar("z_mega_mob_size");
 	z_difficulty_hell = FindConVar("z_difficulty");
 
-	// Hooks de daño
+	// Hooks de dano
 	for (int i = 1; i <= MaxClients; i++)
 		if (IsClientInGame(i))
 			SDKHook(i, SDKHook_OnTakeDamage, Hell_OnTakeDamage);
@@ -108,7 +108,7 @@ public void Hell_OnPluginStart()
 	RegAdminCmd("sm_hell_toggle", Cmd_HellToggle, ADMFLAG_GENERIC, "Alterna Hell Mode");
 	RegAdminCmd("sm_hell_status", Cmd_HellStatus, ADMFLAG_GENERIC, "Estado Hell Mode");
 
-	// Hook ConVar para detectar activación/desactivación
+	// Hook ConVar para detectar activacion/desactivacion
 	HookConVarChange(g_cvar_Hell_Enable, Hell_ConVarChanged);
 
 	g_sOrigDifficulty_Hell[0] = '\0';
@@ -146,7 +146,7 @@ public void Hell_OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, Hell_OnTakeDamage);
 
-	// Si Hell está activo, aplicar fade al nuevo jugador
+	// Si Hell esta activo, aplicar fade al nuevo jugador
 	if (g_bHellActive && GetConVarBool(g_cvar_Hell_Fade))
 	{
 		CreateTimer(2.0, Hell_Timer_ApplyFadeToNewPlayer, GetClientUserId(client));
@@ -174,7 +174,7 @@ public void Hell_OnMapStart()
  */
 public void Hell_OnMapEnd()
 {
-	// Desactivar Hell si está activo al cambiar de mapa
+	// Desactivar Hell si esta activo al cambiar de mapa
 	if (g_bHellActive)
 	{
 		LogMessage("[Hell] Map ending, deactivating Hell");
@@ -183,7 +183,7 @@ public void Hell_OnMapEnd()
 }
 
 /**
- * Hook de daño - Multiplicador de Hell
+ * Hook de dano - Multiplicador de Hell
  */
 public Action Hell_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
@@ -218,7 +218,7 @@ public Action Hell_OnTakeDamage(int victim, int &attacker, int &inflictor, float
 		{
 			char vName[64];
 			GetClientName(victim, vName, sizeof(vName));
-			PrintToChatAll("\x05[Hell:DMG]\x01 %s recibió %.1f daño (mult=%.2f)", vName, damage, mult);
+			PrintToChatAll("\x05[Hell:DMG]\x01 %s recibio %.1f dano (mult=%.2f)", vName, damage, mult);
 		}
 		return Plugin_Changed;
 	}
@@ -281,7 +281,7 @@ void Hell_Activate(const char[] reason = "manual")
 
 	g_bHellActive = true;
 
-	// Ambientación
+	// Ambientacion
 	Hell_ApplyLightStyle();
 
 	if (GetConVarBool(g_cvar_Hell_FogEnable))
@@ -301,7 +301,7 @@ void Hell_Activate(const char[] reason = "manual")
 
 	Hell_DoScreenFadeAll(true);
 
-	PrintToChatAll("\x04[Hell]\x01 ¡Modo Infierno ACTIVADO! Las llamas del infierno te consumirán (mult=%.2f)",
+	PrintToChatAll("\x04[Hell]\x01 Modo Infierno ACTIVADO! Las llamas del infierno te consumiran (mult=%.2f)",
 		GetConVarFloat(g_cvar_Hell_DmgMult));
 
 	if (GetConVarBool(g_cvar_Hell_ChangeDiff))
@@ -679,7 +679,7 @@ void Hell_StopFogEnforcerTimer()
 }
 
 /**
- * Obtiene si Hell está activo
+ * Obtiene si Hell esta activo
  */
 public bool Hell_IsActive()
 {

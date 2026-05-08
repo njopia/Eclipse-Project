@@ -4,7 +4,7 @@
 
 //==================================================
 // === MEDIC PASSIVE REWARD ===
-// Otorga bonus de salud al usar items de curación
+// Otorga bonus de salud al usar items de curacion
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -18,14 +18,14 @@ Handle cvar_Medic_FirstAidBonus = INVALID_HANDLE;
 bool g_bMedic_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Medic
+ * Inicializa el modulo de Medic
  */
 public void Medic_OnPluginStart()
 {
 	cvar_Medic_RequiredLevel = CreateConVar(
 		"reward_medic_level",
 		"4",
-		"Nivel requerido para desbloquear Medic (bonus de curación)",
+		"Nivel requerido para desbloquear Medic (bonus de curacion)",
 		FCVAR_PLUGIN
 	);
 
@@ -46,11 +46,11 @@ public void Medic_OnPluginStart()
 	cvar_Medic_FirstAidBonus = CreateConVar(
 		"reward_medic_firstaid_bonus",
 		"200",
-		"HP adicional al usar botiquín (First Aid Kit)",
+		"HP adicional al usar botiquin (First Aid Kit)",
 		FCVAR_PLUGIN
 	);
 
-	// Hooks para eventos de curación
+	// Hooks para eventos de curacion
 	HookEvent("pills_used", Event_Medic_PillsUsed, EventHookMode_Post);
 	HookEvent("adrenaline_used", Event_Medic_AdrenalineUsed, EventHookMode_Post);
 	HookEvent("heal_success", Event_Medic_HealSuccess, EventHookMode_Post);
@@ -90,11 +90,11 @@ public void Medic_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_Medic_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bMedic_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Medic\x01! (Bonus de salud al usar items de curación)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Medic\x01! (Bonus de salud al usar items de curacion)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -157,7 +157,7 @@ public Action Event_Medic_AdrenalineUsed(Event event, const char[] name, bool do
 }
 
 /**
- * Evento: Heal Success - Otorga HP adicional al usar botiquín
+ * Evento: Heal Success - Otorga HP adicional al usar botiquin
  */
 public Action Event_Medic_HealSuccess(Event event, const char[] name, bool dontBroadcast)
 {
@@ -206,7 +206,7 @@ stock void Medic_GiveHealth(int client, int amount, bool permanent)
 	int currentHealth = GetClientHealth(client);
 	int newHealth = currentHealth + amount;
 
-	// Limitar a un máximo razonable
+	// Limitar a un maximo razonable
 	if (newHealth > 500)
 		newHealth = 500;
 
@@ -225,7 +225,7 @@ stock void Medic_GiveHealth(int client, int amount, bool permanent)
 }
 
 /**
- * Obtiene si Medic está habilitado para un jugador
+ * Obtiene si Medic esta habilitado para un jugador
  */
 public bool Medic_IsEnabled(int client)
 {

@@ -38,14 +38,14 @@
 // TODO: Incluir rewards activos cuando se implementen
 // #include "rewards/active/..."
 
-// Incluir módulo de debug
+// Incluir modulo de debug
 #include "leveling-debug.module.sp"
 
 // --- ConVar para debug de rewards ---
 Handle cvar_Rewards_Debug = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de rewards
+ * Inicializa el modulo de rewards
  * Debe ser llamado desde OnPluginStart()
  */
 public void LevelingRewards_OnPluginStart()
@@ -83,7 +83,7 @@ public void LevelingRewards_OnPluginStart()
 	DoubleJump_OnPluginStart();
 	DamageReduction_OnPluginStart();
 
-	// Inicializar módulo de debug
+	// Inicializar modulo de debug
 	LevelingDebug_OnPluginStart();
 
 	// Registrar hook para cuando el jugador spawn
@@ -190,7 +190,7 @@ public void LevelingRewards_ApplyRewards(int client, int level)
 	// DEBUG: Log cuando se apliquen rewards
 	LogMessage("[REWARDS DEBUG] Aplicando rewards para %N (Nivel %d)", client, level);
 
-	// Aplicar cada reward (mostrará mensaje si se desbloquea)
+	// Aplicar cada reward (mostrara mensaje si se desbloquea)
 	Acrobatics_OnLevelUp(client, level);
 	HealthBonus_OnLevelUp(client, level);
 	Medic_OnLevelUp(client, level);
@@ -343,7 +343,7 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return Plugin_Continue;
 
-	// Aplicar rewards según nivel (sin mostrar mensajes en spawn)
+	// Aplicar rewards segun nivel (sin mostrar mensajes en spawn)
 	int playerLevel = Leveling_GetPlayerLevel(client);
 	LogMessage("[REWARDS DEBUG] Player_Spawn evento - %N con nivel %d", client, playerLevel);
 
@@ -353,13 +353,13 @@ public Action Event_PlayerSpawn_Rewards(Event event, const char[] name, bool don
 	}
 	else
 	{
-		LogMessage("[REWARDS DEBUG] %N tiene nivel 0, no se aplicarán rewards", client);
+		LogMessage("[REWARDS DEBUG] %N tiene nivel 0, no se aplicaran rewards", client);
 	}
 
 	// Mostrar UI de nivel/XP
 	LevelingUI_ShowOnSpawn(client);
 
-	// Auto-equipar Shoulder Cannon si está habilitado (con delay para asegurar spawn completo)
+	// Auto-equipar Shoulder Cannon si esta habilitado (con delay para asegurar spawn completo)
 	if (playerLevel >= 35 && Leveling_GetShoulderCannonAutoEquip(client))
 	{
 		CreateTimer(0.5, Timer_AutoEquipShoulderCannon, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -380,7 +380,7 @@ public Action Timer_AutoEquipShoulderCannon(Handle timer, int userid)
 	if (GetClientTeam(client) != 2) // Solo Survivors
 		return Plugin_Stop;
 
-	// Equipar (ShoulderCannon_Equip ya verifica si está equipado)
+	// Equipar (ShoulderCannon_Equip ya verifica si esta equipado)
 	ShoulderCannon_Equip(client);
 
 	return Plugin_Stop;
@@ -388,7 +388,7 @@ public Action Timer_AutoEquipShoulderCannon(Handle timer, int userid)
 
 /**
  * Verifica si un jugador tiene el doble salto habilitado
- * (Wrapper para mantener compatibilidad con código existente)
+ * (Wrapper para mantener compatibilidad con codigo existente)
  */
 public bool LevelingRewards_IsDoubleJumpEnabled(int client)
 {

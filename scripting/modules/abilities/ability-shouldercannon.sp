@@ -40,9 +40,9 @@ int g_iShoulderCannon_Entity[MAXPLAYERS + 1];
 Handle g_hShoulderCannon_FireTimer[MAXPLAYERS + 1];
 
 // Configuracion del Shoulder Cannon (guardadas en BBDD via g_bShoulderCannon_AutoEquip en leveling)
-bool g_bCannon_Disabled[MAXPLAYERS + 1];  // Desactivar disparo automático
-int g_iCannon_NeverTarget[MAXPLAYERS + 1];  // Qué no atacar nunca
-int g_iCannon_TargetFirst[MAXPLAYERS + 1];  // Qué atacar primero
+bool g_bCannon_Disabled[MAXPLAYERS + 1];  // Desactivar disparo automatico
+int g_iCannon_NeverTarget[MAXPLAYERS + 1];  // Que no atacar nunca
+int g_iCannon_TargetFirst[MAXPLAYERS + 1];  // Que atacar primero
 float g_fCannon_FireRate[MAXPLAYERS + 1];  // Velocidad de disparo
 
 /**
@@ -59,7 +59,7 @@ void Ability_ShoulderCannon_Precache()
 // Use ShoulderCannon_Equip() and ShoulderCannon_Unequip() instead
 
 /**
- * Hook de transmisión
+ * Hook de transmision
  */
 public Action ShoulderCannon_Hook_SetTransmit(int entity, int client)
 {
@@ -67,7 +67,7 @@ public Action ShoulderCannon_Hook_SetTransmit(int entity, int client)
 }
 
 /**
- * Timer: Disparo automático
+ * Timer: Disparo automatico
  */
 public Action Timer_ShoulderCannon_Fire(Handle timer, int userid)
 {
@@ -75,7 +75,7 @@ public Action Timer_ShoulderCannon_Fire(Handle timer, int userid)
 	if (client <= 0 || !IsClientInGame(client) || !IsPlayerAlive(client))
 		return Plugin_Stop;
 
-	// Verificar si está equipado (ya no depende de Abilities system)
+	// Verificar si esta equipado (ya no depende de Abilities system)
 	// if (!Abilities_IsActive(client, Ability_ShoulderCannon))
 	// 	return Plugin_Stop;
 
@@ -83,15 +83,15 @@ public Action Timer_ShoulderCannon_Fire(Handle timer, int userid)
 	if (cannon <= 0 || !IsValidEntity(cannon))
 		return Plugin_Stop;
 
-	// No disparar si está incapacitado
+	// No disparar si esta incapacitado
 	if (GetEntProp(client, Prop_Send, "m_isIncapacitated", 1))
 		return Plugin_Continue;
 
-	// No disparar si está siendo agarrado
+	// No disparar si esta siendo agarrado
 	if (IsPlayerHeld(client))
 		return Plugin_Continue;
 
-	// No disparar si el jugador lo deshabilitó
+	// No disparar si el jugador lo deshabilito
 	if (g_bCannon_Disabled[client])
 		return Plugin_Continue;
 
@@ -106,7 +106,7 @@ public Action Timer_ShoulderCannon_Fire(Handle timer, int userid)
 }
 
 /**
- * Busca un objetivo válido
+ * Busca un objetivo valido
  */
 int ShoulderCannon_FindTarget(int client)
 {
@@ -280,7 +280,7 @@ void ShoulderCannon_FireAtTarget(int client, int cannon, int target)
 	ShoulderCannon_CreateTracerParticles(cannon, target);
 	EmitSoundToAll(SOUND_M60_FIRE, client);
 
-	// Aplicar daño
+	// Aplicar dano
 	bool isPlayer = (target > 0 && target <= MaxClients);
 
 	if (isPlayer)
@@ -290,7 +290,7 @@ void ShoulderCannon_FireAtTarget(int client, int cannon, int target)
 }
 
 /**
- * Aplica daño a entidad
+ * Aplica dano a entidad
  */
 void ShoulderCannon_DealDamageEntity(int target, int attacker, int dmg)
 {
@@ -337,7 +337,7 @@ void ShoulderCannon_DealDamageEntity(int target, int attacker, int dmg)
 }
 
 /**
- * Crea efecto de destello del cañón
+ * Crea efecto de destello del canon
  */
 void ShoulderCannon_ShowMuzzleFlash(int target)
 {
@@ -419,7 +419,7 @@ void ShoulderCannon_CreateTracerParticles(int entity, int target)
 }
 
 /**
- * Adjunta partícula a entidad
+ * Adjunta particula a entidad
  */
 void ShoulderCannon_AttachParticle(int target, const char[] ParticleName, float time, float x, float y, float z)
 {
@@ -452,7 +452,7 @@ void ShoulderCannon_AttachParticle(int target, const char[] ParticleName, float 
 }
 
 /**
- * Verifica si un jugador está siendo agarrado
+ * Verifica si un jugador esta siendo agarrado
  */
 bool IsPlayerHeld(int client)
 {
@@ -487,7 +487,7 @@ void ShoulderCannon_InitializeDefaults(int client)
 }
 
 /**
- * Muestra el menú principal del Shoulder Cannon
+ * Muestra el menu principal del Shoulder Cannon
  */
 void ShoulderCannon_ShowMenu(int client)
 {
@@ -506,7 +506,7 @@ void ShoulderCannon_ShowMenu(int client)
 
 	char buffer[128];
 
-	// Opción 0: Equipar/Desequipar
+	// Opcion 0: Equipar/Desequipar
 	bool isEquipped = (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]));
 	if (isEquipped)
 	{
@@ -518,20 +518,20 @@ void ShoulderCannon_ShowMenu(int client)
 	}
 	menu.AddItem("equip", buffer);
 
-	// Solo mostrar opciones si está equipado
+	// Solo mostrar opciones si esta equipado
 	if (isEquipped)
 	{
-		// Opción 1: Auto-equipar
+		// Opcion 1: Auto-equipar
 		Format(buffer, sizeof(buffer), "%s Auto Equip al Spawnar",
 			g_bShoulderCannon_AutoEquip[client] ? "[X]" : "[ ]");
 		menu.AddItem("autoequip", buffer);
 
-		// Opción 2: Desactivar disparo
+		// Opcion 2: Desactivar disparo
 		Format(buffer, sizeof(buffer), "%s Desactivar Disparo",
 			g_bCannon_Disabled[client] ? "[X]" : "[ ]");
 		menu.AddItem("disable", buffer);
 
-		// Opción 3: Never Target
+		// Opcion 3: Never Target
 		char neverText[64];
 		switch(g_iCannon_NeverTarget[client])
 		{
@@ -547,7 +547,7 @@ void ShoulderCannon_ShowMenu(int client)
 		Format(buffer, sizeof(buffer), "[%s] Never Target", neverText);
 		menu.AddItem("never", buffer);
 
-		// Opción 4: Target First
+		// Opcion 4: Target First
 		char firstText[64];
 		switch(g_iCannon_TargetFirst[client])
 		{
@@ -559,7 +559,7 @@ void ShoulderCannon_ShowMenu(int client)
 		Format(buffer, sizeof(buffer), "[%s] Target First", firstText);
 		menu.AddItem("first", buffer);
 
-		// Opción 5: Fire Rate
+		// Opcion 5: Fire Rate
 		char rateText[64];
 		if (g_fCannon_FireRate[client] <= 0.05) Format(rateText, sizeof(rateText), "+0.05 Fastest");
 		else if (g_fCannon_FireRate[client] <= 0.10) Format(rateText, sizeof(rateText), "+0.10 Faster");
@@ -575,7 +575,7 @@ void ShoulderCannon_ShowMenu(int client)
 }
 
 /**
- * Handler del menú principal
+ * Handler del menu principal
  */
 public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, int param)
 {
@@ -602,7 +602,7 @@ public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, 
 				PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon equipado");
 			}
 
-			// Reabrir menú
+			// Reabrir menu
 			ShoulderCannon_ShowMenu(client);
 		}
 		else if (StrEqual(info, "autoequip"))
@@ -642,7 +642,7 @@ public int ShoulderCannon_MenuHandler(Menu menu, MenuAction action, int client, 
 }
 
 /**
- * Menú Never Target
+ * Menu Never Target
  */
 void ShoulderCannon_ShowNeverTargetMenu(int client)
 {
@@ -685,7 +685,7 @@ public int ShoulderCannon_NeverTargetHandler(Menu menu, MenuAction action, int c
 }
 
 /**
- * Menú Target First
+ * Menu Target First
  */
 void ShoulderCannon_ShowTargetFirstMenu(int client)
 {
@@ -724,7 +724,7 @@ public int ShoulderCannon_TargetFirstHandler(Menu menu, MenuAction action, int c
 }
 
 /**
- * Menú Fire Rate
+ * Menu Fire Rate
  */
 void ShoulderCannon_ShowFireRateMenu(int client)
 {
@@ -769,7 +769,7 @@ public int ShoulderCannon_FireRateHandler(Menu menu, MenuAction action, int clie
 
 /**
  * Equipa el Shoulder Cannon (sin cooldown ni costo)
- * Llamado desde el menú !buy -> Specials
+ * Llamado desde el menu !buy -> Specials
  */
 void ShoulderCannon_Equip(int client)
 {
@@ -782,14 +782,14 @@ void ShoulderCannon_Equip(int client)
 		return;
 	}
 
-	// Si ya está equipado, no hacer nada
+	// Si ya esta equipado, no hacer nada
 	if (g_iShoulderCannon_Entity[client] > 0 && IsValidEntity(g_iShoulderCannon_Entity[client]))
 	{
-		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Ya está equipado");
+		PrintToChat(client, "\x04[Shoulder Cannon]\x01 Ya esta equipado");
 		return;
 	}
 
-	// Crear entidad del cañón
+	// Crear entidad del canon
 	int entity = CreateEntityByName("prop_dynamic_override");
 	if (entity == -1)
 		entity = CreateEntityByName("prop_dynamic");
@@ -829,7 +829,7 @@ void ShoulderCannon_Equip(int client)
 
 	g_hShoulderCannon_FireTimer[client] = CreateTimer(fireRate, Timer_ShoulderCannon_Fire, GetClientUserId(client), TIMER_REPEAT);
 
-	// Hook de transmisión
+	// Hook de transmision
 	SDKHook(entity, SDKHook_SetTransmit, ShoulderCannon_Hook_SetTransmit);
 
 	PrintToChat(client, "\x04[Shoulder Cannon]\x01 Cannon equipado! Disparo automatico %s", g_bCannon_Disabled[client] ? "DESACTIVADO" : "activado");
@@ -837,7 +837,7 @@ void ShoulderCannon_Equip(int client)
 
 /**
  * Desequipa el Shoulder Cannon
- * Llamado desde el menú !buy -> Specials
+ * Llamado desde el menu !buy -> Specials
  */
 void ShoulderCannon_Unequip(int client)
 {

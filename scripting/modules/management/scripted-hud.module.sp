@@ -2,7 +2,7 @@
  * ====================================================================================================
  * ECLIPSE MANAGEMENT SYSTEM - SCRIPTED HUD MODULE
  * ====================================================================================================
- * Módulo de HUD para mostrar información del servidor y jugadores
+ * Modulo de HUD para mostrar informacion del servidor y jugadores
  * Adaptado de l4d2_scripted_hud.sp por Mart
  * ====================================================================================================
  */
@@ -64,7 +64,7 @@
 // ====================================================================================================
 // Module Variables
 // ====================================================================================================
-static Handle g_hDbHUDMessages;		// Handle para la conexión a la BD de mensajes
+static Handle g_hDbHUDMessages;		// Handle para la conexion a la BD de mensajes
 
 static ConVar g_hCvar_HUD_Enabled;
 static ConVar g_hCvar_HUD_UpdateInterval;
@@ -130,7 +130,7 @@ bool ScriptedHUD_ConnectDatabase()
 		return false;
 	}
 
-	LogMessage("[ScriptedHUD] Conexión a base de datos exitosa");
+	LogMessage("[ScriptedHUD] Conexion a base de datos exitosa");
 	return true;
 }
 
@@ -138,7 +138,7 @@ void ScriptedHUD_LoadMessagesFromDB()
 {
 	if (g_hDbHUDMessages == INVALID_HANDLE)
 	{
-		LogError("[ScriptedHUD] No hay conexión a la base de datos");
+		LogError("[ScriptedHUD] No hay conexion a la base de datos");
 		return;
 	}
 

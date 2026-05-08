@@ -2,29 +2,29 @@
     ECLIPSE MANAGEMENT SYSTEM - CURRENCY EVENTS IMPLEMENTATION GUIDE
 ═══════════════════════════════════════════════════════════════════════════
 
-ÍNDICE DE IMPLEMENTACIÓN:
+INDICE DE IMPLEMENTACION:
 ═══════════════════════════════════════════════════════════════════════════
 
 1. EVENTOS YA IMPLEMENTADOS
 2. AGREGAR UN NUEVO EVENTO SIMPLE
 3. AGREGAR UN EVENTO CON VALIDACIONES COMPLEJAS
-4. CREAR UN MÓDULO PERSONALIZADO
+4. CREAR UN MODULO PERSONALIZADO
 5. DEBUGGING Y PRUEBAS
 6. Configuracion DEL SERVIDOR
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 1: EVENTOS YA IMPLEMENTADOS
+SECCION 1: EVENTOS YA IMPLEMENTADOS
 ═══════════════════════════════════════════════════════════════════════════
 
-Los siguientes eventos están COMPLETAMENTE implementados y funcionando:
+Los siguientes eventos estan COMPLETAMENTE implementados y funcionando:
 
-EVENTOS BÁSICOS (currency-events.module.sp):
+EVENTOS BASICOS (currency-events.module.sp):
 ────────────────────────────────────────────
-✓ infected_death     → Matar infectado común       (1 punto)
+✓ infected_death     → Matar infectado comun       (1 punto)
 ✓ tank_killed        → Matar Tank                  (20 puntos)
 ✓ witch_killed       → Matar Witch                 (15 puntos)
-✓ heal_success       → Curar compañero             (1 punto)
-✓ revive_success     → Revivir compañero           (3 puntos)
+✓ heal_success       → Curar companero             (1 punto)
+✓ revive_success     → Revivir companero           (3 puntos)
 ✓ defibrillator_used → Usar desfibrilador (L4D2)  (5 puntos)
 
 EVENTOS AVANZADOS (currency-advanced-events.module.sp):
@@ -35,19 +35,19 @@ EVENTOS AVANZADOS (currency-advanced-events.module.sp):
 ✓ charger_impact        → Impacto de Charger        (3 puntos)
 ✓ survival_round_start  → Completar ronda Survival  (10 puntos)
 
-HEADSHOT BONUS (automático):
+HEADSHOT BONUS (automatico):
 ──────────────────────────────
-✓ Se suma automáticamente cuando hay headshot en infected_death (2 puntos)
+✓ Se suma automaticamente cuando hay headshot en infected_death (2 puntos)
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 2: AGREGAR UN EVENTO SIMPLE
+SECCION 2: AGREGAR UN EVENTO SIMPLE
 ═══════════════════════════════════════════════════════════════════════════
 
 EJEMPLO: Agregar puntos por matar Boomer
 
 PASO 1: Crear el ConVar
 ─────────────────────────
-Agregarlo en CurrencyEvents_OnPluginStart() o crear un nuevo módulo.
+Agregarlo en CurrencyEvents_OnPluginStart() o crear un nuevo modulo.
 
 Ejemplo en currency-events.module.sp:
 
@@ -67,11 +67,11 @@ En CurrencyEvents_OnPluginStart(), agregar:
 
     HookEvent("infected_death", Event_InfectedDeath, EventHookMode_Pre);
 
-(Ya existe, pero puedes crear un evento específico si lo necesitas)
+(Ya existe, pero puedes crear un evento especifico si lo necesitas)
 
 PASO 3: Detectar el tipo de infectado
 ──────────────────────────────────────
-En Event_InfectedDeath, agregar validación:
+En Event_InfectedDeath, agregar validacion:
 
     int victim = GetClientOfUserId(event.GetInt("victim"));
 
@@ -95,7 +95,7 @@ PASO 4: Probar
 5. Verificar si aparece el mensaje y se suma el currency
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 3: EVENTO CON VALIDACIONES COMPLEJAS
+SECCION 3: EVENTO CON VALIDACIONES COMPLEJAS
 ═══════════════════════════════════════════════════════════════════════════
 
 EJEMPLO: Puntos bonus por matar especial con melee
@@ -104,15 +104,15 @@ public Action Event_MeleeSpecialKill(Event event, const char[] name, bool dontBr
 {
     int attacker = GetClientOfUserId(event.GetInt("attacker"));
 
-    // Validación 1: Cliente válido
+    // Validacion 1: Cliente valido
     if (attacker <= 0 || attacker > MaxClients || !IsClientInGame(attacker))
         return Plugin_Continue;
 
-    // Validación 2: Es survivor
+    // Validacion 2: Es survivor
     if (GetClientTeam(attacker) != 2)
         return Plugin_Continue;
 
-    // Validación 3: Verificar que fue melee
+    // Validacion 3: Verificar que fue melee
     int weapon_index = GetPlayerWeaponSlot(attacker, 0);  // Slot 0 = Primary
     if (weapon_index == -1)
         return Plugin_Continue;
@@ -124,7 +124,7 @@ public Action Event_MeleeSpecialKill(Event event, const char[] name, bool dontBr
     if (StrContains(weapon_name, "melee", false) == -1)
         return Plugin_Continue;
 
-    // Validación 4: Fue un especial
+    // Validacion 4: Fue un especial
     int victim = GetClientOfUserId(event.GetInt("victim"));
     int infectedClass = GetEntProp(victim, Prop_Send, "m_zombieClass");
 
@@ -141,10 +141,10 @@ public Action Event_MeleeSpecialKill(Event event, const char[] name, bool dontBr
 }
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 4: CREAR UN MÓDULO PERSONALIZADO COMPLETO
+SECCION 4: CREAR UN MODULO PERSONALIZADO COMPLETO
 ═══════════════════════════════════════════════════════════════════════════
 
-Estructura de un módulo personalizado:
+Estructura de un modulo personalizado:
 
 Archivo: currency-custom-yourname.module.sp
 ────────────────────────────────────────────
@@ -159,7 +159,7 @@ Handle cvar_CustomEvent1 = INVALID_HANDLE;
 Handle cvar_CustomEvent2 = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo personalizado
+ * Inicializa el modulo personalizado
  */
 public void CurrencyCustom_OnPluginStart()
 {
@@ -167,14 +167,14 @@ public void CurrencyCustom_OnPluginStart()
     cvar_CustomEvent1 = CreateConVar(
         "currency_custom_event1",
         "10",
-        "Descripción del evento 1",
+        "Descripcion del evento 1",
         FCVAR_PLUGIN
     );
 
     cvar_CustomEvent2 = CreateConVar(
         "currency_custom_event2",
         "15",
-        "Descripción del evento 2",
+        "Descripcion del evento 2",
         FCVAR_PLUGIN
     );
 
@@ -188,7 +188,7 @@ public void CurrencyCustom_OnPluginStart()
  */
 public Action Event_CustomEvent1(Event event, const char[] name, bool dontBroadcast)
 {
-    // Implementación
+    // Implementacion
     return Plugin_Continue;
 }
 
@@ -197,7 +197,7 @@ public Action Event_CustomEvent1(Event event, const char[] name, bool dontBroadc
  */
 public Action Event_CustomEvent2(Event event, const char[] name, bool dontBroadcast)
 {
-    // Implementación
+    // Implementacion
     return Plugin_Continue;
 }
 
@@ -215,7 +215,7 @@ Y en OnPluginStart(), agregar:
 CurrencyCustom_OnPluginStart();
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 5: DEBUGGING Y PRUEBAS
+SECCION 5: DEBUGGING Y PRUEBAS
 ═══════════════════════════════════════════════════════════════════════════
 
 HABILITAR LOGS DETALLADOS:
@@ -227,7 +227,7 @@ En cualquier evento, agregar antes de AwardCurrency():
     GetClientName(attacker, attacker_name, sizeof(attacker_name));
 
     LogToFile(logfilepath,
-        "[CURRENCY] %s ganó %d puntos por %s (Total: %d)",
+        "[CURRENCY] %s gano %d puntos por %s (Total: %d)",
         attacker_name, reward, reason, g_iPlayerCurrency[attacker]
     );
 
@@ -259,7 +259,7 @@ Crear un comando admin:
         return Plugin_Handled;
     }
 
-PROBAR UN EVENTO ESPECÍFICO:
+PROBAR UN EVENTO ESPECIFICO:
 ────────────────────────────
 
 Crear comando de prueba:
@@ -274,15 +274,15 @@ Crear comando de prueba:
     }
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 6: Configuracion DEL SERVIDOR
+SECCION 6: Configuracion DEL SERVIDOR
 ═══════════════════════════════════════════════════════════════════════════
 
-Después de compilar, el servidor genera automáticamente:
+Despues de compilar, el servidor genera automaticamente:
 cfg/sourcemod/eclipse_management_system.cfg
 
 O puedes crear uno manualmente con:
 
-// RECOMPENSAS BÁSICAS
+// RECOMPENSAS BASICAS
 currency_common_kill "1"
 currency_special_kill "5"
 currency_tank_kill "20"
@@ -329,11 +329,11 @@ HARD (Menor reward):
     (Multiplicar por 0.75)
 
 ═══════════════════════════════════════════════════════════════════════════
-TROUBLESHOOTING COMÚN
+TROUBLESHOOTING COMUN
 ═══════════════════════════════════════════════════════════════════════════
 
 ❌ El evento no otorga puntos:
-   ✓ Verificar que HookEvent está registrado
+   ✓ Verificar que HookEvent esta registrado
    ✓ Verificar que el evento es el nombre CORRECTO (case-sensitive)
    ✓ Verificar validaciones del cliente
    ✓ Verificar ConVar tiene valor > 0
@@ -342,13 +342,13 @@ TROUBLESHOOTING COMÚN
    ✓ Verificar GetClientOfUserId("userid") vs ("attacker")
    ✓ Verificar GetClientTeam es el correcto (2=survivor, 3=infected)
 
-❌ Error de compilación:
+❌ Error de compilacion:
    ✓ Verificar #if !defined EMS_MAIN_FILE al inicio
    ✓ Verificar sintaxis de { }
    ✓ Verificar nombres de funciones vs definidas
 
 ❌ ConVar no aparece en sm_cvar list:
-   ✓ Verificar que CreateConVar está en *_OnPluginStart()
-   ✓ Verificar que la función se llama desde OnPluginStart()
+   ✓ Verificar que CreateConVar esta en *_OnPluginStart()
+   ✓ Verificar que la funcion se llama desde OnPluginStart()
 
 ═══════════════════════════════════════════════════════════════════════════

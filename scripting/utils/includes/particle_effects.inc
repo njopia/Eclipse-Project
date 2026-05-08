@@ -4,7 +4,7 @@
 #define _particle_effects_included
 
 // =============================================================================
-// PARTÍCULAS COMUNES DE L4D2
+// PARTICULAS COMUNES DE L4D2
 // =============================================================================
 
 // Fuego
@@ -44,12 +44,12 @@
 #define PARTICLE_PIPE_BOMB		   "pipebomb_trail"
 #define PARTICLE_ADRENALINE		   "adrenaline_use_1st"
 
-// Curación / Soporte
+// Curacion / Soporte
 #define PARTICLE_MEDKIT_USE		   "firstaid_use_1st"
 #define PARTICLE_DEFIBRILLATOR	   "defibrillator_use_1stP"
 
 // =============================================================================
-// LÍMITE DE PARTÍCULAS (anti-crash)
+// LIMITE DE PARTICULAS (anti-crash)
 // =============================================================================
 
 #define FX_MAX_PARTICLES		   64
@@ -57,12 +57,12 @@
 static int g_iFXParticleCount = 0;
 
 // =============================================================================
-// FUNCIONES PÚBLICAS
+// FUNCIONES PUBLICAS
 // =============================================================================
 
 /**
- * Precachea una partícula creándola brevemente.
- * Llamar en OnMapStart() para cada partícula que vayas a usar.
+ * Precachea una particula creandola brevemente.
+ * Llamar en OnMapStart() para cada particula que vayas a usar.
  *
  * @param particlename  Nombre del efecto.
  */
@@ -81,9 +81,9 @@ stock void FX_PrecacheParticle(const char[] particlename)
 }
 
 /**
- * Precachea múltiples partículas de un array.
+ * Precachea multiples particulas de un array.
  *
- * @param particles     Array de nombres de partículas.
+ * @param particles     Array de nombres de particulas.
  * @param count         Cantidad de elementos en el array.
  */
 stock void FX_PrecacheParticles(const char[][] particles, int count)
@@ -93,13 +93,13 @@ stock void FX_PrecacheParticles(const char[][] particles, int count)
 }
 
 /**
- * Crea una partícula estática en la posición de una entidad.
+ * Crea una particula estatica en la posicion de una entidad.
  *
  * @param target        Entidad de referencia.
  * @param particlename  Nombre del efecto.
- * @param time          Duración en segundos.
+ * @param time          Duracion en segundos.
  * @param origin        Offset en Z sobre la entidad.
- * @return              Índice de la entidad creada, o -1 si falló.
+ * @return              Indice de la entidad creada, o -1 si fallo.
  */
 stock int FX_CreateParticle(int target, const char[] particlename, float time, float origin = 0.0)
 {
@@ -129,12 +129,12 @@ stock int FX_CreateParticle(int target, const char[] particlename, float time, f
 }
 
 /**
- * Crea una partícula en coordenadas absolutas del mundo.
+ * Crea una particula en coordenadas absolutas del mundo.
  *
- * @param pos           Posición en el mundo [x, y, z].
+ * @param pos           Posicion en el mundo [x, y, z].
  * @param particlename  Nombre del efecto.
- * @param time          Duración en segundos.
- * @return              Índice de la entidad creada, o -1 si falló.
+ * @param time          Duracion en segundos.
+ * @return              Indice de la entidad creada, o -1 si fallo.
  */
 stock int FX_CreateParticleAtPos(const float pos[3], const char[] particlename, float time)
 {
@@ -158,13 +158,13 @@ stock int FX_CreateParticleAtPos(const float pos[3], const char[] particlename, 
 }
 
 /**
- * Crea una partícula adjunta a una entidad (la sigue si se mueve).
+ * Crea una particula adjunta a una entidad (la sigue si se mueve).
  *
  * @param target        Entidad a la que se adjunta.
  * @param particlename  Nombre del efecto.
- * @param time          Duración en segundos.
+ * @param time          Duracion en segundos.
  * @param origin        Offset en Z sobre la entidad.
- * @return              Índice de la entidad creada, o -1 si falló.
+ * @return              Indice de la entidad creada, o -1 si fallo.
  */
 stock int FX_AttachParticle(int target, const char[] particlename, float time, float origin = 0.0)
 {
@@ -205,14 +205,14 @@ stock int FX_AttachParticle(int target, const char[] particlename, float time, f
 }
 
 /**
- * Crea una partícula adjunta a un attachment point del modelo (hueso exacto).
- * Útil para efectos en manos, cabeza, pies, etc.
+ * Crea una particula adjunta a un attachment point del modelo (hueso exacto).
+ * Util para efectos en manos, cabeza, pies, etc.
  *
  * @param target        Entidad a la que se adjunta.
  * @param particlename  Nombre del efecto.
  * @param attachment    Nombre del attachment point (ej: "head", "rhand", "lhand").
- * @param time          Duración en segundos.
- * @return              Índice de la entidad creada, o -1 si falló.
+ * @param time          Duracion en segundos.
+ * @return              Indice de la entidad creada, o -1 si fallo.
  */
 stock int FX_AttachParticleToAttachment(int target, const char[] particlename, const char[] attachment, float time)
 {
@@ -242,7 +242,7 @@ stock int FX_AttachParticleToAttachment(int target, const char[] particlename, c
 	DispatchSpawn(particle);
 	ActivateEntity(particle);
 
-	// Vincula al attachment point específico del modelo
+	// Vincula al attachment point especifico del modelo
 	SetVariantString(tName);
 	AcceptEntityInput(particle, "SetParent", particle, particle);
 	SetVariantString(attachment);
@@ -257,8 +257,8 @@ stock int FX_AttachParticleToAttachment(int target, const char[] particlename, c
 }
 
 /**
- * Elimina todas las partículas activas del mundo inmediatamente.
- * Útil en OnMapEnd() o al limpiar una ronda.
+ * Elimina todas las particulas activas del mundo inmediatamente.
+ * Util en OnMapEnd() o al limpiar una ronda.
  */
 stock void FX_KillAllParticles()
 {
@@ -270,9 +270,9 @@ stock void FX_KillAllParticles()
 }
 
 /**
- * Elimina partículas activas que tengan un targetname específico.
+ * Elimina particulas activas que tengan un targetname especifico.
  *
- * @param targetname    El targetname asignado al crear las partículas.
+ * @param targetname    El targetname asignado al crear las particulas.
  */
 stock void FX_KillParticlesByName(const char[] targetname)
 {
@@ -287,9 +287,9 @@ stock void FX_KillParticlesByName(const char[] targetname)
 }
 
 /**
- * Retorna cuántas partículas FX están activas actualmente.
+ * Retorna cuantas particulas FX estan activas actualmente.
  *
- * @return  Cantidad de partículas activas.
+ * @return  Cantidad de particulas activas.
  */
 stock int FX_GetParticleCount()
 {
@@ -297,7 +297,7 @@ stock int FX_GetParticleCount()
 }
 
 /**
- * Retorna true si se alcanzó el límite de partículas.
+ * Retorna true si se alcanzo el limite de particulas.
  */
 stock bool FX_IsParticleLimitReached()
 {

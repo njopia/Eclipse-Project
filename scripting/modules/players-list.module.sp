@@ -16,7 +16,7 @@
 Handle cvar_PlayersList_Enabled = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de lista de jugadores
+ * Inicializa el modulo de lista de jugadores
  */
 public void PlayersList_OnPluginStart()
 {
@@ -40,7 +40,7 @@ public Action Command_ShowPlayers(int client, int args)
 {
 	if (!GetConVarBool(cvar_PlayersList_Enabled))
 	{
-		ReplyToCommand(client, "[Players] El sistema de lista de jugadores está deshabilitado.");
+		ReplyToCommand(client, "[Players] El sistema de lista de jugadores esta deshabilitado.");
 		return Plugin_Handled;
 	}
 

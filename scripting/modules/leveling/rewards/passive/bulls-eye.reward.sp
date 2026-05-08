@@ -16,7 +16,7 @@ bool g_bBullsEye_Enabled[MAXPLAYERS + 1];
 int g_iBullsEye_UseDelay[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de BullsEye
+ * Inicializa el modulo de BullsEye
  */
 public void BullsEye_OnPluginStart()
 {
@@ -76,7 +76,7 @@ public void BullsEye_OnLevelUp(int client, int level)
 		g_bBullsEye_Enabled[client] = true;
 		g_iBullsEye_UseDelay[client] = 0;
 		BullsEye_EquipLaserSight(client, false);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05BullsEye\x01! (Laser sight gratis en armas primarias)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05BullsEye\x01! (Laser sight gratis en armas primarias)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -182,7 +182,7 @@ public Action Timer_BullsEye_ResetDelay(Handle timer, int userid)
 }
 
 /**
- * Obtiene si BullsEye está habilitado para un jugador
+ * Obtiene si BullsEye esta habilitado para un jugador
  */
 public bool BullsEye_IsEnabled(int client)
 {

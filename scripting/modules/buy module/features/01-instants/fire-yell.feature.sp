@@ -14,7 +14,7 @@
 #define FIRE_YELL_BURN_DURATION	5.0
 #define MAX_INFECTED_TO_BURN	50
 
-// Partícula usando macro del include
+// Particula usando macro del include
 #define PARTICLE_FIREYELL_FIRE		PARTICLE_MOLOTOV_FIRE
 
 // --- Variables ---
@@ -24,7 +24,7 @@ static float g_fNextFireYell[MAXPLAYERS + 1];
  * Activa la habilidad Fire Yell para un jugador.
  * El jugador emite un grito que quema a los infectados comunes y especiales cercanos.
  *
- * @param client  Índice del jugador que activa la habilidad.
+ * @param client  Indice del jugador que activa la habilidad.
  */
 stock void Activate_FireYell(int client)
 {
@@ -48,7 +48,7 @@ stock void Activate_FireYell(int client)
 		PrintToChat(client, "\x05[Eclipse]\x01 Quemaste \x04%d\x01 infectados (\x04%d\x01 comunes, \x04%d\x01 especiales).",
 					totalBurned, commonBurned, specialBurned);
 	else
-		PrintToChat(client, "\x05[Eclipse]\x01 No hay infectados en el área.");
+		PrintToChat(client, "\x05[Eclipse]\x01 No hay infectados en el area.");
 
 	g_fNextFireYell[client] = GetGameTime() + FIRE_YELL_COOLDOWN;
 }
@@ -59,18 +59,18 @@ stock void Activate_FireYell(int client)
 static void PlayFireYellEffects(int client)
 {
 	EmitSoundToAll("player/survivor/voice/mechanic/taunt02.wav", client, SNDCHAN_VOICE);
-	PrintToChat(client, "\x05[Eclipse]\x01 ¡Has desatado un \x04Grito de Fuego\x01!");
+	PrintToChat(client, "\x05[Eclipse]\x01 Has desatado un \x04Grito de Fuego\x01!");
 
 	float origin[3];
 	GetClientAbsOrigin(client, origin);
 
-	// Partícula en posición del jugador usando FX include
+	// Particula en posicion del jugador usando FX include
 	FX_CreateParticleAtPos(origin, PARTICLE_FIREYELL_FIRE, 2.0);
 }
 
 /**
  * Quema infectados comunes en el radio.
- * @return Número de infectados quemados.
+ * @return Numero de infectados quemados.
  */
 static int BurnCommonInfected(const float origin[3])
 {
@@ -94,7 +94,7 @@ static int BurnCommonInfected(const float origin[3])
 
 		IgniteEntity(entity, FIRE_YELL_BURN_DURATION);
 
-		// Partícula adjunta al infectado quemado
+		// Particula adjunta al infectado quemado
 		FX_AttachParticle(entity, PARTICLE_FIREYELL_FIRE, FIRE_YELL_BURN_DURATION);
 
 		burned++;
@@ -105,7 +105,7 @@ static int BurnCommonInfected(const float origin[3])
 
 /**
  * Quema infectados especiales (jugadores) en el radio.
- * @return Número de especiales quemados.
+ * @return Numero de especiales quemados.
  */
 static int BurnSpecialInfected(const float origin[3])
 {
@@ -130,7 +130,7 @@ static int BurnSpecialInfected(const float origin[3])
 		{
 			IgniteEntity(i, FIRE_YELL_BURN_DURATION);
 
-			// Partícula adjunta al especial quemado
+			// Particula adjunta al especial quemado
 			FX_AttachParticle(i, PARTICLE_FIREYELL_FIRE, FIRE_YELL_BURN_DURATION);
 
 			burned++;
@@ -141,7 +141,7 @@ static int BurnSpecialInfected(const float origin[3])
 }
 
 /**
- * Verifica si un cliente es un infectado especial válido.
+ * Verifica si un cliente es un infectado especial valido.
  */
 static bool IsValidSpecialInfected(int client)
 {

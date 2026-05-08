@@ -6,13 +6,13 @@
 // =============================================================================
 // SPEED MANAGER — EMS
 // Gestiona velocidades de sobrevivientes mediante un sistema de capas (layers).
-// La velocidad más alta activa se aplica mediante los forwards de L4D:
+// La velocidad mas alta activa se aplica mediante los forwards de L4D:
 //   L4D_OnGetRunTopSpeed / WalkTopSpeed / CrouchTopSpeed
 // Esto garantiza que el boost persiste ante cualquier reset del engine
-// (adrenalina, incap, agarrón de SI, etc.).
+// (adrenalina, incap, agarron de SI, etc.).
 // =============================================================================
 
-// --- Capas disponibles (prioridad por valor, mayor = más prioritario) ---
+// --- Capas disponibles (prioridad por valor, mayor = mas prioritario) ---
 enum SpeedLayer
 {
 	SpeedLayer_Base        = 0,  // Velocidad base del juego (1.0)
@@ -30,17 +30,17 @@ static float  g_fSpeedLayers[MAXPLAYERS + 1][SPEED_LAYER_COUNT];
 static Handle g_hSpeedTimers[MAXPLAYERS + 1][SPEED_LAYER_COUNT];
 
 // =============================================================================
-// API PÚBLICA
+// API PUBLICA
 // =============================================================================
 
 /**
- * Aplica una capa de velocidad a un cliente con duración opcional.
+ * Aplica una capa de velocidad a un cliente con duracion opcional.
  * Si ya hay una capa activa del mismo tipo, la reemplaza.
  *
- * @param client    Índice del cliente.
+ * @param client    Indice del cliente.
  * @param layer     Capa de velocidad a aplicar.
- * @param speed     Multiplicador de velocidad (ej: 1.4 = 40% más rápido).
- * @param duration  Duración en segundos. 0.0 = permanente hasta remover manualmente.
+ * @param speed     Multiplicador de velocidad (ej: 1.4 = 40% mas rapido).
+ * @param duration  Duracion en segundos. 0.0 = permanente hasta remover manualmente.
  */
 stock void SPD_Apply(int client, SpeedLayer layer, float speed, float duration = 0.0)
 {
@@ -61,9 +61,9 @@ stock void SPD_Apply(int client, SpeedLayer layer, float speed, float duration =
 }
 
 /**
- * Remueve una capa de velocidad específica de un cliente.
+ * Remueve una capa de velocidad especifica de un cliente.
  *
- * @param client    Índice del cliente.
+ * @param client    Indice del cliente.
  * @param layer     Capa a remover.
  */
 stock void SPD_Remove(int client, SpeedLayer layer)
@@ -77,7 +77,7 @@ stock void SPD_Remove(int client, SpeedLayer layer)
 /**
  * Remueve todas las capas de un cliente.
  *
- * @param client    Índice del cliente.
+ * @param client    Indice del cliente.
  */
 stock void SPD_RemoveAll(int client)
 {
@@ -95,7 +95,7 @@ stock void SPD_RemoveAll(int client)
  *
  * @param layer     Capa a aplicar.
  * @param speed     Multiplicador de velocidad.
- * @param duration  Duración en segundos. 0.0 = permanente.
+ * @param duration  Duracion en segundos. 0.0 = permanente.
  */
 stock void SPD_ApplyToTeam(SpeedLayer layer, float speed, float duration = 0.0)
 {
@@ -118,9 +118,9 @@ stock void SPD_RemoveFromTeam(SpeedLayer layer)
 }
 
 /**
- * Retorna la velocidad efectiva actual de un cliente (capa más alta activa).
+ * Retorna la velocidad efectiva actual de un cliente (capa mas alta activa).
  *
- * @param client    Índice del cliente.
+ * @param client    Indice del cliente.
  * @return          Multiplicador activo, o SPEED_BASE si no hay capas.
  */
 stock float SPD_GetEffective(int client)
@@ -129,9 +129,9 @@ stock float SPD_GetEffective(int client)
 }
 
 /**
- * Retorna true si el cliente tiene una capa específica activa.
+ * Retorna true si el cliente tiene una capa especifica activa.
  *
- * @param client    Índice del cliente.
+ * @param client    Indice del cliente.
  * @param layer     Capa a verificar.
  */
 stock bool SPD_HasLayer(int client, SpeedLayer layer)
@@ -155,9 +155,9 @@ stock void SPD_OnMapEnd()
 
 // =============================================================================
 // L4D FORWARDS — enforcement por frame via engine
-// El engine llama estos forwards cada vez que consulta la velocidad máxima
+// El engine llama estos forwards cada vez que consulta la velocidad maxima
 // del jugador. Retornar Plugin_Handled con retVal modificado es la forma
-// canónica y más robusta de aplicar velocidad persistente en L4D2.
+// canonica y mas robusta de aplicar velocidad persistente en L4D2.
 // =============================================================================
 
 public Action L4D_OnGetRunTopSpeed(int target, float &retVal)

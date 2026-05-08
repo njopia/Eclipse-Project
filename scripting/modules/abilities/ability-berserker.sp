@@ -52,7 +52,7 @@ void Ability_Berserker_Deactivate(int client)
 
 /**
  * Llamado cada frame para modificar velocidad de ataque melee
- * Debe ser llamado desde OnGameFrame o un timer rápido
+ * Debe ser llamado desde OnGameFrame o un timer rapido
  */
 void Berserker_UpdateMeleeSpeed(int client)
 {
@@ -69,7 +69,7 @@ void Berserker_UpdateMeleeSpeed(int client)
 	float m_flNextSecondaryAttack = GetEntPropFloat(weapon, Prop_Send, "m_flNextSecondaryAttack");
 	float m_flCycle = GetEntPropFloat(weapon, Prop_Send, "m_flCycle");
 
-	// Si el arma está en reposo (m_flCycle == 0), acelerar ataque
+	// Si el arma esta en reposo (m_flCycle == 0), acelerar ataque
 	if (m_flCycle == 0.0)
 	{
 		SetEntPropFloat(weapon, Prop_Send, "m_flPlaybackRate", 2.5);

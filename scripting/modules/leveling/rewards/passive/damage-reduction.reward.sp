@@ -4,7 +4,7 @@
 
 //==================================================
 // === DAMAGE REDUCTION PASSIVE REWARD ===
-// Reduce el daño recibido por el jugador
+// Reduce el dano recibido por el jugador
 //==================================================
 
 // --- ConVars ---
@@ -15,25 +15,25 @@ Handle cvar_DamageReduction_Percentage = INVALID_HANDLE;
 bool g_bDamageReduction_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Damage Reduction
+ * Inicializa el modulo de Damage Reduction
  */
 public void DamageReduction_OnPluginStart()
 {
 	cvar_DamageReduction_RequiredLevel = CreateConVar(
 		"reward_damage_reduction_level",
 		"9",
-		"Nivel requerido para desbloquear reducción de daño",
+		"Nivel requerido para desbloquear reduccion de dano",
 		FCVAR_PLUGIN
 	);
 
 	cvar_DamageReduction_Percentage = CreateConVar(
 		"reward_damage_reduction_value",
 		"0.05",
-		"Porcentaje de reducción de daño (0.05 = 5%, 0.10 = 10%)",
+		"Porcentaje de reduccion de dano (0.05 = 5%, 0.10 = 10%)",
 		FCVAR_PLUGIN
 	);
 
-	// Hook para modificar el daño recibido
+	// Hook para modificar el dano recibido
 	HookEvent("player_hurt", Event_PlayerHurt_DamageReduction, EventHookMode_Pre);
 }
 
@@ -71,14 +71,14 @@ public void DamageReduction_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_DamageReduction_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bDamageReduction_Enabled[client] = true;
 
 		float reductionValue = GetConVarFloat(cvar_DamageReduction_Percentage);
 		int percentage = RoundToFloor(reductionValue * 100.0);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Resistencia a Daño (-%d%%)\x01!", percentage);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Resistencia a Dano (-%d%%)\x01!", percentage);
 	}
 	else if (level > requiredLevel)
 	{
@@ -95,10 +95,10 @@ public bool DamageReduction_IsUnlocked(int client, int level)
 }
 
 /**
- * Evento: Player Hurt - Reduce el daño recibido
- * NOTA: Este evento es informativo, el daño ya fue aplicado.
- * Para implementar reducción de daño real, se necesita usar OnTakeDamage hook.
- * Este código es un placeholder que muestra la estructura.
+ * Evento: Player Hurt - Reduce el dano recibido
+ * NOTA: Este evento es informativo, el dano ya fue aplicado.
+ * Para implementar reduccion de dano real, se necesita usar OnTakeDamage hook.
+ * Este codigo es un placeholder que muestra la estructura.
  */
 public Action Event_PlayerHurt_DamageReduction(Event event, const char[] name, bool dontBroadcast)
 {
@@ -107,14 +107,14 @@ public Action Event_PlayerHurt_DamageReduction(Event event, const char[] name, b
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return Plugin_Continue;
 
-	// TODO: Implementar reducción de daño real usando SDKHooks_TakeDamage
-	// Este hook requiere SDKHooks y debe interceptar el daño ANTES de aplicarlo
+	// TODO: Implementar reduccion de dano real usando SDKHooks_TakeDamage
+	// Este hook requiere SDKHooks y debe interceptar el dano ANTES de aplicarlo
 
 	return Plugin_Continue;
 }
 
 /**
- * Obtiene si la reducción de daño está habilitada para un jugador
+ * Obtiene si la reduccion de dano esta habilitada para un jugador
  */
 public bool DamageReduction_IsEnabled(int client)
 {
@@ -125,10 +125,10 @@ public bool DamageReduction_IsEnabled(int client)
 }
 
 /**
- * Calcula el daño reducido para un jugador
+ * Calcula el dano reducido para un jugador
  * @param client - ID del cliente
- * @param damage - Daño original
- * @return Daño después de aplicar la reducción
+ * @param damage - Dano original
+ * @return Dano despues de aplicar la reduccion
  */
 public float DamageReduction_CalculateDamage(int client, float damage)
 {

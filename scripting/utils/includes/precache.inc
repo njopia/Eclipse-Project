@@ -1,9 +1,9 @@
 /**
  * modules/utils/precache.inc
- * Módulo de Precache para EMS (single-plugin).
+ * Modulo de Precache para EMS (single-plugin).
  *
- * - Mantiene listas internas (editables aquí) de Sonidos, particulas, Modelos,
- *   Genéricos y archivos a Descargar.
+ * - Mantiene listas internas (editables aqui) de Sonidos, particulas, Modelos,
+ *   Genericos y archivos a Descargar.
  * - API para el MAIN:
  *      EMS_Precache_Init();
  *      EMS_Precache_SetDebug(bool enable);
@@ -49,7 +49,7 @@ static const char g_DefaultSounds[][] = {
 	"player/survivor/voice/gambler/battlecry02.wav",
 	"weapons/grenade_launcher/grenade_launcher_explode.wav",
 	"weapons/grenade_launcher/grenade_launcher_reload.wav",
-	"vehicles/airboat/fan_blade_fullthrottle_loop1.wav",
+	"vehicles/helicopter/helicopter_idle1.wav",
 	"ambient/energy/zap5.wav",
 	"ambient/energy/zap6.wav",
 	"ambient/energy/zap7.wav",
@@ -57,7 +57,7 @@ static const char g_DefaultSounds[][] = {
 	"ambient/energy/zap9.wav",
 	// Nuclear Strike sounds
 	"ambient/fire/fire_small_loop2.wav",
-	"ambient/levels/caves/rumble3.wav",
+	"ambient/explosions/exp1.wav",
 	"weapons/grenade_launcher/grenadefire/grenade_launcher_explode_1.wav",
 	"ambient/alarms/klaxon1.wav",
 	"ambient/wind/wind_hit1.wav",
@@ -66,7 +66,7 @@ static const char g_DefaultSounds[][] = {
 	// Sonido de shoulderCannon
 	"weapons/machinegun_m60/gunfire/machinegun_fire_1.wav",
 	"player/survivor/voice/biker/reactionapprehensive01.wav"
-	// agrega más si quieres…
+	// agrega mas si quieres…
 };
 
 // particulas por defecto (nombres de sistema – no rutas .pcf)
@@ -136,7 +136,7 @@ static const char g_DefaultParticles[][] = {
 	"fire_large_01",
 	"smoke_large_01",
 	"fire_small_smoke",
-	// agrega más si quieres…
+	// agrega mas si quieres…
 };
 
 // Modelos por defecto
@@ -144,11 +144,11 @@ static const char g_DefaultModels[][] = {
 	"models/props_unique/spawn_apartment/coffeeammo.mdl",
 	// Nuclear Strike model
 	"models/props_lighting/light_flares.mdl"
-	// agrega más si quieres…
+	// agrega mas si quieres…
 };
 
-// Si no tienes genéricos o downloads aún, define arrays “placeholder” de 1 elemento
-// para que sizeof(...) sea válido en compilación.
+// Si no tienes genericos o downloads aun, define arrays “placeholder” de 1 elemento
+// para que sizeof(...) sea valido en compilacion.
 static const char g_DefaultGenericFiles[][PLATFORM_MAX_PATH] = {
 	"sprites/light_glow03.vmt",
 	"sprites/glow_test02.vmt"
@@ -205,7 +205,7 @@ stock bool EMS_PrecacheParticleSystem(const char[] name)
 		return true;	// ya estaba
 
 	bool wasLocked = LockStringTables(false);
-	AddToStringTable(tbl, name);	// puede retornar void según headers
+	AddToStringTable(tbl, name);	// puede retornar void segun headers
 	LockStringTables(wasLocked);
 
 	return (FindStringIndex(tbl, name) != INVALID_STRING_INDEX);
@@ -253,7 +253,7 @@ stock void EMS_Precache_Init()
 		for (int i = 0; i < sizeof(g_DefaultDownloads); i++)
 			if (g_DefaultDownloads[i][0]) g_Downloads.PushString(g_DefaultDownloads[i]);
 
-	EMS_DLog("---[ Módulo Precache EMS Inicializado ]---");
+	EMS_DLog("---[ Modulo Precache EMS Inicializado ]---");
 	EMS_DLog("Listas por defecto cargadas: S=%d P=%d M=%d G=%d D=%d",
 			 g_Sounds.Length, g_Particles.Length, g_Models.Length, g_Generic.Length, g_Downloads.Length);
 }
@@ -295,7 +295,7 @@ stock void EMS_Precache_ClearAll()
 	EMS_DLog("Listas limpiadas.");
 }
 
-// ---- (Opcionales) añadir recursos extra en runtime --------------------
+// ---- (Opcionales) anadir recursos extra en runtime --------------------
 stock void EMS_Precache_AddSound(const char[] path)
 {
 	if (!path[0]) return;
@@ -333,7 +333,7 @@ stock void EMS_Precache_AddDownload(const char[] file)
 }
 
 // ======================================================================
-// --------------------------- IMPLEMENTACIÓN ---------------------------
+// --------------------------- IMPLEMENTACION ---------------------------
 // ======================================================================
 
 static int EMS_AddDownloads_()
@@ -366,10 +366,10 @@ static void EMS_PrecacheGeneric_(int &ok, int &fail)
 		if (!f[0]) continue;
 
 		// Cambiamos 'bool' por 'int' para evitar el tag mismatch
-		// En SourceMod, PrecacheGeneric devuelve un índice o 0 si falla.
+		// En SourceMod, PrecacheGeneric devuelve un indice o 0 si falla.
 		int idx = PrecacheGeneric(f, true);
 
-		if (idx != 0)	 // Si el índice es distinto de 0, se considera exitoso
+		if (idx != 0)	 // Si el indice es distinto de 0, se considera exitoso
 		{
 			ok++;
 			EMS_DLog("Generic: %s -> OK (idx %d)", f, idx);
@@ -412,7 +412,7 @@ static void EMS_PrecacheSounds_(int &ok, int &fail)
 		g_Sounds.GetString(i, s, sizeof s);
 		if (!s[0]) continue;
 
-		bool res = PrecacheSound(s, true);	  // true => también cliente
+		bool res = PrecacheSound(s, true);	  // true => tambien cliente
 		if (res) ok++;
 		else fail++;
 		EMS_DLog("Sound: %s -> %d", s, res ? 1 : 0);

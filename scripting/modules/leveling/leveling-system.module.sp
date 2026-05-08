@@ -24,7 +24,7 @@ int			g_iPlayerLevel[MAXPLAYERS + 1];
 int			g_iPlayerXP[MAXPLAYERS + 1];
 int			g_iTotalPlayerXP[MAXPLAYERS + 1];
 bool		g_bShoulderCannon_AutoEquip[MAXPLAYERS + 1];  // Auto-equipar Shoulder Cannon al spawnar
-bool		g_bPlayerDataLoaded[MAXPLAYERS + 1];  // Trackea si los datos ya fueron cargados en esta sesión
+bool		g_bPlayerDataLoaded[MAXPLAYERS + 1];  // Trackea si los datos ya fueron cargados en esta sesion
 
 // --- Variable para congelar currency durante eventos especiales (ej: Nightmare) ---
 bool		g_bCurrencyFrozen = false; // Cuando es true, no se gana/pierde/resetea currency
@@ -46,7 +46,7 @@ bool   g_bCvarAllow, g_bMapStarted;
 float  g_fCvarThird, g_fCvarTime, g_fCvarWait;
 bool   g_bLeft4Dead2 = true;
 /**
- * Inicializa el módulo de leveling
+ * Inicializa el modulo de leveling
  * Debe ser llamado desde OnPluginStart()
  */
 public void Leveling_OnPluginStart()
@@ -61,35 +61,35 @@ public void Leveling_OnPluginStart()
 	cvar_LevelingFormulaEasy = CreateConVar(
 		"leveling_formula_easy",
 		"1.1",
-		"Exponente para fórmula de dificultad FÁCIL",
+		"Exponente para formula de dificultad FACIL",
 		FCVAR_PLUGIN);
 
 	// Normal: formula^1.25
 	cvar_LevelingFormulaNormal = CreateConVar(
 		"leveling_formula_normal",
 		"1.25",
-		"Exponente para fórmula de dificultad NORMAL",
+		"Exponente para formula de dificultad NORMAL",
 		FCVAR_PLUGIN);
 
 	// Advanced: formula^1.4
 	cvar_LevelingFormulaAdvanced = CreateConVar(
 		"leveling_formula_advanced",
 		"1.4",
-		"Exponente para fórmula de dificultad AVANZADA",
+		"Exponente para formula de dificultad AVANZADA",
 		FCVAR_PLUGIN);
 
 	// Expert: formula^1.6
 	cvar_LevelingFormulaExpert = CreateConVar(
 		"leveling_formula_expert",
 		"1.6",
-		"Exponente para fórmula de dificultad EXPERTO",
+		"Exponente para formula de dificultad EXPERTO",
 		FCVAR_PLUGIN);
 
 	// Dificultad actual del servidor
 	cvar_LevelingDifficultyMode = CreateConVar(
 		"leveling_difficulty",
 		"0",
-		"Dificultad del servidor (0=Fácil, 1=Normal, 2=Avanzado, 3=Experto)",
+		"Dificultad del servidor (0=Facil, 1=Normal, 2=Avanzado, 3=Experto)",
 		FCVAR_PLUGIN);
 
 	cvar_LevelingDebug = CreateConVar(
@@ -155,7 +155,7 @@ public void Leveling_OnMapEnd()
 }
 
 /**
- * Se llama cuando un cliente está autenticado y listo
+ * Se llama cuando un cliente esta autenticado y listo
  */
 public void Leveling_OnClientPostAdminCheck(int client)
 {
@@ -185,7 +185,7 @@ public void Leveling_OnClientDisconnect(int client)
 	g_iPlayerLevel[client] = 0;
 	g_iPlayerXP[client] = 0;
 	g_iTotalPlayerXP[client] = 0;
-	g_bPlayerDataLoaded[client] = false;  // Reset flag para permitir carga en próxima sesión
+	g_bPlayerDataLoaded[client] = false;  // Reset flag para permitir carga en proxima sesion
 }
 
 /**
@@ -197,7 +197,7 @@ public void Leveling_LoadPlayerData(int client)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client))
 		return;
 
-	// Prevenir cargas duplicadas en la misma sesión
+	// Prevenir cargas duplicadas en la misma sesion
 	if (g_bPlayerDataLoaded[client])
 	{
 		if (GetConVarBool(cvar_LevelingDebug))
@@ -213,10 +213,10 @@ public void Leveling_LoadPlayerData(int client)
 	if (strlen(steamid) == 0 || StrEqual(steamid, "BOT"))
 		return;
 
-	// Verificar que la BD esté conectada
+	// Verificar que la BD este conectada
 	if (g_hDbPlayers == INVALID_HANDLE || g_hDbPlayers == null)
 	{
-		LogToFile(g_szLevelingLogPath, "[ERROR] Handle de BD Players inválido, no se puede cargar datos de %N", client);
+		LogToFile(g_szLevelingLogPath, "[ERROR] Handle de BD Players invalido, no se puede cargar datos de %N", client);
 		return;
 	}
 
@@ -254,7 +254,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		LogToFile(g_szLevelingLogPath, "[ERROR] Manteniendo valores actuales para prevenir reset - Level: %d, XP: %d",
 				  g_iPlayerLevel[client], g_iPlayerXP[client]);
 		// NO resetear a 0 en caso de error de BD - mantener valores actuales
-		// Solo resetear si es un nuevo jugador (ver más abajo)
+		// Solo resetear si es un nuevo jugador (ver mas abajo)
 		return;
 	}
 
@@ -266,7 +266,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_bShoulderCannon_AutoEquip[client] = view_as<bool>(results.FetchInt(3));
 		g_bPlayerDataLoaded[client] = true;  // Marcar como cargado
 
-		// Currency se mantiene durante toda la sesión (no se resetea entre mapas)
+		// Currency se mantiene durante toda la sesion (no se resetea entre mapas)
 		// Solo se resetea al desconectar o al iniciar el plugin
 
 		LogToFile(g_szLevelingLogPath, "[LOAD] %N - Nivel: %d, XP: %d/%d, Total: %d, AutoEquip: %d",
@@ -274,7 +274,7 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
 				  g_bShoulderCannon_AutoEquip[client]);
 
-		// Aplicar pasivas inmediatamente si el jugador está vivo
+		// Aplicar pasivas inmediatamente si el jugador esta vivo
 		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
 		{
 			LevelingRewards_ApplyRewardsSilent(client, g_iPlayerLevel[client]);
@@ -289,8 +289,8 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 		g_iTotalPlayerXP[client]  = 0;
 		g_bShoulderCannon_AutoEquip[client] = false;
 		g_bPlayerDataLoaded[client] = true;  // Marcar como cargado (nuevo jugador)
-		// Currency ya está inicializado en 0 por buyMenuOnPluginStart() o OnClientDisconnect()
-		// No lo tocamos aquí para no resetear el currency entre mapas
+		// Currency ya esta inicializado en 0 por buyMenuOnPluginStart() o OnClientDisconnect()
+		// No lo tocamos aqui para no resetear el currency entre mapas
 
 		char steamid[32];
 		GetClientAuthId(client, AuthId_Steam2, steamid, sizeof(steamid));
@@ -331,7 +331,7 @@ public void Callback_InsertPlayerLevel(Database db, DBResultSet results, const c
 
 /**
  * Evento: player_spawn - Se dispara cuando el jugador aparece en el mapa
- * NOTA: Ya NO cargamos datos aquí - solo se cargan en OnClientPostAdminCheck
+ * NOTA: Ya NO cargamos datos aqui - solo se cargan en OnClientPostAdminCheck
  * Esto previene resets accidentales si hay errores de BD durante el juego
  */
 public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -341,7 +341,7 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
 	if (client <= 0 || !IsClientInGame(client) || IsFakeClient(client))
 		return Plugin_Continue;
 
-	// Ya no cargamos datos aquí - esto causaba resets si fallaba la BD
+	// Ya no cargamos datos aqui - esto causaba resets si fallaba la BD
 	// Los datos se cargan SOLO en OnClientPostAdminCheck (al conectar)
 
 	// Aplicar pasivas si el jugador tiene nivel (datos ya cargados)
@@ -357,7 +357,7 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
  * Otorga XP a un jugador y maneja el level-up
  * @param client - ID del cliente
  * @param xp_amount - Cantidad de XP a otorgar
- * @param reason - Razón por la cual se otorgó XP (para logs)
+ * @param reason - Razon por la cual se otorgo XP (para logs)
  */
 public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 {
@@ -393,7 +393,7 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 				  client, xp_amount, reason, g_iPlayerLevel[client], g_iPlayerXP[client], xp_required);
 	}
 
-	// Actualizar en base de datos (asíncrono) - Solo nivel y XP, currency es temporal
+	// Actualizar en base de datos (asincrono) - Solo nivel y XP, currency es temporal
 	Leveling_UpdatePlayerDatabase(client);
 }
 
@@ -408,19 +408,19 @@ public void Leveling_OnLevelUp(int client)
 	PrintToChat(client, "\x04[LEVELING]\x01 %s", message);
 	CmdTrophy(client, 0);	 // Mostrar trofeo
 	// Log antes de aplicar rewards
-	LogMessage("[LEVELING DEBUG] OnLevelUp - %N alcanzó nivel %d, aplicando rewards...", client, g_iPlayerLevel[client]);
+	LogMessage("[LEVELING DEBUG] OnLevelUp - %N alcanzo nivel %d, aplicando rewards...", client, g_iPlayerLevel[client]);
 
 	// Aplicar beneficios del nuevo nivel
 	Leveling_ApplyLevelRewards(client, g_iPlayerLevel[client]);
 
 	// Log
-	LogToFile(g_szLevelingLogPath, "[LEVELUP] %N alcanzó Nivel %d", client, g_iPlayerLevel[client]);
+	LogToFile(g_szLevelingLogPath, "[LEVELUP] %N alcanzo Nivel %d", client, g_iPlayerLevel[client]);
 	LogMessage("[LEVELING DEBUG] OnLevelUp completado para %N", client);
 }
 
 /**
  * Obtiene el XP requerido para pasar al siguiente nivel
- * Usa la fórmula: base_xp * (nivel+1)^exponente
+ * Usa la formula: base_xp * (nivel+1)^exponente
  * @param client - ID del cliente (para obtener el nivel actual)
  * @return - XP requerido para el siguiente nivel
  */
@@ -436,7 +436,7 @@ public int Leveling_GetXPRequiredForNextLevel(int client)
 }
 
 /**
- * Obtiene el exponente de la fórmula según la dificultad del servidor
+ * Obtiene el exponente de la formula segun la dificultad del servidor
  */
 public float Leveling_GetDifficultyFormula()
 {
@@ -453,13 +453,13 @@ public float Leveling_GetDifficultyFormula()
 }
 
 /**
- * Aplica los beneficios/rewards según el nivel
+ * Aplica los beneficios/rewards segun el nivel
  * @param client - ID del cliente
  * @param level - Nivel alcanzado
  */
 public void Leveling_ApplyLevelRewards(int client, int level)
 {
-	// Llamar a la función real de rewards del módulo de rewards
+	// Llamar a la funcion real de rewards del modulo de rewards
 	// Usa LevelingRewards_ApplyRewards que muestra mensajes (llamado al subir de nivel)
 	LevelingRewards_ApplyRewards(client, level);
 }
@@ -482,10 +482,10 @@ public void Leveling_UpdatePlayerDatabase(int client)
 	char name[MAX_NAME_LENGTH];
 	GetClientName(client, name, sizeof(name));
 
-	// Verificar que la BD esté conectada
+	// Verificar que la BD este conectada
 	if (g_hDbPlayers == INVALID_HANDLE || g_hDbPlayers == null)
 	{
-		LogToFile(g_szLevelingLogPath, "[ERROR] Handle de BD Players inválido, no se puede actualizar");
+		LogToFile(g_szLevelingLogPath, "[ERROR] Handle de BD Players invalido, no se puede actualizar");
 		return;
 	}
 
@@ -575,21 +575,21 @@ public int Leveling_GetLevelProgress(int client)
 
 /**
  * Detecta cambios de dificultad
- * NOTA: Currency persiste entre mapas (durante toda la sesión), no requiere reset por cambio de dificultad
- * Esta función se mantiene por compatibilidad pero ya no gestiona currency
+ * NOTA: Currency persiste entre mapas (durante toda la sesion), no requiere reset por cambio de dificultad
+ * Esta funcion se mantiene por compatibilidad pero ya no gestiona currency
  *
- * NOTA: Durante eventos especiales (Nightmare, etc), el currency está congelado
+ * NOTA: Durante eventos especiales (Nightmare, etc), el currency esta congelado
  */
 /* stock void Leveling_CheckDifficultyChange(int client)
 {
-	// Esta función ahora es un stub (vacía) porque currency es siempre temporal
-	// Se mantiene para no romper llamadas existentes en el código
+	// Esta funcion ahora es un stub (vacia) porque currency es siempre temporal
+	// Se mantiene para no romper llamadas existentes en el codigo
 	return;
 } */
 
 /**
  * Congela el currency para todos los jugadores (usado durante eventos especiales)
- * Cuando está congelado: no se gana, no se pierde, no se resetea por cambio de dificultad
+ * Cuando esta congelado: no se gana, no se pierde, no se resetea por cambio de dificultad
  *
  * USO: Llamar al inicio del evento Nightmare o similar
  */
@@ -613,9 +613,9 @@ public void Leveling_UnfreezeCurrency()
 }
 
 /**
- * Verifica si el currency está actualmente congelado
+ * Verifica si el currency esta actualmente congelado
  *
- * @return true si está congelado, false si no
+ * @return true si esta congelado, false si no
  */
 public bool Leveling_IsCurrencyFrozen()
 {
@@ -639,14 +639,14 @@ public void Leveling_SaveShoulderCannonAutoEquip(int client, bool autoEquip)
 
 	if (GetConVarBool(cvar_LevelingDebug))
 	{
-		LogToFile(g_szLevelingLogPath, "[AUTOEQUIP] %N cambió auto-equip Shoulder Cannon a: %d", client, autoEquip);
+		LogToFile(g_szLevelingLogPath, "[AUTOEQUIP] %N cambio auto-equip Shoulder Cannon a: %d", client, autoEquip);
 	}
 }
 
 /**
  * Obtiene la preferencia de auto-equip de Shoulder Cannon
  * @param client - ID del cliente
- * @return - true si auto-equip está activado, false si no
+ * @return - true si auto-equip esta activado, false si no
  */
 public bool Leveling_GetShoulderCannonAutoEquip(int client)
 {
@@ -657,7 +657,7 @@ public bool Leveling_GetShoulderCannonAutoEquip(int client)
 }
 
 /**
- * Función auxiliar para calcular potencias
+ * Funcion auxiliar para calcular potencias
  */
 stock float pow(float base, float exponent)
 {

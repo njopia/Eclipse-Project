@@ -4,25 +4,25 @@
 
 //==================================================
 // === LEVELING INFO MODULE ===
-// Menú de información para jugadores sobre sus rewards activos
+// Menu de informacion para jugadores sobre sus rewards activos
 //==================================================
 
 // --- ConVars ---
 Handle cvar_Info_Enabled = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de información
+ * Inicializa el modulo de informacion
  */
 public void LevelingInfo_OnPluginStart()
 {
 	cvar_Info_Enabled = CreateConVar(
 		"leveling_info_enabled",
 		"1",
-		"Habilita el menú de información de rewards (1 = habilitado, 0 = deshabilitado)",
+		"Habilita el menu de informacion de rewards (1 = habilitado, 0 = deshabilitado)",
 		FCVAR_PLUGIN
 	);
 
-	// Comandos para abrir el menú
+	// Comandos para abrir el menu
 	RegConsoleCmd("sm_rewards", Command_ShowRewards, "Muestra tus rewards activos");
 	RegConsoleCmd("sm_myrewards", Command_ShowRewards, "Muestra tus rewards activos");
 	RegConsoleCmd("sm_skills", Command_ShowRewards, "Muestra tus rewards activos");
@@ -30,13 +30,13 @@ public void LevelingInfo_OnPluginStart()
 }
 
 /**
- * Comando: Muestra el menú de rewards
+ * Comando: Muestra el menu de rewards
  */
 public Action Command_ShowRewards(int client, int args)
 {
 	if (!GetConVarBool(cvar_Info_Enabled))
 	{
-		ReplyToCommand(client, "[Rewards] El sistema de información está deshabilitado.");
+		ReplyToCommand(client, "[Rewards] El sistema de informacion esta deshabilitado.");
 		return Plugin_Handled;
 	}
 
@@ -51,7 +51,7 @@ public Action Command_ShowRewards(int client, int args)
 }
 
 /**
- * Muestra el menú principal de rewards
+ * Muestra el menu principal de rewards
  */
 void ShowRewardsMainMenu(int client)
 {
@@ -61,21 +61,21 @@ void ShowRewardsMainMenu(int client)
 	Menu menu = new Menu(RewardsMainMenu_Handler);
 
 	char title[256];
-	Format(title, sizeof(title), "=== Mis Rewards ===\nNivel: %d | Activos: %d/23\n \nSelecciona una categoría:",
+	Format(title, sizeof(title), "=== Mis Rewards ===\nNivel: %d | Activos: %d/23\n \nSelecciona una categoria:",
 		level, activeCount);
 	menu.SetTitle(title);
 
 	menu.AddItem("active", "Ver Rewards Activos");
 	menu.AddItem("locked", "Ver Rewards Bloqueados");
 	menu.AddItem("all", "Ver Todos los Rewards");
-	menu.AddItem("next", "Próximo Reward");
+	menu.AddItem("next", "Proximo Reward");
 
 	menu.ExitButton = true;
 	menu.Display(client, MENU_TIME_FOREVER);
 }
 
 /**
- * Handler del menú principal
+ * Handler del menu principal
  */
 public int RewardsMainMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -110,7 +110,7 @@ public int RewardsMainMenu_Handler(Menu menu, MenuAction action, int client, int
 }
 
 /**
- * Muestra el menú de rewards activos
+ * Muestra el menu de rewards activos
  */
 void ShowActiveRewardsMenu(int client)
 {
@@ -258,7 +258,7 @@ void ShowActiveRewardsMenu(int client)
 
 	if (count == 0)
 	{
-		menu.AddItem("none", "No tienes rewards activos aún", ITEMDRAW_DISABLED);
+		menu.AddItem("none", "No tienes rewards activos aun", ITEMDRAW_DISABLED);
 	}
 
 	menu.ExitBackButton = true;
@@ -266,7 +266,7 @@ void ShowActiveRewardsMenu(int client)
 }
 
 /**
- * Handler del menú de rewards activos
+ * Handler del menu de rewards activos
  */
 public int ActiveRewardsMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -294,7 +294,7 @@ public int ActiveRewardsMenu_Handler(Menu menu, MenuAction action, int client, i
 }
 
 /**
- * Muestra el menú de rewards bloqueados
+ * Muestra el menu de rewards bloqueados
  */
 void ShowLockedRewardsMenu(int client)
 {
@@ -442,7 +442,7 @@ void ShowLockedRewardsMenu(int client)
 
 	if (count == 0)
 	{
-		menu.AddItem("none", "¡Tienes todos los rewards desbloqueados!", ITEMDRAW_DISABLED);
+		menu.AddItem("none", "Tienes todos los rewards desbloqueados!", ITEMDRAW_DISABLED);
 	}
 
 	menu.ExitBackButton = true;
@@ -450,7 +450,7 @@ void ShowLockedRewardsMenu(int client)
 }
 
 /**
- * Handler del menú de rewards bloqueados
+ * Handler del menu de rewards bloqueados
  */
 public int LockedRewardsMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -512,7 +512,7 @@ void ShowAllRewardsMenu(int client)
 }
 
 /**
- * Handler del menú de todos los rewards
+ * Handler del menu de todos los rewards
  */
 public int AllRewardsMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -543,7 +543,7 @@ public int AllRewardsMenu_Handler(Menu menu, MenuAction action, int client, int 
 }
 
 /**
- * Agrega un reward al menú con el formato correcto
+ * Agrega un reward al menu con el formato correcto
  */
 void AddRewardToMenu(Menu menu, int rewardLevel, const char[] name, int playerLevel)
 {
@@ -564,7 +564,7 @@ void AddRewardToMenu(Menu menu, int rewardLevel, const char[] name, int playerLe
 }
 
 /**
- * Muestra información detallada de un reward
+ * Muestra informacion detallada de un reward
  */
 void ShowRewardDetailMenu(int client, int rewardLevel, bool isActive)
 {
@@ -592,7 +592,7 @@ void ShowRewardDetailMenu(int client, int rewardLevel, bool isActive)
 }
 
 /**
- * Handler del menú de detalles
+ * Handler del menu de detalles
  */
 public int RewardDetailMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -609,7 +609,7 @@ public int RewardDetailMenu_Handler(Menu menu, MenuAction action, int client, in
 }
 
 /**
- * Muestra información sobre el próximo reward
+ * Muestra informacion sobre el proximo reward
  */
 void ShowNextRewardInfo(int client)
 {
@@ -618,7 +618,7 @@ void ShowNextRewardInfo(int client)
 
 	if (nextLevel == -1)
 	{
-		PrintToChat(client, "\x04[Rewards]\x01 ¡Ya tienes todos los rewards desbloqueados!");
+		PrintToChat(client, "\x04[Rewards]\x01 Ya tienes todos los rewards desbloqueados!");
 		ShowRewardsMainMenu(client);
 		return;
 	}
@@ -630,7 +630,7 @@ void ShowNextRewardInfo(int client)
 
 	int levelsNeeded = nextLevel - level;
 
-	Format(title, sizeof(title), "=== Próximo Reward ===\n%s\nNivel requerido: %d\nTe faltan %d niveles\n \n%s",
+	Format(title, sizeof(title), "=== Proximo Reward ===\n%s\nNivel requerido: %d\nTe faltan %d niveles\n \n%s",
 		rewardName, nextLevel, levelsNeeded, description);
 
 	menu.SetTitle(title);
@@ -640,7 +640,7 @@ void ShowNextRewardInfo(int client)
 }
 
 /**
- * Handler del menú de próximo reward
+ * Handler del menu de proximo reward
  */
 public int NextRewardMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -657,7 +657,7 @@ public int NextRewardMenu_Handler(Menu menu, MenuAction action, int client, int 
 }
 
 /**
- * Obtiene información de un reward específico
+ * Obtiene informacion de un reward especifico
  */
 void GetRewardInfo(int level, char[] name, int nameLen, char[] description, int descLen)
 {
@@ -671,7 +671,7 @@ void GetRewardInfo(int level, char[] name, int nameLen, char[] description, int 
 		case 2:
 		{
 			strcopy(name, nameLen, "Acrobatics");
-			strcopy(description, descLen, "Aumenta la altura de salto y reduce el daño de caída en 50%.\nPerfecto para movilidad vertical.");
+			strcopy(description, descLen, "Aumenta la altura de salto y reduce el dano de caida en 50%.\nPerfecto para movilidad vertical.");
 		}
 		case 3:
 		{
@@ -686,82 +686,82 @@ void GetRewardInfo(int level, char[] name, int nameLen, char[] description, int 
 		case 6:
 		{
 			strcopy(name, nameLen, "Pack Rat");
-			strcopy(description, descLen, "Aumenta la capacidad de munición en 25%.\nMás balas = más tiempo disparando.");
+			strcopy(description, descLen, "Aumenta la capacidad de municion en 25%.\nMas balas = mas tiempo disparando.");
 		}
 		case 8:
 		{
 			strcopy(name, nameLen, "Desert Cobra");
-			strcopy(description, descLen, "Reemplaza tu pistola con un Magnum cuando estás incapacitado.\nMayor daño para defenderte en situaciones críticas.");
+			strcopy(description, descLen, "Reemplaza tu pistola con un Magnum cuando estas incapacitado.\nMayor dano para defenderte en situaciones criticas.");
 		}
 		case 9:
 		{
 			strcopy(name, nameLen, "Damage Reduction");
-			strcopy(description, descLen, "Reduce el daño recibido en 5%.\nMayor resistencia a ataques enemigos.");
+			strcopy(description, descLen, "Reduce el dano recibido en 5%.\nMayor resistencia a ataques enemigos.");
 		}
 		case 10:
 		{
 			strcopy(name, nameLen, "Gene Mutations I");
-			strcopy(description, descLen, "+100 HP máximo adicional\nRegeneración: +1 HP cada 5 segundos\nPrimera mejora genética.");
+			strcopy(description, descLen, "+100 HP maximo adicional\nRegeneracion: +1 HP cada 5 segundos\nPrimera mejora genetica.");
 		}
 		case 11:
 		{
 			strcopy(name, nameLen, "Self Revive");
-			strcopy(description, descLen, "Auto-revive usando la tecla USE cuando estás incapacitado.\nDuración: 2.5 segundos\n¡No necesitas ayuda de nadie!");
+			strcopy(description, descLen, "Auto-revive usando la tecla USE cuando estas incapacitado.\nDuracion: 2.5 segundos\nNo necesitas ayuda de nadie!");
 		}
 		case 13:
 		{
 			strcopy(name, nameLen, "Sleight of Hand");
-			strcopy(description, descLen, "Duplica la velocidad de recarga de armas.\nMenos tiempo recargando = más tiempo disparando.");
+			strcopy(description, descLen, "Duplica la velocidad de recarga de armas.\nMenos tiempo recargando = mas tiempo disparando.");
 		}
 		case 15:
 		{
 			strcopy(name, nameLen, "Knife");
-			strcopy(description, descLen, "Apuñala infectados especiales cuando te capturan.\nUsa la tecla USE durante 1.5s para intentar liberarte.");
+			strcopy(description, descLen, "Apunala infectados especiales cuando te capturan.\nUsa la tecla USE durante 1.5s para intentar liberarte.");
 		}
 		case 17:
 		{
 			strcopy(name, nameLen, "Hard to Kill");
-			strcopy(description, descLen, "HP de incapacitación aumentado de 300 a 500.\nMás difícil de morir cuando estás caído.");
+			strcopy(description, descLen, "HP de incapacitacion aumentado de 300 a 500.\nMas dificil de morir cuando estas caido.");
 		}
 		case 19:
 		{
 			strcopy(name, nameLen, "Arms Dealer");
-			strcopy(description, descLen, "Expande tu mochila de 9 a 40 items.\n¡Lleva todo el arsenal que necesites!");
+			strcopy(description, descLen, "Expande tu mochila de 9 a 40 items.\nLleva todo el arsenal que necesites!");
 		}
 		case 20:
 		{
 			strcopy(name, nameLen, "Gene Mutations II");
-			strcopy(description, descLen, "+200 HP máximo adicional (total: +300)\nRegeneración: +2 HP cada 5 segundos\nSegunda mejora genética.");
+			strcopy(description, descLen, "+200 HP maximo adicional (total: +300)\nRegeneracion: +2 HP cada 5 segundos\nSegunda mejora genetica.");
 		}
 		case 22:
 		{
 			strcopy(name, nameLen, "Surgeon");
-			strcopy(description, descLen, "Reduce el tiempo de uso de items de curación en 50%.\nCura más rápido = mayor supervivencia.");
+			strcopy(description, descLen, "Reduce el tiempo de uso de items de curacion en 50%.\nCura mas rapido = mayor supervivencia.");
 		}
 		case 24:
 		{
 			strcopy(name, nameLen, "Extreme Conditioning");
-			strcopy(description, descLen, "Aumenta la velocidad de movimiento en 25%.\n¡Corre más rápido que los infectados!");
+			strcopy(description, descLen, "Aumenta la velocidad de movimiento en 25%.\nCorre mas rapido que los infectados!");
 		}
 		case 26:
 		{
 			strcopy(name, nameLen, "BullsEye");
-			strcopy(description, descLen, "Equipa laser sight gratis en todas tus armas primarias.\nMejor precisión sin gastar puntos de mejora.");
+			strcopy(description, descLen, "Equipa laser sight gratis en todas tus armas primarias.\nMejor precision sin gastar puntos de mejora.");
 		}
 		case 29:
 		{
 			strcopy(name, nameLen, "Size Matters");
-			strcopy(description, descLen, "Recarga M60 y Grenade Launcher en ammo piles.\nArmas pesadas siempre listas para la acción.");
+			strcopy(description, descLen, "Recarga M60 y Grenade Launcher en ammo piles.\nArmas pesadas siempre listas para la accion.");
 		}
 		case 30:
 		{
 			strcopy(name, nameLen, "Gene Mutations III");
-			strcopy(description, descLen, "+300 HP máximo adicional (total: +600)\nRegeneración: +3 HP cada 5 segundos\nTercera mejora genética.");
+			strcopy(description, descLen, "+300 HP maximo adicional (total: +600)\nRegeneracion: +3 HP cada 5 segundos\nTercera mejora genetica.");
 		}
 		case 32:
 		{
 			strcopy(name, nameLen, "Master at Arms");
-			strcopy(description, descLen, "Duplica el daño de armas melee.\nDaño: 100 → 200\n¡Destruye infectados cuerpo a cuerpo!");
+			strcopy(description, descLen, "Duplica el dano de armas melee.\nDano: 100 → 200\nDestruye infectados cuerpo a cuerpo!");
 		}
 		case 35:
 		{
@@ -771,38 +771,38 @@ void GetRewardInfo(int level, char[] name, int nameLen, char[] description, int 
 		case 38:
 		{
 			strcopy(name, nameLen, "Critical Hit");
-			strcopy(description, descLen, "10% de probabilidad de hacer daño crítico.\nMultiplicador: 1.5x - 3.0x daño\n¡Hits devastadores!");
+			strcopy(description, descLen, "10% de probabilidad de hacer dano critico.\nMultiplicador: 1.5x - 3.0x dano\nHits devastadores!");
 		}
 		case 40:
 		{
 			strcopy(name, nameLen, "Gene Mutations IV");
-			strcopy(description, descLen, "+400 HP máximo adicional (total: +1000)\nRegeneración: +4 HP cada 5 segundos\nMejora genética máxima.");
+			strcopy(description, descLen, "+400 HP maximo adicional (total: +1000)\nRegeneracion: +4 HP cada 5 segundos\nMejora genetica maxima.");
 		}
 		case 41:
 		{
 			strcopy(name, nameLen, "Commando");
-			strcopy(description, descLen, "Permite recargar M60 en ammo piles.\nCartucho extendido de 300 balas\n¡Nunca te quedes sin munición!");
+			strcopy(description, descLen, "Permite recargar M60 en ammo piles.\nCartucho extendido de 300 balas\nNunca te quedes sin municion!");
 		}
 		case 44:
 		{
 			strcopy(name, nameLen, "Second Chance");
-			strcopy(description, descLen, "Auto-revive automático una vez por ronda.\nVuelves a la vida después de morir\n¡Una segunda oportunidad!");
+			strcopy(description, descLen, "Auto-revive automatico una vez por ronda.\nVuelves a la vida despues de morir\nUna segunda oportunidad!");
 		}
 		case 47:
 		{
 			strcopy(name, nameLen, "Laser Rounds");
-			strcopy(description, descLen, "Munición láser para rifles y SMGs.\nDaño aumentado + efecto de incineración\n¡Poder de fuego máximo!");
+			strcopy(description, descLen, "Municion laser para rifles y SMGs.\nDano aumentado + efecto de incineracion\nPoder de fuego maximo!");
 		}
 		default:
 		{
 			strcopy(name, nameLen, "Reward Desconocido");
-			strcopy(description, descLen, "No hay información disponible.");
+			strcopy(description, descLen, "No hay informacion disponible.");
 		}
 	}
 }
 
 /**
- * Obtiene el siguiente nivel de reward después del nivel actual
+ * Obtiene el siguiente nivel de reward despues del nivel actual
  */
 int GetNextRewardLevel(int currentLevel)
 {
@@ -820,7 +820,7 @@ int GetNextRewardLevel(int currentLevel)
 }
 
 /**
- * Cuenta cuántos rewards activos tiene el jugador
+ * Cuenta cuantos rewards activos tiene el jugador
  */
 int GetActiveRewardsCount(int level)
 {
@@ -853,7 +853,7 @@ int GetPlayerLevel(int client)
 }
 
 /**
- * Obtiene si el módulo de info está habilitado
+ * Obtiene si el modulo de info esta habilitado
  */
 public bool LevelingInfo_IsEnabled()
 {

@@ -4,7 +4,7 @@
 
 //==================================================
 // === CURRENCY ADVANCED EVENTS MODULE ===
-// Maneja eventos más complejos para otorgar currency
+// Maneja eventos mas complejos para otorgar currency
 // Incluye: Saves, Incaps, Team events, etc.
 //==================================================
 
@@ -18,7 +18,7 @@ Handle cvar_CurrencySpitterSave = INVALID_HANDLE;
 Handle cvar_CurrencySurvivalRound = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de eventos avanzados de currency
+ * Inicializa el modulo de eventos avanzados de currency
  * Debe ser llamado desde CurrencyEvents_OnPluginStart()
  */
 public void CurrencyAdvancedEvents_OnPluginStart()
@@ -48,7 +48,7 @@ public void CurrencyAdvancedEvents_OnPluginStart()
 
 /**
  * Evento: Player Incapacitated
- * Se otorgan puntos a quien saca a un compañero de incapacitado
+ * Se otorgan puntos a quien saca a un companero de incapacitado
  */
 public Action Event_PlayerIncapacitated(Event event, const char[] name, bool dontBroadcast)
 {

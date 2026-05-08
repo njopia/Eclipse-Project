@@ -18,8 +18,8 @@ Handle cvar_XPHeal = INVALID_HANDLE;
 Handle cvar_XPDefibrillator = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de eventos de XP
- * Debe ser llamado desde OnPluginStart() DESPUÉS de Leveling_OnPluginStart()
+ * Inicializa el modulo de eventos de XP
+ * Debe ser llamado desde OnPluginStart() DESPUES de Leveling_OnPluginStart()
  */
 public void LevelingXPEvents_OnPluginStart()
 {
@@ -27,7 +27,7 @@ public void LevelingXPEvents_OnPluginStart()
 	cvar_XPCommonKill = CreateConVar(
 		"xp_common_kill",
 		"5",
-		"XP por matar un infectado común",
+		"XP por matar un infectado comun",
 		FCVAR_PLUGIN
 	);
 
@@ -62,14 +62,14 @@ public void LevelingXPEvents_OnPluginStart()
 	cvar_XPRevive = CreateConVar(
 		"xp_revive",
 		"20",
-		"XP por revivir a un compañero",
+		"XP por revivir a un companero",
 		FCVAR_PLUGIN
 	);
 
 	cvar_XPHeal = CreateConVar(
 		"xp_heal",
 		"5",
-		"XP por curar a un compañero",
+		"XP por curar a un companero",
 		FCVAR_PLUGIN
 	);
 
@@ -84,7 +84,7 @@ public void LevelingXPEvents_OnPluginStart()
 	CreateConVar(
 		"xp_protect_teammate",
 		"10",
-		"XP por proteger a un compañero de un SI",
+		"XP por proteger a un companero de un SI",
 		FCVAR_PLUGIN
 	);
 
@@ -133,13 +133,13 @@ public Action Event_InfectedDeath_XP(Event event, const char[] name, bool dontBr
 	bool isHeadshot = event.GetBool("headshot", false);
 
 	// Otorgar XP base
-	Leveling_AwardXP(attacker, xp_reward, "Matar infectado común");
+	Leveling_AwardXP(attacker, xp_reward, "Matar infectado comun");
 
 	// Bonus por headshot
 	if (isHeadshot)
 	{
 		int headshot_bonus = GetConVarInt(cvar_XPHeadshot);
-		Leveling_AwardXP(attacker, headshot_bonus, "Headshot en infectado común");
+		Leveling_AwardXP(attacker, headshot_bonus, "Headshot en infectado comun");
 	}
 
 	return Plugin_Continue;
@@ -154,14 +154,14 @@ public Action Event_PlayerDeath_XP(Event event, const char[] name, bool dontBroa
 	int victim = GetClientOfUserId(event.GetInt("userid"));
 	int attacker = GetClientOfUserId(event.GetInt("attacker"));
 
-	// Validar que víctima y atacante existan
+	// Validar que victima y atacante existan
 	if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
 		return Plugin_Continue;
 
 	if (attacker <= 0 || attacker > MaxClients || !IsClientInGame(attacker) || IsFakeClient(attacker))
 		return Plugin_Continue;
 
-	// Verificar que la víctima es infectado (Team 3) y el atacante es survivor (Team 2)
+	// Verificar que la victima es infectado (Team 3) y el atacante es survivor (Team 2)
 	if (GetClientTeam(victim) != 3 || GetClientTeam(attacker) != 2)
 		return Plugin_Continue;
 
@@ -172,7 +172,7 @@ public Action Event_PlayerDeath_XP(Event event, const char[] name, bool dontBroa
 	if (zombieClass == 8 || zombieClass == 9)  // 8 = Tank, 9 = Tank en L4D1
 		return Plugin_Continue;
 
-	// Verificar que es un infectado especial válido (1-7)
+	// Verificar que es un infectado especial valido (1-7)
 	// 1=Smoker, 2=Boomer, 3=Hunter, 4=Spitter, 5=Jockey, 6=Charger, 7=Witch
 	if (zombieClass < 1 || zombieClass > 7)
 		return Plugin_Continue;
@@ -236,7 +236,7 @@ public Action Event_WitchKilled_XP(Event event, const char[] name, bool dontBroa
 
 /**
  * Evento: Heal Success
- * Los survivors ganan XP por curar a un compañero
+ * Los survivors ganan XP por curar a un companero
  */
 public Action Event_HealSuccess_XP(Event event, const char[] name, bool dontBroadcast)
 {
@@ -249,14 +249,14 @@ public Action Event_HealSuccess_XP(Event event, const char[] name, bool dontBroa
 		return Plugin_Continue;
 
 	int xp_reward = GetConVarInt(cvar_XPHeal);
-	Leveling_AwardXP(healer, xp_reward, "Curar compañero");
+	Leveling_AwardXP(healer, xp_reward, "Curar companero");
 
 	return Plugin_Continue;
 }
 
 /**
  * Evento: Revive Success
- * Los survivors ganan XP por revivir a un compañero
+ * Los survivors ganan XP por revivir a un companero
  */
 public Action Event_ReviveSuccess_XP(Event event, const char[] name, bool dontBroadcast)
 {
@@ -269,7 +269,7 @@ public Action Event_ReviveSuccess_XP(Event event, const char[] name, bool dontBr
 		return Plugin_Continue;
 
 	int xp_reward = GetConVarInt(cvar_XPRevive);
-	Leveling_AwardXP(reviver, xp_reward, "Revivir compañero");
+	Leveling_AwardXP(reviver, xp_reward, "Revivir companero");
 
 	return Plugin_Continue;
 }
@@ -296,7 +296,7 @@ public Action Event_DefibUsed_XP(Event event, const char[] name, bool dontBroadc
 
 /**
  * Evento: Player Left Safe Area
- * Marca que el mapa comenzó (para dar XP al completarlo)
+ * Marca que el mapa comenzo (para dar XP al completarlo)
  */
 bool g_bMapStarted = false;
 

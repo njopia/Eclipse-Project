@@ -20,10 +20,10 @@ static int g_iMaxHealth[MAXPLAYERS + 1];
 
 /**
  * Activa la habilidad Team Heal para un jugador.
- * Cura a todos los sobrevivientes con ticks de sanación hasta llegar al máximo.
+ * Cura a todos los sobrevivientes con ticks de sanacion hasta llegar al maximo.
  * Los bots survivors reciben glow verde lima parpadeante.
  *
- * @param client  Índice del jugador que activa la habilidad.
+ * @param client  Indice del jugador que activa la habilidad.
  */
 stock void Activate_TeamHeal(int client)
 {
@@ -54,7 +54,7 @@ stock void Activate_TeamHeal(int client)
 	// 6. Feedback al jugador
 	PrintToChat(client, "\x05[Eclipse]\x01 \x04Team Heal\x01 activado. Curando a \x04%d\x01 sobrevivientes (\x04%d\x01 bots).",
 		survivorsHealed, botsGlowed);
-	PrintToChatAll("\x05[Eclipse]\x01 \x04%N\x01 ha activado \x04Team Heal\x01. ¡Todos están siendo curados!", client);
+	PrintToChatAll("\x05[Eclipse]\x01 \x04%N\x01 ha activado \x04Team Heal\x01. Todos estan siendo curados!", client);
 
 	// 7. Establecer cooldown
 	g_fNextTeamHeal[client] = GetGameTime() + CONFIG_TEAM_HEAL_COOLDOWN;
@@ -65,20 +65,20 @@ stock void Activate_TeamHeal(int client)
  */
 static void PlayTeamHealEffects(int client)
 {
-	// Sonido de activación - usar comando de adrenaline
+	// Sonido de activacion - usar comando de adrenaline
 	EmitSoundToAll("player/adrenaline_inject.wav", client, SNDCHAN_VOICE);
 
-	// Sonido adicional (victoria/activación)
+	// Sonido adicional (victoria/activacion)
 	EmitSoundToAll("player/survivor/voice/gambler/battlecry01.wav", client, SNDCHAN_AUTO);
 
-	// Obtener posición del cliente para la partícula
+	// Obtener posicion del cliente para la particula
 	float origin[3];
 	GetClientAbsOrigin(client, origin);
 
-	// Crear partícula de sanación
+	// Crear particula de sanacion
 	CreateHealingParticle(origin);
 
-	// Fade visual para todos (efecto de sanación)
+	// Fade visual para todos (efecto de sanacion)
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsSurvivor(i))
@@ -87,7 +87,7 @@ static void PlayTeamHealEffects(int client)
 		}
 	}
 
-	// Aplicar efecto de adrenaline visual a todos (sin el tiempo de curación completo)
+	// Aplicar efecto de adrenaline visual a todos (sin el tiempo de curacion completo)
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsSurvivor(i) && IsPlayerAlive(i))
@@ -99,7 +99,7 @@ static void PlayTeamHealEffects(int client)
 }
 
 /**
- * Crea una partícula de sanación temporal
+ * Crea una particula de sanacion temporal
  */
 static void CreateHealingParticle(const float origin[3])
 {
@@ -107,22 +107,22 @@ static void CreateHealingParticle(const float origin[3])
 	if (particle == -1)
 		return;
 
-	// Usar partícula de sanación - luz verde brillante
+	// Usar particula de sanacion - luz verde brillante
 	DispatchKeyValue(particle, "effect_name", "heal_sparkles");
 	TeleportEntity(particle, origin, NULL_VECTOR, NULL_VECTOR);
 	DispatchSpawn(particle);
 	ActivateEntity(particle);
 	AcceptEntityInput(particle, "start");
 
-	// Auto-destruir después de 3 segundos
+	// Auto-destruir despues de 3 segundos
 	SetVariantString("OnUser1 !self:Kill::3.0:-1");
 	AcceptEntityInput(particle, "AddOutput");
 	AcceptEntityInput(particle, "FireUser1");
 }
 
 /**
- * Cura a todos los sobrevivientes con ticks hasta llegar al máximo
- * @return Número de sobrevivientes curados
+ * Cura a todos los sobrevivientes con ticks hasta llegar al maximo
+ * @return Numero de sobrevivientes curados
  */
 static int HealAllSurvivors()
 {
@@ -133,11 +133,11 @@ static int HealAllSurvivors()
 		if (!IsSurvivor(i) || !IsPlayerAlive(i))
 			continue;
 
-		// Obtener salud actual y máxima
+		// Obtener salud actual y maxima
 		int currentHealth = GetEntProp(i, Prop_Data, "m_iHealth");
 		int maxHealth = GetEntProp(i, Prop_Data, "m_iMaxHealth");
 
-		// Si no está al máximo, curar
+		// Si no esta al maximo, curar
 		if (currentHealth < maxHealth)
 		{
 			// Cancelar timer anterior si existe
@@ -150,7 +150,7 @@ static int HealAllSurvivors()
 			// Guardar el maxHealth para el timer
 			g_iMaxHealth[i] = maxHealth;
 
-			// Crear timer para curación gradual
+			// Crear timer para curacion gradual
 			g_hTeamHealTimer[i] = CreateTimer(
 				CONFIG_TEAM_HEAL_TICK_INTERVAL,
 				Timer_HealTick,
@@ -165,7 +165,7 @@ static int HealAllSurvivors()
 			SetEntProp(i, Prop_Send, "m_glowColorOverride", glowColor);
 			SetEntProp(i, Prop_Send, "m_iGlowType", 2);
 
-			// Remover glow después de 5 segundos
+			// Remover glow despues de 5 segundos
 			CreateTimer(5.0, Timer_RemoveGlow, i, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
@@ -174,7 +174,7 @@ static int HealAllSurvivors()
 }
 
 /**
- * Timer para aplicar sanación gradual a un jugador
+ * Timer para aplicar sanacion gradual a un jugador
  */
 public Action Timer_HealTick(Handle timer, int client)
 {
@@ -188,7 +188,7 @@ public Action Timer_HealTick(Handle timer, int client)
 
 	int currentHealth = GetEntProp(client, Prop_Data, "m_iHealth");
 
-	// Si llegó al máximo, detener timer
+	// Si llego al maximo, detener timer
 	if (currentHealth >= maxHealth)
 	{
 		g_hTeamHealTimer[client] = INVALID_HANDLE;
@@ -204,13 +204,13 @@ public Action Timer_HealTick(Handle timer, int client)
 
 	SetEntProp(client, Prop_Data, "m_iHealth", newHealth);
 
-	// Mostrar feedback periódico
+	// Mostrar feedback periodico
 	if (newHealth % 10 == 0)
 	{
 		PrintToChat(client, "\x05[Eclipse]\x01 Sanando... \x04%d\x01 / \x04%d\x01", newHealth, maxHealth);
 	}
 
-	// Si llegó al máximo después de curar, detener timer
+	// Si llego al maximo despues de curar, detener timer
 	if (newHealth >= maxHealth)
 	{
 		g_hTeamHealTimer[client] = INVALID_HANDLE;
@@ -239,7 +239,7 @@ public Action Timer_RemoveGlow(Handle timer, int client)
 
 /**
  * Aplica glow verde lima parpadeante a todos los bots survivors
- * @return Número de bots con glow aplicado
+ * @return Numero de bots con glow aplicado
  */
 static int ApplyBotGlow()
 {
@@ -274,7 +274,7 @@ static int ApplyBotGlow()
 		);
 	}
 
-	// Detener parpadeo después de 10 segundos
+	// Detener parpadeo despues de 10 segundos
 	CreateTimer(10.0, Timer_StopBotGlow, _, TIMER_FLAG_NO_MAPCHANGE);
 
 	return botsGlowed;
@@ -333,7 +333,7 @@ public Action Timer_StopBotGlow(Handle timer)
 }
 
 /**
- * Resetea el cooldown (útil para debugging)
+ * Resetea el cooldown (util para debugging)
  */
 stock void ResetTeamHealCooldown(int client)
 {

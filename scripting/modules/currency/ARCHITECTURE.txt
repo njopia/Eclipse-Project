@@ -33,12 +33,12 @@ EVENTO DEL JUEGO
        ▼
 ┌──────────────────────────────────┐
 │ Event_Handler valida:            │
-│ - Cliente válido (1-MaxClients)  │
+│ - Cliente valido (1-MaxClients)  │
 │ - Cliente en juego               │
 │ - Team correcto (Si aplica)      │
 └──────────────────────────────────┘
        │
-    ✓ Si válido / ✗ Si no válido
+    ✓ Si valido / ✗ Si no valido
        │
        ▼
 ┌──────────────────────────────┐
@@ -58,17 +58,17 @@ EVENTO DEL JUEGO
        │
        ▼
 ┌──────────────────────────────┐
-│ Registro en Estadísticas:    │
+│ Registro en Estadisticas:    │
 │ - CurrencyStats_Add*()       │
 │ - Incrementa contadores      │
-│ - Guarda datos de sesión     │
+│ - Guarda datos de sesion     │
 └──────────────────────────────┘
        │
        ▼
     COMPLETO: Usuario gana puntos
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    ESTRUCTURA DE MÓDULOS - ÁRBOL                            │
+│                    ESTRUCTURA DE MODULOS - ARBOL                            │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 Eclipse Management System.sp (MAIN)
@@ -127,7 +127,7 @@ Eclipse Management System.sp (MAIN)
    └─ server-management.utils.sp
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    FLUJO DE INICIALIZACIÓN (OnPluginStart)                  │
+│                    FLUJO DE INICIALIZACION (OnPluginStart)                  │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 OnPluginStart()
@@ -155,13 +155,13 @@ OnPluginStart()
 └─ PrecacheAll()
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    GESTIÓN DEL CICLO DE VIDA DEL CLIENTE                    │
+│                    GESTION DEL CICLO DE VIDA DEL CLIENTE                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 Cliente se conecta
 │
 ├─ OnClientConnect()
-│  └─ (Automático, stats no se resetean aún)
+│  └─ (Automatico, stats no se resetean aun)
 │
 ├─ OnClientDisconnect(client)
 │  ├─ g_iPlayerCurrency[client] = 0 (Reset)
@@ -180,7 +180,7 @@ Cliente se conecta
 
 BUY MENU MODULE:
 ├─ g_iPlayerCurrency[MAXPLAYERS + 1]  ← Balance de cada jugador
-└─ Múltiples cooldown arrays
+└─ Multiples cooldown arrays
 
 CURRENCY EVENTS MODULE:
 ├─ cvar_CurrencyCommonKill
@@ -232,7 +232,7 @@ PurchaseItem(client, cost, itemName)
 ├─ CanAffordPurchase(client, cost)?
 │  ├─ SI: Restar de g_iPlayerCurrency[client]
 │  │      Mostrar "Comprado: X Item"
-│  │      Ejecutar acción del item
+│  │      Ejecutar accion del item
 │  │      return true
 │  └─ NO: Mostrar "No tienes suficientes puntos"
 │         return false
@@ -241,7 +241,7 @@ PurchaseItem(client, cost, itemName)
 Item ejecutado (si compra exitosa)
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    RELACIÓN ENTRE MÓDULOS                                   │
+│                    RELACION ENTRE MODULOS                                   │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────┐
@@ -307,28 +307,28 @@ Item ejecutado (si compra exitosa)
 └─────────────────────────────────────────────────────────────────────────────┘
 
 Cada evento verifica:
-✓ Cliente es válido (1 a MaxClients)
-✓ Cliente está en juego (IsClientInGame)
+✓ Cliente es valido (1 a MaxClients)
+✓ Cliente esta en juego (IsClientInGame)
 ✓ Team es correcto (si aplica)
 ✓ Evento viene de SourceMod (HookEvent)
 
 Funciones helper verifican:
-✓ Cliente válido antes de modificar arrays
+✓ Cliente valido antes de modificar arrays
 ✓ IsClientInGame antes de enviar mensajes
 ✓ Rango de arrays no se sobrepasa
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    ESTADÍSTICAS Y AUDITORÍA                                 │
+│                    ESTADISTICAS Y AUDITORIA                                 │
 └─────────────────────────────────────────────────────────────────────────────┘
 
 Cada vez que se otorgan puntos:
 1. Se suman a g_iPlayerCurrency[client]
 2. Se registra en CurrencyStats_AddEarnings()
-3. Se actualiza contador específico (si aplica)
+3. Se actualiza contador especifico (si aplica)
    - CurrencyStats_AddCommonKill()
    - CurrencyStats_AddHeadshot()
    - etc.
 
-Resultado: Auditoría completa por sesión del jugador
+Resultado: Auditoria completa por sesion del jugador
 
 ═════════════════════════════════════════════════════════════════════════════

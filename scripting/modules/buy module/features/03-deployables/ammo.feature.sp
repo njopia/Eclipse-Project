@@ -2,10 +2,10 @@
  * ============================================================================
  * ECLIPSE MANAGEMENT SYSTEM — AMMO SPAWN MODULE
  * ============================================================================
- * Spawnea pilas/packs de munición donde apunta el jugador.
- * Límite de distancia: CONFIG_AMMO_MAX_DIST unidades (~3 metros = ~192 u.)
+ * Spawnea pilas/packs de municion donde apunta el jugador.
+ * Limite de distancia: CONFIG_AMMO_MAX_DIST unidades (~3 metros = ~192 u.)
  *
- * API pública:
+ * API publica:
  *   SpawnAmmo(int client, AmmoKind kind)
  *   SpawnAmmoByName(int client, const char[] typeName)
  *   AmmoPile_ResetCooldown(int client)
@@ -14,7 +14,7 @@
  */
 
 #if !defined EMS_MAIN_FILE
-	#error Compile from "Eclipse Management System.sp". Este es un módulo auxiliar.
+	#error Compile from "Eclipse Management System.sp". Este es un modulo auxiliar.
 #endif
 
 // ============================================================================
@@ -50,7 +50,7 @@ static const char g_AmmoAlias[AMMO_KINDS_COUNT][] = {
 	"incendiary"
 };
 
-// Classnames ordenados por probabilidad de éxito (primero el más común)
+// Classnames ordenados por probabilidad de exito (primero el mas comun)
 static const char g_ClassPile[1][] = {
 	"weapon_ammo_spawn"
 };
@@ -76,8 +76,8 @@ static ConVar g_cvDebug;
 // ============================================================================
 public void AmmoSpawn_OnPluginStart()
 {
-	g_cvDebug = CreateConVar("ems_ammo_debug", "0", "Debug del módulo de ammo spawn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	RegAdminCmd("sm_spawnammo", Cmd_SpawnAmmo, ADMFLAG_CHEATS, "Spawnea munición: sm_spawnammo <pile|explosive|incendiary>");
+	g_cvDebug = CreateConVar("ems_ammo_debug", "0", "Debug del modulo de ammo spawn", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	RegAdminCmd("sm_spawnammo", Cmd_SpawnAmmo, ADMFLAG_CHEATS, "Spawnea municion: sm_spawnammo <pile|explosive|incendiary>");
 
 	// Todos listos al arrancar
 	for (int i = 1; i <= MaxClients; i++)
@@ -142,7 +142,7 @@ public Action Cmd_SpawnAmmo(int client, int args)
 }
 
 // ============================================================================
-// API pública
+// API publica
 // ============================================================================
 
 /**
@@ -156,7 +156,7 @@ stock void AmmoPile_ResetCooldown(int client)
 }
 
 /**
- * Spawnea munición por nombre de tipo.
+ * Spawnea municion por nombre de tipo.
  */
 stock void SpawnAmmoByName(int client, const char[] typeName)
 {
@@ -168,11 +168,11 @@ stock void SpawnAmmoByName(int client, const char[] typeName)
 			return;
 		}
 	}
-	PrintToChat(client, "[Ammo] Tipo inválido: '%s' (pile | explosive | incendiary)", typeName);
+	PrintToChat(client, "[Ammo] Tipo invalido: '%s' (pile | explosive | incendiary)", typeName);
 }
 
 /**
- * Spawnea munición del tipo dado en el punto de mira del cliente.
+ * Spawnea municion del tipo dado en el punto de mira del cliente.
  * Usa bool de disponibilidad en vez de timestamps — inmune a cambios de mapa.
  */
 stock void SpawnAmmo(int client, AmmoKind kind)
@@ -183,15 +183,15 @@ stock void SpawnAmmo(int client, AmmoKind kind)
 	// Verificar cooldown
 	if (!g_bReady[client][kind])
 	{
-		PrintToChat(client, "[Ammo] \x04%s\x01 aún en cooldown (\x05%.0fs\x01).", g_AmmoAlias[kind], CONFIG_AMMO_PILE_COOLDOWN);
+		PrintToChat(client, "[Ammo] \x04%s\x01 aun en cooldown (\x05%.0fs\x01).", g_AmmoAlias[kind], CONFIG_AMMO_PILE_COOLDOWN);
 		return;
 	}
 
-	// Raycast con validación de distancia
+	// Raycast con validacion de distancia
 	float hitPos[3];
 	if (!_GetAimPoint(client, hitPos))
 	{
-		PrintToChat(client, "[Ammo] No hay superficie válida frente a ti.");
+		PrintToChat(client, "[Ammo] No hay superficie valida frente a ti.");
 		return;
 	}
 
@@ -234,7 +234,7 @@ public Action _Timer_AmmoCooldown(Handle timer, any data)
 }
 
 /**
- * Destruye la entidad de ammo al expirar su vida útil.
+ * Destruye la entidad de ammo al expirar su vida util.
  */
 public Action _Timer_KillEnt(Handle timer, any entRef)
 {
@@ -250,8 +250,8 @@ public Action _Timer_KillEnt(Handle timer, any entRef)
 
 /**
  * Lanza un ray desde los ojos del cliente y devuelve el punto de impacto
- * si está dentro de CONFIG_AMMO_MAX_DIST. Devuelve false si no hay impacto
- * o si está fuera de rango.
+ * si esta dentro de CONFIG_AMMO_MAX_DIST. Devuelve false si no hay impacto
+ * o si esta fuera de rango.
  */
 static bool _GetAimPoint(int client, float outPos[3])
 {
@@ -275,15 +275,15 @@ static bool _GetAimPoint(int client, float outPos[3])
 
 	// Validar distancia
 	float dist = GetVectorDistance(eyePos, outPos);
-	_DLog(client, "Impacto a %.1f unidades (máx %.1f)", dist, CONFIG_AMMO_MAX_DIST);
+	_DLog(client, "Impacto a %.1f unidades (max %.1f)", dist, CONFIG_AMMO_MAX_DIST);
 
 	if (dist > CONFIG_AMMO_MAX_DIST)
 	{
-		PrintToChat(client, "[Ammo] Superficie demasiado lejos (%.1f u. / máx %.0f u.).", dist, CONFIG_AMMO_MAX_DIST);
+		PrintToChat(client, "[Ammo] Superficie demasiado lejos (%.1f u. / max %.0f u.).", dist, CONFIG_AMMO_MAX_DIST);
 		return false;
 	}
 
-	outPos[2] += 2.0;	 // pequeño offset para que no quede enterrado
+	outPos[2] += 2.0;	 // pequeno offset para que no quede enterrado
 	return true;
 }
 
@@ -339,7 +339,7 @@ static int _TrySpawn(int client, const char[] classname, const float pos[3], boo
 	int ent = CreateEntityByName(classname);
 	if (ent == -1)
 	{
-		_ELog(client, "CreateEntityByName('%s') falló.", classname);
+		_ELog(client, "CreateEntityByName('%s') fallo.", classname);
 		return -1;
 	}
 
@@ -355,7 +355,7 @@ static int _TrySpawn(int client, const char[] classname, const float pos[3], boo
 
 	if (!IsValidEntity(ent))
 	{
-		_ELog(client, "DispatchSpawn('%s') invalidó la entidad.", classname);
+		_ELog(client, "DispatchSpawn('%s') invalido la entidad.", classname);
 		return -1;
 	}
 

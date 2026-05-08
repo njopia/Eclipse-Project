@@ -11,15 +11,15 @@
 /**
  * Obtiene el nivel actual del jugador
  *
- * @param client    Índice del cliente
- * @return          Nivel del jugador (0 si es inválido)
+ * @param client    Indice del cliente
+ * @return          Nivel del jugador (0 si es invalido)
  */
 native int EMS_GetPlayerLevel(int client);
 
 /**
  * Obtiene el XP actual del jugador dentro de su nivel actual
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          XP actual del jugador
  */
 native int EMS_GetPlayerCurrentXP(int client);
@@ -27,7 +27,7 @@ native int EMS_GetPlayerCurrentXP(int client);
 /**
  * Obtiene el XP total acumulado del jugador desde el inicio
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          XP total acumulado
  */
 native int EMS_GetPlayerTotalXP(int client);
@@ -35,7 +35,7 @@ native int EMS_GetPlayerTotalXP(int client);
 /**
  * Obtiene el XP requerido para alcanzar el siguiente nivel
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          XP necesario para subir de nivel
  */
 native int EMS_GetXPForNextLevel(int client);
@@ -43,7 +43,7 @@ native int EMS_GetXPForNextLevel(int client);
 /**
  * Obtiene el progreso del jugador hacia el siguiente nivel
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          Porcentaje de progreso (0-100)
  */
 native int EMS_GetLevelProgress(int client);
@@ -51,7 +51,7 @@ native int EMS_GetLevelProgress(int client);
 /**
  * Obtiene la moneda/puntos actuales del jugador
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          Cantidad de currency/puntos
  */
 native int EMS_GetPlayerCurrency(int client);

@@ -5,7 +5,7 @@
 // Cooldown: 5 minutes
 //==================================================
 
-#define LIFESTEAL_PERCENTAGE 0.15  // 15% del daño se convierte en curación
+#define LIFESTEAL_PERCENTAGE 0.15  // 15% del dano se convierte en curacion
 
 /**
  * Activa Lifestealer
@@ -64,7 +64,7 @@ void Ability_Lifestealer_Deactivate(int client)
 }
 
 /**
- * Hook de daño para Lifestealer
+ * Hook de dano para Lifestealer
  */
 public Action Lifestealer_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
@@ -73,7 +73,7 @@ public Action Lifestealer_OnTakeDamage(int victim, int &attacker, int &inflictor
 	{
 		if (Abilities_IsActive(attacker, Ability_Lifestealer))
 		{
-			// Calcular curación (15% del daño)
+			// Calcular curacion (15% del dano)
 			int healAmount = RoundToFloor(damage * LIFESTEAL_PERCENTAGE);
 
 			if (healAmount > 0)

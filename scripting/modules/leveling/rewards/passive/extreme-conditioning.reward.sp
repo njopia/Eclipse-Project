@@ -16,7 +16,7 @@ Handle cvar_ExtremeConditioning_SpeedMultiplier = INVALID_HANDLE;
 bool g_bExtremeConditioning_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Extreme Conditioning
+ * Inicializa el modulo de Extreme Conditioning
  */
 public void ExtremeConditioning_OnPluginStart()
 {
@@ -69,13 +69,13 @@ public void ExtremeConditioning_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_ExtremeConditioning_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bExtremeConditioning_Enabled[client] = true;
 		float multiplier = GetConVarFloat(cvar_ExtremeConditioning_SpeedMultiplier);
 		int percentage = RoundToFloor((multiplier - 1.0) * 100.0);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Extreme Conditioning\x01! (Velocidad aumentada en \x03+%d%%\x01)", percentage);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Extreme Conditioning\x01! (Velocidad aumentada en \x03+%d%%\x01)", percentage);
 	}
 	else if (level > requiredLevel)
 	{
@@ -93,7 +93,7 @@ public bool ExtremeConditioning_IsUnlocked(int client, int level)
 
 /**
  * Procesa el movimiento del jugador cada tick
- * Esta función debe ser llamada desde OnPlayerRunCmd
+ * Esta funcion debe ser llamada desde OnPlayerRunCmd
  */
 public Action ExtremeConditioning_OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 {
@@ -129,13 +129,13 @@ stock void ExtremeConditioning_UpdateSpeed(int client)
 	float speedValue;
 	float speedMultiplier = GetConVarFloat(cvar_ExtremeConditioning_SpeedMultiplier);
 
-	// Verificar si está saltando
+	// Verificar si esta saltando
 	if (flags & IN_JUMP)
 	{
 		// En salto, velocidad ligeramente mayor
 		speedValue = 1.15;
 	}
-	// Verificar si está en el agua
+	// Verificar si esta en el agua
 	else if (flags & FL_INWATER)
 	{
 		// En agua, velocidad reducida
@@ -147,7 +147,7 @@ stock void ExtremeConditioning_UpdateSpeed(int client)
 		}
 		else
 		{
-			speedValue = speedMultiplier * 0.8; // Más lento en agua sin adrenalina
+			speedValue = speedMultiplier * 0.8; // Mas lento en agua sin adrenalina
 		}
 	}
 	else
@@ -156,11 +156,11 @@ stock void ExtremeConditioning_UpdateSpeed(int client)
 		speedValue = speedMultiplier;
 	}
 
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", speedValue);
+	SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", speedValue);
 }
 
 /**
- * Obtiene si Extreme Conditioning está habilitado para un jugador
+ * Obtiene si Extreme Conditioning esta habilitado para un jugador
  */
 public bool ExtremeConditioning_IsEnabled(int client)
 {

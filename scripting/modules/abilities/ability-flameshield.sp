@@ -6,7 +6,7 @@
 //==================================================
 
 #define FLAMESHIELD_RADIUS 200.0
-#define FLAMESHIELD_DAMAGE 5.0  // Daño por tick
+#define FLAMESHIELD_DAMAGE 5.0  // Dano por tick
 #define FLAMESHIELD_DAMAGE_INTERVAL 0.5  // Cada 0.5 segundos
 
 Handle g_hFlameshield_Timer[MAXPLAYERS + 1];
@@ -19,7 +19,7 @@ bool Ability_Flameshield_Activate(int client)
 {
 	Flameshield_CreateFireEffect(client);
 
-	// Iniciar timer de daño
+	// Iniciar timer de dano
 	g_hFlameshield_Timer[client] = CreateTimer(FLAMESHIELD_DAMAGE_INTERVAL, Timer_Flameshield_Damage, GetClientUserId(client), TIMER_REPEAT);
 
 	// Efecto visual naranja
@@ -92,7 +92,7 @@ void Ability_Flameshield_Deactivate(int client)
 }
 
 /**
- * Timer: Daño de Flameshield a infectados cercanos
+ * Timer: Dano de Flameshield a infectados cercanos
  */
 public Action Timer_Flameshield_Damage(Handle timer, int userid)
 {
@@ -103,7 +103,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 	if (!Abilities_IsActive(client, Ability_Flameshield))
 		return Plugin_Stop;
 
-	// Obtener posición del jugador
+	// Obtener posicion del jugador
 	float clientPos[3];
 	GetClientAbsOrigin(client, clientPos);
 
@@ -120,7 +120,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 			float distance = GetVectorDistance(clientPos, targetPos);
 			if (distance <= FLAMESHIELD_RADIUS)
 			{
-				// Aplicar daño e incendiar
+				// Aplicar dano e incendiar
 				SDKHooks_TakeDamage(i, client, client, FLAMESHIELD_DAMAGE, DMG_BURN);
 
 				// Incendiar al infectado
@@ -130,7 +130,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 		}
 	}
 
-	// También buscar infectados comunes cercanos
+	// Tambien buscar infectados comunes cercanos
 	int entity = -1;
 	while ((entity = FindEntityByClassname(entity, "infected")) != -1)
 	{
@@ -140,13 +140,13 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 		float distance = GetVectorDistance(clientPos, targetPos);
 		if (distance <= FLAMESHIELD_RADIUS)
 		{
-			// Incendiar infectado común
+			// Incendiar infectado comun
 			Flameshield_IgniteEntity(entity, client, 3.0);
 			infectadosQuemados++;
 		}
 	}
 
-	// Debug: mostrar cuántos infectados se quemaron
+	// Debug: mostrar cuantos infectados se quemaron
 	if (infectadosQuemados > 0)
 	{
 		PrintHintText(client, "Flameshield: %d infectados quemados", infectadosQuemados);
@@ -160,7 +160,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
  */
 void Flameshield_CreateFireEffect(int client)
 {
-	// Crear partícula de fuego
+	// Crear particula de fuego
 	int particle = CreateEntityByName("info_particle_system");
 	if (particle == -1)
 		return;
@@ -197,7 +197,7 @@ stock void Flameshield_IgniteEntity(int entity, int attacker, float duration)
 	if (!IsValidEntity(entity))
 		return;
 
-	// Si Left4DHooks está disponible, usar la función nativa
+	// Si Left4DHooks esta disponible, usar la funcion nativa
 	#if defined _l4dhooks_included
 		L4D2_Ignite(entity, duration);
 		return;
@@ -213,11 +213,11 @@ stock void Flameshield_IgniteEntity(int entity, int attacker, float duration)
 		return;
 	}
 
-	// Para entidades (infectados comunes): usar método extendido
+	// Para entidades (infectados comunes): usar metodo extendido
 	ExtinguishEntity(entity); // Apagar fuego existente primero
 	IgniteEntity(entity, duration); // Intentar IgniteEntity primero
 
-	// Método adicional para asegurar que se vea el fuego
+	// Metodo adicional para asegurar que se vea el fuego
 	char targetName[32];
 	Format(targetName, sizeof(targetName), "flameshield_t_%d", entity);
 	DispatchKeyValue(entity, "targetname", targetName);

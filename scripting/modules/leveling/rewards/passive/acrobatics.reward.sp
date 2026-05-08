@@ -4,7 +4,7 @@
 
 //==================================================
 // === ACROBATICS PASSIVE REWARD ===
-// Aumenta la altura del salto y reduce el daño por caída
+// Aumenta la altura del salto y reduce el dano por caida
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -17,28 +17,28 @@ Handle cvar_Acrobatics_FallDamageReduction = INVALID_HANDLE;
 bool g_bAcrobatics_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Acrobatics
+ * Inicializa el modulo de Acrobatics
  */
 public void Acrobatics_OnPluginStart()
 {
 	cvar_Acrobatics_RequiredLevel = CreateConVar(
 		"reward_acrobatics_level",
 		"2",
-		"Nivel requerido para desbloquear Acrobatics (aumento de salto y reducción de daño por caída)",
+		"Nivel requerido para desbloquear Acrobatics (aumento de salto y reduccion de dano por caida)",
 		FCVAR_PLUGIN
 	);
 
 	cvar_Acrobatics_JumpGravity = CreateConVar(
 		"reward_acrobatics_jump_gravity",
 		"0.7",
-		"Multiplicador de gravedad al saltar (0.7 = salto más alto, 1.0 = normal)",
+		"Multiplicador de gravedad al saltar (0.7 = salto mas alto, 1.0 = normal)",
 		FCVAR_PLUGIN
 	);
 
 	cvar_Acrobatics_FallDamageReduction = CreateConVar(
 		"reward_acrobatics_fall_reduction",
 		"0.5",
-		"Multiplicador de daño por caída (0.5 = mitad de daño, 1.0 = normal)",
+		"Multiplicador de dano por caida (0.5 = mitad de dano, 1.0 = normal)",
 		FCVAR_PLUGIN
 	);
 }
@@ -77,11 +77,11 @@ public void Acrobatics_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_Acrobatics_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bAcrobatics_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Acrobatics\x01! (Mayor altura de salto y menos daño por caída)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Acrobatics\x01! (Mayor altura de salto y menos dano por caida)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -115,7 +115,7 @@ public Action Acrobatics_OnPlayerRunCmd(int client, int &buttons, int &impulse, 
 
 	float gravityValue;
 
-	// Si está saltando (en el aire), reducir la gravedad
+	// Si esta saltando (en el aire), reducir la gravedad
 	if (buttons & IN_JUMP)
 	{
 		gravityValue = GetConVarFloat(cvar_Acrobatics_JumpGravity);
@@ -131,39 +131,39 @@ public Action Acrobatics_OnPlayerRunCmd(int client, int &buttons, int &impulse, 
 }
 
 /**
- * Maneja la reducción de daño por caída
- * Esta función debe ser llamada desde OnTakeDamage
- * @param victim - ID del cliente que recibe daño
+ * Maneja la reduccion de dano por caida
+ * Esta funcion debe ser llamada desde OnTakeDamage
+ * @param victim - ID del cliente que recibe dano
  * @param attacker - ID del atacante (0 = mundo)
- * @param damage - Daño original
- * @param damagetype - Tipo de daño
- * @return Daño modificado
+ * @param damage - Dano original
+ * @param damagetype - Tipo de dano
+ * @return Dano modificado
  */
 public float Acrobatics_OnTakeDamage(int victim, int attacker, float damage, int damagetype)
 {
 	// Solo procesar si:
 	// 1. El atacante es el mundo (attacker == 0)
-	// 2. El tipo de daño es por caída (damagetype == 32)
+	// 2. El tipo de dano es por caida (damagetype == 32)
 	// 3. El jugador tiene Acrobatics habilitado
 	if (attacker == 0 && damagetype == 32 && g_bAcrobatics_Enabled[victim])
 	{
-		if (damage > 2.0) // Solo reducir si el daño es significativo
+		if (damage > 2.0) // Solo reducir si el dano es significativo
 		{
 			float reductionMultiplier = GetConVarFloat(cvar_Acrobatics_FallDamageReduction);
 			float reducedDamage = damage * reductionMultiplier;
 			float damageReduced = damage - reducedDamage;
 
-			PrintToChat(victim, "\x04[Acrobatics]\x01 Daño por caída reducido en \x03%i\x01 puntos de vida.", RoundFloat(damageReduced));
+			PrintToChat(victim, "\x04[Acrobatics]\x01 Dano por caida reducido en \x03%i\x01 puntos de vida.", RoundFloat(damageReduced));
 
 			return reducedDamage;
 		}
 	}
 
-	return damage; // Devolver daño sin modificar
+	return damage; // Devolver dano sin modificar
 }
 
 /**
- * Obtiene si Acrobatics está habilitado para un jugador
+ * Obtiene si Acrobatics esta habilitado para un jugador
  */
 public bool Acrobatics_IsEnabled(int client)
 {

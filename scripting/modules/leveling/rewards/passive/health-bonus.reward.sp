@@ -15,7 +15,7 @@ Handle cvar_HealthBonus_BonusAmount = INVALID_HANDLE;
 bool g_bHealthBonus_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Health Bonus
+ * Inicializa el modulo de Health Bonus
  */
 public void HealthBonus_OnPluginStart()
 {
@@ -33,7 +33,7 @@ public void HealthBonus_OnPluginStart()
 		FCVAR_PLUGIN
 	);
 
-	// Timer para verificar y mantener el HP máximo cada segundo
+	// Timer para verificar y mantener el HP maximo cada segundo
 	CreateTimer(1.0, Timer_CheckMaxHealth, _, TIMER_REPEAT);
 }
 
@@ -81,14 +81,14 @@ public void HealthBonus_OnLevelUp(int client, int level)
 	int requiredLevel = GetConVarInt(cvar_HealthBonus_RequiredLevel);
 	LogMessage("[HEALTH BONUS DEBUG] OnLevelUp - %N (Nivel %d, Requerido: %d)", client, level, requiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bHealthBonus_Enabled[client] = true;
 		HealthBonus_ApplyHealth(client);
 
 		int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Ganaste \x05+%d HP\x01!", bonusAmount);
+		PrintToChat(client, "\x04[REWARD]\x01 Ganaste \x05+%d HP\x01!", bonusAmount);
 		LogMessage("[HEALTH BONUS DEBUG] Health bonus DESBLOQUEADO para %N (nivel exacto)", client);
 	}
 	else if (level > requiredLevel)
@@ -118,7 +118,7 @@ stock void HealthBonus_ApplyHealth(int client)
 {
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 	{
-		LogMessage("[HEALTH BONUS DEBUG] ApplyHealth - %N no está vivo o en juego", client);
+		LogMessage("[HEALTH BONUS DEBUG] ApplyHealth - %N no esta vivo o en juego", client);
 		return;
 	}
 
@@ -131,10 +131,10 @@ stock void HealthBonus_ApplyHealth(int client)
 	LogMessage("[HEALTH BONUS DEBUG] ApplyHealth - %N: HP actual=%d, MaxHP actual=%d, Nuevo MaxHP=%d",
 		client, currentHealth, currentMaxHealth, newMaxHealth);
 
-	// Establecer el HP máximo
+	// Establecer el HP maximo
 	SetEntProp(client, Prop_Send, "m_iMaxHealth", newMaxHealth);
 
-	// Si el jugador está a HP completo (100), subirlo a 125
+	// Si el jugador esta a HP completo (100), subirlo a 125
 	if (currentHealth == 100)
 	{
 		SetEntityHealth(client, newMaxHealth);
@@ -144,14 +144,14 @@ stock void HealthBonus_ApplyHealth(int client)
 	else if (currentHealth < newMaxHealth)
 	{
 		// No hacer nada, el HP actual se mantiene
-		// Cuando se cure, podrá llegar hasta el nuevo máximo (125)
+		// Cuando se cure, podra llegar hasta el nuevo maximo (125)
 		LogMessage("[HEALTH BONUS DEBUG] HP mantenido en %d para %N (puede curarse hasta %d)",
 			currentHealth, client, newMaxHealth);
 	}
 }
 
 /**
- * Obtiene si el health bonus está habilitado para un jugador
+ * Obtiene si el health bonus esta habilitado para un jugador
  */
 public bool HealthBonus_IsEnabled(int client)
 {
@@ -162,17 +162,17 @@ public bool HealthBonus_IsEnabled(int client)
 }
 
 /**
- * Remueve el bonus de HP (restaura HP máximo a 100)
+ * Remueve el bonus de HP (restaura HP maximo a 100)
  */
 stock void HealthBonus_RemoveHealth(int client)
 {
 	if (!IsClientInGame(client) || !IsPlayerAlive(client))
 		return;
 
-	// Restaurar HP máximo a 100
+	// Restaurar HP maximo a 100
 	SetEntProp(client, Prop_Send, "m_iMaxHealth", 100);
 
-	// Si el jugador tiene más de 100 HP, reducirlo a 100
+	// Si el jugador tiene mas de 100 HP, reducirlo a 100
 	int currentHealth = GetClientHealth(client);
 	if (currentHealth > 100)
 	{
@@ -182,7 +182,7 @@ stock void HealthBonus_RemoveHealth(int client)
 
 /**
  * Verifica y re-aplica el bonus de HP si es necesario
- * Útil para asegurar que el HP máximo persista después de eventos del juego
+ * Util para asegurar que el HP maximo persista despues de eventos del juego
  */
 stock void HealthBonus_EnsureMaxHealth(int client)
 {
@@ -192,16 +192,16 @@ stock void HealthBonus_EnsureMaxHealth(int client)
 	if (!g_bHealthBonus_Enabled[client])
 		return;
 
-	// NO aplicar Health Bonus si Speed Freak está activo
-	// Speed Freak tiene prioridad y maneja el HP máximo temporalmente
+	// NO aplicar Health Bonus si Speed Freak esta activo
+	// Speed Freak tiene prioridad y maneja el HP maximo temporalmente
 	// NOTA: Speed Freak ahora es parte del sistema de Abilities
-	// La verificación de conflicto de HP se maneja en el módulo de abilities
+	// La verificacion de conflicto de HP se maneja en el modulo de abilities
 
 	int bonusAmount = GetConVarInt(cvar_HealthBonus_BonusAmount);
 	int expectedMaxHealth = 100 + bonusAmount;
 	int currentMaxHealth = GetEntProp(client, Prop_Send, "m_iMaxHealth");
 
-	// Si el HP máximo no es el esperado, corregirlo
+	// Si el HP maximo no es el esperado, corregirlo
 	if (currentMaxHealth != expectedMaxHealth)
 	{
 		SetEntProp(client, Prop_Send, "m_iMaxHealth", expectedMaxHealth);
@@ -209,7 +209,7 @@ stock void HealthBonus_EnsureMaxHealth(int client)
 }
 
 /**
- * Timer que verifica el HP máximo de todos los jugadores cada segundo
+ * Timer que verifica el HP maximo de todos los jugadores cada segundo
  */
 public Action Timer_CheckMaxHealth(Handle timer)
 {

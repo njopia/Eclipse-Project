@@ -25,10 +25,10 @@ bool Ability_Nightcrawler_Activate(int client)
 		return false;
 	}
 
-	// Seleccionar un índice aleatorio (evitando repetir el anterior si es posible)
+	// Seleccionar un indice aleatorio (evitando repetir el anterior si es posible)
 	int randomIndex = GetRandomInt(0, g_iNightcrawler_SurvivorCount[client] - 1);
 
-	// Si hay más de 1 survivor y el aleatorio coincide con el último usado, intentar otro
+	// Si hay mas de 1 survivor y el aleatorio coincide con el ultimo usado, intentar otro
 	if (g_iNightcrawler_SurvivorCount[client] > 1)
 	{
 		int attempts = 0;
@@ -41,10 +41,10 @@ bool Ability_Nightcrawler_Activate(int client)
 
 	g_iNightcrawler_CurrentTarget[client] = randomIndex;
 
-	// Guardar el survivor actual como el último usado
+	// Guardar el survivor actual como el ultimo usado
 	g_iNightcrawler_LastTarget[client] = g_iNightcrawler_SurvivorList[client][randomIndex];
 
-	// Efecto visual púrpura
+	// Efecto visual purpura
 	int clients[1];
 	clients[0] = client;
 	int color[4] = {128, 0, 255, 100};
@@ -79,7 +79,7 @@ void Ability_Nightcrawler_Deactivate(int client)
 	if (!IsClientInGame(client))
 		return;
 
-	// No limpiar LastTarget - queremos recordarlo para la próxima activación
+	// No limpiar LastTarget - queremos recordarlo para la proxima activacion
 	g_iNightcrawler_CurrentTarget[client] = 0;
 	g_iNightcrawler_SurvivorCount[client] = 0;
 
@@ -173,12 +173,12 @@ void Nightcrawler_Teleport(int client)
 	int target = g_iNightcrawler_SurvivorList[client][g_iNightcrawler_CurrentTarget[client]];
 	if (target <= 0 || !IsClientInGame(target) || !IsPlayerAlive(target))
 	{
-		// Reconstruir lista si el target murió
+		// Reconstruir lista si el target murio
 		Nightcrawler_BuildSurvivorList(client);
 		return;
 	}
 
-	// Obtener posición del target
+	// Obtener posicion del target
 	float targetPos[3], targetAng[3];
 	GetClientAbsOrigin(target, targetPos);
 	GetClientAbsAngles(target, targetAng);
@@ -194,7 +194,7 @@ void Nightcrawler_Teleport(int client)
 	// Teletransportar
 	TeleportEntity(client, targetPos, targetAng, NULL_VECTOR);
 
-	// Efecto visual después de teleport
+	// Efecto visual despues de teleport
 	TE_SetupBeamRingPoint(targetPos, 10.0, 300.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.5, 10.0, 0.0, {128, 0, 255, 255}, 10, 0);
 	TE_SendToAll();
 

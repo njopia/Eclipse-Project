@@ -13,7 +13,7 @@
 /**
  * Verifica si un cliente puede usar el Ion Cannon
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          true si puede usarlo, false si no
  */
 native bool Ion_CanUse(int client);
@@ -21,15 +21,15 @@ native bool Ion_CanUse(int client);
 /**
  * Activa el Ion Cannon para un cliente (llamado desde sistema de compras)
  *
- * @param client    Índice del cliente que compró el Ion
- * @return          true si se activó correctamente, false si falló
+ * @param client    Indice del cliente que compro el Ion
+ * @return          true si se activo correctamente, false si fallo
  */
 native bool Ion_Activate(int client);
 
 /**
  * Obtiene el tiempo de cooldown restante para un cliente
  *
- * @param client    Índice del cliente
+ * @param client    Indice del cliente
  * @return          Segundos restantes de cooldown (0 = disponible)
  */
 native float Ion_GetCooldown(int client);
@@ -37,31 +37,31 @@ native float Ion_GetCooldown(int client);
 /**
  * Obtiene las cargas restantes de un cliente
  *
- * @param client    Índice del cliente
- * @return          Número de cargas restantes
+ * @param client    Indice del cliente
+ * @return          Numero de cargas restantes
  */
 native int Ion_GetCharges(int client);
 
 /**
- * Establece las cargas de un cliente (útil para eventos especiales)
+ * Establece las cargas de un cliente (util para eventos especiales)
  *
- * @param client    Índice del cliente
- * @param charges   Número de cargas a establecer
+ * @param client    Indice del cliente
+ * @param charges   Numero de cargas a establecer
  */
 native void Ion_SetCharges(int client, int charges);
 
 /**
  * Forward llamado cuando el Ion Cannon se activa
  *
- * @param client    Cliente que activó el Ion
+ * @param client    Cliente que activo el Ion
  */
 forward void Ion_OnActivate(int client);
 
 /**
  * Forward llamado cuando el Ion Cannon termina
  *
- * @param client    Cliente cuyo Ion terminó
- * @param kills     Número de infectados eliminados
+ * @param client    Cliente cuyo Ion termino
+ * @param kills     Numero de infectados eliminados
  */
 forward void Ion_OnComplete(int client, int kills);
 

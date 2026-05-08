@@ -5,7 +5,7 @@
 
 //==================================================
 // === FRAGS SYSTEM MODULE ===
-// Sistema de frags y estadísticas de daño
+// Sistema de frags y estadisticas de dano
 //==================================================
 
 #define MAXPLAYERS_PLUS1 (MAXPLAYERS + 1)
@@ -23,7 +23,7 @@ int	 ExClientsCount = 0;
 bool ShowInfo[MAXPLAYERS_PLUS1];
 
 /**
- * Inicializa el módulo de frags
+ * Inicializa el modulo de frags
  */
 public void FragsSystem_OnPluginStart()
 {
@@ -53,7 +53,7 @@ public void FragsSystem_OnClientPutInServer(int client)
 }
 
 /**
- * Reset de todas las estadísticas
+ * Reset de todas las estadisticas
  */
 void FragsSystem_ResetAllStats()
 {
@@ -106,7 +106,7 @@ public void FragsSystem_Event_PlayerDeath(Event event, const char[] name, bool d
 		int basePoints = 0;
 		bool isHeadshot = event.GetBool("headshot", false);
 
-		// Calcular puntos BASE según tipo (debe coincidir con eclipse-points-unified)
+		// Calcular puntos BASE segun tipo (debe coincidir con eclipse-points-unified)
 		// Valores BASE para Easy: Tank=100, Especiales=10
 		if (zombieClass == 8) // Tank
 			basePoints = 100;
@@ -121,13 +121,13 @@ public void FragsSystem_Event_PlayerDeath(Event event, const char[] name, bool d
 		int difficultyMultiplier = GetDifficultyMultiplier();
 		int finalPoints = basePoints * difficultyMultiplier;
 
-		// Usar función centralizada de buy-menu para mostrar el mensaje con puntos FINALES
+		// Usar funcion centralizada de buy-menu para mostrar el mensaje con puntos FINALES
 		BuyMenu_PrintKillMessage(attacker, victim, Frags[attacker], FragsSystem_GetFragsPos(attacker), finalPoints);
 	}
 }
 
 /**
- * Evento: Player Hurt (daño de infectados)
+ * Evento: Player Hurt (dano de infectados)
  */
 public void FragsSystem_Event_PlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
@@ -153,7 +153,7 @@ public void FragsSystem_Event_PlayerHurt(Event event, const char[] name, bool do
 }
 
 /**
- * Timer para verificar daño acumulado
+ * Timer para verificar dano acumulado
  */
 public Action FragsSystem_Timer_CheckDamage(Handle timer, any client)
 {
@@ -166,7 +166,7 @@ public Action FragsSystem_Timer_CheckDamage(Handle timer, any client)
 		{
 			if (FragsSystem_IsValidClient(i) && ShowInfo[i])
 			{
-				PrintToChat(i, "\x03[Pos: %d] \x04%N \x01causó \x05%d daño \x01(Total: \x03%d\x01)",
+				PrintToChat(i, "\x03[Pos: %d] \x04%N \x01causo \x05%d dano \x01(Total: \x03%d\x01)",
 							FragsSystem_GetDmgPos(client), client, SessionDmg[client], Dmg[client]);
 			}
 		}
@@ -190,7 +190,7 @@ void FragsSystem_ShowFragsPanel(int client)
 {
 	Panel panel = new Panel();
 
-	panel.SetTitle("Estadísticas Actuales:");
+	panel.SetTitle("Estadisticas Actuales:");
 
 	panel.DrawText("Frags Survivors:");
 
@@ -205,13 +205,13 @@ void FragsSystem_ShowFragsPanel(int client)
 	}
 
 	panel.DrawText(" ");
-	panel.DrawText("Daño Infected:");
+	panel.DrawText("Dano Infected:");
 
 	for (int i = 1; i <= FragsSystem_GetTeamPlayerCount(3); i++)
 	{
 		if (FragsSystem_IsValidClient(DmgLine[i]) && GetClientTeam(DmgLine[i]) == 3)
 		{
-			Format(text, sizeof(text), "%d. %N - Daño: %d", i, DmgLine[i], Dmg[DmgLine[i]]);
+			Format(text, sizeof(text), "%d. %N - Dano: %d", i, DmgLine[i], Dmg[DmgLine[i]]);
 			panel.DrawText(text);
 		}
 	}
@@ -231,7 +231,7 @@ public int FragsSystem_PanelHandler_Frags(Menu menu, MenuAction action, int para
 }
 
 /**
- * Actualizar líneas de frags y daño
+ * Actualizar lineas de frags y dano
  */
 void FragsSystem_UpdateFragsLine()
 {
@@ -247,7 +247,7 @@ void FragsSystem_UpdateFragsLine()
 }
 
 /**
- * Obtener cliente con más frags
+ * Obtener cliente con mas frags
  */
 int FragsSystem_GetMaxFragsClient()
 {
@@ -268,7 +268,7 @@ int FragsSystem_GetMaxFragsClient()
 }
 
 /**
- * Obtener cliente con más daño
+ * Obtener cliente con mas dano
  */
 int FragsSystem_GetMaxDamageClient()
 {
@@ -310,7 +310,7 @@ bool FragsSystem_IsExClient(int client)
 }
 
 /**
- * Obtener posición en frags
+ * Obtener posicion en frags
  */
 int FragsSystem_GetFragsPos(int client)
 {
@@ -321,7 +321,7 @@ int FragsSystem_GetFragsPos(int client)
 }
 
 /**
- * Obtener posición en daño
+ * Obtener posicion en dano
  */
 int FragsSystem_GetDmgPos(int client)
 {
@@ -363,5 +363,5 @@ bool FragsSystem_IsValidClient(int client)
 public void FragsSystem_Event_MapStart(Event event, const char[] name, bool dontBroadcast)
 {
 	FragsSystem_ResetAllStats();
-	PrintToServer("[frags] Estadísticas reseteadas: cambio de mapa detectado.");
+	PrintToServer("[frags] Estadisticas reseteadas: cambio de mapa detectado.");
 }

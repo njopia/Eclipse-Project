@@ -43,9 +43,9 @@ Menu g_SpecialsMenu;
 #define BM_CHOICE_5_2 "BM_TeamBonuses_TeamHeal"
 
 // =============================================================================
-// HELPER — tiempo restante del Team Speed Boost para mostrar en el menú.
-// El manager no expone el tiempo restante directamente, así que mostramos
-// si está activo o en cooldown, que es lo que realmente importa en la UI.
+// HELPER — tiempo restante del Team Speed Boost para mostrar en el menu.
+// El manager no expone el tiempo restante directamente, asi que mostramos
+// si esta activo o en cooldown, que es lo que realmente importa en la UI.
 // =============================================================================
 static void _BM_GetSpeedBoostMenuText(int client, int cost, char[] out, int maxlen)
 {
@@ -75,7 +75,7 @@ static void _BM_GetSpeedBoostMenuText(int client, int cost, char[] out, int maxl
 }
 
 // =============================================================================
-// MENÚ PRINCIPAL
+// MENU PRINCIPAL
 // =============================================================================
 public Action Cmd_Buy(int client, int args)
 {
@@ -135,7 +135,7 @@ public Action Cmd_Buy(int client, int args)
 	g_MainMenu.ExitButton = true;
 	g_MainMenu.Display(client, 20);
 
-	// Recrear submenús para mostrar timers actualizados
+	// Recrear submenus para mostrar timers actualizados
 	InstantsMenu(client);
 	DeployablesMenu(client);
 	BombardmentsMenu(client);
@@ -198,7 +198,7 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 }
 
 // =============================================================================
-// SUBMENÚS
+// SUBMENUS
 // =============================================================================
 public void InstantsMenu(int client)
 {
@@ -473,7 +473,7 @@ public void SpecialsMenu(int client)
 }
 
 // =============================================================================
-// HANDLERS DE SELECCIÓN
+// HANDLERS DE SELECCION
 // =============================================================================
 public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int param)
 {
@@ -523,7 +523,7 @@ public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int
 		}
 		if (!AmmoPile_IsReady(client, AMMO_PILE))
 		{
-			PrintToChat(client, "\x05[Eclipse]\x01 Ammo Pile aún en cooldown.");
+			PrintToChat(client, "\x05[Eclipse]\x01 Ammo Pile aun en cooldown.");
 			return 0;
 		}
 		if (PurchaseItem(client, GetConVarInt(cvar_CostAmmo), "Ammo Pile"))

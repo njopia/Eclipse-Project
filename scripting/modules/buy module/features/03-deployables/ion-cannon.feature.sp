@@ -6,14 +6,14 @@
 	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
 #endif
 
-// Ion Cannon ahora está integrado - NO necesita include externo
+// Ion Cannon ahora esta integrado - NO necesita include externo
 float g_LastIonPurchase[MAXPLAYERS + 1];
 
 /**
- * Comprar y activar Ion Cannon desde el menú
+ * Comprar y activar Ion Cannon desde el menu
  *
  * @param client    Cliente que compra
- * @return          true si se activó exitosamente
+ * @return          true si se activo exitosamente
  */
 stock bool BuyIonCannon(int client)
 {
@@ -85,11 +85,11 @@ stock bool BuyIonCannon(int client)
 }
 
 /**
- * Obtener información del Ion Cannon para mostrar en el menú
+ * Obtener informacion del Ion Cannon para mostrar en el menu
  *
  * @param client    Cliente
  * @param buffer    Buffer para el texto
- * @param maxlen    Tamaño del buffer
+ * @param maxlen    Tamano del buffer
  */
 stock void GetIonCannonInfo(int client, char[] buffer, int maxlen)
 {
@@ -131,7 +131,7 @@ stock bool CanBuyIonCannon(int client)
 	if (timeSinceLastPurchase < CONFIG_IONCANNON_BUY_COOLDOWN)
 		return false;
 
-	// Verificar si tiene cargas y no está en cooldown
+	// Verificar si tiene cargas y no esta en cooldown
 	return IonCannon_CanUse(client);
 }
 

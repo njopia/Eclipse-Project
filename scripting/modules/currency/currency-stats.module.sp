@@ -4,11 +4,11 @@
 
 //==================================================
 // === CURRENCY STATS MODULE ===
-// Rastrea y registra estadísticas de currency ganada
+// Rastrea y registra estadisticas de currency ganada
 //==================================================
 
-// --- Arrays para estadísticas de currency ---
-int g_iCurrencyEarned[MAXPLAYERS + 1];        // Total de currency ganada por sesión
+// --- Arrays para estadisticas de currency ---
+int g_iCurrencyEarned[MAXPLAYERS + 1];        // Total de currency ganada por sesion
 int g_iCommonKills[MAXPLAYERS + 1];           // Total de infectados comunes matados
 int g_iSpecialKills[MAXPLAYERS + 1];          // Total de especiales matados
 int g_iHeadshots[MAXPLAYERS + 1];             // Total de headshots
@@ -16,16 +16,16 @@ int g_iTotalRevivals[MAXPLAYERS + 1];         // Total de revives dados
 int g_iTotalHeals[MAXPLAYERS + 1];            // Total de curaciones dadas
 
 /**
- * Inicializa el módulo de estadísticas de currency
+ * Inicializa el modulo de estadisticas de currency
  */
 public void CurrencyStats_OnPluginStart()
 {
-	// No hay ConVars, solo inicialización de arrays
+	// No hay ConVars, solo inicializacion de arrays
 	// Los arrays se resetean en ResetPlayerCurrencyStats()
 }
 
 /**
- * Resetea todas las estadísticas de un jugador
+ * Resetea todas las estadisticas de un jugador
  * Debe ser llamada en OnClientDisconnect
  */
 public void ResetPlayerCurrencyStats(int client)
@@ -39,8 +39,8 @@ public void ResetPlayerCurrencyStats(int client)
 }
 
 /**
- * Reporta estadísticas de currency del jugador
- * Útil para debugging y auditoría
+ * Reporta estadisticas de currency del jugador
+ * Util para debugging y auditoria
  */
 stock void CurrencyStats_PrintPlayerStats(int client)
 {
@@ -115,7 +115,7 @@ stock void CurrencyStats_AddHeal(int client)
 }
 
 /**
- * Registra currency ganada en estadísticas
+ * Registra currency ganada en estadisticas
  * Debe ser llamada desde AwardCurrency
  */
 stock void CurrencyStats_AddEarnings(int client, int amount)
@@ -126,7 +126,7 @@ stock void CurrencyStats_AddEarnings(int client, int amount)
 }
 
 /**
- * Obtiene el total de currency ganada por sesión
+ * Obtiene el total de currency ganada por sesion
  */
 stock int CurrencyStats_GetTotalEarned(int client)
 {

@@ -17,7 +17,7 @@ static Handle g_hGlowTimer = INVALID_HANDLE;
  * Activa la habilidad Team Speed Boost para un jugador.
  * Aumenta la velocidad de todos los sobrevivientes un 40% durante CONFIG_TEAM_SPEEDBOOST_DURATION.
  *
- * @param client  Índice del jugador que activa la habilidad.
+ * @param client  Indice del jugador que activa la habilidad.
  */
 stock void	 Activate_TeamSpeedBoost(int client)
 {
@@ -92,7 +92,7 @@ static void RemoveSpeedBoostGlow(int client)
 }
 
 // =============================================================================
-// API PÚBLICA
+// API PUBLICA
 // =============================================================================
 
 /**
@@ -104,9 +104,9 @@ stock bool TeamSpeedBoost_IsActive(int client)
 }
 
 /**
- * Retorna el tiempo restante del boost activo (0.0 si no está activo).
+ * Retorna el tiempo restante del boost activo (0.0 si no esta activo).
  * Nota: el manager no expone el tiempo restante directamente,
- * así que lo calculamos desde el cooldown del cliente que lo activó.
+ * asi que lo calculamos desde el cooldown del cliente que lo activo.
  * Para un tracking exacto usa un timer propio si lo necesitas en la UI.
  */
 stock float GetTeamSpeedBoostCooldown(int client)

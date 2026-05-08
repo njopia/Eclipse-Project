@@ -4,7 +4,7 @@
 
 //==================================================
 // === LASER ROUNDS PASSIVE REWARD ===
-// Actualiza rifles y SMGs a munición láser con daño extra e incineración
+// Actualiza rifles y SMGs a municion laser con dano extra e incineracion
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -32,11 +32,11 @@ Handle cvar_LaserRounds_DamageBonus = INVALID_HANDLE;
 
 // --- Estado del jugador ---
 bool g_bLaserRounds_Enabled[MAXPLAYERS + 1];
-int g_iLaserRounds_LastWeapon[MAXPLAYERS + 1];  // Última arma a la que se aplicó láser
-Handle g_hLaserRounds_CheckTimer[MAXPLAYERS + 1];  // Timer de verificación periódica
+int g_iLaserRounds_LastWeapon[MAXPLAYERS + 1];  // Ultima arma a la que se aplico laser
+Handle g_hLaserRounds_CheckTimer[MAXPLAYERS + 1];  // Timer de verificacion periodica
 
 /**
- * Inicializa el módulo de Laser Rounds
+ * Inicializa el modulo de Laser Rounds
  */
 public void LaserRounds_OnPluginStart()
 {
@@ -50,7 +50,7 @@ public void LaserRounds_OnPluginStart()
 	cvar_LaserRounds_DamageBonus = CreateConVar(
 		"reward_laserrounds_damage",
 		"1.5",
-		"Multiplicador de daño para Laser Rounds",
+		"Multiplicador de dano para Laser Rounds",
 		FCVAR_PLUGIN
 	);
 
@@ -116,7 +116,7 @@ public void LaserRounds_OnLevelUp(int client, int level)
 	if (level == requiredLevel)
 	{
 		g_bLaserRounds_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Laser Rounds\x01! (Munición láser con daño extra e incineración)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Laser Rounds\x01! (Municion laser con dano extra e incineracion)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -133,7 +133,7 @@ public bool LaserRounds_IsUnlocked(int client, int level)
 }
 
 /**
- * Evento: Item Pickup - Marca que se recogió un arma nueva
+ * Evento: Item Pickup - Marca que se recogio un arma nueva
  */
 public Action Event_LaserRounds_ItemPickup(Event event, const char[] name, bool dontBroadcast)
 {
@@ -152,7 +152,7 @@ public Action Event_LaserRounds_ItemPickup(Event event, const char[] name, bool 
 	char itemName[64];
 	event.GetString("item", itemName, sizeof(itemName));
 
-	// Si es un arma primaria compatible, resetear el tracker para forzar verificación
+	// Si es un arma primaria compatible, resetear el tracker para forzar verificacion
 	if (LaserRounds_IsLaserWeapon(itemName))
 	{
 		g_iLaserRounds_LastWeapon[client] = -1;
@@ -162,7 +162,7 @@ public Action Event_LaserRounds_ItemPickup(Event event, const char[] name, bool 
 }
 
 /**
- * Timer: Verifica constantemente si el arma actual necesita láser
+ * Timer: Verifica constantemente si el arma actual necesita laser
  */
 public Action Timer_LaserRounds_CheckWeapon(Handle timer, int userid)
 {
@@ -186,7 +186,7 @@ public Action Timer_LaserRounds_CheckWeapon(Handle timer, int userid)
 
 	if (weapon > 0 && IsValidEntity(weapon))
 	{
-		// Verificar si es una arma diferente a la última procesada
+		// Verificar si es una arma diferente a la ultima procesada
 		if (weapon != g_iLaserRounds_LastWeapon[client])
 		{
 			char weaponClass[64];
@@ -203,16 +203,16 @@ public Action Timer_LaserRounds_CheckWeapon(Handle timer, int userid)
 			{
 				// Aplicar upgrade de laser sight (upgrade flag 4)
 				int upgrades = GetEntProp(weapon, Prop_Send, "m_upgradeBitVec");
-				if (!(upgrades & 4)) // Si no tiene láser
+				if (!(upgrades & 4)) // Si no tiene laser
 				{
 					SetEntProp(weapon, Prop_Send, "m_upgradeBitVec", upgrades | 4);
 					SetEntProp(weapon, Prop_Send, "m_nUpgradedPrimaryAmmoLoaded", GetEntProp(weapon, Prop_Send, "m_iClip1"));
 
 					// Feedback visual sutil
-					PrintToChat(client, "\x04[Laser Rounds]\x01 Láser aplicado al arma");
+					PrintToChat(client, "\x04[Laser Rounds]\x01 Laser aplicado al arma");
 				}
 
-				// Actualizar última arma procesada
+				// Actualizar ultima arma procesada
 				g_iLaserRounds_LastWeapon[client] = weapon;
 			}
 		}
@@ -222,7 +222,7 @@ public Action Timer_LaserRounds_CheckWeapon(Handle timer, int userid)
 }
 
 /**
- * Evento: Weapon Fire - Crea efecto de láser
+ * Evento: Weapon Fire - Crea efecto de laser
  */
 public Action Event_LaserRounds_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
@@ -237,11 +237,11 @@ public Action Event_LaserRounds_WeaponFire(Event event, const char[] name, bool 
 	if (!g_bLaserRounds_Enabled[client])
 		return Plugin_Continue;
 
-	// Obtener el arma que disparó desde el evento
+	// Obtener el arma que disparo desde el evento
 	char weaponName[32];
 	event.GetString("weapon", weaponName, sizeof(weaponName));
 
-	// Verificar si es un arma compatible con láser
+	// Verificar si es un arma compatible con laser
 	if (!LaserRounds_IsLaserWeapon(weaponName))
 		return Plugin_Continue;
 
@@ -252,10 +252,10 @@ public Action Event_LaserRounds_WeaponFire(Event event, const char[] name, bool 
 		float origin[3];
 		LaserRounds_GetPlayerEye(client, origin);
 
-		// Crear efecto láser
+		// Crear efecto laser
 		LaserRounds_CreateLaser(viewmodel, origin);
 
-		// Sonido de láser (volumen reducido y pitch más bajo)
+		// Sonido de laser (volumen reducido y pitch mas bajo)
 		EmitSoundToAll("ambient/energy/zap6.wav", client, SNDCHAN_AUTO, SNDLEVEL_HOME, SND_NOFLAGS, 0.2, 90);
 	}
 
@@ -263,7 +263,7 @@ public Action Event_LaserRounds_WeaponFire(Event event, const char[] name, bool 
 }
 
 /**
- * Verifica si un arma es compatible con láser (por nombre del weapon_fire event)
+ * Verifica si un arma es compatible con laser (por nombre del weapon_fire event)
  */
 stock bool LaserRounds_IsLaserWeapon(const char[] weaponName)
 {
@@ -299,7 +299,7 @@ stock bool LaserRounds_IsLaserWeapon(const char[] weaponName)
 }
 
 /**
- * Verifica si un viewmodel es compatible con láser
+ * Verifica si un viewmodel es compatible con laser
  * OBSOLETO: Ya no se usa, se mantiene por compatibilidad
  */
 stock bool LaserRounds_IsLaserViewModel(int entity)
@@ -326,7 +326,7 @@ stock bool LaserRounds_IsLaserViewModel(int entity)
 }
 
 /**
- * Crea el efecto visual de láser
+ * Crea el efecto visual de laser
  */
 stock void LaserRounds_CreateLaser(int entity, float position[3])
 {
@@ -349,7 +349,7 @@ stock void LaserRounds_CreateLaser(int entity, float position[3])
 		AcceptEntityInput(endpoint, "FireUser1");
 	}
 
-	// Crear partícula de láser
+	// Crear particula de laser
 	int particle = CreateEntityByName("info_particle_system");
 	if (particle > 0 && IsValidEntity(particle))
 	{
@@ -372,7 +372,7 @@ stock void LaserRounds_CreateLaser(int entity, float position[3])
 }
 
 /**
- * Obtiene la posición del ojo del jugador (para el endpoint del láser)
+ * Obtiene la posicion del ojo del jugador (para el endpoint del laser)
  */
 stock void LaserRounds_GetPlayerEye(int client, float position[3])
 {
@@ -390,7 +390,7 @@ stock void LaserRounds_GetPlayerEye(int client, float position[3])
 	}
 	else
 	{
-		// Si no impacta nada, usar una posición muy lejana
+		// Si no impacta nada, usar una posicion muy lejana
 		GetAngleVectors(eyeAngles, direction, NULL_VECTOR, NULL_VECTOR);
 		position[0] = eyePos[0] + direction[0] * 10000.0;
 		position[1] = eyePos[1] + direction[1] * 10000.0;
@@ -401,7 +401,7 @@ stock void LaserRounds_GetPlayerEye(int client, float position[3])
 }
 
 /**
- * Filtro para el trace del láser
+ * Filtro para el trace del laser
  */
 public bool LaserRounds_TraceFilter(int entity, int contentsMask, int client)
 {
@@ -409,7 +409,7 @@ public bool LaserRounds_TraceFilter(int entity, int contentsMask, int client)
 }
 
 /**
- * Obtiene el multiplicador de daño
+ * Obtiene el multiplicador de dano
  * Debe ser llamado desde OnTakeDamage
  */
 public float LaserRounds_GetDamageMultiplier(int attacker)
@@ -423,7 +423,7 @@ public float LaserRounds_GetDamageMultiplier(int attacker)
 }
 
 /**
- * Obtiene si Laser Rounds está habilitado para un jugador
+ * Obtiene si Laser Rounds esta habilitado para un jugador
  */
 public bool LaserRounds_IsEnabled(int client)
 {

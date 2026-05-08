@@ -243,7 +243,7 @@ void ShowCustomAmountPrompt(int admin, int target)
 	char sPlayerName[MAX_NAME_LENGTH];
 	GetClientName(target, sPlayerName, sizeof(sPlayerName));
 
-	Format(sTitle, sizeof(sTitle), "Cantidad personalizada para %s (escribe un número):", sPlayerName);
+	Format(sTitle, sizeof(sTitle), "Cantidad personalizada para %s (escribe un numero):", sPlayerName);
 
 	// Store target info
 	g_iAdminMoneyTarget[admin] = target;

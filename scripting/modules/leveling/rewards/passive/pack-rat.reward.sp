@@ -4,7 +4,7 @@
 
 //==================================================
 // === PACK RAT PASSIVE REWARD ===
-// Permite llevar más munición en todas las armas
+// Permite llevar mas municion en todas las armas
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -16,26 +16,26 @@ Handle cvar_PackRat_AmmoMultiplier = INVALID_HANDLE;
 bool g_bPackRat_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Pack Rat
+ * Inicializa el modulo de Pack Rat
  */
 public void PackRat_OnPluginStart()
 {
 	cvar_PackRat_RequiredLevel = CreateConVar(
 		"reward_packrat_level",
 		"6",
-		"Nivel requerido para desbloquear Pack Rat (más capacidad de munición)",
+		"Nivel requerido para desbloquear Pack Rat (mas capacidad de municion)",
 		FCVAR_PLUGIN
 	);
 
 	cvar_PackRat_AmmoMultiplier = CreateConVar(
 		"reward_packrat_ammo_multiplier",
 		"1.25",
-		"Multiplicador de capacidad de munición (1.25 = +25% munición)",
+		"Multiplicador de capacidad de municion (1.25 = +25% municion)",
 		FCVAR_PLUGIN
 	);
 
-	// Hook para cuando el jugador recoge munición
-	// Nota: Se aplicará automáticamente cuando el jugador use ammo piles
+	// Hook para cuando el jugador recoge municion
+	// Nota: Se aplicara automaticamente cuando el jugador use ammo piles
 }
 
 /**
@@ -72,13 +72,13 @@ public void PackRat_OnLevelUp(int client, int level)
 {
 	int requiredLevel = GetConVarInt(cvar_PackRat_RequiredLevel);
 
-	// Solo mostrar mensaje si justo alcanzó el nivel requerido
+	// Solo mostrar mensaje si justo alcanzo el nivel requerido
 	if (level == requiredLevel)
 	{
 		g_bPackRat_Enabled[client] = true;
 		float multiplier = GetConVarFloat(cvar_PackRat_AmmoMultiplier);
 		int percentage = RoundToFloor((multiplier - 1.0) * 100.0);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Pack Rat\x01! (Puedes llevar \x03+%d%%\x01 más munición)", percentage);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Pack Rat\x01! (Puedes llevar \x03+%d%%\x01 mas municion)", percentage);
 	}
 	else if (level > requiredLevel)
 	{
@@ -95,8 +95,8 @@ public bool PackRat_IsUnlocked(int client, int level)
 }
 
 /**
- * Aplica munición extra cuando el jugador recoge un ammo pile
- * Esta función debe ser llamada desde el evento de item_pickup o cuando se usa ammo pile
+ * Aplica municion extra cuando el jugador recoge un ammo pile
+ * Esta funcion debe ser llamada desde el evento de item_pickup o cuando se usa ammo pile
  */
 public void PackRat_OnAmmoPickup(int client)
 {
@@ -110,7 +110,7 @@ public void PackRat_OnAmmoPickup(int client)
 }
 
 /**
- * Otorga munición extra basada en el arma primaria equipada
+ * Otorga municion extra basada en el arma primaria equipada
  */
 stock void PackRat_GiveExtraAmmo(int client)
 {
@@ -132,12 +132,12 @@ stock void PackRat_GiveExtraAmmo(int client)
 	if (maxAmmo > 0 && currentAmmo < maxAmmo)
 	{
 		SetEntData(client, FindSendPropInfo("CTerrorPlayer", "m_iAmmo") + offset, maxAmmo);
-		PrintToChat(client, "\x04[Pack Rat]\x01 Almacenando munición extra");
+		PrintToChat(client, "\x04[Pack Rat]\x01 Almacenando municion extra");
 	}
 }
 
 /**
- * Obtiene el offset de munición de un arma
+ * Obtiene el offset de municion de un arma
  */
 stock int PackRat_GetWeaponAmmoOffset(int weapon)
 {
@@ -150,7 +150,7 @@ stock int PackRat_GetWeaponAmmoOffset(int weapon)
 }
 
 /**
- * Obtiene la cantidad máxima de munición para un arma con Pack Rat
+ * Obtiene la cantidad maxima de municion para un arma con Pack Rat
  */
 stock int PackRat_GetMaxAmmoForWeapon(const char[] classname)
 {
@@ -197,11 +197,11 @@ stock int PackRat_GetMaxAmmoForWeapon(const char[] classname)
 	if (StrEqual(classname, "weapon_sniper_awp"))
 		return RoundFloat(180 * multiplier);
 
-	return 0; // Arma no reconocida o sin munición extra
+	return 0; // Arma no reconocida o sin municion extra
 }
 
 /**
- * Obtiene si Pack Rat está habilitado para un jugador
+ * Obtiene si Pack Rat esta habilitado para un jugador
  */
 public bool PackRat_IsEnabled(int client)
 {

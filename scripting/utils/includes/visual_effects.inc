@@ -5,8 +5,8 @@
 /**
  * Aplica un efecto de color (Fade) en la pantalla del jugador.
  *
- * @param client        Índice del cliente.
- * @param duration      Duración total del efecto en milisegundos.
+ * @param client        Indice del cliente.
+ * @param duration      Duracion total del efecto en milisegundos.
  * @param holdTime      Tiempo que el color se queda fijo antes de desvanecerse.
  * @param flags         Flags del Fade (0x0001: Fade In, 0x0002: Fade Out, 0x0008: Stay Out).
  * @param r             Rojo (0-255).
@@ -38,7 +38,7 @@
 #define FFADE_STAYOUT  0x0008	 // El color se queda fijo (no se desvanece solo)
 #define FFADE_PURGE	   0x0010	 // Limpia todos los efectos de fade anteriores
 /**
- * Función base para el efecto Fade.
+ * Funcion base para el efecto Fade.
  */
 stock void FX_SetFade(int client, int duration, int holdTime, int flags, int r, int g, int b, int a)
 {
@@ -50,7 +50,7 @@ stock void FX_SetFade(int client, int duration, int holdTime, int flags, int r, 
 	Handle message = StartMessageEx(GetUserMessageId("Fade"), clients, 1);
 	if (message != INVALID_HANDLE)
 	{
-		// Usamos BfWrite directamente (estándar de SourceMod para L4D2)
+		// Usamos BfWrite directamente (estandar de SourceMod para L4D2)
 		BfWriteShort(message, duration);
 		BfWriteShort(message, holdTime);
 		BfWriteShort(message, flags);
@@ -63,8 +63,8 @@ stock void FX_SetFade(int client, int duration, int holdTime, int flags, int r, 
 }
 
 /**
- * Crea un bloque de color sólido (Activa el feature visual).
- * Usamos una duración mínima (10ms) para que sea instantáneo.
+ * Crea un bloque de color solido (Activa el feature visual).
+ * Usamos una duracion minima (10ms) para que sea instantaneo.
  */
 stock void FX_FadeCustom(int client, int r, int g, int b, int alpha)
 {
@@ -78,6 +78,6 @@ stock void FX_FadeCustom(int client, int r, int g, int b, int alpha)
  */
 stock void FX_ClearFade(int client)
 {
-	// Al quitarlo, un desvanecimiento de 500ms (0.5s) queda más natural que un corte brusco.
+	// Al quitarlo, un desvanecimiento de 500ms (0.5s) queda mas natural que un corte brusco.
 	FX_SetFade(client, 500, 0, FFADE_PURGE | FFADE_OUT, 0, 0, 0, 0);
 }

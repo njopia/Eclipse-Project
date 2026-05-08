@@ -130,8 +130,8 @@ public bool Knife_IsUnlocked(int client, int level)
 
 /**
  * Proceso de knife - debe ser llamado en OnPlayerRunCmd o similar
- * Requiere el nivel del jugador para calcular daño
- * Retorna true si está en proceso de knife
+ * Requiere el nivel del jugador para calcular dano
+ * Retorna true si esta en proceso de knife
  */
 public bool Knife_Process(int client, int buttons, int level)
 {
@@ -151,13 +151,13 @@ public bool Knife_Process(int client, int buttons, int level)
 			g_fKnife_StartTime[client] = 0.0;
 			g_iKnife_Target[client] = -1;
 
-			// Feedback de cancelación
+			// Feedback de cancelacion
 			PrintHintText(client, "");
 		}
 		return false;
 	}
 
-	// Verificar si alguien lo está usando
+	// Verificar si alguien lo esta usando
 	int useActionOwner = GetEntPropEnt(client, Prop_Send, "m_useActionOwner");
 
 	float currentTime = GetEngineTime();
@@ -166,7 +166,7 @@ public bool Knife_Process(int client, int buttons, int level)
 	// Iniciar proceso si presiona USE
 	if (buttons & IN_USE)
 	{
-		// Verificar cooldown de 0.5s después del último uso
+		// Verificar cooldown de 0.5s despues del ultimo uso
 		float timeSinceLastUse = currentTime - g_fKnife_LastUse[client];
 		if (timeSinceLastUse < 0.5)
 		{
@@ -179,7 +179,7 @@ public bool Knife_Process(int client, int buttons, int level)
 			g_fKnife_StartTime[client] = currentTime;
 			g_iKnife_Target[client] = zombie;
 
-			// Crear botón de progreso nativo
+			// Crear boton de progreso nativo
 			Knife_CreateProgressButton(client, duration);
 
 			// Feedback inicial mejorado
@@ -188,7 +188,7 @@ public bool Knife_Process(int client, int buttons, int level)
 		}
 		else if (g_bKnife_InProgress[client])
 		{
-			// Verificar si completó el tiempo
+			// Verificar si completo el tiempo
 			float elapsed = currentTime - g_fKnife_StartTime[client];
 
 			if (elapsed >= duration)
@@ -199,10 +199,10 @@ public bool Knife_Process(int client, int buttons, int level)
 				// IMPORTANTE: Resetear TODOS los estados para permitir un nuevo uso
 				g_bKnife_InProgress[client] = false;
 				g_fKnife_StartTime[client] = 0.0;
-				g_fKnife_LastUse[client] = currentTime; // Marcar tiempo del último uso
+				g_fKnife_LastUse[client] = currentTime; // Marcar tiempo del ultimo uso
 				g_iKnife_Target[client] = -1;
 
-				// Destruir el botón de progreso
+				// Destruir el boton de progreso
 				Knife_DestroyProgressButton(client);
 			}
 		}
@@ -217,10 +217,10 @@ public bool Knife_Process(int client, int buttons, int level)
 			g_fKnife_StartTime[client] = 0.0;
 			g_iKnife_Target[client] = -1;
 
-			// Destruir el botón de progreso
+			// Destruir el boton de progreso
 			Knife_DestroyProgressButton(client);
 
-			// Feedback de cancelación
+			// Feedback de cancelacion
 			PrintCenterText(client, ">> KNIFE ATTACK CANCELLED <<");
 		}
 	}
@@ -229,14 +229,14 @@ public bool Knife_Process(int client, int buttons, int level)
 }
 
 /**
- * Crea un botón de progreso invisible que muestra la barra nativa de L4D2
+ * Crea un boton de progreso invisible que muestra la barra nativa de L4D2
  */
 stock void Knife_CreateProgressButton(int client, float duration)
 {
-	// Destruir botón anterior si existe
+	// Destruir boton anterior si existe
 	Knife_DestroyProgressButton(client);
 
-	// Obtener posición del jugador
+	// Obtener posicion del jugador
 	float clientPos[3];
 	GetClientAbsOrigin(client, clientPos);
 
@@ -245,17 +245,17 @@ stock void Knife_CreateProgressButton(int client, float duration)
 	if (!IsValidEntity(button))
 		return;
 
-	// Configurar el botón
+	// Configurar el boton
 	char durationStr[16];
 	FloatToString(duration, durationStr, sizeof(durationStr));
 
 	DispatchKeyValue(button, "use_string", "Knifing..."); // Texto que se muestra
-	DispatchKeyValue(button, "use_time", durationStr); // Duración
+	DispatchKeyValue(button, "use_time", durationStr); // Duracion
 	DispatchKeyValue(button, "auto_disable", "1"); // Auto-desactivar al completar
 
-	// Hacer el botón invisible y sin colisión
+	// Hacer el boton invisible y sin colision
 	DispatchKeyValue(button, "rendermode", "10"); // No renderizar
-	DispatchKeyValue(button, "solid", "0"); // Sin colisión
+	DispatchKeyValue(button, "solid", "0"); // Sin colision
 
 	DispatchSpawn(button);
 	ActivateEntity(button);
@@ -268,7 +268,7 @@ stock void Knife_CreateProgressButton(int client, float duration)
 	effects |= 32; // EF_NODRAW
 	SetEntProp(button, Prop_Send, "m_fEffects", effects);
 
-	// Auto-activar el botón para el cliente
+	// Auto-activar el boton para el cliente
 	SetEntPropEnt(button, Prop_Data, "m_hActivator", client);
 	AcceptEntityInput(button, "Press", client, client);
 
@@ -277,7 +277,7 @@ stock void Knife_CreateProgressButton(int client, float duration)
 }
 
 /**
- * Destruye el botón de progreso
+ * Destruye el boton de progreso
  */
 stock void Knife_DestroyProgressButton(int client)
 {
@@ -300,7 +300,7 @@ stock void Knife_Complete(int client, int zombie, int level)
 
 	if (random >= minChance)
 	{
-		// Éxito!
+		// Exito!
 		int damageMultiplier = GetConVarInt(cvar_Knife_DamageMultiplier);
 		int damage = random * damageMultiplier;
 
@@ -327,7 +327,7 @@ stock void Knife_Complete(int client, int zombie, int level)
 			}
 		}
 
-		// Daño normal - Feedback mejorado
+		// Dano normal - Feedback mejorado
 		char zombieName[32];
 		Knife_GetInfectedName(zombie, zombieName, sizeof(zombieName));
 
@@ -335,7 +335,7 @@ stock void Knife_Complete(int client, int zombie, int level)
 		PrintToChat(client, "\x04[KNIFE]\x01 \x05CRITICAL HIT!\x01 [\x03%d\x01 damage to %s]", damage, zombieName);
 		PrintCenterText(client, ">> STABBING SUCCESSFUL! <<\n%d DAMAGE", damage);
 
-		// Efecto de pantalla (rojo intenso para daño alto, naranja para daño bajo)
+		// Efecto de pantalla (rojo intenso para dano alto, naranja para dano bajo)
 		if (damage >= 100)
 			Knife_ScreenEffect(client, {255, 0, 0, 40}); // Rojo
 		else
@@ -345,7 +345,7 @@ stock void Knife_Complete(int client, int zombie, int level)
 	}
 	else
 	{
-		// Falló - Feedback mejorado
+		// Fallo - Feedback mejorado
 		PrintHintText(client, "");
 		PrintToChat(client, "\x04[KNIFE]\x01 \x07You missed!\x01 (Rolled: %d, Needed: %d+)", random, minChance);
 		PrintCenterText(client, ">> KNIFE ATTACK FAILED! <<");
@@ -356,7 +356,7 @@ stock void Knife_Complete(int client, int zombie, int level)
 }
 
 /**
- * Verifica qué infectado está sosteniendo al jugador
+ * Verifica que infectado esta sosteniendo al jugador
  */
 stock int Knife_CheckZombieHold(int client)
 {
@@ -405,7 +405,7 @@ stock void Knife_BreakInfectedHold(int zombie)
 }
 
 /**
- * Aplica daño al infectado
+ * Aplica dano al infectado
  */
 stock void Knife_DealDamage(int victim, int damage)
 {
@@ -424,7 +424,7 @@ stock void Knife_DealDamage(int victim, int damage)
 }
 
 /**
- * Obtiene si Knife está habilitado para un jugador
+ * Obtiene si Knife esta habilitado para un jugador
  */
 public bool Knife_IsEnabled(int client)
 {
@@ -435,7 +435,7 @@ public bool Knife_IsEnabled(int client)
 }
 
 /**
- * Obtiene si el jugador está en proceso de knife
+ * Obtiene si el jugador esta en proceso de knife
  */
 public bool Knife_IsInProgress(int client)
 {

@@ -4,7 +4,7 @@
 
 //==================================================
 // === MASTER AT ARMS PASSIVE REWARD ===
-// Duplica el daño de armas melee (100 -> 200)
+// Duplica el dano de armas melee (100 -> 200)
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -16,7 +16,7 @@ Handle cvar_MasterAtArms_MeleeDamage = INVALID_HANDLE;
 bool g_bMasterAtArms_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Master at Arms
+ * Inicializa el modulo de Master at Arms
  */
 public void MasterAtArms_OnPluginStart()
 {
@@ -30,7 +30,7 @@ public void MasterAtArms_OnPluginStart()
 	cvar_MasterAtArms_MeleeDamage = CreateConVar(
 		"reward_masteratarms_damage",
 		"200.0",
-		"Daño de melee con Master at Arms (default: 100.0)",
+		"Dano de melee con Master at Arms (default: 100.0)",
 		FCVAR_PLUGIN
 	);
 }
@@ -72,7 +72,7 @@ public void MasterAtArms_OnLevelUp(int client, int level)
 	if (level == requiredLevel)
 	{
 		g_bMasterAtArms_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Master at Arms\x01! (Daño melee duplicado)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Master at Arms\x01! (Dano melee duplicado)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -89,7 +89,7 @@ public bool MasterAtArms_IsUnlocked(int client, int level)
 }
 
 /**
- * Obtiene el daño melee modificado para el jugador
+ * Obtiene el dano melee modificado para el jugador
  * Debe ser llamado desde el hook OnTakeDamage
  */
 public float MasterAtArms_GetMeleeDamage(int client)
@@ -99,11 +99,11 @@ public float MasterAtArms_GetMeleeDamage(int client)
 		return GetConVarFloat(cvar_MasterAtArms_MeleeDamage);
 	}
 
-	return 100.0; // Daño melee por defecto
+	return 100.0; // Dano melee por defecto
 }
 
 /**
- * Obtiene si Master at Arms está habilitado para un jugador
+ * Obtiene si Master at Arms esta habilitado para un jugador
  */
 public bool MasterAtArms_IsEnabled(int client)
 {

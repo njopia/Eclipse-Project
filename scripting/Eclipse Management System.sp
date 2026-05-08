@@ -46,7 +46,7 @@
 //==================================================
 // === ABILITIES SYSTEM MODULE ===
 // Sistema de habilidades desbloqueables por nivel
-// No requieren currency, se activan automáticamente
+// No requieren currency, se activan automaticamente
 //==================================================
 #tryinclude "modules/abilities/abilities-system.module.sp"
 #tryinclude "modules/abilities/ability-detectzombie.sp"
@@ -72,7 +72,7 @@
 
 //==================================================
 // === CURRENCY STATS MODULE ===
-// Mantener para estadísticas
+// Mantener para estadisticas
 //==================================================
 #tryinclude "modules/currency/currency-stats.module.sp"
 
@@ -248,7 +248,7 @@ public int Native_GetLevelProgress(Handle plugin, int numParams)
 
 /**
  * Native: Get player's currency/points
- * NOTA: Currency persiste durante la sesión (se mantiene entre mapas, se resetea al desconectar)
+ * NOTA: Currency persiste durante la sesion (se mantiene entre mapas, se resetea al desconectar)
  * @param client Client index
  * @return Player's currency amount (session-persistent, not saved in DB)
  */
@@ -259,7 +259,7 @@ public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return 0;
 
-	// Currency persiste durante la sesión
+	// Currency persiste durante la sesion
 	return GetPlayerCurrency(client);
 }
 
@@ -438,7 +438,7 @@ public void OnMapEnd()
 	LogToFile(logfilepath, "|               MAP END                     |");
 
 	// CRITICAL: Force cleanup all fog controllers before map change
-	// ForceCleanupAllFogControllers(); // Comentado para evitar reseteos de iluminación al salir
+	// ForceCleanupAllFogControllers(); // Comentado para evitar reseteos de iluminacion al salir
 
 	// Cleanup game modes
 	Bloodmoon_OnMapEnd();
@@ -667,7 +667,7 @@ public void Event_OnPlayerSpawn(Event event, const char[] name, bool dontBroadca
  */
 public Action Cmd_ClearFade(int client, int args)
 {
-	// FFADE_PURGE ya está definido en difficulty-orchestrator.module.sp
+	// FFADE_PURGE ya esta definido en difficulty-orchestrator.module.sp
 	// Purgar fades de todos los jugadores
 	int affectedPlayers = 0;
 	for (int i = 1; i <= MaxClients; i++)
@@ -690,14 +690,14 @@ public Action Cmd_ClearFade(int client, int args)
 		}
 	}
 
-	// Mensaje de confirmación
+	// Mensaje de confirmacion
 	if (client > 0)
 	{
 		PrintToChat(client, "\x04[Eclipse]\x01 Screen fades purgados para \x05%d\x01 jugadores", affectedPlayers);
 	}
 
 	PrintToServer("[Eclipse] Screen fades purgados por admin. Jugadores afectados: %d", affectedPlayers);
-	LogToFile(logfilepath, "[FADE PURGE] Admin %N purgó screen fades. Jugadores: %d", client > 0 ? client : 0, affectedPlayers);
+	LogToFile(logfilepath, "[FADE PURGE] Admin %N purgo screen fades. Jugadores: %d", client > 0 ? client : 0, affectedPlayers);
 
 	return Plugin_Handled;
 }
@@ -736,14 +736,14 @@ public Action Cmd_ClearFog(int client, int args)
 	// Reset light style to normal
 	SetLightStyle(0, "m");
 
-	// Mensaje de confirmación
+	// Mensaje de confirmacion
 	if (client > 0)
 	{
 		PrintToChat(client, "\x04[Eclipse]\x01 Fog controllers eliminados: \x05%d\x01. Light style restaurado.", removedCount);
 	}
 
 	PrintToServer("[Eclipse] Fog controllers eliminados por admin. Total: %d", removedCount);
-	LogToFile(logfilepath, "[FOG CLEAR] Admin %N eliminó %d fog controllers", client > 0 ? client : 0, removedCount);
+	LogToFile(logfilepath, "[FOG CLEAR] Admin %N elimino %d fog controllers", client > 0 ? client : 0, removedCount);
 
 	return Plugin_Handled;
 }
@@ -758,7 +758,7 @@ public Action Cmd_FixWhiteScreen(int client, int args)
 
 	if (client > 0)
 	{
-		PrintToChat(client, "\x04[Eclipse]\x01 Aplicando solución de emergencia para pantalla blanca...");
+		PrintToChat(client, "\x04[Eclipse]\x01 Aplicando solucion de emergencia para pantalla blanca...");
 	}
 
 	// Step 1: Clear all fades
@@ -812,7 +812,7 @@ public Action Cmd_FixWhiteScreen(int client, int args)
 	// Results
 	if (client > 0)
 	{
-		PrintToChat(client, "\x04[Eclipse]\x01 Solución aplicada:");
+		PrintToChat(client, "\x04[Eclipse]\x01 Solucion aplicada:");
 		PrintToChat(client, " \x05→\x01 Screen fades purgados: \x05%d\x01 jugadores", affectedPlayers);
 		PrintToChat(client, " \x05→\x01 Fog controllers eliminados: \x05%d", removedFog);
 		PrintToChat(client, " \x05→\x01 Light style restaurado a normal");

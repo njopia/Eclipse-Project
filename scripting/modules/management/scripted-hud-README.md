@@ -1,18 +1,18 @@
 # Eclipse Management System — Scripted HUD Module
 
-Módulo de HUD para Left 4 Dead 2 que muestra información del servidor en pantalla, con rotación dinámica de mensajes cargados desde base de datos.
+Modulo de HUD para Left 4 Dead 2 que muestra informacion del servidor en pantalla, con rotacion dinamica de mensajes cargados desde base de datos.
 
 ---
 
-## Características
+## Caracteristicas
 
 - HUD persistente en pantalla para todos los jugadores (o por equipo)
-- Rotación automática de mensajes desde base de datos (cada 10 segundos)
+- Rotacion automatica de mensajes desde base de datos (cada 10 segundos)
 - Auto-recarga de mensajes desde DB cada 30 segundos sin reiniciar
-- Parpadeo automático cuando hay un Tank vivo
-- Mensajes por defecto si la DB no está disponible
+- Parpadeo automatico cuando hay un Tank vivo
+- Mensajes por defecto si la DB no esta disponible
 - Comando admin para recargar mensajes en caliente
-- Configuracion completa vía ConVars
+- Configuracion completa via ConVars
 
 ---
 
@@ -21,7 +21,7 @@ Módulo de HUD para Left 4 Dead 2 que muestra información del servidor en panta
 - SourceMod 1.10+
 - Left 4 Dead 2
 - MySQL o SQLite
-- El módulo debe incluirse desde el plugin principal del EMS
+- El modulo debe incluirse desde el plugin principal del EMS
 
 ---
 
@@ -29,7 +29,7 @@ Módulo de HUD para Left 4 Dead 2 que muestra información del servidor en panta
 
 ### Configuracion en `databases.cfg`
 
-El módulo usa la entrada `DB_HUD_MESSAGES` definida en el plugin principal. Asegúrate de tener la sección correspondiente en `addons/sourcemod/configs/databases.cfg`:
+El modulo usa la entrada `DB_HUD_MESSAGES` definida en el plugin principal. Asegurate de tener la seccion correspondiente en `addons/sourcemod/configs/databases.cfg`:
 
 ```
 "Databases"
@@ -40,7 +40,7 @@ El módulo usa la entrada `DB_HUD_MESSAGES` definida en el plugin principal. Ase
         "host"      "localhost"
         "database"  "eclipse_ems"
         "user"      "tu_usuario"
-        "pass"      "tu_contraseña"
+        "pass"      "tu_contrasena"
         "port"      "3306"
     }
 }
@@ -90,28 +90,28 @@ SELECT message FROM server_hud_messages WHERE is_active = 1 ORDER BY id ASC;
 
 ## ConVars
 
-| ConVar | Default | Descripción |
+| ConVar | Default | Descripcion |
 |--------|---------|-------------|
 | `ems_hud_enable` | `1` | Activa/desactiva el HUD |
-| `ems_hud_update_interval` | `0.1` | Intervalo de actualización en segundos |
-| `ems_hud1_text` | `""` | Texto fijo (vacío = automático desde DB) |
-| `ems_hud1_text_align` | `1` | Alineación: 1=Izquierda, 2=Centro, 3=Derecha |
+| `ems_hud_update_interval` | `0.1` | Intervalo de actualizacion en segundos |
+| `ems_hud1_text` | `""` | Texto fijo (vacio = automatico desde DB) |
+| `ems_hud1_text_align` | `1` | Alineacion: 1=Izquierda, 2=Centro, 3=Derecha |
 | `ems_hud1_blink_tank` | `1` | Parpadear cuando hay Tank vivo |
 | `ems_hud1_blink` | `0` | Parpadeo constante |
 | `ems_hud1_beep` | `0` | Sonido al parpadear |
 | `ems_hud1_visible` | `1` | Visibilidad del HUD |
 | `ems_hud1_background` | `0` | Mostrar fondo |
 | `ems_hud1_team` | `0` | Equipo: 0=Todos, 1=Survivors, 2=Infected |
-| `ems_hud1_x` | `0.02` | Posición X en pantalla |
-| `ems_hud1_y` | `0.015` | Posición Y en pantalla |
-| `ems_hud1_width` | `1.5` | Ancho del área de texto |
-| `ems_hud1_height` | `0.026` | Alto del área de texto |
+| `ems_hud1_x` | `0.02` | Posicion X en pantalla |
+| `ems_hud1_y` | `0.015` | Posicion Y en pantalla |
+| `ems_hud1_width` | `1.5` | Ancho del area de texto |
+| `ems_hud1_height` | `0.026` | Alto del area de texto |
 
 ---
 
 ## Comandos
 
-| Comando | Acceso | Descripción |
+| Comando | Acceso | Descripcion |
 |---------|--------|-------------|
 | `sm_reload_hud` | ROOT | Recarga mensajes desde la DB inmediatamente |
 
@@ -119,7 +119,7 @@ SELECT message FROM server_hud_messages WHERE is_active = 1 ORDER BY id ASC;
 
 ## Comportamiento
 
-### Rotación de mensajes
+### Rotacion de mensajes
 Los mensajes rotan cada **10 segundos** en orden ascendente por `id`. El formato en pantalla es:
 
 ```
@@ -127,19 +127,19 @@ Los mensajes rotan cada **10 segundos** en orden ascendente por `id`. El formato
 ```
 
 ### Auto-recarga
-Cada **30 segundos** el plugin recarga automáticamente los mensajes desde la DB, permitiendo agregar o desactivar mensajes sin reiniciar el servidor ni ejecutar comandos.
+Cada **30 segundos** el plugin recarga automaticamente los mensajes desde la DB, permitiendo agregar o desactivar mensajes sin reiniciar el servidor ni ejecutar comandos.
 
 ### Fallback
-Si la DB no está disponible o no hay mensajes activos, el plugin carga 5 mensajes por defecto hardcodeados para que el HUD nunca quede vacío.
+Si la DB no esta disponible o no hay mensajes activos, el plugin carga 5 mensajes por defecto hardcodeados para que el HUD nunca quede vacio.
 
 ### Tank vivo
-Si `ems_hud1_blink_tank 1` está activo, el HUD parpadeará automáticamente mientras haya un Tank vivo en el juego.
+Si `ems_hud1_blink_tank 1` esta activo, el HUD parpadeara automaticamente mientras haya un Tank vivo en el juego.
 
 ---
 
-## Integración
+## Integracion
 
-Este archivo es un módulo (`#include`) del Eclipse Management System. No es un plugin standalone. Se incluye desde el plugin principal:
+Este archivo es un modulo (`#include`) del Eclipse Management System. No es un plugin standalone. Se incluye desde el plugin principal:
 
 ```sourcepawn
 #include "eclipse/scripted_hud_module"

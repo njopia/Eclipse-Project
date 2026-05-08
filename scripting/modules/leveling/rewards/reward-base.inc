@@ -4,7 +4,7 @@
 
 //==================================================
 // === REWARD BASE INTERFACE ===
-// Define la interfaz común para todas las recompensas
+// Define la interfaz comun para todas las recompensas
 //==================================================
 
 /**
@@ -13,7 +13,7 @@
 enum RewardType
 {
 	Reward_Passive,  // Habilidades pasivas siempre activas
-	Reward_Active    // Habilidades activas que requieren activación
+	Reward_Active    // Habilidades activas que requieren activacion
 }
 
 /**
@@ -22,10 +22,10 @@ enum RewardType
 enum struct RewardData
 {
 	char name[64];           // Nombre de la recompensa
-	char description[256];   // Descripción
+	char description[256];   // Descripcion
 	int requiredLevel;       // Nivel requerido
 	RewardType type;         // Tipo de recompensa
-	bool isEnabled[MAXPLAYERS + 1];  // Si está habilitada para cada jugador
+	bool isEnabled[MAXPLAYERS + 1];  // Si esta habilitada para cada jugador
 }
 
 /**

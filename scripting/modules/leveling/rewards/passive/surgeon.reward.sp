@@ -4,7 +4,7 @@
 
 //==================================================
 // === SURGEON PASSIVE REWARD ===
-// Reduce el tiempo de uso de items de curación a la mitad
+// Reduce el tiempo de uso de items de curacion a la mitad
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -18,7 +18,7 @@ Handle cvar_Surgeon_DefibDuration = INVALID_HANDLE;
 bool g_bSurgeon_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Surgeon
+ * Inicializa el modulo de Surgeon
  */
 public void Surgeon_OnPluginStart()
 {
@@ -32,25 +32,25 @@ public void Surgeon_OnPluginStart()
 	cvar_Surgeon_HealDuration = CreateConVar(
 		"reward_surgeon_heal_duration",
 		"2.5",
-		"Duración de uso de botiquín con Surgeon (default: 5.0)",
+		"Duracion de uso de botiquin con Surgeon (default: 5.0)",
 		FCVAR_PLUGIN
 	);
 
 	cvar_Surgeon_ReviveDuration = CreateConVar(
 		"reward_surgeon_revive_duration",
 		"2.5",
-		"Duración de revivir con Surgeon (default: 5.0)",
+		"Duracion de revivir con Surgeon (default: 5.0)",
 		FCVAR_PLUGIN
 	);
 
 	cvar_Surgeon_DefibDuration = CreateConVar(
 		"reward_surgeon_defib_duration",
 		"1.5",
-		"Duración de usar desfibrilador con Surgeon (default: 3.0)",
+		"Duracion de usar desfibrilador con Surgeon (default: 3.0)",
 		FCVAR_PLUGIN
 	);
 
-	// Hooks para eventos de curación
+	// Hooks para eventos de curacion
 	HookEvent("heal_begin", Event_Surgeon_HealBegin, EventHookMode_Post);
 	HookEvent("defibrillator_begin", Event_Surgeon_DefibBegin, EventHookMode_Post);
 }
@@ -94,7 +94,7 @@ public void Surgeon_OnLevelUp(int client, int level)
 	{
 		g_bSurgeon_Enabled[client] = true;
 		Surgeon_UpdateUseDurations();
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Surgeon\x01! (Usas items de curación 2x más rápido)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Surgeon\x01! (Usas items de curacion 2x mas rapido)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -126,7 +126,7 @@ public Action Event_Surgeon_HealBegin(Event event, const char[] name, bool dontB
 
 	if (g_bSurgeon_Enabled[client])
 	{
-		PrintToChat(client, "\x04[Surgeon]\x01 Tu habilidad te permite usar este item más rápido");
+		PrintToChat(client, "\x04[Surgeon]\x01 Tu habilidad te permite usar este item mas rapido");
 	}
 
 	return Plugin_Continue;
@@ -147,18 +147,18 @@ public Action Event_Surgeon_DefibBegin(Event event, const char[] name, bool dont
 
 	if (g_bSurgeon_Enabled[client])
 	{
-		PrintToChat(client, "\x04[Surgeon]\x01 Tu habilidad te permite usar este item más rápido");
+		PrintToChat(client, "\x04[Surgeon]\x01 Tu habilidad te permite usar este item mas rapido");
 	}
 
 	return Plugin_Continue;
 }
 
 /**
- * Actualiza las duraciones de uso de items de curación
+ * Actualiza las duraciones de uso de items de curacion
  */
 stock void Surgeon_UpdateUseDurations()
 {
-	// Verificar si algún jugador tiene Surgeon habilitado
+	// Verificar si algun jugador tiene Surgeon habilitado
 	bool anySurgeon = false;
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -172,7 +172,7 @@ stock void Surgeon_UpdateUseDurations()
 		}
 	}
 
-	// Ajustar ConVars según si hay algún Surgeon
+	// Ajustar ConVars segun si hay algun Surgeon
 	ConVar cvarHeal = FindConVar("first_aid_kit_use_duration");
 	ConVar cvarRevive = FindConVar("survivor_revive_duration");
 	ConVar cvarDefib = FindConVar("defibrillator_use_duration");
@@ -193,7 +193,7 @@ stock void Surgeon_UpdateUseDurations()
 }
 
 /**
- * Obtiene si Surgeon está habilitado para un jugador
+ * Obtiene si Surgeon esta habilitado para un jugador
  */
 public bool Surgeon_IsEnabled(int client)
 {

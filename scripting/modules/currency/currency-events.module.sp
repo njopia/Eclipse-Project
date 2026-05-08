@@ -18,19 +18,19 @@ Handle cvar_CurrencyHeal = INVALID_HANDLE;
 Handle cvar_CurrencyDefibrillator = INVALID_HANDLE;
 
 /**
- * Inicializa el módulo de eventos de currency
+ * Inicializa el modulo de eventos de currency
  * Debe ser llamado desde OnPluginStart()
  */
 public void CurrencyEvents_OnPluginStart()
 {
 	// Crear ConVars para recompensas por eventos
-	cvar_CurrencyCommonKill = CreateConVar("currency_common_kill", "1", "Puntos por matar un infectado común", FCVAR_PLUGIN);
+	cvar_CurrencyCommonKill = CreateConVar("currency_common_kill", "1", "Puntos por matar un infectado comun", FCVAR_PLUGIN);
 	cvar_CurrencySpecialKill = CreateConVar("currency_special_kill", "5", "Puntos por matar un infectado especial", FCVAR_PLUGIN);
 	cvar_CurrencyTankKill = CreateConVar("currency_tank_kill", "20", "Puntos por matar un Tank", FCVAR_PLUGIN);
 	cvar_CurrencyWitchKill = CreateConVar("currency_witch_kill", "15", "Puntos por matar una Witch", FCVAR_PLUGIN);
 	cvar_CurrencyHeadshot = CreateConVar("currency_headshot", "2", "Puntos bonus por headshot", FCVAR_PLUGIN);
-	cvar_CurrencyRevive = CreateConVar("currency_revive", "3", "Puntos por revivir a un compañero", FCVAR_PLUGIN);
-	cvar_CurrencyHeal = CreateConVar("currency_heal", "1", "Puntos por curar a un compañero", FCVAR_PLUGIN);
+	cvar_CurrencyRevive = CreateConVar("currency_revive", "3", "Puntos por revivir a un companero", FCVAR_PLUGIN);
+	cvar_CurrencyHeal = CreateConVar("currency_heal", "1", "Puntos por curar a un companero", FCVAR_PLUGIN);
 	cvar_CurrencyDefibrillator = CreateConVar("currency_defibrillator", "5", "Puntos por usar desfibrilador", FCVAR_PLUGIN);
 
 	// Registrar hooks de eventos
@@ -47,13 +47,13 @@ public void CurrencyEvents_OnPluginStart()
 		HookEvent("defibrillator_used", Event_DefibUsed, EventHookMode_Pre);
 	}
 
-	// Inicializar módulo de eventos avanzados
+	// Inicializar modulo de eventos avanzados
 	CurrencyAdvancedEvents_OnPluginStart();
 }
 
 /**
  * Evento: Player Death (cuando un survivor muere por un infectado)
- * Se otorgan puntos al infectado que lo mató
+ * Se otorgan puntos al infectado que lo mato
  */
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
@@ -66,14 +66,14 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 	if (GetClientTeam(attacker) != 3)  // Team 3 = Infected
 		return Plugin_Continue;
 
-	// Nota: La mayoría de las muertes se registran como "player_death"
+	// Nota: La mayoria de las muertes se registran como "player_death"
 	// Los eventos especiales (tank_killed, witch_killed) se manejan por separado
 
 	return Plugin_Continue;
 }
 
 /**
- * Evento: Infected Death (cuando muere un infectado común)
+ * Evento: Infected Death (cuando muere un infectado comun)
  * Los survivors ganan puntos por matarlos
  */
 public Action Event_InfectedDeath(Event event, const char[] name, bool dontBroadcast)
@@ -90,8 +90,8 @@ public Action Event_InfectedDeath(Event event, const char[] name, bool dontBroad
 	int reward = GetConVarInt(cvar_CurrencyCommonKill);
 	bool isHeadshot = event.GetBool("headshot", false);
 
-	// Otorgar puntos base por matar infectado común
-	AwardCurrency(attacker, reward, "Matar infectado común");
+	// Otorgar puntos base por matar infectado comun
+	AwardCurrency(attacker, reward, "Matar infectado comun");
 	CurrencyStats_AddCommonKill(attacker);
 
 	// Bonus por headshot
@@ -146,7 +146,7 @@ public Action Event_WitchKilled(Event event, const char[] name, bool dontBroadca
 }
 
 /**
- * Evento: Heal Success (cuando se cura a un compañero con medkit)
+ * Evento: Heal Success (cuando se cura a un companero con medkit)
  */
 public Action Event_HealSuccess(Event event, const char[] name, bool dontBroadcast)
 {
@@ -156,14 +156,14 @@ public Action Event_HealSuccess(Event event, const char[] name, bool dontBroadca
 		return Plugin_Continue;
 
 	int reward = GetConVarInt(cvar_CurrencyHeal);
-	AwardCurrency(healer, reward, "Curar compañero");
+	AwardCurrency(healer, reward, "Curar companero");
 	CurrencyStats_AddHeal(healer);
 
 	return Plugin_Continue;
 }
 
 /**
- * Evento: Revive Success (cuando se revive a un compañero caído)
+ * Evento: Revive Success (cuando se revive a un companero caido)
  */
 public Action Event_ReviveSuccess(Event event, const char[] name, bool dontBroadcast)
 {
@@ -173,7 +173,7 @@ public Action Event_ReviveSuccess(Event event, const char[] name, bool dontBroad
 		return Plugin_Continue;
 
 	int reward = GetConVarInt(cvar_CurrencyRevive);
-	AwardCurrency(healer, reward, "Revivir compañero");
+	AwardCurrency(healer, reward, "Revivir companero");
 	CurrencyStats_AddRevival(healer);
 
 	return Plugin_Continue;
@@ -198,7 +198,7 @@ public Action Event_DefibUsed(Event event, const char[] name, bool dontBroadcast
 
 /**
  * Stock function para otorgar currency con mensaje personalizado
- * (Usa la función AwardCurrency existente en buy-menu.module.sp)
+ * (Usa la funcion AwardCurrency existente en buy-menu.module.sp)
  */
 stock void CurrencyEvents_SetCommonReward(int amount)
 {

@@ -15,7 +15,7 @@ Handle cvar_HardenedStance_RequiredLevel = INVALID_HANDLE;
 bool g_bHardenedStance_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Hardened Stance
+ * Inicializa el modulo de Hardened Stance
  */
 public void HardenedStance_OnPluginStart()
 {
@@ -64,7 +64,7 @@ public void HardenedStance_OnLevelUp(int client, int level)
 	if (level == requiredLevel)
 	{
 		g_bHardenedStance_Enabled[client] = true;
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Hardened Stance\x01! (Sin stagger de witch)");
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Hardened Stance\x01! (Sin stagger de witch)");
 	}
 	else if (level > requiredLevel)
 	{
@@ -90,7 +90,7 @@ public bool HardenedStance_CanResistStagger(int client)
 }
 
 /**
- * Obtiene si Hardened Stance está habilitado para un jugador
+ * Obtiene si Hardened Stance esta habilitado para un jugador
  */
 public bool HardenedStance_IsEnabled(int client)
 {

@@ -50,7 +50,7 @@ Handle g_hCowLevel_EventTimer = null;
 ArrayList g_aCowEntities = null;
 
 /**
- * Inicializa el módulo de Cow Level
+ * Inicializa el modulo de Cow Level
  */
 public void CowLevel_OnPluginStart()
 {
@@ -137,7 +137,7 @@ public void CowLevel_OnMapStart()
 		g_aCowEntities.Clear();
 	}
 
-	// Si está habilitado, activar
+	// Si esta habilitado, activar
 	if (GetConVarBool(g_cvar_CowLevel_Enable))
 	{
 		// Delay para que el mapa cargue completamente
@@ -146,7 +146,7 @@ public void CowLevel_OnMapStart()
 }
 
 /**
- * Timer para activación con delay
+ * Timer para activacion con delay
  */
 public Action Timer_DelayedActivation(Handle timer)
 {
@@ -170,7 +170,7 @@ public void CowLevel_OnMapEnd()
  */
 public void CowLevel_OnClientPutInServer(int client)
 {
-	// Si Cow Level está activo, aplicar efectos al cliente
+	// Si Cow Level esta activo, aplicar efectos al cliente
 	if (g_bCowLevelActive && !IsFakeClient(client))
 	{
 		CreateTimer(2.0, Timer_WelcomeToCowLevel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
@@ -235,10 +235,10 @@ void CowLevel_Activate()
 	CowLevel_CacheOriginalDirector();
 	// Cow Level no modifica el director, pero guardamos los valores por si acaso
 
-	// Preparar timestamp (NO activar aún)
+	// Preparar timestamp (NO activar aun)
 	g_fCowLevel_LastPanicEvent = GetGameTime();
 
-	// Anunciar activación
+	// Anunciar activacion
 	SetGlobalTransTarget(LANG_SERVER);
 	char message[256];
 	Format(message, sizeof(message), "%t", "CowLevel_Unlocked");
@@ -273,7 +273,7 @@ void CowLevel_Activate()
 		g_hCowLevel_EventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT);
 	}
 
-	// SOLO activar después de que todos los recursos estén creados
+	// SOLO activar despues de que todos los recursos esten creados
 	g_bCowLevelActive = true;
 
 	LogMessage("[Cow Level] ============ ACTIVATION COMPLETE ============");
@@ -304,7 +304,7 @@ void CowLevel_Deactivate()
 	// Remover color correction
 	CowLevel_RemoveColorCorrection();
 
-	// Anunciar desactivación
+	// Anunciar desactivacion
 	SetGlobalTransTarget(LANG_SERVER);
 	char message[128];
 	Format(message, sizeof(message), "%t", "CowLevel_Ended");
@@ -312,7 +312,7 @@ void CowLevel_Deactivate()
 }
 
 /**
- * Timer de eventos periódicos del Cow Level
+ * Timer de eventos periodicos del Cow Level
  */
 public Action Timer_CowLevelEvents(Handle timer)
 {
@@ -348,7 +348,7 @@ public Action Timer_CowLevelEvents(Handle timer)
 		}
 	}
 
-	// Remover special infected si está habilitado
+	// Remover special infected si esta habilitado
 	if (GetConVarBool(g_cvar_CowLevel_RemoveSpecials))
 	{
 		CowLevel_RemoveNonZombies();
@@ -399,7 +399,7 @@ void CowLevel_RemoveNonZombies()
 					ChangeClientTeam(i, 2);
 				}
 			}
-			// Tanks (class 8) también se remueven
+			// Tanks (class 8) tambien se remueven
 			else if (class == 8)
 			{
 				ForcePlayerSuicide(i);
@@ -631,7 +631,7 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 	if (fogVolEnt == -1)
 	{
 		LogMessage("[Cow Level] ERROR: Failed to create fog_volume entity!");
-		// Limpiar color_correction huérfano
+		// Limpiar color_correction huerfano
 		CowLevel_RemoveColorCorrection();
 		return;
 	}
@@ -690,7 +690,7 @@ void CowLevel_RemoveColorCorrection()
 }
 
 //==================================================
-// FUNCIONES DE BACKUP Y RESTAURACIÓN
+// FUNCIONES DE BACKUP Y RESTAURACION
 //==================================================
 
 /**

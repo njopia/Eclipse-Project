@@ -17,7 +17,7 @@ Handle cvar_ArmsDealer_DefaultSize = INVALID_HANDLE;
 bool g_bArmsDealer_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Arms Dealer
+ * Inicializa el modulo de Arms Dealer
  */
 public void ArmsDealer_OnPluginStart()
 {
@@ -31,14 +31,14 @@ public void ArmsDealer_OnPluginStart()
 	cvar_ArmsDealer_BackpackSize = CreateConVar(
 		"reward_armsdealer_backpack_size",
 		"40",
-		"Tamaño de la mochila con Arms Dealer",
+		"Tamano de la mochila con Arms Dealer",
 		FCVAR_PLUGIN
 	);
 
 	cvar_ArmsDealer_DefaultSize = CreateConVar(
 		"reward_armsdealer_default_size",
 		"9",
-		"Tamaño de la mochila sin Arms Dealer",
+		"Tamano de la mochila sin Arms Dealer",
 		FCVAR_PLUGIN
 	);
 }
@@ -81,7 +81,7 @@ public void ArmsDealer_OnLevelUp(int client, int level)
 	{
 		g_bArmsDealer_Enabled[client] = true;
 		int backpackSize = GetConVarInt(cvar_ArmsDealer_BackpackSize);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Arms Dealer\x01! (Mochila expandida a %d items)", backpackSize);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Arms Dealer\x01! (Mochila expandida a %d items)", backpackSize);
 	}
 	else if (level > requiredLevel)
 	{
@@ -98,7 +98,7 @@ public bool ArmsDealer_IsUnlocked(int client, int level)
 }
 
 /**
- * Obtiene el tamaño de la mochila para el jugador
+ * Obtiene el tamano de la mochila para el jugador
  */
 public int ArmsDealer_GetBackpackSize(int client)
 {
@@ -111,7 +111,7 @@ public int ArmsDealer_GetBackpackSize(int client)
 }
 
 /**
- * Obtiene si Arms Dealer está habilitado para un jugador
+ * Obtiene si Arms Dealer esta habilitado para un jugador
  */
 public bool ArmsDealer_IsEnabled(int client)
 {

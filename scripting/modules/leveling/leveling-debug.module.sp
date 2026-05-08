@@ -4,7 +4,7 @@
 
 //==================================================
 // === LEVELING DEBUG MODULE ===
-// Menú admin para probar y debuggear rewards pasivos
+// Menu admin para probar y debuggear rewards pasivos
 //==================================================
 
 // --- ConVars ---
@@ -15,7 +15,7 @@ bool g_bDebug_ForceReward[MAXPLAYERS + 1][50]; // Array para forzar rewards (50 
 int g_iDebug_ForcedLevel[MAXPLAYERS + 1];      // Nivel forzado para testing
 
 /**
- * Inicializa el módulo de debug
+ * Inicializa el modulo de debug
  */
 public void LevelingDebug_OnPluginStart()
 {
@@ -26,9 +26,9 @@ public void LevelingDebug_OnPluginStart()
 		FCVAR_PLUGIN
 	);
 
-	// Comando admin para abrir menú de debug
-	RegAdminCmd("sm_rewardsdebug", Command_RewardsDebug, ADMFLAG_ROOT, "Abre el menú de debug de rewards");
-	RegAdminCmd("sm_rdebug", Command_RewardsDebug, ADMFLAG_ROOT, "Abre el menú de debug de rewards");
+	// Comando admin para abrir menu de debug
+	RegAdminCmd("sm_rewardsdebug", Command_RewardsDebug, ADMFLAG_ROOT, "Abre el menu de debug de rewards");
+	RegAdminCmd("sm_rdebug", Command_RewardsDebug, ADMFLAG_ROOT, "Abre el menu de debug de rewards");
 	RegAdminCmd("sm_setlevel", Command_SetLevel, ADMFLAG_ROOT, "Establece el nivel de un jugador temporalmente");
 }
 
@@ -57,13 +57,13 @@ public void LevelingDebug_OnClientDisconnect(int client)
 }
 
 /**
- * Comando: Abre el menú de debug de rewards
+ * Comando: Abre el menu de debug de rewards
  */
 public Action Command_RewardsDebug(int client, int args)
 {
 	if (!GetConVarBool(cvar_Debug_Enabled))
 	{
-		ReplyToCommand(client, "[Debug] El sistema de debug está deshabilitado.");
+		ReplyToCommand(client, "[Debug] El sistema de debug esta deshabilitado.");
 		return Plugin_Handled;
 	}
 
@@ -84,7 +84,7 @@ public Action Command_SetLevel(int client, int args)
 {
 	if (!GetConVarBool(cvar_Debug_Enabled))
 	{
-		ReplyToCommand(client, "[Debug] El sistema de debug está deshabilitado.");
+		ReplyToCommand(client, "[Debug] El sistema de debug esta deshabilitado.");
 		return Plugin_Handled;
 	}
 
@@ -114,16 +114,16 @@ public Action Command_SetLevel(int client, int args)
 }
 
 /**
- * Muestra el menú principal de debug
+ * Muestra el menu principal de debug
  */
 void ShowDebugMainMenu(int client)
 {
 	Menu menu = new Menu(DebugMainMenu_Handler);
-	menu.SetTitle("=== Rewards Debug Menu ===\nSelecciona una categoría:");
+	menu.SetTitle("=== Rewards Debug Menu ===\nSelecciona una categoria:");
 
 	menu.AddItem("passive", "Rewards Pasivos");
 	menu.AddItem("active", "Rewards Activos (WIP)");
-	menu.AddItem("level", "Gestión de Nivel");
+	menu.AddItem("level", "Gestion de Nivel");
 	menu.AddItem("reset", "Reset Todo");
 
 	menu.ExitButton = true;
@@ -131,7 +131,7 @@ void ShowDebugMainMenu(int client)
 }
 
 /**
- * Handler del menú principal
+ * Handler del menu principal
  */
 public int DebugMainMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -146,7 +146,7 @@ public int DebugMainMenu_Handler(Menu menu, MenuAction action, int client, int p
 		}
 		else if (StrEqual(info, "active"))
 		{
-			PrintToChat(client, "\x04[Debug]\x01 Rewards activos aún no implementados.");
+			PrintToChat(client, "\x04[Debug]\x01 Rewards activos aun no implementados.");
 			ShowDebugMainMenu(client);
 		}
 		else if (StrEqual(info, "level"))
@@ -169,7 +169,7 @@ public int DebugMainMenu_Handler(Menu menu, MenuAction action, int client, int p
 }
 
 /**
- * Muestra el menú de rewards pasivos
+ * Muestra el menu de rewards pasivos
  */
 void ShowPassiveRewardsMenu(int client)
 {
@@ -209,7 +209,7 @@ void ShowPassiveRewardsMenu(int client)
 }
 
 /**
- * Handler del menú de rewards pasivos
+ * Handler del menu de rewards pasivos
  */
 public int PassiveRewardsMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -234,14 +234,14 @@ public int PassiveRewardsMenu_Handler(Menu menu, MenuAction action, int client, 
 }
 
 /**
- * Muestra el menú de acción para un reward específico
+ * Muestra el menu de accion para un reward especifico
  */
 void ShowRewardActionMenu(int client, int rewardLevel)
 {
 	Menu menu = new Menu(RewardActionMenu_Handler);
 
 	char title[128];
-	Format(title, sizeof(title), "=== Reward Nivel %d ===\n¿Qué deseas hacer?", rewardLevel);
+	Format(title, sizeof(title), "=== Reward Nivel %d ===\nQue deseas hacer?", rewardLevel);
 	menu.SetTitle(title);
 
 	char levelStr[8];
@@ -260,7 +260,7 @@ void ShowRewardActionMenu(int client, int rewardLevel)
 }
 
 /**
- * Handler del menú de acción
+ * Handler del menu de accion
  */
 public int RewardActionMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -307,7 +307,7 @@ public int RewardActionMenu_Handler(Menu menu, MenuAction action, int client, in
 }
 
 /**
- * Muestra el menú de gestión de nivel
+ * Muestra el menu de gestion de nivel
  */
 void ShowLevelManagementMenu(int client)
 {
@@ -315,7 +315,7 @@ void ShowLevelManagementMenu(int client)
 
 	int currentLevel = GetClientLevel(client);
 	char title[128];
-	Format(title, sizeof(title), "=== Gestión de Nivel ===\nNivel actual: %d", currentLevel);
+	Format(title, sizeof(title), "=== Gestion de Nivel ===\nNivel actual: %d", currentLevel);
 	menu.SetTitle(title);
 
 	menu.AddItem("set_1", "Nivel 1");
@@ -332,7 +332,7 @@ void ShowLevelManagementMenu(int client)
 }
 
 /**
- * Handler del menú de gestión de nivel
+ * Handler del menu de gestion de nivel
  */
 public int LevelManagementMenu_Handler(Menu menu, MenuAction action, int client, int param)
 {
@@ -397,14 +397,14 @@ int GetClientLevel(int client)
 	if (g_iDebug_ForcedLevel[client] >= 0)
 		return g_iDebug_ForcedLevel[client];
 
-	// Aquí debería obtener el nivel real del sistema de leveling
+	// Aqui deberia obtener el nivel real del sistema de leveling
 	// Por ahora retornamos 1 como placeholder
 	// TODO: Integrar con el sistema de leveling real
 	return 1;
 }
 
 /**
- * Obtiene si el debug está habilitado
+ * Obtiene si el debug esta habilitado
  */
 public bool LevelingDebug_IsEnabled()
 {

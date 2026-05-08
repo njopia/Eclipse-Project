@@ -6,7 +6,7 @@
 // Cooldown: 5 minutes
 //==================================================
 
-#define POLYMORPH_SUCCESS_CHANCE 98  // 98% de éxito, 2% de fallo
+#define POLYMORPH_SUCCESS_CHANCE 98  // 98% de exito, 2% de fallo
 
 char g_szPolymorph_Items[][] = {
 	"weapon_first_aid_kit",
@@ -75,7 +75,7 @@ void Ability_Polymorph_Deactivate(int client)
 }
 
 /**
- * Hook cuando el jugador mata un infectado común
+ * Hook cuando el jugador mata un infectado comun
  */
 public void Polymorph_OnInfectedKilled(int attacker, int victim)
 {
@@ -85,25 +85,25 @@ public void Polymorph_OnInfectedKilled(int attacker, int victim)
 	if (!Abilities_IsActive(attacker, Ability_Polymorph))
 		return;
 
-	// Verificar que sea un infectado común
+	// Verificar que sea un infectado comun
 	char className[64];
 	GetEdictClassname(victim, className, sizeof(className));
 	if (!StrEqual(className, "infected"))
 		return;
 
-	// Obtener posición del infectado muerto
+	// Obtener posicion del infectado muerto
 	float victimPos[3];
 	GetEntPropVector(victim, Prop_Send, "m_vecOrigin", victimPos);
 
-	// Probabilidad de éxito
+	// Probabilidad de exito
 	int roll = GetRandomInt(1, 100);
 
 	if (roll <= POLYMORPH_SUCCESS_CHANCE)
 	{
-		// Éxito: Spawnear item
+		// Exito: Spawnear item
 		Polymorph_SpawnItem(victimPos);
 
-		// Efecto visual de éxito
+		// Efecto visual de exito
 		TE_SetupGlowSprite(victimPos, PrecacheModel("sprites/blueglow1.vmt"), 0.5, 1.0, 200);
 		TE_SendToAll();
 
@@ -111,7 +111,7 @@ public void Polymorph_OnInfectedKilled(int attacker, int victim)
 	}
 	else
 	{
-		// Fallo: Explosión
+		// Fallo: Explosion
 		Polymorph_CreateExplosion(victimPos, attacker);
 
 		// Efecto visual de fallo
@@ -151,25 +151,25 @@ void Polymorph_SpawnItem(float pos[3])
 }
 
 /**
- * Crea una explosión
+ * Crea una explosion
  */
 void Polymorph_CreateExplosion(float pos[3], int attacker)
 {
-	// Crear explosión con env_explosion
+	// Crear explosion con env_explosion
 	int explosion = CreateEntityByName("env_explosion");
 	if (explosion == -1)
 		return;
 
-	DispatchKeyValue(explosion, "iMagnitude", "100");  // Daño
+	DispatchKeyValue(explosion, "iMagnitude", "100");  // Dano
 	DispatchKeyValue(explosion, "iRadiusOverride", "200");  // Radio
-	DispatchKeyValue(explosion, "spawnflags", "828");  // Flags (daño, humo, etc)
+	DispatchKeyValue(explosion, "spawnflags", "828");  // Flags (dano, humo, etc)
 
 	TeleportEntity(explosion, pos, NULL_VECTOR, NULL_VECTOR);
 
 	DispatchSpawn(explosion);
 	AcceptEntityInput(explosion, "Explode");
 
-	// Aplicar daño al atacante si está cerca
+	// Aplicar dano al atacante si esta cerca
 	float attackerPos[3];
 	GetClientAbsOrigin(attacker, attackerPos);
 
@@ -184,12 +184,12 @@ void Polymorph_CreateExplosion(float pos[3], int attacker)
 		}
 	}
 
-	// Remover la explosión después de 0.1 segundos
+	// Remover la explosion despues de 0.1 segundos
 	CreateTimer(0.1, Timer_RemoveExplosion, EntIndexToEntRef(explosion));
 }
 
 /**
- * Timer: Remover explosión
+ * Timer: Remover explosion
  */
 public Action Timer_RemoveExplosion(Handle timer, int ref)
 {

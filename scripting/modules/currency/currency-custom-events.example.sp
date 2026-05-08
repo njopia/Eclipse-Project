@@ -29,11 +29,11 @@ public void CurrencyCustomEvents_OnPluginStart()
 
 /**
  * TEMPLATE: Evento personalizado 1
- * Describe aquí qué hace este evento
+ * Describe aqui que hace este evento
  */
 public Action Event_CustomEvent1(Event event, const char[] name, bool dontBroadcast)
 {
-	// Obtener información del evento
+	// Obtener informacion del evento
 	// int client = GetClientOfUserId(event.GetInt("userid"));
 
 	// Validar cliente
@@ -54,12 +54,12 @@ public Action Event_CustomEvent1(Event event, const char[] name, bool dontBroadc
 
 /**
  * TEMPLATE: Evento personalizado 2
- * Describe aquí qué hace este evento
+ * Describe aqui que hace este evento
  */
 public Action Event_CustomEvent2(Event event, const char[] name, bool dontBroadcast)
 {
 	// Similar a Event_CustomEvent1
-	// Implementar según necesidad
+	// Implementar segun necesidad
 
 	return Plugin_Continue;
 }
@@ -78,12 +78,12 @@ public Action Event_CustomEvent2(Event event, const char[] name, bool dontBroadc
 //    - "map_transition" con el evento real
 //    - cvar_CurrencyCustomEvent1 con un nombre apropiado
 //
-// 4. IMPLEMENTA la lógica:
-//    - Obtén el cliente/datos del evento
+// 4. IMPLEMENTA la logica:
+//    - Obten el cliente/datos del evento
 //    - Valida el cliente
-//    - Obtén el reward del ConVar
+//    - Obten el reward del ConVar
 //    - Llama a AwardCurrency()
-//    - (Opcional) Actualiza estadísticas
+//    - (Opcional) Actualiza estadisticas
 //
 // 5. PRUEBA en servidor de desarrollo
 //
@@ -98,12 +98,12 @@ public Action Event_CustomEvent2(Event event, const char[] name, bool dontBroadc
 // - player_no_longer_it       (Ceguera termina)
 //
 // Infectados:
-// - infected_death            (Infectado común muere)
+// - infected_death            (Infectado comun muere)
 // - tank_killed               (Tank muere)
 // - witch_killed              (Witch muere)
 //
 // Acciones:
-// - heal_success              (Curación exitosa)
+// - heal_success              (Curacion exitosa)
 // - revive_success            (Revive exitoso)
 // - tongue_pull_stopped       (Escape de Smoker)
 // - pounce_stopped            (Escape de Hunter)
@@ -111,7 +111,7 @@ public Action Event_CustomEvent2(Event event, const char[] name, bool dontBroadc
 // - charger_impact            (Impacto de Charger)
 //
 // Mapa:
-// - map_transition            (Transición de mapa)
+// - map_transition            (Transicion de mapa)
 // - round_start               (Inicio de ronda)
 // - survival_round_start      (Inicio ronda Survival)
 //

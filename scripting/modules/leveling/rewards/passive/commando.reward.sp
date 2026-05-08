@@ -16,7 +16,7 @@ Handle cvar_Commando_ExtendedCartridge = INVALID_HANDLE;
 bool g_bCommando_Enabled[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Commando
+ * Inicializa el modulo de Commando
  */
 public void Commando_OnPluginStart()
 {
@@ -73,7 +73,7 @@ public void Commando_OnLevelUp(int client, int level)
 	{
 		g_bCommando_Enabled[client] = true;
 		int cartridge = GetConVarInt(cvar_Commando_ExtendedCartridge);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Commando\x01! (Recarga M60 con cartucho de %d balas en ammo piles)", cartridge);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Commando\x01! (Recarga M60 con cartucho de %d balas en ammo piles)", cartridge);
 	}
 	else if (level > requiredLevel)
 	{
@@ -109,7 +109,7 @@ public void Commando_ReloadM60(int client)
 	if (!StrEqual(weaponName, "weapon_rifle_m60", false))
 		return;
 
-	// Obtener munición actual
+	// Obtener municion actual
 	int offset = FindSendPropInfo("CTerrorPlayer", "m_iAmmo");
 	int currentAmmo = GetEntData(client, offset + 24); // Offset 24 es para M60
 
@@ -123,7 +123,7 @@ public void Commando_ReloadM60(int client)
 }
 
 /**
- * Obtiene si Commando está habilitado para un jugador
+ * Obtiene si Commando esta habilitado para un jugador
  */
 public bool Commando_IsEnabled(int client)
 {

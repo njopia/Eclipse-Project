@@ -4,7 +4,7 @@
 
 //==================================================
 // === SELF REVIVE PASSIVE REWARD ===
-// Permite auto-revivirse cuando está incapacitado usando la tecla [USE]
+// Permite auto-revivirse cuando esta incapacitado usando la tecla [USE]
 // Based on Master_3_46 implementation
 //==================================================
 
@@ -19,7 +19,7 @@ bool g_bSelfRevive_InProgress[MAXPLAYERS + 1];
 float g_fSelfRevive_StartTime[MAXPLAYERS + 1];
 
 /**
- * Inicializa el módulo de Self Revive
+ * Inicializa el modulo de Self Revive
  */
 public void SelfRevive_OnPluginStart()
 {
@@ -33,7 +33,7 @@ public void SelfRevive_OnPluginStart()
 	cvar_SelfRevive_Duration = CreateConVar(
 		"reward_selfrevive_duration",
 		"2.5",
-		"Duración del auto-revive en segundos",
+		"Duracion del auto-revive en segundos",
 		FCVAR_PLUGIN
 	);
 
@@ -91,7 +91,7 @@ public void SelfRevive_OnLevelUp(int client, int level)
 	{
 		g_bSelfRevive_Enabled[client] = true;
 		float duration = GetConVarFloat(cvar_SelfRevive_Duration);
-		PrintToChat(client, "\x04[REWARD]\x01 ¡Desbloqueaste \x05Self Revive\x01! (Auto-revive en %.1fs con tecla USE)", duration);
+		PrintToChat(client, "\x04[REWARD]\x01 Desbloqueaste \x05Self Revive\x01! (Auto-revive en %.1fs con tecla USE)", duration);
 	}
 	else if (level > requiredLevel)
 	{
@@ -109,7 +109,7 @@ public bool SelfRevive_IsUnlocked(int client, int level)
 
 /**
  * Proceso de self revive - debe ser llamado en OnPlayerRunCmd o similar
- * Retorna true si está en proceso de revive
+ * Retorna true si esta en proceso de revive
  */
 public bool SelfRevive_Process(int client, int buttons)
 {
@@ -119,7 +119,7 @@ public bool SelfRevive_Process(int client, int buttons)
 	if (!IsPlayerAlive(client))
 		return false;
 
-	// Verificar si está incapacitado y no está siendo sostenido por infectado
+	// Verificar si esta incapacitado y no esta siendo sostenido por infectado
 	if (!SelfRevive_IsIncapacitated(client) || SelfRevive_IsHeld(client))
 	{
 		if (g_bSelfRevive_InProgress[client])
@@ -130,7 +130,7 @@ public bool SelfRevive_Process(int client, int buttons)
 		return false;
 	}
 
-	// Verificar si alguien más lo está reviviendo
+	// Verificar si alguien mas lo esta reviviendo
 	int reviver = GetEntPropEnt(client, Prop_Send, "m_reviveOwner");
 	if (reviver > 0 && reviver != client)
 	{
@@ -184,12 +184,12 @@ public bool SelfRevive_Process(int client, int buttons)
 stock void SelfRevive_Complete(int client)
 {
 	// Revivir al jugador (esto requiere SDKCall configurado en el main)
-	// Por ahora usaremos el método básico
+	// Por ahora usaremos el metodo basico
 	SelfRevive_RevivePlayer(client);
 
 	// Bonus HP si tiene Medic (nivel 4+)
-	// Esto se puede verificar desde el módulo principal
-	// Por ahora aplicamos bonus HP básico
+	// Esto se puede verificar desde el modulo principal
+	// Por ahora aplicamos bonus HP basico
 	int bonusHP = GetConVarInt(cvar_SelfRevive_BonusHP);
 	SelfRevive_GiveHealth(client, bonusHP, false);
 
@@ -202,7 +202,7 @@ stock void SelfRevive_Complete(int client)
 stock void SelfRevive_RevivePlayer(int client)
 {
 	// Nota: Esto requiere el SDKCall L4D2_ReviveSurvivor configurado en el main
-	// Por ahora usaremos un método alternativo
+	// Por ahora usaremos un metodo alternativo
 	SetEntProp(client, Prop_Send, "m_isIncapacitated", 0);
 	SetEntProp(client, Prop_Send, "m_currentReviveCount", 0);
 }
@@ -233,7 +233,7 @@ stock void SelfRevive_GiveHealth(int client, int amount, bool temp)
 }
 
 /**
- * Verifica si el jugador está incapacitado
+ * Verifica si el jugador esta incapacitado
  */
 stock bool SelfRevive_IsIncapacitated(int client)
 {
@@ -241,11 +241,11 @@ stock bool SelfRevive_IsIncapacitated(int client)
 }
 
 /**
- * Verifica si el jugador está siendo sostenido por un infectado
+ * Verifica si el jugador esta siendo sostenido por un infectado
  */
 stock bool SelfRevive_IsHeld(int client)
 {
-	// Verificar si está agarrado por Smoker, Hunter, Jockey, Charger
+	// Verificar si esta agarrado por Smoker, Hunter, Jockey, Charger
 	if (GetEntPropEnt(client, Prop_Send, "m_tongueOwner") > 0)
 		return true;
 	if (GetEntPropEnt(client, Prop_Send, "m_pounceAttacker") > 0)
@@ -259,7 +259,7 @@ stock bool SelfRevive_IsHeld(int client)
 }
 
 /**
- * Obtiene si Self Revive está habilitado para un jugador
+ * Obtiene si Self Revive esta habilitado para un jugador
  */
 public bool SelfRevive_IsEnabled(int client)
 {
@@ -270,7 +270,7 @@ public bool SelfRevive_IsEnabled(int client)
 }
 
 /**
- * Obtiene si el jugador está en proceso de self revive
+ * Obtiene si el jugador esta en proceso de self revive
  */
 public bool SelfRevive_IsInProgress(int client)
 {

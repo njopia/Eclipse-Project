@@ -9,10 +9,10 @@
 
 // --- Defines ---
 #define POWER_YELL_RADIUS	400.0	// Radio en unidades para repeler a los infectados.
-#define POWER_YELL_PUSH_FORCE	700.0	// Fuerza del empujón.
+#define POWER_YELL_PUSH_FORCE	700.0	// Fuerza del empujon.
 #define POWER_YELL_COOLDOWN	5.0	// Cooldown en segundos.
 
-// Efectos de partículas — ahora usando macros de particle_effects.inc
+// Efectos de particulas — ahora usando macros de particle_effects.inc
 #define PARTICLE_POWERYELL_ELECTRIC	PARTICLE_ELECTRIC_SPARK
 #define PARTICLE_POWERYELL_FIRE		PARTICLE_FIRE_LARGE
 #define PARTICLE_POWERYELL_EXPLOSION	PARTICLE_EXPLOSION_LARGE
@@ -47,7 +47,7 @@ stock void Yell(int client)
 
 			if (FloatCompare(distance, POWER_YELL_RADIUS) == -1 && !IsTank(i))
 			{
-				// Partícula adjunta al infectado usando el nuevo include
+				// Particula adjunta al infectado usando el nuevo include
 				FX_AttachParticle(i, PARTICLE_POWERYELL_ELECTRIC, 2.0);
 			}
 
@@ -85,7 +85,7 @@ stock void Yell(int client)
 		}
 	}
 
-	// Partícula y shockwave en la posición del jugador
+	// Particula y shockwave en la posicion del jugador
 	float origin[3];
 	GetClientAbsOrigin(client, origin);
 
@@ -169,7 +169,7 @@ stock void EmitYell(int client)
 
 /**
  * Crea efecto de onda de choque visual.
- * Se mantiene aquí porque es específico de esta feature (env_sprite, no partícula).
+ * Se mantiene aqui porque es especifico de esta feature (env_sprite, no particula).
  */
 static void CreateShockwaveEffect(const float origin[3])
 {
