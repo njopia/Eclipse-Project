@@ -87,6 +87,8 @@ public void CowLevel_OnPluginStart()
 	RegAdminCmd("sm_cowlevel", Command_ToggleCowLevel, ADMFLAG_ROOT, "Toggle Secret Cow Level");
 
 	g_sOrigDifficulty_CowLevel[0] = '\0';
+
+	DifficultyOrchestrator_Register(MODE_COWLEVEL, g_cvar_CowLevel_Enable);
 }
 
 /**
@@ -270,7 +272,7 @@ void CowLevel_Activate()
 	if (g_hCowLevel_EventTimer == null)
 	{
 		LogMessage("[Cow Level] Starting event timer...");
-		g_hCowLevel_EventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT);
+		g_hCowLevel_EventTimer = CreateTimer(5.0, Timer_CowLevelEvents, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	}
 
 	// SOLO activar despues de que todos los recursos esten creados
@@ -638,8 +640,8 @@ void CowLevel_CreateColorCorrection(const char[] fileName, float weight)
 
 	LogMessage("[Cow Level] fog_volume entity created: %d", fogVolEnt);
 
-	DispatchKeyValue(fogVolEnt, "targetname", "cowlevel_fogvolume");
-	DispatchKeyValue(fogVolEnt, "PostProcessName", "cowlevel_colorcorrection");
+	DispatchKeyValue(fogVolEnt, "targetname",          "cowlevel_fogvolume");
+	DispatchKeyValue(fogVolEnt, "ColorCorrectionName", "cowlevel_colorcorrection");
 
 	// Cubrir todo el mapa - DEBE hacerse ANTES de DispatchSpawn
 	DispatchKeyValue(fogVolEnt, "mins", "-10000 -10000 -10000");

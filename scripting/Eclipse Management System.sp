@@ -89,6 +89,7 @@
 //==================================================
 // === GAME MODES MODULE ===
 //==================================================
+#tryinclude "modules/modes/difficulty-base.inc"
 #tryinclude "modules/modes/difficulty-orchestrator.module.sp"
 #tryinclude "modules/modes/bloodmoon.module.sp"
 #tryinclude "modules/modes/hell.module.sp"

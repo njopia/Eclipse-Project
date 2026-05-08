@@ -613,8 +613,7 @@ public int MenuHandler_Bombardments(Menu menu, MenuAction action, int client, in
 			_BM_PrintLevelError(client, 7, "Ion Cannon");
 			return 0;
 		}
-		if (PurchaseItem(client, GetConVarInt(cvar_CostIonCannon), "Ion Cannon") && BuyIonCannon(client))
-			_BM_PrintDeploySuccess(client, "Ion Cannon");
+		BuyIonCannon(client);
 	}
 	else if (StrEqual(info, BM_CHOICE_4_2))
 	{
@@ -623,8 +622,7 @@ public int MenuHandler_Bombardments(Menu menu, MenuAction action, int client, in
 			_BM_PrintLevelError(client, 15, "Nuclear Strike");
 			return 0;
 		}
-		if (PurchaseItem(client, GetConVarInt(cvar_CostNuclearStrike), "Nuclear Strike"))
-			Activate_NuclearStrike(client);
+		BuyNuclearStrike(client);
 	}
 
 	return 0;

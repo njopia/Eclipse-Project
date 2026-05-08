@@ -40,6 +40,7 @@
 #define PARTICLE_SMOKE_SMALL	   "smoke_small_01"
 #define PARTICLE_SMOKE_LARGE	   "smoke_medium_01"
 #define PARTICLE_ELECTRIC_SPARK	   "electric_spark_01b"
+#define PARTICLE_LIGHTNING		   "storm_lightning_01_thin"
 #define PARTICLE_FLASHLIGHT		   "flashlight_switchon"
 #define PARTICLE_PIPE_BOMB		   "pipebomb_trail"
 #define PARTICLE_ADRENALINE		   "adrenaline_use_1st"

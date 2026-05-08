@@ -13,7 +13,7 @@
 #define POWER_YELL_COOLDOWN	5.0	// Cooldown en segundos.
 
 // Efectos de particulas — ahora usando macros de particle_effects.inc
-#define PARTICLE_POWERYELL_ELECTRIC	PARTICLE_ELECTRIC_SPARK
+#define PARTICLE_POWERYELL_ELECTRIC	"electrical_arc_01_system"
 #define PARTICLE_POWERYELL_FIRE		PARTICLE_FIRE_LARGE
 #define PARTICLE_POWERYELL_EXPLOSION	PARTICLE_EXPLOSION_LARGE
 
@@ -45,26 +45,26 @@ stock void Yell(int client)
 			GetClientAbsOrigin(i, tpos);
 			distance = GetVectorDistance(pos, tpos);
 
-			if (FloatCompare(distance, POWER_YELL_RADIUS) == -1 && !IsTank(i))
+			if (FloatCompare(distance, POWER_YELL_RADIUS) == -1)
 			{
-				// Particula adjunta al infectado usando el nuevo include
-				FX_AttachParticle(i, PARTICLE_POWERYELL_ELECTRIC, 2.0);
+				if (!IsTank(i))
+					FX_AttachParticle(i, PARTICLE_POWERYELL_ELECTRIC, 2.0);
+
+				MakeVectorFromPoints(pos, tpos, traceVec);
+				GetVectorAngles(traceVec, resultingFling);
+
+				resultingFling[0] = Cosine(DegToRad(resultingFling[1])) * POWER_YELL_PUSH_FORCE;
+				resultingFling[1] = Sine(DegToRad(resultingFling[1]))   * POWER_YELL_PUSH_FORCE;
+				resultingFling[2] = POWER_YELL_PUSH_FORCE;
+
+				GetEntPropVector(i, Prop_Data, "m_vecVelocity", currentVelVec);
+				resultingFling[0] += currentVelVec[0];
+				resultingFling[1] += currentVelVec[1];
+				resultingFling[2] += currentVelVec[2];
+
+				TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, resultingFling);
+				L4D_StaggerPlayer(i, client, resultingFling);
 			}
-
-			MakeVectorFromPoints(pos, tpos, traceVec);
-			GetVectorAngles(traceVec, resultingFling);
-
-			resultingFling[0] = Cosine(DegToRad(resultingFling[1])) * POWER_YELL_PUSH_FORCE;
-			resultingFling[1] = Sine(DegToRad(resultingFling[1]))   * POWER_YELL_PUSH_FORCE;
-			resultingFling[2] = POWER_YELL_PUSH_FORCE;
-
-			GetEntPropVector(i, Prop_Data, "m_vecVelocity", currentVelVec);
-			resultingFling[0] += currentVelVec[0];
-			resultingFling[1] += currentVelVec[1];
-			resultingFling[2] += currentVelVec[2];
-
-			TeleportEntity(i, NULL_VECTOR, NULL_VECTOR, resultingFling);
-			L4D_StaggerPlayer(i, client, resultingFling);
 		}
 
 		char class[32];

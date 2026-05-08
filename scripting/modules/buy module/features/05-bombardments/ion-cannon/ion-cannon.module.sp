@@ -26,6 +26,7 @@
 #define ION_TICK_CENTER 1.5         // Tick de beam central
 #define ION_BLAST_RINGS 3           // Cantidad de anillos en blast
 #define ION_BLAST_GAP 0.3           // Gap entre anillos del blast
+#define ION_DAMAGE_RADIUS 800.0     // Radio de aplicacion de dano por tick
 
 // === OPTIMIZACION: Limites de muertes por tick ===
 #define ION_MAX_COMMON_KILLS_PER_TICK   10  // Maximo zombies comunes a matar por tick
@@ -92,6 +93,7 @@ public void IonCannon_OnMapStart()
 	PrecacheSound("weapons/hegrenade/explode4.wav", true);
 	PrecacheSound("weapons/hegrenade/explode5.wav", true);
 	PrecacheSound("ambient/explosions/explode_1.wav", true);
+	PrecacheSound("ambient/explosions/explode_2.wav", true);
 	PrecacheSound("ambient/energy/zap7.wav", true);
 	PrecacheSound("ambient/energy/spark1.wav", true);
 	PrecacheSound("ambient/energy/weld1.wav", true);
@@ -328,7 +330,6 @@ public Action IonCannon_Timer_Start(Handle timer, any data)
 	IonCannon_SetupOrbitBeams(client);
 
 	// Crear impacto inicial
-	CreateTimer(0.5, IonCannon_Timer_CreateRing, data, TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(1.0, IonCannon_Timer_CreateBlast, data, TIMER_FLAG_NO_MAPCHANGE);
 
 	// Timers repetitivos
@@ -336,20 +337,6 @@ public Action IonCannon_Timer_Start(Handle timer, any data)
 	CreateTimer(ION_TICK_RING, IonCannon_Timer_RingTick, data, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(ION_TICK_CENTER, IonCannon_Timer_CenterBeam, data, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(ION_PULSE_INTERVAL, IonCannon_Timer_DamagePulse, data, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-
-	return Plugin_Stop;
-}
-
-/**
- * Timer: Crea anillo visual inicial
- */
-public Action IonCannon_Timer_CreateRing(Handle timer, any data)
-{
-	int client, token;
-	IonCannon_UnpackData(data, client, token);
-
-	if (IonCannon_IsStale(client, token))
-		return Plugin_Stop;
 
 	return Plugin_Stop;
 }
@@ -566,9 +553,13 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (!IsValidEntity(ent))
 			continue;
 
-		// LIMITE: Solo procesar X zombies comunes por tick
 		if (commonProcessedThisTick >= ION_MAX_COMMON_KILLS_PER_TICK)
 			break;
+
+		float entPos[3];
+		GetEntPropVector(ent, Prop_Send, "m_vecOrigin", entPos);
+		if (GetVectorDistance(g_vIonOrigin[client], entPos) > ION_DAMAGE_RADIUS)
+			continue;
 
 		SDKHooks_TakeDamage(ent, 0, client, float(ION_DAMAGE_COMMON), DMG_BURN);
 		commonProcessedThisTick++;
@@ -582,9 +573,13 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (!IsValidEntity(ent))
 			continue;
 
-		// LIMITE: Solo procesar X witches por tick
 		if (witchProcessedThisTick >= ION_MAX_WITCH_KILLS_PER_TICK)
 			break;
+
+		float witchPos[3];
+		GetEntPropVector(ent, Prop_Send, "m_vecOrigin", witchPos);
+		if (GetVectorDistance(g_vIonOrigin[client], witchPos) > ION_DAMAGE_RADIUS)
+			continue;
 
 		SDKHooks_TakeDamage(ent, 0, client, float(ION_DAMAGE_COMMON), DMG_BURN);
 		witchProcessedThisTick++;
@@ -603,9 +598,13 @@ public Action IonCannon_Timer_DamagePulse(Handle timer, any data)
 		if (GetEntProp(i, Prop_Send, "m_isGhost") != 0)
 			continue;
 
-		// LIMITE: Solo procesar X especiales por tick
 		if (specialProcessedThisTick >= ION_MAX_SPECIAL_KILLS_PER_TICK)
 			break;
+
+		float siPos[3];
+		GetClientAbsOrigin(i, siPos);
+		if (GetVectorDistance(g_vIonOrigin[client], siPos) > ION_DAMAGE_RADIUS)
+			continue;
 
 		SDKHooks_TakeDamage(i, 0, client, float(ION_DAMAGE_SI), DMG_BURN);
 		specialProcessedThisTick++;

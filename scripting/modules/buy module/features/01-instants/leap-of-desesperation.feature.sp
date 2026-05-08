@@ -4,16 +4,14 @@
 
 public void Activate_LeapOfDesperation(int client)
 {
-	if (!IsNormalPlayer(client)) return;
+	if (!IsNormalPlayer(client) || !IsPlayerAlive(client)) return;
 
-	// Creamos un DataPack para pasar el cliente y el contador al timer
 	DataPack pack = new DataPack();
 	pack.WriteCell(client);
-	pack.WriteCell(7);	  // Duracion total en segundos
-	pack.WriteCell(0);	  // Contador de gritos
+	pack.WriteCell(7);	// Duracion total en segundos
+	pack.WriteCell(0);	// Contador de gritos
 
-	// Iniciamos el timer repetitivo
-	CreateTimer(1.0, Timer_LeapOfDesperation, pack, TIMER_REPEAT);
+	CreateTimer(1.0, Timer_LeapOfDesperation, pack, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	PrintToChat(client, "\x05[Eclipse]\x01 Activando Salto de Desesperacion!");
 }
 
@@ -24,18 +22,19 @@ public Action Timer_LeapOfDesperation(Handle timer, DataPack pack)
 	int duration = pack.ReadCell();
 	int count	 = pack.ReadCell();
 
-	if (!IsNormalPlayer(client) || count >= duration)
+	if (!IsNormalPlayer(client) || !IsPlayerAlive(client) || count >= duration)
 	{
 		delete pack;
-		return Plugin_Stop;	   // Detenemos el timer
+		return Plugin_Stop;
 	}
 
-	Yell(client);	 // Ejecutamos el grito
+	Yell(client);
+	FX_AttachParticle(client, "electrical_arc_01_system", 1.0);
 
 	pack.Reset();
 	pack.WriteCell(client);
 	pack.WriteCell(duration);
-	pack.WriteCell(count + 1);	  // Incrementamos el contador
+	pack.WriteCell(count + 1);
 
 	return Plugin_Continue;
 }

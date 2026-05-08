@@ -71,14 +71,16 @@ Handle cvar_CostNuclearStrike  = INVALID_HANDLE;
 #tryinclude "features/03-deployables/ammo.feature.sp"
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
-#tryinclude "features/03-deployables/ion-cannon/ion-cannon.module.sp"
-#tryinclude "features/03-deployables/ion-cannon.feature.sp"
 #tryinclude "features/03-deployables/defense-grid.feature.sp"
+//////////////////////////////////////////////
+////// BOMBARDMENTS ///////////////////////////
+#tryinclude "features/05-bombardments/ion-cannon/ion-cannon.module.sp"
+#tryinclude "features/05-bombardments/ion-cannon.feature.sp"
+#tryinclude "features/05-bombardments/nuclear-strike.feature.sp"
 //////////////////////////////////////////////
 ////// TEAM BONUSES ///////////////////////////
 #tryinclude "features/04-team-bonuses/team-speed-boost.feature.sp"
 #tryinclude "features/04-team-bonuses/team-heal.feature.sp"
-#tryinclude "features/04-team-bonuses/nuclear-strike.feature.sp"
 //////////////////////////////////////////////
 #tryinclude "features/0-menu/buy-menu.feature.sp"
 #tryinclude "features/0-menu/admin-currency.feature.sp"

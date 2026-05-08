@@ -1201,6 +1201,50 @@ stock bool NuclearStrike_HasUsedThisMap(int client)
 }
 
 /**
+ * Compra y activa Nuclear Strike desde el menu.
+ * Valida todas las condiciones antes de descontar currency.
+ */
+stock bool BuyNuclearStrike(int client)
+{
+	if (!IsSurvivor(client))
+	{
+		PrintToChat(client, "\x05[Eclipse]\x01 Solo los sobrevivientes pueden usar esta habilidad.");
+		return false;
+	}
+
+	if (!IsPlayerAlive(client))
+	{
+		PrintToChat(client, "\x05[Eclipse]\x01 Debes estar vivo para usar Nuclear Strike.");
+		return false;
+	}
+
+	if (!(GetEntityFlags(client) & FL_ONGROUND))
+	{
+		PrintToChat(client, "\x05[Eclipse]\x01 Debes estar en el suelo para lanzar Nuclear Strike.");
+		return false;
+	}
+
+	if (NuclearStrike_HasUsedThisMap(client))
+	{
+		PrintToChat(client, "\x05[Eclipse]\x01 Solo puedes usar Nuclear Strike \x04una vez por mapa\x01.");
+		return false;
+	}
+
+	if (NuclearStrike_IsAnyActive() || IonCannon_IsAnyActive())
+	{
+		PrintToChat(client, "\x05[Eclipse]\x01 Ya hay un bombardeo activo. Espera a que termine.");
+		return false;
+	}
+
+	int cost = GetConVarInt(cvar_CostNuclearStrike);
+	if (!PurchaseItem(client, cost, "Nuclear Strike"))
+		return false;
+
+	Activate_NuclearStrike(client);
+	return true;
+}
+
+/**
  * Verifica si hay algun Nuclear Strike activo
  * Usado por el sistema de control global de bombardeos
  */

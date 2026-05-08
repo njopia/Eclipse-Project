@@ -4,563 +4,377 @@
 
 //==================================================
 // === DIFFICULTY ORCHESTRATOR MODULE ===
-// Orquestador central de modos de dificultad
-// Gestiona mutual exclusion, progresion y coordinacion
+// Coordina modos de dificultad: mutual exclusion,
+// progresion por victorias y comandos admin.
+//
+// Comunicacion con modos:
+//   Cada modo llama DifficultyOrchestrator_Register()
+//   al final de su OnPluginStart(). El orquestador
+//   guarda el ConVar handle y hookea cambios para
+//   detectar activaciones manuales.
+//   La flag g_bOrchestratorChanging evita que los
+//   hooks propios del orquestador se disparen de
+//   forma recursiva cuando el mismo orquestador
+//   cambia un ConVar.
 //==================================================
 
-//==================================================
+// =============================================================================
 // ENUMS Y CONSTANTES
-//==================================================
+// =============================================================================
 
 enum DifficultyMode
 {
-	MODE_NONE = 0,
+	MODE_NONE      = 0,
 	MODE_BLOODMOON = 1,
-	MODE_HELL = 2,
-	MODE_INFERNO = 3,
-	MODE_COWLEVEL = 4
+	MODE_HELL      = 2,
+	MODE_INFERNO   = 3,
+	MODE_COWLEVEL  = 4
 };
 
-// Progression requirements (campaign wins needed to unlock next mode)
-#define PROGRESSION_BLOODMOON_TO_HELL		0	// Immediate unlock after 1 win
-#define PROGRESSION_HELL_TO_INFERNO			2	// Need 2 wins
-#define PROGRESSION_INFERNO_TO_COWLEVEL		2	// Need 2 wins
+// Victorias acumuladas en el modo actual necesarias para avanzar.
+// 0 = avanza despues de la primera victoria en ese modo.
+#define PROGRESSION_BLOODMOON_TO_HELL    0
+#define PROGRESSION_HELL_TO_INFERNO      2
+#define PROGRESSION_INFERNO_TO_COWLEVEL  2
 
-// Fade flags (shared across all difficulty modes)
-#if !defined FFADE_IN
-	#define FFADE_IN       0x0001  // Fade from transparent to opaque
-#endif
-#if !defined FFADE_OUT
-	#define FFADE_OUT      0x0002  // Fade from opaque to transparent
-#endif
-#if !defined FFADE_MODULATE
-	#define FFADE_MODULATE 0x0004  // Modulate (don't blend)
-#endif
-#if !defined FFADE_STAYOUT
-	#define FFADE_STAYOUT  0x0008  // Stay faded until next usermessage
-#endif
-#if !defined FFADE_PURGE
-	#define FFADE_PURGE    0x0010  // Purge all other fades
-#endif
-
-//==================================================
+// =============================================================================
 // VARIABLES GLOBALES
-//==================================================
+// =============================================================================
 
-// ConVars
-Handle g_cvar_DiffOrch_Enable = INVALID_HANDLE;
+Handle g_cvar_DiffOrch_Enable          = INVALID_HANDLE;
 Handle g_cvar_DiffOrch_ProgressionEnable = INVALID_HANDLE;
 Handle g_cvar_DiffOrch_MutualExclusion = INVALID_HANDLE;
-Handle g_cvar_DiffOrch_AutoUnlock = INVALID_HANDLE;
+Handle g_cvar_DiffOrch_AutoUnlock      = INVALID_HANDLE;
+
+// Handles registrados por cada modo (indice = DifficultyMode)
+Handle g_hModeConVars[5];
 
 // Estado actual
-DifficultyMode g_CurrentMode = MODE_NONE;
-int g_iDifficultyWins = 0;
+DifficultyMode g_CurrentMode  = MODE_NONE;
+DifficultyMode g_PreviousMode = MODE_NONE;
+int  g_iDifficultyWins  = 0;
 bool g_bFinaleCompleted = false;
 
-// Modo anterior (para tracking)
-DifficultyMode g_PreviousMode = MODE_NONE;
+// Evita que el hook del orquestador procese cambios que el mismo genero,
+// previniendo el loop recursivo de mutual exclusion.
+bool g_bOrchestratorChanging = false;
 
-// Handles para ConVars de modos (obtenidos dinamicamente)
-Handle g_hBloodmoon_Enable = INVALID_HANDLE;
-Handle g_hCowLevel_Enable = INVALID_HANDLE;
-Handle g_hHell_Enable = INVALID_HANDLE;
-Handle g_hInferno_Enable = INVALID_HANDLE;
+// =============================================================================
+// INICIALIZACION
+// =============================================================================
 
-//==================================================
-// FUNCIONES PUBLICAS
-//==================================================
-
-/**
- * Inicializa el orquestador de dificultad
- */
 public void DifficultyOrchestrator_OnPluginStart()
 {
-	// ConVars de Configuracion
 	g_cvar_DiffOrch_Enable = CreateConVar(
-		"difficulty_orchestrator_enable",
-		"1",
+		"difficulty_orchestrator_enable", "1",
 		"Habilita el orquestador de dificultad",
-		FCVAR_PLUGIN,
-		true, 0.0, true, 1.0
-	);
+		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_ProgressionEnable = CreateConVar(
-		"difficulty_progression_enable",
-		"1",
-		"Habilita progresion automatica de dificultad al ganar campanas",
-		FCVAR_PLUGIN,
-		true, 0.0, true, 1.0
-	);
+		"difficulty_progression_enable", "1",
+		"Progresion automatica al ganar campanas",
+		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_MutualExclusion = CreateConVar(
-		"difficulty_mutual_exclusion",
-		"1",
-		"Solo un modo de dificultad activo a la vez",
-		FCVAR_PLUGIN,
-		true, 0.0, true, 1.0
-	);
+		"difficulty_mutual_exclusion", "1",
+		"Solo un modo activo a la vez",
+		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_AutoUnlock = CreateConVar(
-		"difficulty_auto_unlock",
-		"1",
+		"difficulty_auto_unlock", "1",
 		"Desbloqueo automatico al cumplir requisitos",
-		FCVAR_PLUGIN,
-		true, 0.0, true, 1.0
-	);
+		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
-	// Hooks de eventos
+	for (int i = 0; i < 5; i++)
+		g_hModeConVars[i] = INVALID_HANDLE;
+
+	HookEvent("finale_win",   Event_FinaleWin);
 	HookEvent("mission_lost", Event_MissionLost);
-	HookEvent("finale_win", Event_FinaleWin);
 
-	// Hook ConVar changes para detectar activaciones manuales
-	HookConVarChange(g_cvar_DiffOrch_MutualExclusion, ConVarChanged_MutualExclusion);
-
-	// Obtener handles de ConVars de modos (FindConVar busca ConVars ya registrados)
-	CreateTimer(0.5, Timer_FindModeConVars, _, TIMER_FLAG_NO_MAPCHANGE);
-
-	// Comandos admin
-	RegAdminCmd("sm_diffmode", Command_DiffMode, ADMFLAG_ROOT, "Gestionar modos de dificultad");
-	RegAdminCmd("sm_mode", Command_DiffMode, ADMFLAG_ROOT, "Alias: Gestionar modos de dificultad");
-	RegAdminCmd("sm_resetprogression", Command_ResetProgression, ADMFLAG_ROOT, "Resetear progresion de dificultad");
-
-	// Alias cortos para modos
-	RegAdminCmd("sm_bm", Command_Alias_Bloodmoon, ADMFLAG_ROOT, "Alias: Activar Bloodmoon");
-	RegAdminCmd("sm_hell", Command_Alias_Hell, ADMFLAG_ROOT, "Alias: Activar Hell Mode");
-	RegAdminCmd("sm_inferno", Command_Alias_Inferno, ADMFLAG_ROOT, "Alias: Activar Inferno Mode");
-	RegAdminCmd("sm_cow", Command_Alias_CowLevel, ADMFLAG_ROOT, "Alias: Activar Cow Level");
-
-	// Alias cortos para comandos de gestion
-	RegAdminCmd("sm_diffstatus", Command_Alias_Status, ADMFLAG_ROOT, "Alias: Ver estado de dificultad");
-	RegAdminCmd("sm_diffreset", Command_Alias_Reset, ADMFLAG_ROOT, "Alias: Resetear progresion");
+	RegAdminCmd("sm_diffmode",      Command_DiffMode,       ADMFLAG_ROOT, "Gestionar modos de dificultad");
+	RegAdminCmd("sm_mode",          Command_DiffMode,       ADMFLAG_ROOT, "Alias: modos de dificultad");
+	RegAdminCmd("sm_resetprogression", Command_ResetProgression, ADMFLAG_ROOT, "Resetear progresion");
+	RegAdminCmd("sm_bm",            Command_Alias_Bloodmoon, ADMFLAG_ROOT, "Activar Bloodmoon");
+	RegAdminCmd("sm_hell",          Command_Alias_Hell,      ADMFLAG_ROOT, "Activar Hell Mode");
+	RegAdminCmd("sm_inferno",       Command_Alias_Inferno,   ADMFLAG_ROOT, "Activar Inferno Mode");
+	RegAdminCmd("sm_cow",           Command_Alias_CowLevel,  ADMFLAG_ROOT, "Activar Cow Level");
+	RegAdminCmd("sm_diffstatus",    Command_Alias_Status,    ADMFLAG_ROOT, "Ver estado de dificultad");
+	RegAdminCmd("sm_diffreset",     Command_Alias_Reset,     ADMFLAG_ROOT, "Resetear progresion");
 }
 
-/**
- * Timer para encontrar y hookear ConVars de modos
- * Delay necesario porque los modulos se inicializan despues del orquestador
- */
-public Action Timer_FindModeConVars(Handle timer)
-{
-	// Buscar ConVars registrados por los modulos
-	g_hBloodmoon_Enable = FindConVar("bloodmoon_enable");
-	g_hCowLevel_Enable = FindConVar("cowlevel_enable");
-	g_hHell_Enable = FindConVar("hell_enable");
-	g_hInferno_Enable = FindConVar("inferno_enable");
-
-	// Hook cambios en ConVars de modos individuales para enforcar mutual exclusion
-	if (g_hBloodmoon_Enable != INVALID_HANDLE)
-		HookConVarChange(g_hBloodmoon_Enable, ConVarChanged_ModeActivation);
-
-	if (g_hCowLevel_Enable != INVALID_HANDLE)
-		HookConVarChange(g_hCowLevel_Enable, ConVarChanged_ModeActivation);
-
-	if (g_hHell_Enable != INVALID_HANDLE)
-		HookConVarChange(g_hHell_Enable, ConVarChanged_ModeActivation);
-
-	if (g_hInferno_Enable != INVALID_HANDLE)
-		HookConVarChange(g_hInferno_Enable, ConVarChanged_ModeActivation);
-
-	LogMessage("[Difficulty Orchestrator] Mode ConVars hooked successfully");
-	return Plugin_Stop;
-}
-
-/**
- * Llamado al inicio del mapa
- */
 public void DifficultyOrchestrator_OnMapStart()
 {
 	g_bFinaleCompleted = false;
-
-	// Detectar modo activo al inicio
-	DifficultyOrchestrator_DetectActiveMode();
+	_DiffOrch_DetectActiveMode();
 }
 
-/**
- * Hook: Finale ganado
- */
+// =============================================================================
+// REGISTRO DE MODOS
+// Los modos llaman esto al final de su OnPluginStart()
+// =============================================================================
+
+void DifficultyOrchestrator_Register(DifficultyMode mode, Handle hEnableConVar)
+{
+	g_hModeConVars[view_as<int>(mode)] = hEnableConVar;
+	HookConVarChange(hEnableConVar, ConVarChanged_ModeActivation);
+	LogMessage("[DiffOrch] Registered mode %d", view_as<int>(mode));
+}
+
+// =============================================================================
+// EVENTOS
+// =============================================================================
+
 public void Event_FinaleWin(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!GetConVarBool(g_cvar_DiffOrch_Enable))
-		return;
-
-	if (!GetConVarBool(g_cvar_DiffOrch_ProgressionEnable))
-		return;
+	if (!GetConVarBool(g_cvar_DiffOrch_Enable))          return;
+	if (!GetConVarBool(g_cvar_DiffOrch_ProgressionEnable)) return;
 
 	g_bFinaleCompleted = true;
-
-	// Procesar progresion en el siguiente mapa
 	CreateTimer(5.0, Timer_ProcessProgression, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-/**
- * Hook: Mision perdida
- */
 public void Event_MissionLost(Event event, const char[] name, bool dontBroadcast)
 {
-	// Reset progression on loss
 	g_iDifficultyWins = 0;
 }
 
-/**
- * Timer: Procesar progresion de dificultad
- */
 public Action Timer_ProcessProgression(Handle timer)
 {
-	if (!g_bFinaleCompleted)
-		return Plugin_Stop;
-
-	DifficultyOrchestrator_ProcessProgression();
+	if (!g_bFinaleCompleted) return Plugin_Stop;
+	g_bFinaleCompleted = false;
+	_DiffOrch_ProcessProgression();
 	return Plugin_Stop;
 }
 
-/**
- * Procesa la progresion de dificultad despues de ganar
- */
-void DifficultyOrchestrator_ProcessProgression()
+// =============================================================================
+// LOGICA DE PROGRESION
+// =============================================================================
+
+static void _DiffOrch_ProcessProgression()
 {
-	if (!GetConVarBool(g_cvar_DiffOrch_AutoUnlock))
-		return;
+	if (!GetConVarBool(g_cvar_DiffOrch_AutoUnlock)) return;
+
+	char msg[256];
 
 	switch (g_CurrentMode)
 	{
 		case MODE_NONE:
 		{
-			// First win → Unlock Bloodmoon
-			SetGlobalTransTarget(LANG_SERVER);
-			char message[256];
-			Format(message, sizeof(message), "%t", "DiffOrch_BloodmoonUnlocked");
-			PrintToChatAll("\x05[Eclipse]\x04 %s", message);
+			Format(msg, sizeof(msg), "%t", "DiffOrch_BloodmoonUnlocked");
+			PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 			EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
-
 			DifficultyOrchestrator_SetMode(MODE_BLOODMOON);
 			g_iDifficultyWins = 0;
 		}
 		case MODE_BLOODMOON:
 		{
-			// Bloodmoon → Hell (immediate)
 			if (g_iDifficultyWins >= PROGRESSION_BLOODMOON_TO_HELL)
 			{
-				SetGlobalTransTarget(LANG_SERVER);
-				char message[256];
-				Format(message, sizeof(message), "%t", "DiffOrch_HellUnlocked");
-				PrintToChatAll("\x05[Eclipse]\x04 %s", message);
+				Format(msg, sizeof(msg), "%t", "DiffOrch_HellUnlocked");
+				PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 				EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
-
 				DifficultyOrchestrator_SetMode(MODE_HELL);
 				g_iDifficultyWins = 0;
 			}
-			else
-			{
-				g_iDifficultyWins++;
-			}
+			else g_iDifficultyWins++;
 		}
 		case MODE_HELL:
 		{
-			// Hell → Inferno (2 wins)
 			if (g_iDifficultyWins >= PROGRESSION_HELL_TO_INFERNO)
 			{
-				SetGlobalTransTarget(LANG_SERVER);
-				char message[256];
-				Format(message, sizeof(message), "%t", "DiffOrch_InfernoUnlocked");
-				PrintToChatAll("\x05[Eclipse]\x04 %s", message);
+				Format(msg, sizeof(msg), "%t", "DiffOrch_InfernoUnlocked");
+				PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 				EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
-
 				DifficultyOrchestrator_SetMode(MODE_INFERNO);
 				g_iDifficultyWins = 0;
 			}
-			else
-			{
-				g_iDifficultyWins++;
-			}
+			else g_iDifficultyWins++;
 		}
 		case MODE_INFERNO:
 		{
-			// Inferno → Cow Level (2 wins)
 			if (g_iDifficultyWins >= PROGRESSION_INFERNO_TO_COWLEVEL)
 			{
-				SetGlobalTransTarget(LANG_SERVER);
-				char message[256];
-				Format(message, sizeof(message), "%t", "DiffOrch_CowLevelUnlocked");
-				PrintToChatAll("\x05[Eclipse]\x04 %s", message);
+				Format(msg, sizeof(msg), "%t", "DiffOrch_CowLevelUnlocked");
+				PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 				EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
-
 				DifficultyOrchestrator_SetMode(MODE_COWLEVEL);
 				g_iDifficultyWins = 0;
 			}
-			else
-			{
-				g_iDifficultyWins++;
-			}
+			else g_iDifficultyWins++;
 		}
 		case MODE_COWLEVEL:
 		{
-			// Cow Level completed → Congratulations!
-			SetGlobalTransTarget(LANG_SERVER);
-			char message[256];
-			Format(message, sizeof(message), "%t", "DiffOrch_AllCompleted");
-			PrintToChatAll("\x05[Eclipse]\x04 %s", message);
-
+			Format(msg, sizeof(msg), "%t", "DiffOrch_AllCompleted");
+			PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 			DifficultyOrchestrator_SetMode(MODE_NONE);
 			g_iDifficultyWins = 0;
 		}
 	}
 }
 
-/**
- * Establece el modo de dificultad activo
- */
+// =============================================================================
+// API PUBLICA
+// =============================================================================
+
 public void DifficultyOrchestrator_SetMode(DifficultyMode mode)
 {
-	if (!GetConVarBool(g_cvar_DiffOrch_Enable))
-		return;
+	if (!GetConVarBool(g_cvar_DiffOrch_Enable)) return;
 
-	// Store previous mode
 	g_PreviousMode = g_CurrentMode;
-	g_CurrentMode = mode;
+	g_CurrentMode  = mode;
 
-	// Mutual exclusion: desactivar otros modos
 	if (GetConVarBool(g_cvar_DiffOrch_MutualExclusion))
-	{
-		DifficultyOrchestrator_EnforceMutualExclusion(mode);
-	}
+		_DiffOrch_EnforceMutualExclusion(mode);
 
-	// Activar el modo solicitado
-	DifficultyOrchestrator_ActivateMode(mode);
+	_DiffOrch_ActivateMode(mode);
 
-	// Log mode change
-	LogMessage("[Difficulty Orchestrator] Mode changed: %d → %d", g_PreviousMode, g_CurrentMode);
+	LogMessage("[DiffOrch] Mode %d -> %d", view_as<int>(g_PreviousMode), view_as<int>(g_CurrentMode));
 }
 
-/**
- * Aplica mutual exclusion - desactiva todos los modos excepto el especificado
- */
-void DifficultyOrchestrator_EnforceMutualExclusion(DifficultyMode activeMode)
+public DifficultyMode DifficultyOrchestrator_GetCurrentMode()  { return g_CurrentMode; }
+public int  DifficultyOrchestrator_GetWinCount()               { return g_iDifficultyWins; }
+public void DifficultyOrchestrator_SetWinCount(int wins)       { g_iDifficultyWins = wins; }
+
+// =============================================================================
+// MUTUAL EXCLUSION
+// Desactiva todos los modos excepto el activo.
+// Usa g_bOrchestratorChanging para que el hook del orquestador ignore
+// los ConVar changes que el mismo genera, evitando recursion.
+// El hook propio de cada modo (Bloodmoon_ConVarChanged, etc.) NO lee
+// esta flag, por lo que la activacion/desactivacion real ocurre correctamente.
+// =============================================================================
+
+static void _DiffOrch_EnforceMutualExclusion(DifficultyMode activeMode)
 {
-	// Verificar que los handles esten inicializados
-	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
+	g_bOrchestratorChanging = true;
+
+	for (int i = 1; i <= 4; i++)
 	{
-		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, skipping mutual exclusion");
+		if (view_as<DifficultyMode>(i) == activeMode) continue;
+		Handle h = g_hModeConVars[i];
+		if (h != INVALID_HANDLE && GetConVarBool(h))
+			SetConVarBool(h, false);
+	}
+
+	g_bOrchestratorChanging = false;
+}
+
+// =============================================================================
+// ACTIVACION DE MODO
+// =============================================================================
+
+static void _DiffOrch_ActivateMode(DifficultyMode mode)
+{
+	if (mode == MODE_NONE)
+	{
+		// Desactivar el modo que estaba corriendo
+		int prev = view_as<int>(g_PreviousMode);
+		Handle h = (prev >= 1 && prev <= 4) ? g_hModeConVars[prev] : INVALID_HANDLE;
+		if (h != INVALID_HANDLE && GetConVarBool(h))
+		{
+			g_bOrchestratorChanging = true;
+			SetConVarBool(h, false);
+			g_bOrchestratorChanging = false;
+		}
 		return;
 	}
 
-	// Desactivar Bloodmoon si no es el modo activo
-	if (activeMode != MODE_BLOODMOON && GetConVarBool(g_hBloodmoon_Enable))
+	Handle h = g_hModeConVars[view_as<int>(mode)];
+	if (h == INVALID_HANDLE)
 	{
-		SetConVarBool(g_hBloodmoon_Enable, false);
-		LogMessage("[Difficulty Orchestrator] Deactivating Bloodmoon (mutual exclusion)");
-	}
-
-	// Desactivar Hell si no es el modo activo
-	if (g_hHell_Enable != INVALID_HANDLE && activeMode != MODE_HELL && GetConVarBool(g_hHell_Enable))
-	{
-		SetConVarBool(g_hHell_Enable, false);
-		LogMessage("[Difficulty Orchestrator] Deactivating Hell (mutual exclusion)");
-	}
-
-	// Desactivar Inferno si no es el modo activo
-	if (g_hInferno_Enable != INVALID_HANDLE && activeMode != MODE_INFERNO && GetConVarBool(g_hInferno_Enable))
-	{
-		SetConVarBool(g_hInferno_Enable, false);
-		LogMessage("[Difficulty Orchestrator] Deactivating Inferno (mutual exclusion)");
-	}
-
-	// Desactivar Cow Level si no es el modo activo
-	if (activeMode != MODE_COWLEVEL && GetConVarBool(g_hCowLevel_Enable))
-	{
-		SetConVarBool(g_hCowLevel_Enable, false);
-		LogMessage("[Difficulty Orchestrator] Deactivating Cow Level (mutual exclusion)");
-	}
-}
-
-/**
- * Activa el modo especificado
- */
-void DifficultyOrchestrator_ActivateMode(DifficultyMode mode)
-{
-	// Verificar que los handles esten inicializados
-	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
-	{
-		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, cannot activate mode");
+		LogMessage("[DiffOrch] Mode %d not registered", view_as<int>(mode));
 		return;
 	}
 
-	switch (mode)
+	// Establecer el ConVar a true.
+	// El hook propio del modo (Bloodmoon_ConVarChanged, etc.) se encarga
+	// de llamar a su funcion Activate(). El hook del orquestador se suprime.
+	if (!GetConVarBool(h))
 	{
-		case MODE_NONE:
-		{
-			// No active mode - ensure all are disabled
-			SetConVarBool(g_hBloodmoon_Enable, false);
-			SetConVarBool(g_hCowLevel_Enable, false);
-			if (g_hHell_Enable != INVALID_HANDLE)
-				SetConVarBool(g_hHell_Enable, false);
-			if (g_hInferno_Enable != INVALID_HANDLE)
-				SetConVarBool(g_hInferno_Enable, false);
-		}
-		case MODE_BLOODMOON:
-		{
-			// Forzar toggle para garantizar que el hook se dispare
-			if (GetConVarBool(g_hBloodmoon_Enable))
-				SetConVarBool(g_hBloodmoon_Enable, false);
-			SetConVarBool(g_hBloodmoon_Enable, true);
-		}
-		case MODE_HELL:
-		{
-			if (g_hHell_Enable != INVALID_HANDLE)
-			{
-				// Forzar toggle para garantizar que el hook se dispare
-				if (GetConVarBool(g_hHell_Enable))
-					SetConVarBool(g_hHell_Enable, false);
-				SetConVarBool(g_hHell_Enable, true);
-			}
-			else
-			{
-				LogMessage("[Difficulty Orchestrator] Hell mode ConVar not found");
-			}
-		}
-		case MODE_INFERNO:
-		{
-			if (g_hInferno_Enable != INVALID_HANDLE)
-			{
-				// Forzar toggle para garantizar que el hook se dispare
-				if (GetConVarBool(g_hInferno_Enable))
-					SetConVarBool(g_hInferno_Enable, false);
-				SetConVarBool(g_hInferno_Enable, true);
-			}
-			else
-			{
-				LogMessage("[Difficulty Orchestrator] Inferno mode ConVar not found");
-			}
-		}
-		case MODE_COWLEVEL:
-		{
-			// Forzar toggle para garantizar que el hook se dispare
-			if (GetConVarBool(g_hCowLevel_Enable))
-				SetConVarBool(g_hCowLevel_Enable, false);
-			SetConVarBool(g_hCowLevel_Enable, true);
-		}
+		g_bOrchestratorChanging = true;
+		SetConVarBool(h, true);
+		g_bOrchestratorChanging = false;
 	}
 }
 
-/**
- * Detecta que modo esta activo actualmente
- */
-void DifficultyOrchestrator_DetectActiveMode()
-{
-	DifficultyMode detectedMode = MODE_NONE;
+// =============================================================================
+// HOOK: CAMBIO MANUAL DE CONVAR DE MODO
+// Solo procesa cambios que NO hizo el orquestador.
+// =============================================================================
 
-	// Verificar que los handles esten inicializados
-	if (g_hCowLevel_Enable == INVALID_HANDLE || g_hBloodmoon_Enable == INVALID_HANDLE)
-	{
-		LogMessage("[Difficulty Orchestrator] ConVar handles not yet initialized, skipping detection");
-		return;
-	}
-
-	// Check en orden de prioridad (de mayor a menor dificultad)
-	if (GetConVarBool(g_hCowLevel_Enable))
-		detectedMode = MODE_COWLEVEL;
-	else if (g_hInferno_Enable != INVALID_HANDLE && GetConVarBool(g_hInferno_Enable))
-		detectedMode = MODE_INFERNO;
-	else if (g_hHell_Enable != INVALID_HANDLE && GetConVarBool(g_hHell_Enable))
-		detectedMode = MODE_HELL;
-	else if (GetConVarBool(g_hBloodmoon_Enable))
-		detectedMode = MODE_BLOODMOON;
-
-	if (detectedMode != g_CurrentMode)
-	{
-		g_PreviousMode = g_CurrentMode;
-		g_CurrentMode = detectedMode;
-		LogMessage("[Difficulty Orchestrator] Detected active mode: %d", g_CurrentMode);
-	}
-}
-
-/**
- * Hook: Cambio en ConVar de mutual exclusion
- */
-public void ConVarChanged_MutualExclusion(Handle convar, const char[] oldValue, const char[] newValue)
-{
-	if (GetConVarBool(g_cvar_DiffOrch_MutualExclusion))
-	{
-		// Si se activa mutual exclusion, aplicar inmediatamente
-		DifficultyOrchestrator_DetectActiveMode();
-		DifficultyOrchestrator_EnforceMutualExclusion(g_CurrentMode);
-	}
-}
-
-/**
- * Hook: Cambio en ConVars de activacion de modos individuales
- * Detecta cuando un modo es activado manualmente y aplica mutual exclusion
- */
 public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, const char[] newValue)
 {
-	if (!GetConVarBool(g_cvar_DiffOrch_Enable))
-		return;
+	if (g_bOrchestratorChanging) return;
+	if (!GetConVarBool(g_cvar_DiffOrch_Enable)) return;
 
-	if (!GetConVarBool(g_cvar_DiffOrch_MutualExclusion))
-		return;
-
-	// Solo procesar si el modo fue activado (0 → 1)
-	int oldVal = StringToInt(oldValue);
 	int newVal = StringToInt(newValue);
+	int oldVal = StringToInt(oldValue);
+	if (newVal == oldVal) return;
 
-	if (oldVal == 1 && newVal == 1)
-		return; // No hubo cambio real
+	DifficultyMode changedMode = MODE_NONE;
+	for (int i = 1; i <= 4; i++)
+	{
+		if (g_hModeConVars[i] == convar)
+		{
+			changedMode = view_as<DifficultyMode>(i);
+			break;
+		}
+	}
+	if (changedMode == MODE_NONE) return;
 
 	if (newVal == 1)
 	{
-		// Determinar que modo fue activado
-		DifficultyMode activatedMode = MODE_NONE;
+		// Activacion manual: actualizar estado y aplicar mutual exclusion
+		g_PreviousMode = g_CurrentMode;
+		g_CurrentMode  = changedMode;
 
-		if (convar == g_hBloodmoon_Enable)
-			activatedMode = MODE_BLOODMOON;
-		else if (convar == g_hHell_Enable)
-			activatedMode = MODE_HELL;
-		else if (convar == g_hInferno_Enable)
-			activatedMode = MODE_INFERNO;
-		else if (convar == g_hCowLevel_Enable)
-			activatedMode = MODE_COWLEVEL;
+		if (GetConVarBool(g_cvar_DiffOrch_MutualExclusion))
+			_DiffOrch_EnforceMutualExclusion(changedMode);
 
-		if (activatedMode != MODE_NONE)
-		{
-			LogMessage("[Difficulty Orchestrator] Manual activation detected: %d", activatedMode);
-
-			// Actualizar modo actual
-			g_PreviousMode = g_CurrentMode;
-			g_CurrentMode = activatedMode;
-
-			// Enforcar mutual exclusion
-			DifficultyOrchestrator_EnforceMutualExclusion(activatedMode);
-		}
+		LogMessage("[DiffOrch] Manual activation: mode %d", view_as<int>(changedMode));
 	}
-	else if (newVal == 0)
+	else
 	{
-		// Modo desactivado - si era el modo actual, resetear
-		DifficultyMode deactivatedMode = MODE_NONE;
-
-		if (convar == g_hBloodmoon_Enable)
-			deactivatedMode = MODE_BLOODMOON;
-		else if (convar == g_hHell_Enable)
-			deactivatedMode = MODE_HELL;
-		else if (convar == g_hInferno_Enable)
-			deactivatedMode = MODE_INFERNO;
-		else if (convar == g_hCowLevel_Enable)
-			deactivatedMode = MODE_COWLEVEL;
-
-		if (deactivatedMode == g_CurrentMode)
+		// Desactivacion manual: si era el modo activo, pasar a NONE
+		if (changedMode == g_CurrentMode)
 		{
-			LogMessage("[Difficulty Orchestrator] Current mode deactivated: %d", deactivatedMode);
 			g_PreviousMode = g_CurrentMode;
-			g_CurrentMode = MODE_NONE;
+			g_CurrentMode  = MODE_NONE;
 		}
 	}
 }
 
-//==================================================
-// COMANDOS ADMIN
-//==================================================
+// =============================================================================
+// DETECCION DE MODO ACTIVO (al inicio de mapa)
+// =============================================================================
 
-/**
- * Comando: Gestionar modos de dificultad
- */
+static void _DiffOrch_DetectActiveMode()
+{
+	DifficultyMode detected = MODE_NONE;
+
+	// Prioridad: modo mas alto
+	for (int i = 4; i >= 1; i--)
+	{
+		Handle h = g_hModeConVars[i];
+		if (h != INVALID_HANDLE && GetConVarBool(h))
+		{
+			detected = view_as<DifficultyMode>(i);
+			break;
+		}
+	}
+
+	if (detected != g_CurrentMode)
+	{
+		g_PreviousMode = g_CurrentMode;
+		g_CurrentMode  = detected;
+		LogMessage("[DiffOrch] Detected active mode: %d", view_as<int>(g_CurrentMode));
+	}
+}
+
+// =============================================================================
+// COMANDOS ADMIN
+// =============================================================================
+
 public Action Command_DiffMode(int client, int args)
 {
 	if (args < 1)
@@ -574,67 +388,39 @@ public Action Command_DiffMode(int client, int args)
 
 	if (StrEqual(arg, "status", false))
 	{
-		// Mostrar estado actual
 		char modeName[32];
-		DifficultyOrchestrator_GetModeName(g_CurrentMode, modeName, sizeof(modeName));
-
-		ReplyToCommand(client, "[Difficulty] Current Mode: %s", modeName);
-		ReplyToCommand(client, "[Difficulty] Progression Wins: %d", g_iDifficultyWins);
-		ReplyToCommand(client, "[Difficulty] Mutual Exclusion: %s",
-			GetConVarBool(g_cvar_DiffOrch_MutualExclusion) ? "ON" : "OFF");
-		ReplyToCommand(client, "[Difficulty] Auto Progression: %s",
+		_DiffOrch_GetModeName(g_CurrentMode, modeName, sizeof(modeName));
+		ReplyToCommand(client, "[Difficulty] Mode: %s | Wins: %d | MutEx: %s | Progression: %s",
+			modeName, g_iDifficultyWins,
+			GetConVarBool(g_cvar_DiffOrch_MutualExclusion) ? "ON" : "OFF",
 			GetConVarBool(g_cvar_DiffOrch_ProgressionEnable) ? "ON" : "OFF");
 		return Plugin_Handled;
 	}
 
-	// Cambiar modo
-	DifficultyMode newMode = MODE_NONE;
-
-	if (StrEqual(arg, "none", false))
-		newMode = MODE_NONE;
-	else if (StrEqual(arg, "bloodmoon", false))
-		newMode = MODE_BLOODMOON;
-	else if (StrEqual(arg, "hell", false))
-		newMode = MODE_HELL;
-	else if (StrEqual(arg, "inferno", false))
-		newMode = MODE_INFERNO;
-	else if (StrEqual(arg, "cowlevel", false))
-		newMode = MODE_COWLEVEL;
-	else
-	{
-		ReplyToCommand(client, "[Difficulty] Invalid mode: %s", arg);
-		return Plugin_Handled;
-	}
+	DifficultyMode newMode;
+	if      (StrEqual(arg, "none",      false)) newMode = MODE_NONE;
+	else if (StrEqual(arg, "bloodmoon", false)) newMode = MODE_BLOODMOON;
+	else if (StrEqual(arg, "hell",      false)) newMode = MODE_HELL;
+	else if (StrEqual(arg, "inferno",   false)) newMode = MODE_INFERNO;
+	else if (StrEqual(arg, "cowlevel",  false)) newMode = MODE_COWLEVEL;
+	else { ReplyToCommand(client, "[Difficulty] Invalid mode: %s", arg); return Plugin_Handled; }
 
 	char modeName[32];
-	DifficultyOrchestrator_GetModeName(newMode, modeName, sizeof(modeName));
-	ReplyToCommand(client, "[Difficulty] Setting mode to: %s", modeName);
-
+	_DiffOrch_GetModeName(newMode, modeName, sizeof(modeName));
+	ReplyToCommand(client, "[Difficulty] Setting mode: %s", modeName);
 	DifficultyOrchestrator_SetMode(newMode);
 	return Plugin_Handled;
 }
 
-/**
- * Comando: Resetear progresion
- */
 public Action Command_ResetProgression(int client, int args)
 {
 	g_iDifficultyWins = 0;
 	DifficultyOrchestrator_SetMode(MODE_NONE);
-
-	ReplyToCommand(client, "[Difficulty] Progression reset. All modes deactivated.");
-	PrintToChatAll("\x05[Eclipse]\x01 Difficulty progression has been reset by admin.");
-
+	ReplyToCommand(client, "[Difficulty] Progression reset.");
+	PrintToChatAll("\x05[Eclipse]\x01 Difficulty progression reset by admin.");
 	return Plugin_Handled;
 }
 
-//==================================================
-// COMANDOS ALIAS (SHORTCUTS)
-//==================================================
-
-/**
- * Alias: sm_bm - Activar Bloodmoon
- */
 public Action Command_Alias_Bloodmoon(int client, int args)
 {
 	DifficultyOrchestrator_SetMode(MODE_BLOODMOON);
@@ -642,9 +428,6 @@ public Action Command_Alias_Bloodmoon(int client, int args)
 	return Plugin_Handled;
 }
 
-/**
- * Alias: sm_hell - Activar Hell Mode
- */
 public Action Command_Alias_Hell(int client, int args)
 {
 	DifficultyOrchestrator_SetMode(MODE_HELL);
@@ -652,9 +435,6 @@ public Action Command_Alias_Hell(int client, int args)
 	return Plugin_Handled;
 }
 
-/**
- * Alias: sm_inferno - Activar Inferno Mode
- */
 public Action Command_Alias_Inferno(int client, int args)
 {
 	DifficultyOrchestrator_SetMode(MODE_INFERNO);
@@ -662,9 +442,6 @@ public Action Command_Alias_Inferno(int client, int args)
 	return Plugin_Handled;
 }
 
-/**
- * Alias: sm_cow - Activar Cow Level
- */
 public Action Command_Alias_CowLevel(int client, int args)
 {
 	DifficultyOrchestrator_SetMode(MODE_COWLEVEL);
@@ -672,72 +449,35 @@ public Action Command_Alias_CowLevel(int client, int args)
 	return Plugin_Handled;
 }
 
-/**
- * Alias: sm_diffstatus - Ver estado
- */
 public Action Command_Alias_Status(int client, int args)
 {
 	char modeName[32];
-	DifficultyOrchestrator_GetModeName(g_CurrentMode, modeName, sizeof(modeName));
-
-	ReplyToCommand(client, "[Difficulty] Current Mode: %s", modeName);
-	ReplyToCommand(client, "[Difficulty] Progression Wins: %d", g_iDifficultyWins);
-	ReplyToCommand(client, "[Difficulty] Mutual Exclusion: %s",
-		GetConVarBool(g_cvar_DiffOrch_MutualExclusion) ? "ON" : "OFF");
-	ReplyToCommand(client, "[Difficulty] Auto Progression: %s",
+	_DiffOrch_GetModeName(g_CurrentMode, modeName, sizeof(modeName));
+	ReplyToCommand(client, "[Difficulty] Mode: %s | Wins: %d | MutEx: %s | Progression: %s",
+		modeName, g_iDifficultyWins,
+		GetConVarBool(g_cvar_DiffOrch_MutualExclusion) ? "ON" : "OFF",
 		GetConVarBool(g_cvar_DiffOrch_ProgressionEnable) ? "ON" : "OFF");
-
 	return Plugin_Handled;
 }
 
-/**
- * Alias: sm_diffreset - Resetear progresion
- */
 public Action Command_Alias_Reset(int client, int args)
 {
 	return Command_ResetProgression(client, args);
 }
 
-//==================================================
-// FUNCIONES DE UTILIDAD
-//==================================================
+// =============================================================================
+// UTILIDAD
+// =============================================================================
 
-/**
- * Obtiene el nombre del modo
- */
-void DifficultyOrchestrator_GetModeName(DifficultyMode mode, char[] buffer, int maxlen)
+static void _DiffOrch_GetModeName(DifficultyMode mode, char[] buffer, int maxlen)
 {
 	switch (mode)
 	{
-		case MODE_NONE: strcopy(buffer, maxlen, "None");
+		case MODE_NONE:      strcopy(buffer, maxlen, "None");
 		case MODE_BLOODMOON: strcopy(buffer, maxlen, "Bloodmoon");
-		case MODE_HELL: strcopy(buffer, maxlen, "Hell");
-		case MODE_INFERNO: strcopy(buffer, maxlen, "Inferno");
-		case MODE_COWLEVEL: strcopy(buffer, maxlen, "Cow Level");
-		default: strcopy(buffer, maxlen, "Unknown");
+		case MODE_HELL:      strcopy(buffer, maxlen, "Hell");
+		case MODE_INFERNO:   strcopy(buffer, maxlen, "Inferno");
+		case MODE_COWLEVEL:  strcopy(buffer, maxlen, "Cow Level");
+		default:             strcopy(buffer, maxlen, "Unknown");
 	}
-}
-
-/**
- * Obtiene el modo actual
- */
-public DifficultyMode DifficultyOrchestrator_GetCurrentMode()
-{
-	return g_CurrentMode;
-}
-
-/**
- * Obtiene el contador de victorias
- */
-public int DifficultyOrchestrator_GetWinCount()
-{
-	return g_iDifficultyWins;
-}
-
-/**
- * Establece el contador de victorias (para persistencia)
- */
-public void DifficultyOrchestrator_SetWinCount(int wins)
-{
-	g_iDifficultyWins = wins;
 }

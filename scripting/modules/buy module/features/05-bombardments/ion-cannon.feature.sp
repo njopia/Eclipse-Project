@@ -31,16 +31,6 @@ stock bool BuyIonCannon(int client)
 		return false;
 	}
 
-	// ========== ECLIPSE BUY COST VERIFICATION ==========
-	// Check if player can afford the purchase
-	int cost = GetConVarInt(cvar_CostIonCannon);
-	if (!PurchaseItem(client, cost, "Ion Cannon"))
-	{
-		// PurchaseItem already prints error message
-		return false;
-	}
-	// ===================================================
-
 	// Verificar cooldown de compra
 	float now = GetGameTime();
 	float timeSinceLastPurchase = now - g_LastIonPurchase[client];
@@ -59,16 +49,17 @@ stock bool BuyIonCannon(int client)
 		int charges = IonCannon_GetCharges(client);
 
 		if (cooldown > 0.0)
-		{
 			PrintToChat(client, "\x04[Eclipse]\x01 Ion Cannon en cooldown: \x05%.0f\x01 segundos.", cooldown);
-		}
 		else if (charges <= 0)
-		{
 			PrintToChat(client, "\x04[Eclipse]\x01 Sin cargas de Ion Cannon disponibles.");
-		}
 
 		return false;
 	}
+
+	// Todas las validaciones pasaron — descontar currency
+	int cost = GetConVarInt(cvar_CostIonCannon);
+	if (!PurchaseItem(client, cost, "Ion Cannon"))
+		return false;
 
 	// Activar Ion Cannon
 	if (IonCannon_Activate(client))
