@@ -12,7 +12,7 @@ Módulo de HUD para Left 4 Dead 2 que muestra información del servidor en panta
 - Parpadeo automático cuando hay un Tank vivo
 - Mensajes por defecto si la DB no está disponible
 - Comando admin para recargar mensajes en caliente
-- Configuración completa vía ConVars
+- Configuracion completa vía ConVars
 
 ---
 
@@ -27,7 +27,7 @@ Módulo de HUD para Left 4 Dead 2 que muestra información del servidor en panta
 
 ## Base de datos
 
-### Configuración en `databases.cfg`
+### Configuracion en `databases.cfg`
 
 El módulo usa la entrada `DB_HUD_MESSAGES` definida en el plugin principal. Asegúrate de tener la sección correspondiente en `addons/sourcemod/configs/databases.cfg`:
 

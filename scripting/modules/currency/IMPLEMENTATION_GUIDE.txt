@@ -10,7 +10,7 @@
 3. AGREGAR UN EVENTO CON VALIDACIONES COMPLEJAS
 4. CREAR UN MÓDULO PERSONALIZADO
 5. DEBUGGING Y PRUEBAS
-6. CONFIGURACIÓN DEL SERVIDOR
+6. Configuracion DEL SERVIDOR
 
 ═══════════════════════════════════════════════════════════════════════════
 SECCIÓN 1: EVENTOS YA IMPLEMENTADOS
@@ -274,7 +274,7 @@ Crear comando de prueba:
     }
 
 ═══════════════════════════════════════════════════════════════════════════
-SECCIÓN 6: CONFIGURACIÓN DEL SERVIDOR
+SECCIÓN 6: Configuracion DEL SERVIDOR
 ═══════════════════════════════════════════════════════════════════════════
 
 Después de compilar, el servidor genera automáticamente:

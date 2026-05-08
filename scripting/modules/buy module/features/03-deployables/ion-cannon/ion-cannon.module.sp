@@ -8,7 +8,7 @@
 // Versión simplificada sin comandos ni API externa
 //==================================================
 
-// ===================== CONFIGURACIÓN ======================
+// ===================== Configuracion ======================
 #define ION_DELAY 10.0              // Delay hasta el impacto (segundos)
 #define ION_DURATION 26.0           // Duración total del efecto
 #define ION_COOLDOWN 45.0           // Cooldown entre usos (segundos)

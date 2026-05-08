@@ -2,7 +2,7 @@
  * modules/utils/precache.inc
  * Módulo de Precache para EMS (single-plugin).
  *
- * - Mantiene listas internas (editables aquí) de Sonidos, Partículas, Modelos,
+ * - Mantiene listas internas (editables aquí) de Sonidos, particulas, Modelos,
  *   Genéricos y archivos a Descargar.
  * - API para el MAIN:
  *      EMS_Precache_Init();
@@ -12,7 +12,7 @@
  *      EMS_Precache_ClearAll();
  *      (Opcional) EMS_Precache_AddSound/Particle/Model/Generic/Download
  *
- * - Precaching de partículas con string tables (compatible con todas las versiones).
+ * - Precaching de particulas con string tables (compatible con todas las versiones).
  */
 
 #if defined _EMS_PRECACHE_MODULE_
@@ -63,11 +63,12 @@ static const char g_DefaultSounds[][] = {
 	"player/adrenaline_inject.wav",
 
 	// Sonido de shoulderCannon
-	"weapons/machinegun_m60/gunfire/machinegun_fire_1.wav"
+	"weapons/machinegun_m60/gunfire/machinegun_fire_1.wav",
+	"player/survivor/voice/biker/reactionapprehensive01.wav"
 	// agrega más si quieres…
 };
 
-// Partículas por defecto (nombres de sistema – no rutas .pcf)
+// particulas por defecto (nombres de sistema – no rutas .pcf)
 static const char g_DefaultParticles[][] = {
 	"inferno_grow",
 	"electrical_arc_01_system",
@@ -119,7 +120,8 @@ static const char g_DefaultModels[][] = {
 // Si no tienes genéricos o downloads aún, define arrays “placeholder” de 1 elemento
 // para que sizeof(...) sea válido en compilación.
 static const char g_DefaultGenericFiles[][PLATFORM_MAX_PATH] = {
-	""	  // placeholder (evita “indeterminate array size in sizeof”)
+	"sprites/light_glow03.vmt",
+	"sprites/glow_test02.vmt"
 };
 static const char g_DefaultDownloads[][PLATFORM_MAX_PATH] = {
 	""	  // placeholder
@@ -160,7 +162,7 @@ stock void EMS_Precache_SetDebug(bool enable)
 }
 
 // ======================================================================
-//  Fallback universal de partículas (string tables) — compatible con SM
+//  Fallback universal de particulas (string tables) — compatible con SM
 // ======================================================================
 
 stock bool EMS_PrecacheParticleSystem(const char[] name)
@@ -333,12 +335,22 @@ static void EMS_PrecacheGeneric_(int &ok, int &fail)
 		g_Generic.GetString(i, f, sizeof f);
 		if (!f[0]) continue;
 
-		/* bool res = PrecacheGeneric(f, true);
-		if (res) ok++; else fail++;
-		EMS_DLog("Generic: %s -> %d", f, res ? 1 : 0); */
+		// Cambiamos 'bool' por 'int' para evitar el tag mismatch
+		// En SourceMod, PrecacheGeneric devuelve un índice o 0 si falla.
+		int idx = PrecacheGeneric(f, true);
+
+		if (idx != 0)	 // Si el índice es distinto de 0, se considera exitoso
+		{
+			ok++;
+			EMS_DLog("Generic: %s -> OK (idx %d)", f, idx);
+		}
+		else
+		{
+			fail++;
+			EMS_DLog("Generic: %s -> FAIL", f);
+		}
 	}
 }
-
 static void EMS_PrecacheModels_(int &ok, int &fail)
 {
 	ok	 = 0;

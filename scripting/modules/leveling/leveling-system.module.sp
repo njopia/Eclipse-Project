@@ -10,7 +10,7 @@
 // --- Defines ---
 #define LEVELING_MODULE_VERSION "1.0.0"
 
-// --- ConVars para configuración de XP y Niveles ---
+// --- ConVars para Configuracion de XP y Niveles ---
 Handle		cvar_LevelingBaseXP			 = INVALID_HANDLE;
 Handle		cvar_LevelingFormulaEasy	 = INVALID_HANDLE;
 Handle		cvar_LevelingFormulaNormal	 = INVALID_HANDLE;
@@ -51,15 +51,13 @@ bool   g_bLeft4Dead2 = true;
  */
 public void Leveling_OnPluginStart()
 {
-	// Crear ConVars para configuración de XP base
+	// Crear ConVars para Configuracion de XP base
 	cvar_LevelingBaseXP = CreateConVar(
 		"leveling_base_xp",
 		"800",
 		"XP base requerido para nivel 1",
 		FCVAR_PLUGIN);
 
-	// Fórmulas para cada dificultad
-	// Easy: formula^1.1
 	cvar_LevelingFormulaEasy = CreateConVar(
 		"leveling_formula_easy",
 		"1.1",

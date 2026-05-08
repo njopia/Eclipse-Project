@@ -79,6 +79,7 @@
 // === SERVER MANAGEMENT UTILITIES ===
 //==================================================
 #tryinclude "utils/server-management.utils.sp"
+#tryinclude "utils/includes/visual_effects.inc"
 
 //==================================================
 // === ECLIPSE POINTS UNIFIED MODULE ===

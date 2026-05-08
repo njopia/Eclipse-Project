@@ -16,30 +16,30 @@
 #define ABILITY_DURATION 60.0
 
 // Variables globales de estado de abilities
-bool g_bAbilityActive[MAXPLAYERS + 1][16];  // Estado activo de cada ability
-float g_fAbilityCooldown[MAXPLAYERS + 1][16];  // Tiempo de cooldown
-Handle g_hAbilityTimer[MAXPLAYERS + 1][16];  // Timers de duración
-float g_fAbilityEndTime[MAXPLAYERS + 1][16];  // Tiempo de finalización de la ability
+bool   g_bAbilityActive[MAXPLAYERS + 1][16];	  // Estado activo de cada ability
+float  g_fAbilityCooldown[MAXPLAYERS + 1][16];	  // Tiempo de cooldown
+Handle g_hAbilityTimer[MAXPLAYERS + 1][16];		  // Timers de duración
+float  g_fAbilityEndTime[MAXPLAYERS + 1][16];	  // Tiempo de finalización de la ability
 
 // Índices de abilities
 enum AbilityIndex
 {
-	Ability_None = 0,
-	Ability_DetectZombie = 1,      // Lvl 3
-	Ability_Berserker = 2,         // Lvl 5
-	Ability_AcidBath = 3,          // Lvl 9
-	Ability_Lifestealer = 4,       // Lvl 12
-	Ability_Flameshield = 5,       // Lvl 16
-	Ability_Nightcrawler = 6,      // Lvl 18
-	Ability_RapidFire = 7,         // Lvl 23
-	Ability_ChainsawMassacre = 8,  // Lvl 25
-	Ability_HeatSeeker = 9,        // Lvl 27
-	Ability_SpeedFreak = 10,       // Lvl 31
-	Ability_HealingAura = 11,      // Lvl 33
+	Ability_None			 = 0,
+	Ability_DetectZombie	 = 1,	  // Lvl 3
+	Ability_Berserker		 = 2,	  // Lvl 5
+	Ability_AcidBath		 = 3,	  // Lvl 9
+	Ability_Lifestealer		 = 4,	  // Lvl 12
+	Ability_Flameshield		 = 5,	  // Lvl 16
+	Ability_Nightcrawler	 = 6,	  // Lvl 18
+	Ability_RapidFire		 = 7,	  // Lvl 23
+	Ability_ChainsawMassacre = 8,	  // Lvl 25
+	Ability_HeatSeeker		 = 9,	  // Lvl 27
+	Ability_SpeedFreak		 = 10,	  // Lvl 31
+	Ability_HealingAura		 = 11,	  // Lvl 33
 	// Ability_ShoulderCannon removed - now available in !buy -> Specials
-	Ability_Soulshield = 13,       // Lvl 37
-	Ability_Polymorph = 14,        // Lvl 39
-	Ability_Instagib = 15          // Lvl 46
+	Ability_Soulshield		 = 13,	  // Lvl 37
+	Ability_Polymorph		 = 14,	  // Lvl 39
+	Ability_Instagib		 = 15	  // Lvl 46
 }
 
 // ConVars
@@ -53,7 +53,7 @@ public void Abilities_OnPluginStart()
 {
 	// ConVars
 	cvar_AbilitiesEnabled = CreateConVar("abilities_enabled", "1", "Habilita el sistema de abilities (1 = habilitado, 0 = deshabilitado)", FCVAR_PLUGIN);
-	cvar_AbilitiesDebug = CreateConVar("abilities_debug", "0", "Modo debug para abilities", FCVAR_PLUGIN);
+	cvar_AbilitiesDebug	  = CreateConVar("abilities_debug", "0", "Modo debug para abilities", FCVAR_PLUGIN);
 
 	// Timer para actualizar velocidad de melee (Berserker)
 	CreateTimer(0.1, Timer_UpdateAbilities, _, TIMER_REPEAT);
@@ -63,6 +63,8 @@ public void Abilities_OnPluginStart()
 
 	// Initialize Detect Zombie
 	DetectZombie_OnPluginStart();
+	// Timer para el HUD de habilidades (cada 1.0 segundos es suficiente y eficiente)
+	CreateTimer(1.0, Timer_UpdateAbilitiesHUD, _, TIMER_REPEAT);
 }
 
 /**
@@ -106,9 +108,9 @@ void Abilities_ResetPlayer(int client)
 {
 	for (int i = 0; i < 16; i++)
 	{
-		g_bAbilityActive[client][i] = false;
+		g_bAbilityActive[client][i]	  = false;
 		g_fAbilityCooldown[client][i] = 0.0;
-		g_fAbilityEndTime[client][i] = 0.0;
+		g_fAbilityEndTime[client][i]  = 0.0;
 
 		if (g_hAbilityTimer[client][i] != INVALID_HANDLE)
 		{
@@ -194,7 +196,7 @@ bool Abilities_HasAccess(int client, AbilityIndex ability)
 	if (!IsValidClient(client))
 		return false;
 
-	int playerLevel = Leveling_GetPlayerLevel(client);
+	int playerLevel	  = Leveling_GetPlayerLevel(client);
 	int requiredLevel = Abilities_GetRequiredLevel(ability);
 
 	return playerLevel >= requiredLevel;
@@ -288,8 +290,8 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 	if (Abilities_IsOnCooldown(client, ability))
 	{
 		float remaining = Abilities_GetCooldownRemaining(client, ability);
-		int minutes = RoundToFloor(remaining / 60.0);
-		int seconds = RoundToFloor(remaining) % 60;
+		int	  minutes	= RoundToFloor(remaining / 60.0);
+		int	  seconds	= RoundToFloor(remaining) % 60;
 		PrintToChat(client, "\x04[Abilities]\x01 Cooldown: %d:%02d restantes.", minutes, seconds);
 		return false;
 	}
@@ -300,7 +302,18 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		PrintToChat(client, "\x04[Abilities]\x01 Esta ability ya está activa.");
 		return false;
 	}
+	if (Abilities_HasAnyActive(client))
+	{
+		PrintToChat(client, "\x04[Abilities]\x01 Ya tienes una habilidad activa. Espera a que termine.");
+		return false;
+	}
 
+	// Verificar si ya está activa (esta es la que ya tenías, puedes dejarla o quitarla ya que la de arriba cubre todo)
+	if (Abilities_IsActive(client, ability))
+	{
+		PrintToChat(client, "\x04[Abilities]\x01 Esta ability ya está activa.");
+		return false;
+	}
 	// Activar la ability según su tipo
 	bool success = false;
 	char abilityName[64];
@@ -327,13 +340,13 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 	if (success)
 	{
 		// Marcar como activa
-		g_bAbilityActive[client][ability] = true;
+		g_bAbilityActive[client][ability]	= true;
 
 		// Establecer cooldown
 		g_fAbilityCooldown[client][ability] = GetGameTime() + ABILITY_COOLDOWN;
 
 		// Guardar tiempo de finalización para tracking de duración
-		g_fAbilityEndTime[client][ability] = GetGameTime() + ABILITY_DURATION;
+		g_fAbilityEndTime[client][ability]	= GetGameTime() + ABILITY_DURATION;
 
 		// Crear timer de duración
 		Handle data;
@@ -358,10 +371,10 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 public Action Timer_AbilityEnd(Handle timer, Handle data)
 {
 	ResetPack(data);
-	int userid = ReadPackCell(data);
+	int			 userid	 = ReadPackCell(data);
 	AbilityIndex ability = view_as<AbilityIndex>(ReadPackCell(data));
 
-	int client = GetClientOfUserId(userid);
+	int			 client	 = GetClientOfUserId(userid);
 	if (client <= 0 || !IsClientInGame(client))
 		return Plugin_Stop;
 
@@ -404,7 +417,6 @@ void Abilities_Deactivate(int client, AbilityIndex ability)
 		return;
 
 	g_bAbilityActive[client][ability] = false;
-
 	// Llamar a la función de desactivación específica
 	switch (ability)
 	{
@@ -456,52 +468,67 @@ void ShowAbilitiesMenu(int client)
 {
 	int level = Leveling_GetPlayerLevel(client);
 
-	// Minimum level required to access abilities menu (first ability: Detect Zombie at level 3)
+	// Nivel mínimo para acceder al menú (basado en la primera habilidad: Detect Zombie nivel 3)
 	if (level < 3)
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 You need to reach level 3 to unlock abilities.");
+		PrintToChat(client, "\x04[Abilities]\x01 Necesitas alcanzar el nivel 3 para desbloquear habilidades.");
 		return;
 	}
 
 	Menu menu = new Menu(AbilitiesMenu_Handler);
-	menu.SetTitle("=== ABILITIES MENU ===\nLevel: %d\n ", level);
+	menu.SetTitle("=== MENU DE HABILIDADES ===\nNivel: %d\n ", level);
 
 	char display[128];
 	char info[8];
 
-	// List ONLY unlocked abilities
+	// Verificamos si ya hay alguna habilidad activa globalmente para este cliente
+	bool bAnyActive = Abilities_HasAnyActive(client);
+
+	// Listar SOLO las habilidades desbloqueadas
 	for (int i = 1; i < 16; i++)
 	{
-		AbilityIndex ability = view_as<AbilityIndex>(i);
-		int reqLevel = Abilities_GetRequiredLevel(ability);
+		AbilityIndex ability  = view_as<AbilityIndex>(i);
+		int			 reqLevel = Abilities_GetRequiredLevel(ability);
 
-		// Only show abilities that are unlocked
+		// Solo mostrar habilidades que ya han sido desbloqueadas por nivel
 		if (level >= reqLevel)
 		{
 			char abilityName[64];
 			Abilities_GetName(ability, abilityName, sizeof(abilityName));
 
-			// Check ability status
+			int style = ITEMDRAW_DEFAULT;
+
+			// CASO 1: La habilidad está actualmente activa
 			if (Abilities_IsActive(client, ability))
 			{
-				Format(display, sizeof(display), "%s [ACTIVE]", abilityName);
+				Format(display, sizeof(display), "%s [ACTIVA]", abilityName);
+				// Opcional: style = ITEMDRAW_DISABLED; // Si no quieres que puedan clickear la activa
 			}
+			// CASO 2: La habilidad está en Cooldown
 			else if (Abilities_IsOnCooldown(client, ability))
 			{
 				float remaining = Abilities_GetCooldownRemaining(client, ability);
-				int minutes = RoundToFloor(remaining / 60.0);
-				int seconds = RoundToFloor(remaining) % 60;
+				int	  minutes	= RoundToFloor(remaining / 60.0);
+				int	  seconds	= RoundToFloor(remaining) % 60;
 				Format(display, sizeof(display), "%s [CD: %d:%02d]", abilityName, minutes, seconds);
+				style = ITEMDRAW_DISABLED;
 			}
+			// CASO 3: Hay OTRA habilidad activa (Bloqueo de simultaneidad)
+			else if (bAnyActive)
+			{
+				Format(display, sizeof(display), "%s [ESPERA]", abilityName);
+				style = ITEMDRAW_DISABLED;
+			}
+			// CASO 4: Lista para usar
 			else
 			{
-				Format(display, sizeof(display), "%s [READY]", abilityName);
+				Format(display, sizeof(display), "%s [LISTO]", abilityName);
+				style = ITEMDRAW_DEFAULT;
 			}
 
 			Format(info, sizeof(info), "%d", i);
-			menu.AddItem(info, display);
+			menu.AddItem(info, display, style);
 		}
-		// Locked abilities are now hidden
 	}
 
 	menu.ExitBackButton = true;
@@ -554,7 +581,6 @@ public Action Timer_ReopenAbilitiesMenu(Handle timer, int userid)
 //==================================================
 // === COMANDOS INDIVIDUALES ===
 //==================================================
-
 public Action Command_ActivateAbility_DetectZombie(int client, int args)
 {
 	Abilities_Activate(client, Ability_DetectZombie);
@@ -622,7 +648,6 @@ public Action Command_ActivateAbility_HealingAura(int client, int args)
 }
 
 // Command_ActivateAbility_ShoulderCannon removed - Shoulder Cannon now available in !buy -> Specials
-
 public Action Command_ActivateAbility_Soulshield(int client, int args)
 {
 	Abilities_Activate(client, Ability_Soulshield);
@@ -642,7 +667,7 @@ public Action Command_ActivateAbility_Instagib(int client, int args)
 }
 
 /**
- * Comando para abrir el menú de configuración del Shoulder Cannon
+ * Comando para abrir el menú de Configuracion del Shoulder Cannon
  */
 public Action Command_ShoulderCannonMenu(int client, int args)
 {
@@ -651,4 +676,55 @@ public Action Command_ShoulderCannonMenu(int client, int args)
 
 	ShoulderCannon_ShowMenu(client);
 	return Plugin_Handled;
+}
+/**
+ * Verifica si el jugador tiene ALGUNA habilidad activa actualmente.
+ */
+bool Abilities_HasAnyActive(int client)
+{
+	for (int i = 1; i < 16; i++)
+	{
+		if (g_bAbilityActive[client][i])
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+public Action Timer_UpdateAbilitiesHUD(Handle timer)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 2)
+		{
+			// Verificamos si tiene ALGUNA activa
+			for (int slot = 1; slot < 16; slot++)
+			{
+				AbilityIndex ability = view_as<AbilityIndex>(slot);
+
+				if (Abilities_IsActive(i, ability))
+				{
+					float remaining = Abilities_GetDurationRemaining(i, ability);
+					int	  seconds	= RoundToFloor(remaining);
+
+					char  abilityName[64];
+					Abilities_GetName(ability, abilityName, sizeof(abilityName));
+
+					// Mostramos el HintText
+					if (seconds > 0)
+					{
+						PrintHintText(i, "%s: %ds restantes", abilityName, seconds);
+					}
+					else{
+						PrintHintText(i, " ");
+					}
+
+					// Solo puede haber una activa, así que salimos del loop de slots para este cliente
+					break;
+				}
+			}
+		}
+	}
+	return Plugin_Continue;
 }

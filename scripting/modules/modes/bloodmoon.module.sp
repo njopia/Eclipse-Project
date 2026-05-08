@@ -130,7 +130,7 @@ public void Bloodmoon_OnPluginStart()
 	g_cvar_Bloodmoon_ColorWeight = CreateConVar("bloodmoon_color_weight", "0.4", "Intensidad del color correction (0.0-1.0)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	// Precipitation
-	g_cvar_Bloodmoon_UsePrecipitation = CreateConVar("bloodmoon_use_precipitation", "1", "Usar func_precipitation en vez de partículas", FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Bloodmoon_UsePrecipitation = CreateConVar("bloodmoon_use_precipitation", "1", "Usar func_precipitation en vez de particulas", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_Bloodmoon_PrecipType = CreateConVar("bloodmoon_precip_type", "3", "Tipo precipitación: 1=lluvia 2=ceniza 3=nieve 4=lluvia_l4d", FCVAR_PLUGIN, true, 1.0, true, 4.0);
 
 	// Breeder Events
@@ -173,7 +173,7 @@ public void Bloodmoon_OnPluginStart()
 	g_iFogVolumeRef = -1;
 	g_iPrecipitationRef = -1;
 
-	// Inicializar array de referencias de partículas
+	// Inicializar array de referencias de particulas
 	for (int i = 0; i < 16; i++)
 		g_iParticleRefs[i] = -1;
 }
@@ -198,7 +198,7 @@ public void Bloodmoon_OnMapStart()
 	g_iFogVolumeRef = -1;
 	g_iPrecipitationRef = -1;
 
-	// Reset array de partículas
+	// Reset array de particulas
 	for (int i = 0; i < 16; i++)
 		g_iParticleRefs[i] = -1;
 
@@ -431,7 +431,7 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	else
 	{
 		LogMessage("[Bloodmoon] Creating ambient particles...");
-		// Usar el sistema de partículas antiguo
+		// Usar el sistema de particulas antiguo
 		Bloodmoon_CreateAmbientParticles();
 	}
 
@@ -1192,7 +1192,7 @@ void Bloodmoon_RemoveColorCorrection()
 
 /**
  * Crea func_precipitation (nieve/lluvia en TODO el mapa)
- * Mucho más eficiente que partículas localizadas
+ * Mucho más eficiente que particulas localizadas
  */
 void Bloodmoon_CreatePrecipitation(int precipType)
 {

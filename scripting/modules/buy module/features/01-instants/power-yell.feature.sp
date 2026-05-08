@@ -13,7 +13,7 @@
 #define POWER_YELL_PUSH_FORCE 700.0	   // Fuerza del empujón.
 #define POWER_YELL_COOLDOWN	  5.0	   // Cooldown en segundos.
 
-// Efectos de partículas
+// Efectos de particulas
 #define PARTICLE_ELECTRIC	  "electrical_arc_01_system"
 #define PARTICLE_FIRE		  "gas_explosion_ground_fire"
 #define PARTICLE_SHOCKWAVE	  "bomb_explosion_huge"

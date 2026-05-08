@@ -82,7 +82,7 @@ scripting/modules/currency/
 ├── currency-events.module.sp           (Eventos básicos y avanzados)
 ├── currency-advanced-events.module.sp  (Saves y eventos especiales)
 ├── currency-stats.module.sp            (Estadísticas por jugador)
-└── currency-config.txt                 (Guía de configuración)
+└── currency-config.txt                 (Guía de Configuracion)
 
 ===============================================================
 FUNCIONES STOCK DISPONIBLES:
@@ -120,7 +120,7 @@ Siguiendo el patrón del proyecto:
 1. Cada módulo es INDEPENDIENTE pero COMPATIBLE
 2. Se incluyen con #tryinclude en archivo principal
 3. Utilizan #if !defined checks para evitar duplicados
-4. Uso de ConVars para configuración dinámica
+4. Uso de ConVars para Configuracion dinámica
 5. Stock functions para funcionalidad compartida
 
 Inicialización:
@@ -180,7 +180,7 @@ NOTAS IMPORTANTES:
    Los módulos pueden activarse/desactivarse comentando
    el #tryinclude en Eclipse Management System.sp
 
-2. CONFIGURACIÓN:
+2. Configuracion:
    Todos los valores son ConVars editables en tiempo real
    No requiere recompilación para ajustar
 

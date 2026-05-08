@@ -145,7 +145,7 @@ void Polymorph_SpawnItem(float pos[3])
 	DispatchSpawn(item);
 	ActivateEntity(item);
 
-	// Crear efecto de partículas
+	// Crear efecto de particulas
 	TE_SetupBeamRingPoint(pos, 10.0, 100.0, PrecacheModel("materials/sprites/laserbeam.vmt"), PrecacheModel("materials/sprites/halo01.vmt"), 0, 15, 0.5, 5.0, 0.0, {0, 255, 255, 255}, 10, 0);
 	TE_SendToAll();
 }

@@ -21,7 +21,7 @@
 #define NUKE_SMOKE_COLUMN_HEIGHT	2000.0		// Altura de la columna de humo persistente
 #define NUKE_SMOKE_COLUMN_DURATION	30.0		// Duración de la columna de humo (segundos)
 
-// === OPTIMIZACIÓN ULTRA: Mínimas partículas ===
+// === OPTIMIZACIÓN ULTRA: Mínimas particulas ===
 #define NUKE_MAX_PARTICLES_PER_WAVE		1		// MÍNIMO: 1 partícula por onda
 #define NUKE_MAX_FIREBALLS				1		// MÍNIMO: 1 bola de fuego
 #define NUKE_MAX_DEBRIS					1		// MÍNIMO: 1 escombro
@@ -72,7 +72,7 @@ static const char SURVIVOR_REACT_SOUNDS[][] = {
 	"player/survivor/voice/gambler/battlecry02.wav"
 };
 
-// Partículas de nuclear strike (EXPANDIDAS)
+// particulas de nuclear strike (EXPANDIDAS)
 static const char PARTICLE_NUKE_HIT[] = "gen_hit_up";
 static const char PARTICLE_NUKE_WAVE[] = "gas_explosion_ground_wave";
 static const char PARTICLE_NUKE_SMOKE_A[] = "gas_explosion_firesmoke";
@@ -553,11 +553,11 @@ static void CreateNukeExplosionEffects(int client)
 	origin[1] = g_fNukeOrigin[client][1];
 	origin[2] = g_fNukeOrigin[client][2];
 
-	// === IMPACTO CENTRAL (OPTIMIZADO: 2 partículas) ===
+	// === IMPACTO CENTRAL (OPTIMIZADO: 2 particulas) ===
 	CreateParticleAtPos(origin, PARTICLE_NUKE_HIT, 5.0);
 	CreateParticleAtPos(origin, PARTICLE_NUKE_EXPLOSION, 4.0);
 	particleCount += 2;
-	NukeLog("  -> Partículas impacto central: 2");
+	NukeLog("  -> particulas impacto central: 2");
 
 	// === ONDAS EXPANSIVAS (OPTIMIZADO: 3 ondas en vez de 6) ===
 	CreateTimer(0.0, Timer_CreateNukeWave, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -570,7 +570,7 @@ static void CreateNukeExplosionEffects(int client)
 	CreateParticleAtPos(origin, PARTICLE_NUKE_FIRE_A, 25.0);
 	CreateParticleAtPos(origin, PARTICLE_NUKE_FIRE_B, 25.0);
 	particleCount += 4;
-	NukeLog("  -> Bola de fuego masiva: 4 partículas");
+	NukeLog("  -> Bola de fuego masiva: 4 particulas");
 
 	// === BOLAS DE FUEGO (OPTIMIZADO: %d bolas) ===
 	for (int i = 0; i < NUKE_MAX_FIREBALLS; i++)
@@ -613,7 +613,7 @@ static void CreateNukeExplosionEffects(int client)
 		particleCount++;
 	}
 	NukeLog("  -> Escombros: %d", NUKE_MAX_DEBRIS);
-	NukeLog("CreateNukeExplosionEffects FINALIZADO - Total partículas iniciales: %d", particleCount);
+	NukeLog("CreateNukeExplosionEffects FINALIZADO - Total particulas iniciales: %d", particleCount);
 }
 
 /**

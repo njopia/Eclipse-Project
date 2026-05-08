@@ -17,7 +17,6 @@ int g_iFlameshield_ParticleRef[MAXPLAYERS + 1];
  */
 bool Ability_Flameshield_Activate(int client)
 {
-	// Crear efecto de partículas de fuego
 	Flameshield_CreateFireEffect(client);
 
 	// Iniciar timer de daño
@@ -62,7 +61,7 @@ void Ability_Flameshield_Deactivate(int client)
 		g_hFlameshield_Timer[client] = INVALID_HANDLE;
 	}
 
-	// Remover efecto de partículas
+	// Remover efecto de particulas
 	if (g_iFlameshield_ParticleRef[client] != 0)
 	{
 		int particle = EntRefToEntIndex(g_iFlameshield_ParticleRef[client]);
@@ -157,7 +156,7 @@ public Action Timer_Flameshield_Damage(Handle timer, int userid)
 }
 
 /**
- * Crea efecto de partículas de fuego
+ * Crea efecto de particulas de fuego
  */
 void Flameshield_CreateFireEffect(int client)
 {

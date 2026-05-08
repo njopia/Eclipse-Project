@@ -76,7 +76,7 @@ Handle g_hInferno_Enable = INVALID_HANDLE;
  */
 public void DifficultyOrchestrator_OnPluginStart()
 {
-	// ConVars de configuración
+	// ConVars de Configuracion
 	g_cvar_DiffOrch_Enable = CreateConVar(
 		"difficulty_orchestrator_enable",
 		"1",

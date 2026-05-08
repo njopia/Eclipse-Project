@@ -30,7 +30,7 @@ Características principales:
 └── leveling-ui.module.sp           → Interfaz en chat
 
 ===================================================================================
-                           CONFIGURACIÓN DE BASE DE DATOS
+                           Configuracion DE BASE DE DATOS
 ===================================================================================
 
 1. Crear la tabla en tu base de datos:
@@ -57,7 +57,7 @@ Características principales:
    }
 
 ===================================================================================
-                              FÓRMULAS DE PROGRESIÓN
+                              FORMULAS DE PROGRESIÓN
 ===================================================================================
 
 El XP requerido para subir de nivel se calcula con:
@@ -111,7 +111,7 @@ Donde el exponente cambia según la dificultad:
 └────────┴─────────────────────────┴──────────────────────────────────────┘
 
 ===================================================================================
-                           CONVARS DE CONFIGURACIÓN
+                           CONVARS DE Configuracion
 ===================================================================================
 
 CORE SYSTEM:
@@ -173,7 +173,7 @@ Progreso: [████████████░░░░░░░░] 27%
                               EJEMPLO DE USO
 ===================================================================================
 
-CONFIGURACIÓN INICIAL:
+Configuracion INICIAL:
 ----------------------
 1. Subir el plugin compilado (.smx) a addons/sourcemod/plugins/
 2. Configurar databases.cfg con los datos de tu BD remota

@@ -525,7 +525,7 @@ public void SpecialsMenu(int client)
 
 	g_SpecialsMenu.SetTitle(fullTitle);
 
-	// Shoulder Cannon (Level 35) - Abre menú de configuración
+	// Shoulder Cannon (Level 35) - Abre menú de Configuracion
 	int requiredLevelSC = 35;
 	Format(baseText, sizeof(baseText), "%T", "BM_Ability_ShoulderCannon", client);
 	if (playerLevel >= requiredLevelSC)
@@ -552,7 +552,7 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 		menu.GetItem(param, info, sizeof(info));
 		int playerLevel = Leveling_GetPlayerLevel(client);
 
-		// Shoulder Cannon - Abrir menú de configuración
+		// Shoulder Cannon - Abrir menú de Configuracion
 		if (StrEqual(info, BM_CHOICE_6_1))
 		{
 			if (playerLevel < 35)
@@ -564,7 +564,7 @@ public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int pa
 				return 0;
 			}
 
-			// Abrir menú de configuración del Shoulder Cannon
+			// Abrir menú de Configuracion del Shoulder Cannon
 			ShoulderCannon_ShowMenu(client);
 		}
 	}

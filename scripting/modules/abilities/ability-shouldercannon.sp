@@ -39,7 +39,7 @@
 int g_iShoulderCannon_Entity[MAXPLAYERS + 1];
 Handle g_hShoulderCannon_FireTimer[MAXPLAYERS + 1];
 
-// Configuración del Shoulder Cannon (guardadas en BBDD via g_bShoulderCannon_AutoEquip en leveling)
+// Configuracion del Shoulder Cannon (guardadas en BBDD via g_bShoulderCannon_AutoEquip en leveling)
 bool g_bCannon_Disabled[MAXPLAYERS + 1];  // Desactivar disparo automático
 int g_iCannon_NeverTarget[MAXPLAYERS + 1];  // Qué no atacar nunca
 int g_iCannon_TargetFirst[MAXPLAYERS + 1];  // Qué atacar primero

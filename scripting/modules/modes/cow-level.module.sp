@@ -231,7 +231,7 @@ void CowLevel_Activate()
 
 	LogMessage("[Cow Level] ============ ACTIVATION START ============");
 
-	// Cachear y aplicar configuración del director
+	// Cachear y aplicar Configuracion del director
 	CowLevel_CacheOriginalDirector();
 	// Cow Level no modifica el director, pero guardamos los valores por si acaso
 
@@ -288,7 +288,7 @@ void CowLevel_Deactivate()
 
 	g_bCowLevelActive = false;
 
-	// Restaurar configuración del director
+	// Restaurar Configuracion del director
 	CowLevel_RestoreDirector();
 
 	// Detener timer de eventos
@@ -409,7 +409,7 @@ void CowLevel_RemoveNonZombies()
 }
 
 /**
- * Carga los cow spawns desde el archivo de configuración
+ * Carga los cow spawns desde el archivo de Configuracion
  */
 void CowLevel_LoadCowSpawns()
 {
