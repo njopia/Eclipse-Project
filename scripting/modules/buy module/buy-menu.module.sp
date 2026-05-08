@@ -45,11 +45,7 @@ Handle cvar_CostConvertHP	   = INVALID_HANDLE;
 Handle cvar_CostFireYell	   = INVALID_HANDLE;
 Handle cvar_CostPowerYell	   = INVALID_HANDLE;
 Handle cvar_CostLeap		   = INVALID_HANDLE;
-Handle cvar_CostAmmo		   = INVALID_HANDLE;
-Handle cvar_CostUVLight		   = INVALID_HANDLE;
-Handle cvar_CostHealingStation = INVALID_HANDLE;
 Handle cvar_CostIonCannon	   = INVALID_HANDLE;
-Handle cvar_CostDefenseGrid	   = INVALID_HANDLE;
 Handle cvar_CostTeamHeal	   = INVALID_HANDLE;
 Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 Handle cvar_CostNuclearStrike  = INVALID_HANDLE;
@@ -72,6 +68,7 @@ Handle cvar_CostNuclearStrike  = INVALID_HANDLE;
 #tryinclude "features/03-deployables/uv-light.feature.sp"
 #tryinclude "features/03-deployables/healing-station.feature.sp"
 #tryinclude "features/03-deployables/defense-grid.feature.sp"
+#tryinclude "features/03-deployables/sentry-gun.feature.sp"
 //////////////////////////////////////////////
 ////// BOMBARDMENTS ///////////////////////////
 #tryinclude "features/05-bombardments/ion-cannon/ion-cannon.module.sp"
@@ -106,11 +103,7 @@ public void buyMenuOnPluginStart()
 	cvar_CostFireYell		= CreateConVar("buy_cost_fire_yell", "20", "Cost in points to buy Fire Yell", FCVAR_PLUGIN);
 	cvar_CostPowerYell		= CreateConVar("buy_cost_power_yell", "30", "Cost in points to buy Power Yell", FCVAR_PLUGIN);
 	cvar_CostLeap			= CreateConVar("buy_cost_leap", "35", "Cost in points to buy Leap of Desperation", FCVAR_PLUGIN);
-	cvar_CostAmmo			= CreateConVar("buy_cost_ammo", "30", "Cost in points to buy Ammo Pile", FCVAR_PLUGIN);
-	cvar_CostUVLight		= CreateConVar("buy_cost_uv_light", "45", "Cost in points to buy UV Light", FCVAR_PLUGIN);
-	cvar_CostHealingStation = CreateConVar("buy_cost_healing_station", "50", "Cost in points to buy Healing Station", FCVAR_PLUGIN);
 	cvar_CostIonCannon		= CreateConVar("buy_cost_ion_cannon", "75", "Cost in points to buy Ion Cannon", FCVAR_PLUGIN);
-	cvar_CostDefenseGrid	= CreateConVar("buy_cost_defense_grid", "65", "Cost in points to buy Defense Grid", FCVAR_PLUGIN);
 	cvar_CostTeamHeal		= CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
 	cvar_CostTeamSpeedBoost = CreateConVar("buy_cost_team_speed_boost", "60", "Cost in points to buy Team Speed Boost", FCVAR_PLUGIN);
 	cvar_CostNuclearStrike	= CreateConVar("buy_cost_nuclear_strike", "100", "Cost in points to buy Nuclear Strike", FCVAR_PLUGIN);
@@ -128,6 +121,9 @@ public void buyMenuOnPluginStart()
 	// Initialize Ion Cannon module
 	IonCannon_OnPluginStart();
 	AmmoSpawn_OnPluginStart();
+#if defined _SENTRY_GUN_FEATURE_
+	SentryGun_OnPluginStart();
+#endif
 	// Initialize Active Abilities
 	// Removidas - ahora son parte del sistema de Abilities
 	// (Berserker, AcidBath, LifeStealer, SpeedFreak, ShoulderCannon)
@@ -185,7 +181,7 @@ public void BuyMenu_OnClientPutInServer(int client)
 	// Ahora son parte del sistema de Abilities
 }
 
-public void OnClientDisconnect(int client)
+void BuyMenu_OnClientDisconnect(int client)
 {
 	// Guardar currency en cookie ANTES de resetear (persiste entre cambios de mapa)
 	if (!IsFakeClient(client))
@@ -203,6 +199,9 @@ public void OnClientDisconnect(int client)
 	g_iPlayerLocalCurrency[client] = 0;	  // Reset local variable (pero ya guardado en cookie)
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
+#if defined _SENTRY_GUN_FEATURE_
+	SentryGun_OnClientDisconnect(client);
+#endif
 	DefenseGrid_OnClientDisconnect(client);
 	TeamHeal_OnClientDisconnect(client);
 	NuclearStrike_OnClientDisconnect(client);
@@ -225,6 +224,9 @@ public void DelegateBuyMenuModule()
 
 	// Initialize Ion Cannon resources
 	IonCannon_OnMapStart();
+#if defined _SENTRY_GUN_FEATURE_
+	SentryGun_OnMapStart();
+#endif
 
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -528,7 +530,13 @@ stock void SetPlayerCurrency(int client, int amount)
  */
 public Action Event_BuyMenu_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-	// ShoulderCannon_OnPlayerDeath removido - ahora es parte del sistema de Abilities
+	int client = GetClientOfUserId(event.GetInt("userid"));
+#if defined _SENTRY_GUN_FEATURE_
+	if (client > 0 && IsClientInGame(client))
+		SentryGun_OnPlayerDeath(client);
+#else
+	#pragma unused client
+#endif
 	return Plugin_Continue;
 }
 

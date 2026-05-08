@@ -18,6 +18,32 @@ void RegisterEMSCommands()
 		RegConsoleCmd("sm_buy",       Cmd_Buy,                "Opens the Eclipse Buy Menu");
 	#endif
 
+	// Deployables
+	#if defined _DEPLOYABLES_MODULE_
+		RegConsoleCmd("sm_deployables", Cmd_Deployables,      "Desplegar equipamiento de campo (!deployables)");
+		RegConsoleCmd("deployables",    Cmd_Deployables,      "Desplegar equipamiento de campo");
+	#endif
+
+	// Specials
+	#if defined _SPECIALS_MODULE_
+		RegConsoleCmd("sm_specials",    Cmd_Specials,         "Habilidades especiales de alto nivel (!specials)");
+		RegConsoleCmd("specials",       Cmd_Specials,         "Habilidades especiales de alto nivel");
+	#endif
+
+	// Sentry Gun config
+	#if defined _SENTRY_GUN_FEATURE_
+		RegConsoleCmd("sm_sentrycontrol", Cmd_SentryControl, "Configurar objetivo de la Sentry Gun");
+		RegConsoleCmd("sentrycontrol",    Cmd_SentryControl, "Configurar objetivo de la Sentry Gun");
+	#endif
+
+	// Hats (acceso directo al selector de hat)
+	#if defined _HATS_MODULE_
+		RegConsoleCmd("sm_choosehat",   Cmd_ChooseHat,        "Elige tu sombrero cosmético (!choosehat)");
+		RegConsoleCmd("choosehat",      Cmd_ChooseHat,        "Elige tu sombrero cosmético");
+		RegConsoleCmd("hat",            Cmd_ChooseHat,        "Elige tu sombrero cosmético");
+	#endif
+
+
 	// Leveling & XP
 	#if defined _LEVELING_UI_MODULE_
 		RegConsoleCmd("sm_level",     Cmd_ShowLevelInfo,      "Shows current level and XP progress");

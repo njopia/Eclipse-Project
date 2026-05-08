@@ -42,6 +42,7 @@
 #tryinclude "modules/leveling/leveling-rewards.module.sp"
 #tryinclude "modules/leveling/leveling-ui.module.sp"
 #tryinclude "modules/leveling/leveling-info.module.sp"
+#tryinclude "modules/leveling/leveling-reset.module.sp"
 
 //==================================================
 // === ABILITIES SYSTEM MODULE ===
@@ -71,6 +72,11 @@
 #tryinclude "modules/buy module/buy-menu.module.sp"
 
 //==================================================
+// === DEPLOYABLES MODULE ===
+//==================================================
+#tryinclude "modules/deployables/deployables.module.sp"
+
+//==================================================
 // === CURRENCY STATS MODULE ===
 // Mantener para estadisticas
 //==================================================
@@ -97,6 +103,13 @@
 #tryinclude "modules/modes/cow-level.module.sp"
 
 //==================================================
+// === SPECIALS MODULE ===
+// Incluido DESPUES de difficulty-base.inc para que
+// DiffBase_IsFinaleActive() este disponible en el jetpack.
+//==================================================
+#tryinclude "modules/specials/specials.module.sp"
+
+//==================================================
 // === FRAGS SYSTEM MODULE ===
 //==================================================
 #include "modules/frags-system.module.sp"
@@ -114,6 +127,7 @@
 #tryinclude "modules/management/lang.module.sp"
 #tryinclude "modules/management/mapvote.module.sp"
 #tryinclude "modules/management/admin-manager.sp"
+#tryinclude "modules/management/bot-control.module.sp"
 
 //==================================================
 // === MAIN MENU MODULE ===
@@ -304,9 +318,15 @@ public void OnPluginStart()
 	LevelingRewards_OnPluginStart();
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
+	LevelingReset_OnPluginStart();
 
 	// Initialize abilities system (AFTER leveling system)
 	Abilities_OnPluginStart();
+
+	// Initialize specials system (hats + jetpack, AFTER leveling)
+#if defined _SPECIALS_MODULE_
+	Specials_OnPluginStart();
+#endif
 
 	// Initialize unified points system
 	EclipsePointsUnified_OnPluginStart();
@@ -329,6 +349,9 @@ public void OnPluginStart()
 	// Initialize server management system
 	Afk_Join_OnPluginStart();
 	AdminManager_OnPluginStart();
+#if defined _BOT_CONTROL_MODULE_
+	BotControl_OnPluginStart();
+#endif
 
 	// Initialize HUD system
 #if defined _SCRIPTED_HUD_MODULE_
@@ -401,6 +424,14 @@ public void OnMapStart()
 	// Initialize buy menu modules
 	DelegateBuyMenuModule();
 	DefenseGrid_OnMapStart();
+#if defined _BOT_CONTROL_MODULE_
+	BotControl_OnMapStart();
+#endif
+
+	// Initialize specials (hats precache, jetpack precache)
+#if defined _SPECIALS_MODULE_
+	Specials_OnMapStart();
+#endif
 
 	// Initialize difficulty orchestrator (MUST be before individual modes)
 	DifficultyOrchestrator_OnMapStart();
@@ -536,6 +567,24 @@ public void OnClientCookiesCached(int client)
 {
 	// Load language preferences from cookies
 	Language_OnClientCookiesCached(client);
+
+	// Load hat selection from cookie
+#if defined _SPECIALS_MODULE_
+	Specials_OnClientCookiesCached(client);
+#endif
+}
+
+/**
+ * Called when client disconnects
+ * Centralizes all per-client cleanup
+ */
+public void OnClientDisconnect(int client)
+{
+	BuyMenu_OnClientDisconnect(client);
+
+#if defined _SPECIALS_MODULE_
+	Specials_OnClientDisconnect(client);
+#endif
 }
 
 /**
@@ -550,6 +599,11 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	// Handle ability-specific controls
 	Nightcrawler_OnPlayerRunCmd(client, buttons);
 	HeatSeeker_OnPlayerRunCmd(client, buttons);
+
+	// Handle jetpack controls
+#if defined _SPECIALS_MODULE_
+	Specials_OnPlayerRunCmd(client, buttons);
+#endif
 
 	return Plugin_Continue;
 }
@@ -640,6 +694,9 @@ stock void ResetPlayerCooldowns(int client)
 	DefenseGrid_ResetCooldown(client);
 	IonCannon_ResetCooldown(client);
 	AmmoPile_ResetCooldown(client);
+#if defined _SENTRY_GUN_FEATURE_
+	SentryGun_ResetCooldown(client);
+#endif
 }
 
 stock void ResetAllPlayersState()

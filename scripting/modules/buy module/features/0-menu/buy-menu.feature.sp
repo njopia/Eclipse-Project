@@ -3,21 +3,15 @@
 #endif
 
 Menu g_MainMenu;
-Menu g_DeployablesMenu;
 Menu g_InstantsMenu;
 Menu g_TeamBonusesMenu;
 Menu g_BombardmentsMenu;
-Menu g_SpecialsMenu;
 
 /// Main Menu Choices ///
 #define BM_CHOICE_0_1 "BM_Instant"
 #define BM_CHOICE_0_2 "BM_LongAction"
-#define BM_CHOICE_0_3 "BM_Deployables"
 #define BM_CHOICE_0_4 "BM_Bombardments"
 #define BM_CHOICE_0_5 "BM_TeamBonuses"
-#define BM_CHOICE_0_6 "BM_Specials"
-#define BM_CHOICE_6_1 "BM_Specials_ShoulderCannon"
-#define BM_CHOICE_6_2 "BM_Specials_ShoulderCannon_Config"
 /// Instant Choices ///
 #define BM_CHOICE_1_1 "BM_Instant_ConvertHP"
 #define BM_CHOICE_1_2 "BM_Instant_FireYell"
@@ -30,11 +24,6 @@ Menu g_SpecialsMenu;
 #define BM_CHOICE_2_4 "BM_Ability_LifeStealer"
 #define BM_CHOICE_2_5 "BM_Ability_SpeedFreak"
 #define BM_CHOICE_2_6 "BM_Ability_ShoulderCannon"
-/// Deployables Choices ///
-#define BM_CHOICE_3_1 "BM_Deployables_Ammo_Pile"
-#define BM_CHOICE_3_2 "BM_Deployables_UV_Light"
-#define BM_CHOICE_3_3 "BM_Deployables_Healing_Station"
-#define BM_CHOICE_3_4 "BM_Deployables_Defense_Grid"
 /// Bombardments Choices ///
 #define BM_CHOICE_4_1 "BM_Bombardments_Ion_Cannon"
 #define BM_CHOICE_4_2 "BM_Bombardments_Nuclear_Strike"
@@ -117,30 +106,19 @@ public Action Cmd_Buy(int client, int args)
 		g_MainMenu.AddItem(BM_CHOICE_0_2, text);
 	}
 
-	Format(text, sizeof(text), "%T", BM_CHOICE_0_3, client);
-	g_MainMenu.AddItem(BM_CHOICE_0_3, text);
-
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_4, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_4, text);
 
 	Format(text, sizeof(text), "%T", BM_CHOICE_0_5, client);
 	g_MainMenu.AddItem(BM_CHOICE_0_5, text);
 
-	if (playerLevel >= 35)
-	{
-		Format(text, sizeof(text), "%T", "Menu_Specials", client);
-		g_MainMenu.AddItem(BM_CHOICE_0_6, text);
-	}
-
 	g_MainMenu.ExitButton = true;
 	g_MainMenu.Display(client, 20);
 
 	// Recrear submenus para mostrar timers actualizados
 	InstantsMenu(client);
-	DeployablesMenu(client);
 	BombardmentsMenu(client);
 	TeamBonusesMenu(client);
-	SpecialsMenu(client);
 
 	return Plugin_Handled;
 }
@@ -164,12 +142,6 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 			{
 				ShowAbilitiesMenu(client);
 			}
-			else if (StrEqual(info, BM_CHOICE_0_3))
-			{
-				DeployablesMenu(client);
-				if (g_DeployablesMenu != null)
-					g_DeployablesMenu.Display(client, 20);
-			}
 			else if (StrEqual(info, BM_CHOICE_0_4))
 			{
 				BombardmentsMenu(client);
@@ -181,12 +153,6 @@ public int MenuHandler1(Menu menu, MenuAction action, int client, int param2)
 				TeamBonusesMenu(client);
 				if (g_TeamBonusesMenu != null)
 					g_TeamBonusesMenu.Display(client, 20);
-			}
-			else if (StrEqual(info, BM_CHOICE_0_6))
-			{
-				SpecialsMenu(client);
-				if (g_SpecialsMenu != null)
-					g_SpecialsMenu.Display(client, 20);
 			}
 		}
 		case MenuAction_End:
@@ -235,108 +201,6 @@ public void InstantsMenu(int client)
 
 	g_InstantsMenu.ExitBackButton = true;
 	g_InstantsMenu.ExitButton	  = true;
-}
-
-public void DeployablesMenu(int client)
-{
-	g_DeployablesMenu = new Menu(MenuHandler_Deployables, MENU_ACTIONS_ALL);
-
-	char text[40], baseText[64], title[128], fullTitle[256];
-	char playerName[MAX_NAME_LENGTH];
-	char playerText[32], pointsText[32], levelText[32];
-	GetClientName(client, playerName, sizeof(playerName));
-	int playerLevel = Leveling_GetPlayerLevel(client);
-	Format(title, sizeof(title), "%T", "BM_Deployables", client);
-	Format(playerText, sizeof(playerText), "%T", "UI_Player", client);
-	Format(pointsText, sizeof(pointsText), "%T", "UI_Points", client);
-	Format(levelText, sizeof(levelText), "%T", "UI_Level", client);
-	Format(fullTitle, sizeof(fullTitle),
-		   "%s \n================= \n %s: %s \n %s: %d \n %s: %d \n=================",
-		   title, playerText, playerName, pointsText, GetPlayerCurrency(client), levelText, playerLevel);
-	g_DeployablesMenu.SetTitle(fullTitle);
-
-	// Ammo Pile (Nivel 1)
-	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_1, client);
-	if (playerLevel >= 1)
-	{
-		Format(text, sizeof(text), "%s (%d)", baseText, GetConVarInt(cvar_CostAmmo));
-		g_DeployablesMenu.AddItem(BM_CHOICE_3_1, text);
-	}
-	else
-	{
-		char lockedText[64];
-		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, 1);
-		Format(text, sizeof(text), "%s %s", baseText, lockedText);
-		g_DeployablesMenu.AddItem("locked_ammo", text, ITEMDRAW_DEFAULT);
-	}
-
-	// UV Light (Nivel 3)
-	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_2, client);
-	if (playerLevel >= 3)
-	{
-		int costUV = GetConVarInt(cvar_CostUVLight);
-		if (UVLightTimer[client] > 0)
-			Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costUV, UVLightTimer[client]);
-		else
-			Format(text, sizeof(text), "%s (%d)", baseText, costUV);
-		g_DeployablesMenu.AddItem(BM_CHOICE_3_2, text);
-	}
-	else
-	{
-		char lockedText[64];
-		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, 3);
-		Format(text, sizeof(text), "%s %s", baseText, lockedText);
-		g_DeployablesMenu.AddItem("locked_uvlight", text, ITEMDRAW_DEFAULT);
-	}
-
-	// Healing Station (Nivel 5)
-	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_3, client);
-	if (playerLevel >= 5)
-	{
-		int costHS = GetConVarInt(cvar_CostHealingStation);
-		if (HSTimer[client] > 0)
-			Format(text, sizeof(text), "%s (%d) [%ds]", baseText, costHS, HSTimer[client]);
-		else
-			Format(text, sizeof(text), "%s (%d)", baseText, costHS);
-		g_DeployablesMenu.AddItem(BM_CHOICE_3_3, text);
-	}
-	else
-	{
-		char lockedText[64];
-		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, 5);
-		Format(text, sizeof(text), "%s %s", baseText, lockedText);
-		g_DeployablesMenu.AddItem("locked_healingstation", text, ITEMDRAW_DEFAULT);
-	}
-
-	// Defense Grid (Nivel 10)
-	Format(baseText, sizeof(baseText), "%T", BM_CHOICE_3_4, client);
-	if (playerLevel >= 10)
-	{
-		int	 dgCooldown = DefenseGrid_GetCooldown(client);
-		int	 dgTime		= DefenseGrid_GetTimeRemaining(client);
-		int	 costDG		= GetConVarInt(cvar_CostDefenseGrid);
-		char activeText[32], readyText[32];
-		Format(activeText, sizeof(activeText), "%T", "UI_Active", client);
-		Format(readyText, sizeof(readyText), "%T", "UI_Ready", client);
-
-		if (dgTime > 0)
-			Format(text, sizeof(text), "%s (%d) [%s: %ds]", baseText, costDG, activeText, dgTime);
-		else if (dgCooldown > 0)
-			Format(text, sizeof(text), "%s (%d) [CD: %ds]", baseText, costDG, dgCooldown);
-		else
-			Format(text, sizeof(text), "%s (%d) [%s]", baseText, costDG, readyText);
-		g_DeployablesMenu.AddItem(BM_CHOICE_3_4, text);
-	}
-	else
-	{
-		char lockedText[64];
-		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, 10);
-		Format(text, sizeof(text), "%s %s", baseText, lockedText);
-		g_DeployablesMenu.AddItem("locked_defensegrid", text, ITEMDRAW_DEFAULT);
-	}
-
-	g_DeployablesMenu.ExitBackButton = true;
-	g_DeployablesMenu.ExitButton	 = true;
 }
 
 public void BombardmentsMenu(int client)
@@ -436,42 +300,6 @@ public void TeamBonusesMenu(int client)
 	g_TeamBonusesMenu.ExitButton	 = true;
 }
 
-public void SpecialsMenu(int client)
-{
-	g_SpecialsMenu = new Menu(MenuHandler_Specials, MENU_ACTIONS_ALL);
-
-	char text[128], baseText[64], title[128], fullTitle[256];
-	char playerName[MAX_NAME_LENGTH];
-	char playerText[32], levelText[32];
-	GetClientName(client, playerName, sizeof(playerName));
-	int playerLevel = Leveling_GetPlayerLevel(client);
-	SetGlobalTransTarget(client);
-	Format(title, sizeof(title), "%t", "Menu_Specials");
-	Format(playerText, sizeof(playerText), "%T", "UI_Player", client);
-	Format(levelText, sizeof(levelText), "%T", "UI_Level", client);
-	Format(fullTitle, sizeof(fullTitle),
-		   "%s \n================= \n %s: %s \n %s: %d \n=================",
-		   title, playerText, playerName, levelText, playerLevel);
-	g_SpecialsMenu.SetTitle(fullTitle);
-
-	// Shoulder Cannon (Nivel 35)
-	Format(baseText, sizeof(baseText), "%T", "BM_Ability_ShoulderCannon", client);
-	if (playerLevel >= 35)
-	{
-		g_SpecialsMenu.AddItem(BM_CHOICE_6_1, baseText);
-	}
-	else
-	{
-		char lockedText[64];
-		Format(lockedText, sizeof(lockedText), "%T", "UI_Locked", client, 35);
-		Format(text, sizeof(text), "%s %s", baseText, lockedText);
-		g_SpecialsMenu.AddItem("locked_shouldercannon", text, ITEMDRAW_DISABLED);
-	}
-
-	g_SpecialsMenu.ExitBackButton = true;
-	g_SpecialsMenu.ExitButton	  = true;
-}
-
 // =============================================================================
 // HANDLERS DE SELECCION
 // =============================================================================
@@ -503,98 +331,6 @@ public int MenuHandler_Instants(Menu menu, MenuAction action, int client, int pa
 				Activate_LeapOfDesperation(client);
 		}
 	}
-	return 0;
-}
-
-public int MenuHandler_Deployables(Menu menu, MenuAction action, int client, int param)
-{
-	if (action != MenuAction_Select) return 0;
-
-	char info[32];
-	menu.GetItem(param, info, sizeof(info));
-	int playerLevel = Leveling_GetPlayerLevel(client);
-
-	if (StrEqual(info, BM_CHOICE_3_1))
-	{
-		if (playerLevel < 1)
-		{
-			_BM_PrintLevelError(client, 1, "Ammo Pile");
-			return 0;
-		}
-		if (!AmmoPile_IsReady(client, AMMO_PILE))
-		{
-			PrintToChat(client, "\x05[Eclipse]\x01 Ammo Pile aun en cooldown.");
-			return 0;
-		}
-		if (PurchaseItem(client, GetConVarInt(cvar_CostAmmo), "Ammo Pile"))
-		{
-			SpawnAmmoByName(client, "pile");
-			_BM_PrintDeploySuccess(client, "Ammo Pile");
-		}
-	}
-	else if (StrEqual(info, BM_CHOICE_3_2))
-	{
-		if (playerLevel < 3)
-		{
-			_BM_PrintLevelError(client, 3, "UV Light");
-			return 0;
-		}
-		if (UVLightTimer[client] > 0)
-		{
-			char errorMsg[128];
-			Format(errorMsg, sizeof(errorMsg), "%T", "Error_WaitSeconds", client, UVLightTimer[client]);
-			PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			return 0;
-		}
-		if (!(GetEntityFlags(client) & FL_ONGROUND))
-		{
-			_BM_PrintGroundError(client);
-			return 0;
-		}
-		if (PurchaseItem(client, GetConVarInt(cvar_CostUVLight), "UV Light"))
-		{
-			SpawnUVLight(client);
-			UpdateUVLight(client);
-			_BM_PrintDeploySuccess(client, "UV Light");
-		}
-	}
-	else if (StrEqual(info, BM_CHOICE_3_3))
-	{
-		if (playerLevel < 5)
-		{
-			_BM_PrintLevelError(client, 5, "Healing Station");
-			return 0;
-		}
-		if (HSTimer[client] > 0)
-		{
-			char errorMsg[128];
-			Format(errorMsg, sizeof(errorMsg), "%T", "Error_WaitSeconds", client, HSTimer[client]);
-			PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-			return 0;
-		}
-		if (!(GetEntityFlags(client) & FL_ONGROUND))
-		{
-			_BM_PrintGroundError(client);
-			return 0;
-		}
-		if (PurchaseItem(client, GetConVarInt(cvar_CostHealingStation), "Healing Station"))
-		{
-			SpawnHealingStation(client);
-			_BM_PrintDeploySuccess(client, "Healing Station");
-		}
-	}
-	else if (StrEqual(info, BM_CHOICE_3_4))
-	{
-		if (playerLevel < 10)
-		{
-			_BM_PrintLevelError(client, 10, "Defense Grid");
-			return 0;
-		}
-		if (!DefenseGrid_CanDeploy(client)) return 0;
-		if (PurchaseItem(client, GetConVarInt(cvar_CostDefenseGrid), "Defense Grid"))
-			DefenseGrid_Deploy(client);
-	}
-
 	return 0;
 }
 
@@ -649,37 +385,6 @@ public int MenuHandler_TeamBonuses(Menu menu, MenuAction action, int client, int
 	return 0;
 }
 
-public int MenuHandler_Specials(Menu menu, MenuAction action, int client, int param)
-{
-	if (action == MenuAction_Select)
-	{
-		char info[32];
-		menu.GetItem(param, info, sizeof(info));
-
-		if (StrEqual(info, BM_CHOICE_6_1))
-		{
-			if (Leveling_GetPlayerLevel(client) < 35)
-			{
-				SetGlobalTransTarget(client);
-				char errorMsg[128];
-				Format(errorMsg, sizeof(errorMsg), "%t", "Error_NeedLevel35ShoulderCannon");
-				PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-				return 0;
-			}
-			ShoulderCannon_ShowMenu(client);
-		}
-	}
-	else if (action == MenuAction_Cancel && param == MenuCancel_ExitBack)
-	{
-		Cmd_Buy(client, 0);
-	}
-	else if (action == MenuAction_End)
-	{
-		delete menu;
-	}
-	return 0;
-}
-
 // =============================================================================
 // HELPERS INTERNOS
 // =============================================================================
@@ -691,16 +396,3 @@ static void _BM_PrintLevelError(int client, int requiredLevel, const char[] item
 	PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
 }
 
-static void _BM_PrintGroundError(int client)
-{
-	char errorMsg[128];
-	Format(errorMsg, sizeof(errorMsg), "%T", "Error_MustBeOnGround", client);
-	PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
-}
-
-static void _BM_PrintDeploySuccess(int client, const char[] itemName)
-{
-	char successMsg[128];
-	Format(successMsg, sizeof(successMsg), "%T", "Success_Deploying", client, itemName);
-	PrintToChat(client, "\x04[Deployables]\x01 %s", successMsg);
-}
