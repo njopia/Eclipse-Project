@@ -1,87 +1,110 @@
+#if !defined EMS_MAIN_FILE
+	#error You must compile main file "scripting/Eclipse Management System.sp". This is only an auxiliary file.
+#endif
+
 //==================================================
 // === SPEED FREAK ABILITY (Level 31) ===
-// Insanely fast movement speed + faster healing
-// Sets health to 50 HP during effect
-// Duration: 60 seconds
-// Cooldown: 5 minutes
+// Velocidad extrema + HP reducido a 50 durante el efecto.
+// Duración: 60 segundos — Cooldown: 5 minutos
 //==================================================
 
-int g_iSpeedFreak_OriginalHealth[MAXPLAYERS + 1];
+#define SPEEDFREAK_SPEED	  2.5	  // 250% velocidad
+#define SPEEDFREAK_DURATION	  60.0	  // segundos
+#define SPEEDFREAK_HP		  50	  // HP durante el efecto
+#define SPEEDFREAK_HP_RESTORE 100	  // HP mínimo al restaurar
+
+static int g_iSpeedFreak_OriginalHealth[MAXPLAYERS + 1];
 
 /**
- * Activa Speed Freak
+ * Activa Speed Freak para un cliente.
+ *
+ * @param client    Índice del cliente.
+ * @return          true si se activó correctamente.
  */
-bool Ability_SpeedFreak_Activate(int client)
+bool	   Ability_SpeedFreak_Activate(int client)
 {
+	if (!IsClientInGame(client) || !IsPlayerAlive(client))
+		return false;
+
 	// Guardar HP original
 	g_iSpeedFreak_OriginalHealth[client] = GetClientHealth(client);
 
-	// Establecer HP a 50
-	SetEntityHealth(client, 50);
+	// Reducir HP a 50
+	SetEntityHealth(client, SPEEDFREAK_HP);
 
-	// Aumentar velocidad drasticamente
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 2.5); // 250% velocidad
+	// Aplicar velocidad via speed manager con duración automática
+	SPD_Apply(client, SpeedLayer_SpeedFreak, SPEEDFREAK_SPEED, SPEEDFREAK_DURATION);
 
-	// NOTA: La velocidad se mantiene automáticamente porque ExtremeConditioning
-	// verifica Abilities_IsActive(client, Ability_SpeedFreak) antes de aplicar su velocidad
+	// Efecto visual azul (Fade In)
+	FX_SetFade(client, 60000, 500, FFADE_IN, 0, 100, 255, 60);
 
-	// Efecto visual azul
-	int clients[1];
-	clients[0] = client;
-	int color[4] = {0, 100, 255, 60};
-	int duration = 60000;
-	int flags = 0x0001;
+	// Partícula en el jugador
+	FX_AttachParticle(client, PARTICLE_ADRENALINE, SPEEDFREAK_DURATION);
 
-	Handle message = StartMessageEx(GetUserMessageId("Fade"), clients, 1);
-	if (message != INVALID_HANDLE)
-	{
-		BfWriteShort(message, duration);
-		BfWriteShort(message, 500);
-		BfWriteShort(message, flags);
-		BfWriteByte(message, color[0]);
-		BfWriteByte(message, color[1]);
-		BfWriteByte(message, color[2]);
-		BfWriteByte(message, color[3]);
-		EndMessage();
-	}
+	PrintToChat(client, "\x04[Speed Freak]\x01 ¡Velocidad máxima! HP reducido a \x04%d\x01.", SPEEDFREAK_HP);
 
-	PrintToChat(client, "\x04[Speed Freak]\x01 Velocidad maxima! HP reducido a 50.");
+	// Timer para restaurar HP y efectos al expirar
+	CreateTimer(SPEEDFREAK_DURATION, _SpeedFreak_TimerExpire, client, TIMER_FLAG_NO_MAPCHANGE);
+
 	return true;
 }
 
 /**
- * Desactiva Speed Freak
+ * Desactiva Speed Freak para un cliente.
+ * Puede llamarse antes de que expire el timer (por muerte, desconexión, etc.).
+ *
+ * @param client    Índice del cliente.
  */
 void Ability_SpeedFreak_Deactivate(int client)
 {
-	if (!IsClientInGame(client))
-		return;
+	if (!IsClientInGame(client)) return;
 
-	// Restaurar velocidad normal (Extreme Conditioning se encargará si está desbloqueado)
-	SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
+	// Remover capa de velocidad — el manager restaura automáticamente
+	// la siguiente capa activa (ej: TeamBoost si estaba activo)
+	SPD_Remove(client, SpeedLayer_SpeedFreak);
 
-	// Restaurar HP (o dar 100 como mínimo)
-	int currentHP = GetClientHealth(client);
-	if (currentHP < 100 && g_iSpeedFreak_OriginalHealth[client] >= 100)
+	// Restaurar HP si sigue vivo
+	if (IsPlayerAlive(client))
 	{
-		SetEntityHealth(client, 100);
+		int currentHP = GetClientHealth(client);
+		if (currentHP < SPEEDFREAK_HP_RESTORE && g_iSpeedFreak_OriginalHealth[client] >= SPEEDFREAK_HP_RESTORE)
+			SetEntityHealth(client, SPEEDFREAK_HP_RESTORE);
 	}
 
-	// Limpiar efecto visual
-	int clients[1];
-	clients[0] = client;
-	int color[4] = {0, 0, 0, 0};
+	g_iSpeedFreak_OriginalHealth[client] = 0;
 
-	Handle message = StartMessageEx(GetUserMessageId("Fade"), clients, 1);
-	if (message != INVALID_HANDLE)
-	{
-		BfWriteShort(message, 500);
-		BfWriteShort(message, 500);
-		BfWriteShort(message, 0x0002);
-		BfWriteByte(message, color[0]);
-		BfWriteByte(message, color[1]);
-		BfWriteByte(message, color[2]);
-		BfWriteByte(message, color[3]);
-		EndMessage();
-	}
+	// Limpiar efecto visual (Fade Out)
+	FX_ClearFade(client);
+
+	PrintToChat(client, "\x05[Speed Freak]\x01 Efecto terminado. Velocidad restaurada.");
+}
+
+/**
+ * Retorna true si Speed Freak está activo para el cliente.
+ */
+stock bool SpeedFreak_IsActive(int client)
+{
+	return SPD_HasLayer(client, SpeedLayer_SpeedFreak);
+}
+
+/**
+ * Limpieza al desconectar (llamar desde OnClientDisconnect).
+ */
+stock void SpeedFreak_OnClientDisconnect(int client)
+{
+	g_iSpeedFreak_OriginalHealth[client] = 0;
+	// SPD_OnClientDisconnect ya limpia la capa, no necesita llamarse aquí
+	// si TeamSpeedBoost_OnClientDisconnect ya lo invoca.
+}
+
+// =============================================================================
+// INTERNAL
+// =============================================================================
+public Action _SpeedFreak_TimerExpire(Handle timer, int client)
+{
+	// Solo desactivar si sigue activo (evita doble deactivate si se llamó manualmente)
+	if (SpeedFreak_IsActive(client))
+		Ability_SpeedFreak_Deactivate(client);
+
+	return Plugin_Stop;
 }

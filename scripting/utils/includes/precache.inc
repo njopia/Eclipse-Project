@@ -15,6 +15,7 @@
  * - Precaching de particulas con string tables (compatible con todas las versiones).
  */
 
+
 #if defined _EMS_PRECACHE_MODULE_
 	#endinput
 #endif
@@ -30,13 +31,13 @@
 #if !defined _sdktools_stringtables_included
 	#include <sdktools_stringtables>
 #endif
-
+#include "particle_effects"
 // ======================================================================
 // --------------------------- CONFIG INTERNA ----------------------------
 // ======================================================================
 
 // Flag local de debug (controla EMS_DLog). Arranca en false.
-static bool		  g_bEMSPrecacheDebug = true;
+static bool		  g_bEMSPrecacheDebug = false;
 
 // Sonidos por defecto (rutas relativas al directorio "sound/")
 static const char g_DefaultSounds[][] = {
@@ -70,6 +71,35 @@ static const char g_DefaultSounds[][] = {
 
 // particulas por defecto (nombres de sistema – no rutas .pcf)
 static const char g_DefaultParticles[][] = {
+	// --- De particle_effects.inc ---
+	PARTICLE_FIRE_SMALL,
+	PARTICLE_FIRE_MEDIUM,
+	PARTICLE_FIRE_LARGE,
+	PARTICLE_MOLOTOV_FIRE,
+	PARTICLE_MOLOTOV_SPREAD,
+	PARTICLE_EXPLOSION,
+	PARTICLE_EXPLOSION_GRENADE,
+	PARTICLE_EXPLOSION_LARGE,
+	PARTICLE_BLOOD_MIST,
+	PARTICLE_BLOOD_SPLATTER,
+	PARTICLE_BLOOD_EXPLOSION,
+	PARTICLE_BOOMER_BILE,
+	PARTICLE_SMOKER_TONGUE,
+	PARTICLE_SMOKER_COUGH,
+	PARTICLE_HUNTER_POUNCE,
+	PARTICLE_SPITTER_SPIT,
+	PARTICLE_SPITTER_ACID,
+	PARTICLE_CHARGER_IMPACT,
+	PARTICLE_JOCKEY_RIDE,
+	PARTICLE_WITCH_ALERT,
+	PARTICLE_TANK_ROCK,
+	PARTICLE_SMOKE_SMALL,
+	PARTICLE_SMOKE_LARGE,
+	PARTICLE_ELECTRIC_SPARK,
+	PARTICLE_PIPE_BOMB,
+	PARTICLE_ADRENALINE,
+	PARTICLE_MEDKIT_USE,
+	PARTICLE_DEFIBRILLATOR,
 	"inferno_grow",
 	"electrical_arc_01_system",
 	"weapon_pipebomb_child_sparks2",

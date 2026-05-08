@@ -1,1 +1,22 @@
 nul
+scripting/l4dd/left4dhooks_changelog.txt
+scripting/l4dd/l4dd_targetfilters.sp
+scripting/l4dd/l4dd_setup.sp
+scripting/l4dd/l4dd_natives.sp
+scripting/l4dd/l4dd_gamedata.sp
+scripting/l4dd/l4dd_forwards.sp
+scripting/include/left4dhooks.inc
+scripting/include/left4dhooks_stocks.inc
+scripting/include/left4dhooks_silver.inc
+scripting/include/left4dhooks_lux_library.inc
+scripting/include/left4dhooks_anim.inc
+scripting/compiled/Eclipse Management System.smx
+scripting/left4dhooks.sp
+scripting/left4dhooks_test.sp
+gamedata/lux_library.txt
+gamedata/left4dhooks.l4d2.txt
+gamedata/left4dhooks.l4d1.txt
+data/left4dhooks.l4d2.cfg
+data/left4dhooks.l4d1.cfg
+.claude/settings.local.json
+.gitignore

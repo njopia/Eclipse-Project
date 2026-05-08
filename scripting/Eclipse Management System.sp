@@ -30,7 +30,8 @@
 // === PRECACHE UTILITIES ===
 //==================================================
 #tryinclude "utils/includes/precache.inc"
-
+#tryinclude "utils/includes/speed_manager.inc"
+#tryinclude "utils/includes/visual_effects.inc"
 //==================================================
 // === LEVELING SYSTEM MODULE ===
 // IMPORTANTE: Se incluye ANTES del Buy Menu porque
@@ -79,7 +80,6 @@
 // === SERVER MANAGEMENT UTILITIES ===
 //==================================================
 #tryinclude "utils/server-management.utils.sp"
-#tryinclude "utils/includes/visual_effects.inc"
 
 //==================================================
 // === ECLIPSE POINTS UNIFIED MODULE ===
