@@ -50,6 +50,9 @@ Handle g_cvar_Bloodmoon_BreederEvents     = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_BreederChance     = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_MegaMobSound      = INVALID_HANDLE;
 Handle g_cvar_Bloodmoon_MegaMobSoundChance = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_ColorCorrection          = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_ColorFile         = INVALID_HANDLE;
+Handle g_cvar_Bloodmoon_ColorWeight       = INVALID_HANDLE;
 
 // ConVars del juego
 Handle g_zCVAR_CommonLimit_BM = INVALID_HANDLE;
@@ -64,6 +67,7 @@ Handle g_zCVAR_Difficulty_BM  = INVALID_HANDLE;
 
 bool   g_bBloodmoonActive = false;
 int    g_iFogRef_BM       = -1;
+int    g_iCCRef_BM        = INVALID_ENT_REFERENCE;
 Handle g_hFogTimer_BM     = null;
 Handle g_hEventTimer_BM   = null;
 int    g_iParticleRefs_BM[16];
@@ -125,6 +129,9 @@ public void Bloodmoon_OnPluginStart()
 	g_cvar_Bloodmoon_BreederChance = CreateConVar("bloodmoon_breeder_chance", "25",           "Probabilidad 1/N breeder event",   FCVAR_PLUGIN, true, 1.0);
 	g_cvar_Bloodmoon_MegaMobSound = CreateConVar("bloodmoon_megamob_sound",   "1",            "Sonido aleatorio mega mob",        FCVAR_PLUGIN, true, 0.0, true, 1.0);
 	g_cvar_Bloodmoon_MegaMobSoundChance = CreateConVar("bloodmoon_megamob_sound_chance","20", "Probabilidad 1/N sonido mega mob", FCVAR_PLUGIN, true, 1.0);
+	g_cvar_Bloodmoon_ColorCorrection = CreateConVar("bloodmoon_color_correction", "1",                                           "Color correction activa",        FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Bloodmoon_ColorFile       = CreateConVar("bloodmoon_color_file",       "materials/correction/urban_night_red.pwl.raw","Archivo .pwl.raw de correccion", FCVAR_PLUGIN);
+	g_cvar_Bloodmoon_ColorWeight     = CreateConVar("bloodmoon_color_weight",     "0.45",                                        "Intensidad 0.0-1.0",             FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_zCVAR_CommonLimit_BM = FindConVar("z_common_limit");
 	g_zCVAR_MobMin_BM      = FindConVar("z_mob_spawn_min_size");
@@ -160,6 +167,7 @@ public void Bloodmoon_OnMapStart()
 	g_fLastPanicEvent_BM   = 0.0;
 	g_iTankCount_BM        = 0;
 	g_iFogRef_BM           = -1;
+	g_iCCRef_BM            = INVALID_ENT_REFERENCE;
 	g_iTonemapRef_BM = g_iPrecipitationRef_BM = -1;
 	for (int i = 0; i < 16; i++) g_iParticleRefs_BM[i] = -1;
 	g_iParticleTotal_BM    = 0;
@@ -193,6 +201,8 @@ public void Bloodmoon_ConVarChanged(Handle convar, const char[] oldValue, const 
 	bool bNew = view_as<bool>(StringToInt(newValue));
 	bool bOld = view_as<bool>(StringToInt(oldValue));
 	if (bNew == bOld) return;
+
+	DiffBase_Debug("Bloodmoon", "ConVarChanged: %s -> %s", oldValue, newValue);
 
 	if (bNew && !g_bBloodmoonActive)
 		Bloodmoon_Activate("convar");
@@ -244,6 +254,7 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	#pragma unused reason
 
 	LogMessage("[Bloodmoon] Activating...");
+	DiffBase_Debug("Bloodmoon", "Activate (razon: %s)", reason);
 
 	DiffBase_BackupDirector(
 		g_zCVAR_CommonLimit_BM, g_zCVAR_MobMin_BM, g_zCVAR_MobMax_BM,
@@ -316,6 +327,14 @@ void Bloodmoon_Activate(const char[] reason = "manual")
 	if (GetConVarBool(g_cvar_Bloodmoon_ChangeDiff))
 		ServerCommand("z_difficulty Impossible");
 
+	if (GetConVarBool(g_cvar_Bloodmoon_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_Bloodmoon_ColorFile, ccFile, sizeof(ccFile));
+		int fogVol = -1;
+		DiffBase_CreateColorCorrection(ccFile, GetConVarFloat(g_cvar_Bloodmoon_ColorWeight), g_iCCRef_BM, fogVol, "bm_cc");
+	}
+
 	PrintToChatAll("\x04[Bloodmoon]\x01 Luna de Sangre ACTIVADA! (x%.2f dano)",
 		GetConVarFloat(g_cvar_Bloodmoon_DmgMult));
 }
@@ -329,6 +348,7 @@ void Bloodmoon_Deactivate(const char[] reason = "manual")
 	if (!g_bBloodmoonActive) return;
 	#pragma unused reason
 
+	DiffBase_Debug("Bloodmoon", "Deactivate (razon: %s)", reason);
 	g_bBloodmoonActive  = false;
 	g_iTankCount_BM     = 0;
 	g_fLastTankSpawn_BM = g_fLastPanicEvent_BM = 0.0;
@@ -344,6 +364,8 @@ void Bloodmoon_Deactivate(const char[] reason = "manual")
 	DiffBase_RemoveTonemapController(g_iTonemapRef_BM);
 	BM_RemovePrecipitation();
 	DiffBase_RemoveAmbientParticles(g_iParticleRefs_BM, g_iParticleTotal_BM);
+	int fogVolBM = -1;
+	DiffBase_RemoveColorCorrection(g_iCCRef_BM, fogVolBM);
 
 	BM_StopFogTimer();
 	DiffBase_RemoveFogController(g_iFogRef_BM);
@@ -395,6 +417,13 @@ public Action BM_Timer_FogEnforcer(Handle timer)
 		GetConVarInt(g_cvar_Bloodmoon_FogStart),
 		GetConVarInt(g_cvar_Bloodmoon_FogEnd),
 		GetConVarFloat(g_cvar_Bloodmoon_FogDensity));
+
+	if (GetConVarBool(g_cvar_Bloodmoon_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_Bloodmoon_ColorFile, ccFile, sizeof(ccFile));
+		DiffBase_EnsureColorCorrection(g_iCCRef_BM, ccFile, GetConVarFloat(g_cvar_Bloodmoon_ColorWeight), "bm_cc");
+	}
 
 	return Plugin_Continue;
 }

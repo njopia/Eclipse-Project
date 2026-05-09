@@ -45,6 +45,7 @@ Handle g_cvar_DiffOrch_Enable          = INVALID_HANDLE;
 Handle g_cvar_DiffOrch_ProgressionEnable = INVALID_HANDLE;
 Handle g_cvar_DiffOrch_MutualExclusion = INVALID_HANDLE;
 Handle g_cvar_DiffOrch_AutoUnlock      = INVALID_HANDLE;
+Handle g_cvar_DiffOrch_Debug           = INVALID_HANDLE;
 
 // Handles registrados por cada modo (indice = DifficultyMode)
 Handle g_hModeConVars[5];
@@ -85,6 +86,13 @@ public void DifficultyOrchestrator_OnPluginStart()
 		"Desbloqueo automatico al cumplir requisitos",
 		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
+	g_cvar_DiffOrch_Debug = CreateConVar(
+		"difficulty_debug", "0",
+		"Debug de modos de dificultad (chat + log + servidor)",
+		FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
+	HookConVarChange(g_cvar_DiffOrch_Debug, _DiffOrch_ConVarChanged_Debug);
+
 	for (int i = 0; i < 5; i++)
 		g_hModeConVars[i] = INVALID_HANDLE;
 
@@ -102,10 +110,49 @@ public void DifficultyOrchestrator_OnPluginStart()
 	RegAdminCmd("sm_diffreset",     Command_Alias_Reset,     ADMFLAG_ROOT, "Resetear progresion");
 }
 
+public void _DiffOrch_ConVarChanged_Debug(Handle convar, const char[] oldValue, const char[] newValue)
+{
+	g_bDiffDebug = view_as<bool>(StringToInt(newValue));
+	if (g_bDiffDebug)
+	{
+		PrintToServer("[DBG/Orch] Debug habilitado");
+		LogMessage("[DBG/Orch] Debug habilitado");
+		PrintToChatAll("\x04[DBG/Orch]\x01 Debug de modos habilitado");
+	}
+}
+
 public void DifficultyOrchestrator_OnMapStart()
 {
 	g_bFinaleCompleted = false;
 	_DiffOrch_DetectActiveMode();
+	DiffBase_Debug("Orch", "MapStart: modo detectado = %d, wins = %d", view_as<int>(g_CurrentMode), g_iDifficultyWins);
+
+	// Si habia un modo activo, re-aplicarlo despues de que todos los OnMapStart
+	// terminen (los modulos resetean g_bXxxActive=false en su OnMapStart).
+	if (g_CurrentMode != MODE_NONE)
+		CreateTimer(2.0, _DiffOrch_Timer_ReapplyMode, _, TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public Action _DiffOrch_Timer_ReapplyMode(Handle timer)
+{
+	if (g_CurrentMode == MODE_NONE) return Plugin_Stop;
+
+	Handle h = g_hModeConVars[view_as<int>(g_CurrentMode)];
+	if (h == INVALID_HANDLE) return Plugin_Stop;
+
+	DiffBase_Debug("Orch", "ReapplyMode: re-aplicando modo %d tras map change", view_as<int>(g_CurrentMode));
+
+	if (GetConVarBool(h))
+	{
+		// Forzar re-activacion: toggle off (orquestador suprimido, modulo ya inactivo)
+		// luego toggle on (hook del modulo activa, orquestador actualiza estado + mutex).
+		g_bOrchestratorChanging = true;
+		SetConVarBool(h, false);
+		g_bOrchestratorChanging = false;
+		SetConVarBool(h, true);
+	}
+
+	return Plugin_Stop;
 }
 
 // =============================================================================
@@ -135,7 +182,11 @@ public void Event_FinaleWin(Event event, const char[] name, bool dontBroadcast)
 
 public void Event_MissionLost(Event event, const char[] name, bool dontBroadcast)
 {
+	DiffBase_Debug("Orch", "MissionLost: reseteando wins y modo (era %d)", view_as<int>(g_CurrentMode));
 	g_iDifficultyWins = 0;
+
+	if (g_CurrentMode != MODE_NONE)
+		DifficultyOrchestrator_SetMode(MODE_NONE);
 }
 
 public Action Timer_ProcessProgression(Handle timer)
@@ -219,6 +270,8 @@ static void _DiffOrch_ProcessProgression()
 public void DifficultyOrchestrator_SetMode(DifficultyMode mode)
 {
 	if (!GetConVarBool(g_cvar_DiffOrch_Enable)) return;
+
+	DiffBase_Debug("Orch", "SetMode: %d -> %d", view_as<int>(g_CurrentMode), view_as<int>(mode));
 
 	g_PreviousMode = g_CurrentMode;
 	g_CurrentMode  = mode;
@@ -325,6 +378,7 @@ public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, c
 	if (newVal == 1)
 	{
 		// Activacion manual: actualizar estado y aplicar mutual exclusion
+		DiffBase_Debug("Orch", "ConVarChanged: activacion manual modo %d (prev=%d)", view_as<int>(changedMode), view_as<int>(g_CurrentMode));
 		g_PreviousMode = g_CurrentMode;
 		g_CurrentMode  = changedMode;
 
@@ -338,6 +392,7 @@ public void ConVarChanged_ModeActivation(Handle convar, const char[] oldValue, c
 		// Desactivacion manual: si era el modo activo, pasar a NONE
 		if (changedMode == g_CurrentMode)
 		{
+			DiffBase_Debug("Orch", "ConVarChanged: desactivacion modo %d -> NONE", view_as<int>(changedMode));
 			g_PreviousMode = g_CurrentMode;
 			g_CurrentMode  = MODE_NONE;
 		}
@@ -368,6 +423,7 @@ static void _DiffOrch_DetectActiveMode()
 		g_PreviousMode = g_CurrentMode;
 		g_CurrentMode  = detected;
 		LogMessage("[DiffOrch] Detected active mode: %d", view_as<int>(g_CurrentMode));
+		DiffBase_Debug("Orch", "DetectMode: %d -> %d", view_as<int>(g_PreviousMode), view_as<int>(g_CurrentMode));
 	}
 }
 

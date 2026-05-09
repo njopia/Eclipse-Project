@@ -54,6 +54,9 @@ Handle g_cvar_Inferno_TonemapEnable          = INVALID_HANDLE;
 Handle g_cvar_Inferno_BloomScale             = INVALID_HANDLE;
 Handle g_cvar_Inferno_ExposureMin            = INVALID_HANDLE;
 Handle g_cvar_Inferno_ExposureMax            = INVALID_HANDLE;
+Handle g_cvar_Inferno_ColorCorrection        = INVALID_HANDLE;
+Handle g_cvar_Inferno_ColorFile              = INVALID_HANDLE;
+Handle g_cvar_Inferno_ColorWeight            = INVALID_HANDLE;
 
 // ConVars del juego
 Handle g_zCVAR_CommonLimit_Inf = INVALID_HANDLE;
@@ -67,6 +70,7 @@ Handle g_zCVAR_Difficulty_Inf  = INVALID_HANDLE;
 // =============================================================================
 
 bool   g_bInfernoActive              = false;
+int    g_iCCRef_Inf                  = INVALID_ENT_REFERENCE;
 bool   g_bIsInstaCapper_Inf[MAXPLAYERS + 1];
 int    g_iFogRef_Inf         = -1;
 Handle g_hFogTimer_Inf       = null;
@@ -92,7 +96,7 @@ int    g_iTonemapRef_Inf    = -1;
 
 public void Inferno_OnPluginStart()
 {
-	g_cvar_Inferno_Enable      = CreateConVar("inferno_enable",           "1",          "Habilita Inferno Mode",             FCVAR_PLUGIN);
+	g_cvar_Inferno_Enable      = CreateConVar("inferno_enable",           "0",          "Habilita Inferno Mode",             FCVAR_PLUGIN);
 	g_cvar_Inferno_DmgMult     = CreateConVar("inferno_damage_mult",      "2.0",        "Multiplicador de dano a Survivors", FCVAR_PLUGIN);
 	g_cvar_Inferno_Fade        = CreateConVar("inferno_fade",             "1",          "Overlay amarillo-naranja",          FCVAR_PLUGIN);
 	g_cvar_Inferno_ChangeDiff  = CreateConVar("inferno_change_difficulty","1",          "Cambiar dificultad a Imposible",    FCVAR_PLUGIN);
@@ -134,6 +138,9 @@ public void Inferno_OnPluginStart()
 	g_cvar_Inferno_BloomScale          = CreateConVar("inferno_bloom_scale",            "5.0",  "Intensidad bloom",                       FCVAR_PLUGIN, true, 0.0);
 	g_cvar_Inferno_ExposureMin         = CreateConVar("inferno_exposure_min",           "0.4",  "Exposicion minima",                      FCVAR_PLUGIN, true, 0.0);
 	g_cvar_Inferno_ExposureMax         = CreateConVar("inferno_exposure_max",           "0.9",  "Exposicion maxima",                      FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Inferno_ColorCorrection = CreateConVar("inferno_color_correction", "1",                                           "Color correction activa",        FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Inferno_ColorFile       = CreateConVar("inferno_color_file",       "materials/correction/urban_night_red.pwl.raw","Archivo .pwl.raw de correccion", FCVAR_PLUGIN);
+	g_cvar_Inferno_ColorWeight     = CreateConVar("inferno_color_weight",     "0.35",                                        "Intensidad 0.0-1.0",             FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_zCVAR_CommonLimit_Inf = FindConVar("z_common_limit");
 	g_zCVAR_MobMin_Inf      = FindConVar("z_mob_spawn_min_size");
@@ -174,6 +181,7 @@ public void Inferno_OnMapStart()
 	g_iTankCount_Inf      = 0;
 	g_fLastTankSpawn_Inf  = g_fLastPanic_Inf = 0.0;
 	g_iTonemapRef_Inf     = -1;
+	g_iCCRef_Inf          = INVALID_ENT_REFERENCE;
 	for (int i = 0; i <= MaxClients; i++) g_bIsInstaCapper_Inf[i] = false;
 	PrecacheSound("npc/mega_mob/mega_mob_incoming.wav", true);
 	PrecacheModel("models/props_debris/concrete_chunk01a.mdl", true);
@@ -205,6 +213,8 @@ public void Inferno_ConVarChanged(Handle convar, const char[] oldValue, const ch
 	bool bOld = view_as<bool>(StringToInt(oldValue));
 	if (bNew == bOld) return;
 
+	DiffBase_Debug("Inferno", "ConVarChanged: %s -> %s", oldValue, newValue);
+
 	if (bNew && !g_bInfernoActive)
 		Inferno_Activate("convar");
 	else if (!bNew && g_bInfernoActive)
@@ -233,6 +243,7 @@ void Inferno_Activate(const char[] reason = "manual")
 	if (g_bInfernoActive) return;
 	#pragma unused reason
 
+	DiffBase_Debug("Inferno", "Activate (razon: %s)", reason);
 	DiffBase_BackupDirector(
 		g_zCVAR_CommonLimit_Inf, g_zCVAR_MobMin_Inf, g_zCVAR_MobMax_Inf,
 		g_zCVAR_MegaMob_Inf,     g_zCVAR_Difficulty_Inf,
@@ -295,6 +306,14 @@ void Inferno_Activate(const char[] reason = "manual")
 	if (GetConVarBool(g_cvar_Inferno_ChangeDiff))
 		ServerCommand("z_difficulty Impossible");
 
+	if (GetConVarBool(g_cvar_Inferno_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_Inferno_ColorFile, ccFile, sizeof(ccFile));
+		int fogVol = -1;
+		DiffBase_CreateColorCorrection(ccFile, GetConVarFloat(g_cvar_Inferno_ColorWeight), g_iCCRef_Inf, fogVol, "inf_cc");
+	}
+
 	PrintToChatAll("\x04[Inferno]\x01 INFERNO SUPREMO ACTIVADO! El fuego eterno te aguarda (x%.2f dano)",
 		GetConVarFloat(g_cvar_Inferno_DmgMult));
 }
@@ -308,6 +327,7 @@ void Inferno_Deactivate(const char[] reason = "manual")
 	if (!g_bInfernoActive) return;
 	#pragma unused reason
 
+	DiffBase_Debug("Inferno", "Deactivate (razon: %s)", reason);
 	g_bInfernoActive  = false;
 	g_iTankCount_Inf  = 0;
 	Inferno_StopEventTimer();
@@ -320,6 +340,8 @@ void Inferno_Deactivate(const char[] reason = "manual")
 
 	DiffBase_RemoveTonemapController(g_iTonemapRef_Inf);
 	DiffBase_RemoveAmbientParticles(g_iParticleRefs_Inf, g_iParticleTotal_Inf);
+	int fogVolInf = -1;
+	DiffBase_RemoveColorCorrection(g_iCCRef_Inf, fogVolInf);
 	Inferno_StopFogTimer();
 	DiffBase_RemoveFogController(g_iFogRef_Inf);
 
@@ -370,6 +392,13 @@ public Action Inferno_Timer_FogEnforcer(Handle timer)
 		GetConVarInt(g_cvar_Inferno_FogStart),
 		GetConVarInt(g_cvar_Inferno_FogEnd),
 		GetConVarFloat(g_cvar_Inferno_FogDensity));
+
+	if (GetConVarBool(g_cvar_Inferno_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_Inferno_ColorFile, ccFile, sizeof(ccFile));
+		DiffBase_EnsureColorCorrection(g_iCCRef_Inf, ccFile, GetConVarFloat(g_cvar_Inferno_ColorWeight), "inf_cc");
+	}
 
 	return Plugin_Continue;
 }
@@ -447,7 +476,11 @@ public Action Inferno_Timer_Events(Handle timer)
 				{
 					GetClientAbsAngles(target, ang);
 					int tank = L4D2_SpawnTank(pos, ang);
-					if (tank > 0) g_iTankCount_Inf++;
+					if (tank > 0)
+					{
+						g_iTankCount_Inf++;
+						DiffBase_Debug("Inferno", "Tank spawneado (total: %d/%d)", g_iTankCount_Inf, tankMax);
+					}
 				}
 			}
 			g_fLastTankSpawn_Inf = now;
@@ -460,12 +493,13 @@ public Action Inferno_Timer_Events(Handle timer)
 		float interval = GetConVarFloat(g_cvar_Inferno_PanicInterval);
 		if (interval > 0.0 && (now - g_fLastPanic_Inf) >= interval)
 		{
+			DiffBase_Debug("Inferno", "Panic event forzado");
 			L4D_ForcePanicEvent();
 			g_fLastPanic_Inf = now;
 		}
 	}
 
-	// 3. Witches (cascada agresiva: hasta 5 spawns por tick, enrage x6)
+	// 3. Witches (cascada agresiva: hasta 5 spawns por tick)
 	if (GetConVarBool(g_cvar_Inferno_WitchEnable))
 	{
 		int witchMax   = GetConVarInt(g_cvar_Inferno_WitchMax);
@@ -478,14 +512,14 @@ public Action Inferno_Timer_Events(Handle timer)
 		if (witchCount < witchMax / 5)     DiffBase_SpawnWitch();
 
 		DiffBase_RecycleWitches(float(GetConVarInt(g_cvar_Inferno_WitchRecycleDist)));
-		// Enrage masivo: 6 pasadas
-		for (int j = 0; j < 6; j++)
-			DiffBase_EnrageWitches(GetRandomInt(2, 6));
+		// No se usa L4D2_Infected_OnHitByVomitJar para enrage: causa efecto visual
+		// de bile de boomer sobre survivors. Las witches detectan naturalmente al
+		// survivor al spawnear cerca via L4D_GetRandomPZSpawnPosition.
 	}
 
-	// 4. Eliminar comunes (para dejar paso a las witches)
+	// 4. Reciclar comunes lejanos (libera slots sin borrar los que estan en combate)
 	if (GetConVarBool(g_cvar_Inferno_RemoveCommons))
-		DiffBase_RemoveCommonInfected();
+		DiffBase_RecycleCommonInfected(2000.0);
 
 	// 5. Meteoros: siempre revisar rocks cerca del suelo; lanzar nuevo segun chance
 	if (GetConVarBool(g_cvar_Inferno_MeteorEnable))

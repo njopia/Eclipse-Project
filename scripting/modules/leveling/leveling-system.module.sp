@@ -343,12 +343,7 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
 
 	// Ya no cargamos datos aqui - esto causaba resets si fallaba la BD
 	// Los datos se cargan SOLO en OnClientPostAdminCheck (al conectar)
-
-	// Aplicar pasivas si el jugador tiene nivel (datos ya cargados)
-	if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
-	{
-		LevelingRewards_ApplyRewardsSilent(client, g_iPlayerLevel[client]);
-	}
+	// Las pasivas se aplican en Event_PlayerSpawn_Rewards (leveling-rewards.module.sp)
 
 	return Plugin_Continue;
 }

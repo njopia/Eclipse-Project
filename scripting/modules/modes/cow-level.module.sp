@@ -23,6 +23,9 @@ Handle g_cvar_CowLevel_ExposureMax = INVALID_HANDLE;
 Handle g_cvar_CowLevel_MegaMobSound = INVALID_HANDLE;
 Handle g_cvar_CowLevel_MegaMobSoundChance = INVALID_HANDLE;
 Handle g_cvar_CowLevel_RemoveSpecials = INVALID_HANDLE;
+Handle g_cvar_CowLevel_ColorCorrection = INVALID_HANDLE;
+Handle g_cvar_CowLevel_ColorFile      = INVALID_HANDLE;
+Handle g_cvar_CowLevel_ColorWeight    = INVALID_HANDLE;
 
 // ConVars del juego
 Handle z_common_limit_cowlevel = INVALID_HANDLE;
@@ -41,6 +44,7 @@ char   g_sOrigDifficulty_CowLevel[16];
 // Estado
 bool   g_bCowLevelActive = false;
 int    g_iCowLevel_TonemapRef = -1;
+int    g_iCCRef_CowLevel      = INVALID_ENT_REFERENCE;
 int    g_iCowLevelSpawns = 0;
 float  g_fCowLevel_LastPanicEvent = 0.0;
 float  g_fCowLevel_MapStartTime = 0.0;
@@ -71,6 +75,11 @@ public void CowLevel_OnPluginStart()
 	// Special Infected Removal
 	g_cvar_CowLevel_RemoveSpecials = CreateConVar("cowlevel_remove_specials", "1", "Remover infected especiales (solo zombies comunes)", FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
+	// Color Correction
+	g_cvar_CowLevel_ColorCorrection = CreateConVar("cowlevel_color_correction", "1",                                           "Color correction activa",        FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_CowLevel_ColorFile       = CreateConVar("cowlevel_color_file",       "materials/correction/urban_night_red.pwl.raw","Archivo .pwl.raw de correccion", FCVAR_PLUGIN);
+	g_cvar_CowLevel_ColorWeight     = CreateConVar("cowlevel_color_weight",     "0.3",                                         "Intensidad 0.0-1.0",             FCVAR_PLUGIN, true, 0.0, true, 1.0);
+
 	// Obtener ConVars del juego
 	z_common_limit_cowlevel = FindConVar("z_common_limit");
 	z_mob_spawn_min_size_cowlevel = FindConVar("z_mob_spawn_min_size");
@@ -99,6 +108,7 @@ public void CowLevel_ConVarChanged(Handle convar, const char[] oldValue, const c
 {
 	if (convar == g_cvar_CowLevel_Enable)
 	{
+		DiffBase_Debug("CowLevel", "ConVarChanged: %s -> %s", oldValue, newValue);
 		bool bNewState = GetConVarBool(g_cvar_CowLevel_Enable);
 
 		if (bNewState && !g_bCowLevelActive)
@@ -132,6 +142,7 @@ public void CowLevel_OnMapStart()
 	// Reset estado
 	g_iCowLevelSpawns = 0;
 	g_iCowLevel_TonemapRef = -1;
+	g_iCCRef_CowLevel      = INVALID_ENT_REFERENCE;
 
 	// Limpiar array de cows
 	if (g_aCowEntities != null)
@@ -232,6 +243,7 @@ void CowLevel_Activate()
 	}
 
 	LogMessage("[Cow Level] ============ ACTIVATION START ============");
+	DiffBase_Debug("CowLevel", "Activate");
 
 	// Cachear y aplicar Configuracion del director
 	CowLevel_CacheOriginalDirector();
@@ -263,6 +275,14 @@ void CowLevel_Activate()
 			GetConVarFloat(g_cvar_CowLevel_ExposureMax),
 			g_iCowLevel_TonemapRef);
 
+	if (GetConVarBool(g_cvar_CowLevel_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_CowLevel_ColorFile, ccFile, sizeof(ccFile));
+		int fogVol = -1;
+		DiffBase_CreateColorCorrection(ccFile, GetConVarFloat(g_cvar_CowLevel_ColorWeight), g_iCCRef_CowLevel, fogVol, "cow_cc");
+	}
+
 	// Iniciar timer de eventos
 	if (g_hCowLevel_EventTimer == null)
 	{
@@ -283,6 +303,7 @@ void CowLevel_Deactivate()
 {
 	if (!g_bCowLevelActive) return;
 
+	DiffBase_Debug("CowLevel", "Deactivate");
 	g_bCowLevelActive = false;
 
 	// Restaurar Configuracion del director
@@ -298,8 +319,10 @@ void CowLevel_Deactivate()
 	// Remover cows
 	CowLevel_RemoveCowSpawns();
 
-	// Remover tonemap
+	// Remover tonemap y color correction
 	DiffBase_RemoveTonemapController(g_iCowLevel_TonemapRef);
+	int fogVolCow = -1;
+	DiffBase_RemoveColorCorrection(g_iCCRef_CowLevel, fogVolCow);
 
 	// Anunciar desactivacion
 	SetGlobalTransTarget(LANG_SERVER);
@@ -349,6 +372,14 @@ public Action Timer_CowLevelEvents(Handle timer)
 	if (GetConVarBool(g_cvar_CowLevel_RemoveSpecials))
 	{
 		CowLevel_RemoveNonZombies();
+	}
+
+	// Asegurar color correction activa (re-crea si el mapa la destruyo)
+	if (GetConVarBool(g_cvar_CowLevel_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_CowLevel_ColorFile, ccFile, sizeof(ccFile));
+		DiffBase_EnsureColorCorrection(g_iCCRef_CowLevel, ccFile, GetConVarFloat(g_cvar_CowLevel_ColorWeight), "cow_cc");
 	}
 
 	return Plugin_Continue;

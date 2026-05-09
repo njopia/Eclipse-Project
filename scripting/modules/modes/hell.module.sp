@@ -48,6 +48,9 @@ Handle g_cvar_Hell_TonemapEnable         = INVALID_HANDLE;
 Handle g_cvar_Hell_BloomScale            = INVALID_HANDLE;
 Handle g_cvar_Hell_ExposureMin           = INVALID_HANDLE;
 Handle g_cvar_Hell_ExposureMax           = INVALID_HANDLE;
+Handle g_cvar_Hell_ColorCorrection       = INVALID_HANDLE;
+Handle g_cvar_Hell_ColorFile             = INVALID_HANDLE;
+Handle g_cvar_Hell_ColorWeight           = INVALID_HANDLE;
 
 // ConVars del juego
 Handle g_zCVAR_CommonLimit_Hell = INVALID_HANDLE;
@@ -62,6 +65,7 @@ Handle g_zCVAR_Difficulty_Hell  = INVALID_HANDLE;
 
 bool   g_bHellActive      = false;
 int    g_iFogRef_Hell     = -1;
+int    g_iCCRef_Hell      = INVALID_ENT_REFERENCE;
 Handle g_hFogTimer_Hell   = null;
 int    g_iParticleRefs_Hell[16];
 int    g_iParticleTotal_Hell = 0;
@@ -85,7 +89,7 @@ int    g_iTonemapRef_Hell    = -1;
 
 public void Hell_OnPluginStart()
 {
-	g_cvar_Hell_Enable      = CreateConVar("hell_enable",           "1",          "Habilita Hell Mode",               FCVAR_PLUGIN);
+	g_cvar_Hell_Enable      = CreateConVar("hell_enable",           "0",          "Habilita Hell Mode",               FCVAR_PLUGIN);
 	g_cvar_Hell_DmgMult     = CreateConVar("hell_damage_mult",      "1.5",        "Multiplicador de dano a Survivors", FCVAR_PLUGIN);
 	g_cvar_Hell_Fade        = CreateConVar("hell_fade",             "1",          "Overlay naranja-rojo persistente", FCVAR_PLUGIN);
 	g_cvar_Hell_ChangeDiff  = CreateConVar("hell_change_difficulty","1",          "Cambiar dificultad a Imposible",   FCVAR_PLUGIN);
@@ -121,6 +125,9 @@ public void Hell_OnPluginStart()
 	g_cvar_Hell_BloomScale            = CreateConVar("hell_bloom_scale",            "4.0",  "Intensidad bloom",                   FCVAR_PLUGIN, true, 0.0);
 	g_cvar_Hell_ExposureMin           = CreateConVar("hell_exposure_min",           "0.3",  "Exposicion minima",                  FCVAR_PLUGIN, true, 0.0);
 	g_cvar_Hell_ExposureMax           = CreateConVar("hell_exposure_max",           "0.7",  "Exposicion maxima",                  FCVAR_PLUGIN, true, 0.0);
+	g_cvar_Hell_ColorCorrection = CreateConVar("hell_color_correction", "1",                                           "Color correction activa",        FCVAR_PLUGIN, true, 0.0, true, 1.0);
+	g_cvar_Hell_ColorFile       = CreateConVar("hell_color_file",       "materials/correction/urban_night_red.pwl.raw","Archivo .pwl.raw de correccion", FCVAR_PLUGIN);
+	g_cvar_Hell_ColorWeight     = CreateConVar("hell_color_weight",     "0.65",                                        "Intensidad 0.0-1.0",             FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_zCVAR_CommonLimit_Hell = FindConVar("z_common_limit");
 	g_zCVAR_MobMin_Hell      = FindConVar("z_mob_spawn_min_size");
@@ -150,6 +157,7 @@ public void Hell_OnMapStart()
 	g_iOrigCommonLimit_Hell = g_iOrigMobMin_Hell = g_iOrigMobMax_Hell = g_iOrigMegaMob_Hell = -1;
 	g_sOrigDifficulty_Hell[0] = '\0';
 	g_iFogRef_Hell = -1;
+	g_iCCRef_Hell  = INVALID_ENT_REFERENCE;
 	for (int i = 0; i < 16; i++) g_iParticleRefs_Hell[i] = -1;
 	g_iParticleTotal_Hell = 0;
 	g_fMapStart_Hell      = GetGameTime();
@@ -187,6 +195,8 @@ public void Hell_ConVarChanged(Handle convar, const char[] oldValue, const char[
 	bool bOld = view_as<bool>(StringToInt(oldValue));
 	if (bNew == bOld) return;
 
+	DiffBase_Debug("Hell", "ConVarChanged: %s -> %s", oldValue, newValue);
+
 	if (bNew && !g_bHellActive)
 		Hell_Activate("convar");
 	else if (!bNew && g_bHellActive)
@@ -215,6 +225,7 @@ void Hell_Activate(const char[] reason = "manual")
 	if (g_bHellActive) return;
 	#pragma unused reason
 
+	DiffBase_Debug("Hell", "Activate (razon: %s)", reason);
 	DiffBase_BackupDirector(
 		g_zCVAR_CommonLimit_Hell, g_zCVAR_MobMin_Hell, g_zCVAR_MobMax_Hell,
 		g_zCVAR_MegaMob_Hell,     g_zCVAR_Difficulty_Hell,
@@ -276,6 +287,14 @@ void Hell_Activate(const char[] reason = "manual")
 	if (GetConVarBool(g_cvar_Hell_ChangeDiff))
 		ServerCommand("z_difficulty Impossible");
 
+	if (GetConVarBool(g_cvar_Hell_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_Hell_ColorFile, ccFile, sizeof(ccFile));
+		int fogVol = -1;
+		DiffBase_CreateColorCorrection(ccFile, GetConVarFloat(g_cvar_Hell_ColorWeight), g_iCCRef_Hell, fogVol, "hell_cc");
+	}
+
 	PrintToChatAll("\x04[Hell]\x01 Modo Infierno ACTIVADO! Las llamas te consumiran (x%.2f dano)",
 		GetConVarFloat(g_cvar_Hell_DmgMult));
 }
@@ -289,6 +308,7 @@ void Hell_Deactivate(const char[] reason = "manual")
 	if (!g_bHellActive) return;
 	#pragma unused reason
 
+	DiffBase_Debug("Hell", "Deactivate (razon: %s)", reason);
 	g_bHellActive     = false;
 	g_iTankCount_Hell = 0;
 	Hell_StopEventTimer();
@@ -301,6 +321,8 @@ void Hell_Deactivate(const char[] reason = "manual")
 
 	DiffBase_RemoveTonemapController(g_iTonemapRef_Hell);
 	DiffBase_RemoveAmbientParticles(g_iParticleRefs_Hell, g_iParticleTotal_Hell);
+	int fogVolHell = -1;
+	DiffBase_RemoveColorCorrection(g_iCCRef_Hell, fogVolHell);
 	Hell_StopFogTimer();
 	DiffBase_RemoveFogController(g_iFogRef_Hell);
 
@@ -350,6 +372,13 @@ public Action Hell_Timer_FogEnforcer(Handle timer)
 		GetConVarInt(g_cvar_Hell_FogStart),
 		GetConVarInt(g_cvar_Hell_FogEnd),
 		GetConVarFloat(g_cvar_Hell_FogDensity));
+
+	if (GetConVarBool(g_cvar_Hell_ColorCorrection))
+	{
+		char ccFile[PLATFORM_MAX_PATH];
+		GetConVarString(g_cvar_Hell_ColorFile, ccFile, sizeof(ccFile));
+		DiffBase_EnsureColorCorrection(g_iCCRef_Hell, ccFile, GetConVarFloat(g_cvar_Hell_ColorWeight), "hell_cc");
+	}
 
 	return Plugin_Continue;
 }

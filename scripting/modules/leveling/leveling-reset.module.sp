@@ -121,6 +121,12 @@ void LevelingReset_Execute(int client, int targetLevel)
 
 	Leveling_UpdatePlayerDatabase(client);
 
+	// Strip passive reward flags immediately — they are cached on spawn and won't
+	// update on their own until the next round. Re-applying with the new level
+	// sets every flag to false for rewards above targetLevel.
+	if (IsPlayerAlive(client))
+		LevelingRewards_ApplyRewardsSilent(client, targetLevel);
+
 	PrintToChat(client, "\x04[Eclipse]\x01 Tu nivel ha sido reseteado de \x05%d\x01 a \x05%d\x01. ¡Buena suerte!",
 		oldLevel, targetLevel);
 

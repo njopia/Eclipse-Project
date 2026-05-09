@@ -153,6 +153,10 @@ stock void DiffBase_ApplyFogSettings(int ent, const char[] color, int fogStart, 
 
 stock void DiffBase_EnsureFogController(int& fogRef, const char[] color, int fogStart, int fogEnd, float density)
 {
+	// Re-disable map fog controllers every tick — the game re-enables them after
+	// a few seconds via map entity I/O, causing a smooth transition that wipes our fog.
+	DiffBase_DisableMapFogControllers(fogRef);
+
 	int ent = EntRefToEntIndex(fogRef);
 	if (ent == -1 || !IsValidEntity(ent))
 	{
@@ -371,6 +375,18 @@ stock void DiffBase_RemoveColorCorrection(int& colorCorrectionRef, int& fogVolum
 	fogVolumeRef = -1;
 }
 
+// Igual que CreateColorCorrection pero solo actua si la entidad ya no existe.
+// Llamar desde el fog enforcer timer para mantener el efecto vivo.
+stock void DiffBase_EnsureColorCorrection(int& ccRef, const char[] file, float weight, const char[] targetName)
+{
+	if (!file[0]) return;
+	int ent = EntRefToEntIndex(ccRef);
+	if (ent != -1 && IsValidEntity(ent)) return;
+
+	int fogVolumeRef = -1;
+	DiffBase_CreateColorCorrection(file, weight, ccRef, fogVolumeRef, targetName);
+}
+
 // =============================================================================
 // TONEMAP CONTROLLER
 // =============================================================================
@@ -499,4 +515,40 @@ stock void DiffBase_RemoveCommonInfected()
 	int entity = -1;
 	while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
 		AcceptEntityInput(entity, "Kill");
+}
+
+// Elimina comunes que estan a mas de maxDist unidades de cualquier survivor
+stock void DiffBase_RecycleCommonInfected(float maxDist)
+{
+	int entity = -1;
+	while ((entity = FindEntityByClassname(entity, "infected")) != INVALID_ENT_REFERENCE)
+	{
+		float pos[3];
+		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", pos);
+		if (DiffBase_GetNearestSurvivorDist(pos) > maxDist)
+			AcceptEntityInput(entity, "Kill");
+	}
+}
+
+// =============================================================================
+// DEBUG
+// =============================================================================
+
+bool g_bDiffDebug = false;
+
+// Emite un mensaje de debug a chat, log y consola del servidor.
+// Solo actua si g_bDiffDebug == true.
+stock void DiffBase_Debug(const char[] tag, const char[] fmt, any ...)
+{
+	if (!g_bDiffDebug) return;
+
+	char msg[512];
+	VFormat(msg, sizeof(msg), fmt, 3);
+
+	char line[576];
+	Format(line, sizeof(line), "[DBG/%s] %s", tag, msg);
+
+	PrintToServer("%s", line);
+	LogMessage("%s", line);
+	PrintToChatAll("\x04[DBG/%s]\x01 %s", tag, msg);
 }
