@@ -14,6 +14,7 @@
 #define ADMIN_DB_NAME	"admins"
 #define PLAYERS_DB_NAME "players"
 #define DB_HUD_MESSAGES PLAYERS_DB_NAME
+#tryinclude "utils/database_schema.utils.sp"
 #tryinclude "utils/database.utils.sp"
 
 #define PLUGIN_VERSION "1.0.0"
@@ -300,14 +301,14 @@ public void OnPluginStart()
 	{
 		doSqlConnectionPlayers(PLAYERS_DB_NAME);	// Separate handle for players
 	}
+
 	if (checkDBFile(ADMIN_DB_NAME))
 	{
 		doSqlConnection(ADMIN_DB_NAME);	   // Handle for admins
 	}
-	if (checkDBFile(DB_HUD_MESSAGES))
-	{
-		doSqlConnection(DB_HUD_MESSAGES);	 // Handle for HUD messages
-	}
+
+	// DB_HUD_MESSAGES usa la misma conexión que PLAYERS_DB_NAME ("players").
+	// La conexión se gestiona ahora a través del handle de players para mayor eficiencia.
 
 	// Initialize buy menu
 	buyMenuOnPluginStart();

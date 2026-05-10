@@ -10,8 +10,10 @@ public bool doSqlConnection(const char[] databaseName)
 	g_hDb = SQL_Connect(databaseName, true, Error, sizeof(Error));
 	if (g_hDb == INVALID_HANDLE)
 	{
+		LogError("[EMS-SQL] Error conectando a '%s': %s", databaseName, Error);
 		return false;
 	}
+	EMS_InitializeDatabaseSchema(view_as<Database>(g_hDb), databaseName);
 	return true;
 }
 
@@ -21,8 +23,10 @@ public bool doSqlConnectionPlayers(const char[] databaseName)
 	g_hDbPlayers = SQL_Connect(databaseName, true, Error, sizeof(Error));
 	if (g_hDbPlayers == INVALID_HANDLE)
 	{
+		LogError("[EMS-SQL] Error conectando a DB de jugadores '%s': %s", databaseName, Error);
 		return false;
 	}
+	EMS_InitializeDatabaseSchema(view_as<Database>(g_hDbPlayers), databaseName);
 	return true;
 }
 bool checkDBFile(const char[] databaseName)
