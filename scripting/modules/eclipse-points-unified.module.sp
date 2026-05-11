@@ -8,7 +8,7 @@
 // currency-events y leveling-xp-events
 //
 // Un solo evento otorga AMBOS tipos de puntos:
-// - Currency Points (para compras) - Persiste entre mapas, se resetea al desconectar
+// - Currency Points (para compras) - Se resetea en cada mapa y al desconectar
 // - XP Points (para subir de nivel) - Se guarda en BD
 //==================================================
 
@@ -33,9 +33,6 @@ ConVar cvar_PointsSurvivalRound;
 bool g_bPlayerLeftSafeArea[MAXPLAYERS + 1];
 bool g_bMapCompleteAwarded[MAXPLAYERS + 1];
 
-// ConVar para detectar dificultad del servidor
-Handle g_hCvarDifficulty = INVALID_HANDLE;
-
 /**
  * Inicializa el modulo de puntos unificados
  * Debe ser llamado desde OnPluginStart()
@@ -50,8 +47,8 @@ public void EclipsePointsUnified_OnPluginStart()
 	// Cada ConVar controla AMBOS sistemas (Currency + XP)
 
 	// IMPORTANTE: Los valores configurados aqui son para dificultad EASY
-	// Se multiplican automaticamente segun la dificultad:
-	// Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
+	// La Currency se multiplica x1.5 en Easy y se reduce en dificultades altas.
+	// La XP se reduce x0.5 en Easy y se multiplica en dificultades altas.
 
 	cvar_PointsCommonKill = CreateConVar(
 		"eclipse_points_common_kill",
@@ -196,9 +193,6 @@ public void EclipsePointsUnified_OnPluginStart()
 	// Survival mode
 	HookEvent("survival_round_start", EclipsePoints_Event_SurvivalRound, EventHookMode_Post);
 
-	// Obtener ConVar de dificultad del servidor
-	g_hCvarDifficulty = FindConVar("z_difficulty");
-
 	LogMessage("[Eclipse Points] Sistema unificado de puntos inicializado");
 }
 
@@ -211,7 +205,17 @@ public void EclipsePointsUnified_OnMapStart()
 	{
 		g_bPlayerLeftSafeArea[i] = false;
 		g_bMapCompleteAwarded[i] = false;
+
+		// Reset de moneda (Currency): Usamos funciones oficiales para evitar errores de visibilidad.
+		if (IsClientInGame(i) && !IsFakeClient(i))
+		{
+			int iBalance = GetPlayerCurrency(i);
+			if (iBalance > 0)
+				AwardCurrency(i, -iBalance, "Reseteo de Mapa");
+		}
 	}
+
+	PrintToChatAll("\x04[Eclipse]\x01 \x05La economía ha sido reiniciada\x01 para el nuevo mapa. ¡Buena suerte!");
 }
 
 /**
@@ -227,54 +231,6 @@ public void EclipsePointsUnified_OnClientDisconnect(int client)
 // === FUNCIONES DE DIFICULTAD ===
 //==================================================
 
-/**
- * Obtiene el multiplicador de dificultad actual del servidor
- * Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
- *
- * NOTA: Este multiplicador afecta tanto a Currency como a XP
- * Currency persiste entre mapas (se resetea al desconectar), XP se guarda en BD
- *
- * @return Multiplicador de puntos segun dificultad
- */
-int GetDifficultyMultiplier()
-{
-	if (g_hCvarDifficulty == INVALID_HANDLE)
-		return 1; // Default a Easy si no se puede detectar
-
-	char difficulty[32];
-	GetConVarString(g_hCvarDifficulty, difficulty, sizeof(difficulty));
-
-	// Determinar multiplicador basado en la dificultad
-	if (StrEqual(difficulty, "Easy", false))
-		return 1;
-	else if (StrEqual(difficulty, "Normal", false))
-		return 2;
-	else if (StrEqual(difficulty, "Hard", false) || StrEqual(difficulty, "Advanced", false))
-		return 3;
-	else if (StrEqual(difficulty, "Impossible", false) || StrEqual(difficulty, "Expert", false))
-		return 4;
-
-	return 1; // Default a Easy
-}
-
-/**
- * Verifica si la dificultad actual es Easy
- * NOTA: Esta funcion se mantiene por compatibilidad
- * Currency persiste entre mapas pero no se guarda en BD
- *
- * @return true si es Easy, false en caso contrario
- */
-/* bool IsEasyDifficulty()
-{
-	if (g_hCvarDifficulty == INVALID_HANDLE)
-		return true; // Default a Easy si no se puede detectar
-
-	char difficulty[32];
-	GetConVarString(g_hCvarDifficulty, difficulty, sizeof(difficulty));
-
-	return StrEqual(difficulty, "Easy", false);
-} */
-
 //==================================================
 // === FUNCION CENTRAL DE OTORGAMIENTO DE PUNTOS ===
 //==================================================
@@ -282,11 +238,12 @@ int GetDifficultyMultiplier()
 /**
  * Otorga puntos UNIFICADOS a un jugador
  * Esta funcion otorga AMBOS tipos de puntos simultaneamente:
- * - Currency (para compras) - Persiste entre mapas, se resetea al desconectar (NO se guarda en BD)
+ * - Currency (para compras) - Se resetea en cada mapa y al desconectar (NO se guarda en BD)
  * - XP (para niveles) - Se guarda en BD
  *
- * Los puntos se multiplican segun la dificultad:
- * Easy = 1x, Normal = 2x, Advanced = 3x, Expert = 4x
+ * Multiplicadores aplicados dinamicamente:
+ * Currency: Facil(1.5x) -> Experto(0.6x)
+ * XP:       Facil(0.5x) -> Experto(2.5x)
  *
  * @param client        Cliente que recibe los puntos
  * @param points        Cantidad de puntos BASE a otorgar (se multiplica por dificultad)
@@ -300,12 +257,18 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 	if (points <= 0)
 		return;
 
-	// Aplicar multiplicador de dificultad
-	int difficultyMultiplier = GetDifficultyMultiplier();
-	int finalPoints = points * difficultyMultiplier;
+	// 1. Calcular Currency (Mas facil = mas dinero)
+	float fCurrencyMult = EMS_GetCurrencyMultiplier();
+	int finalCurrency = RoundToNearest(float(points) * fCurrencyMult);
+	if (finalCurrency < 1 && points >= 1) finalCurrency = 1;
 
+	// 2. Calcular XP (Mas facil = menos XP)
+	float fXPMult = EMS_GetXPMultiplier();
+	int finalXP = RoundToNearest(float(points) * fXPMult);
+	if (finalXP < 1 && points >= 1) finalXP = 1;
+	
 	// Otorgar Currency Points (sistema de compras)
-	AwardCurrency(client, finalPoints, reason);
+	AwardCurrency(client, finalCurrency, reason);
 
 	// Actualizar estadisticas de currency segun el tipo de evento
 	if (StrContains(reason, "comun", false) != -1 || StrContains(reason, "comun", false) != -1)
@@ -318,7 +281,7 @@ void AwardUnifiedPoints(int client, int points, const char[] reason)
 		CurrencyStats_AddHeal(client);
 
 	// Otorgar XP Points (sistema de niveles)
-	Leveling_AwardXP(client, finalPoints, reason);
+	Leveling_AwardXP(client, finalXP, reason);
 
 	// Log para debugging con dificultad
 	// LogMessage("[Eclipse Points] %N recibio %d puntos (%d base x%d dificultad) por: %s",
@@ -601,9 +564,9 @@ public Action EclipsePoints_Event_MapComplete(Event event, const char[] name, bo
 {
 	int points = cvar_PointsCompleteMap.IntValue;
 
-	// Aplicar multiplicador de dificultad
-	int difficultyMultiplier = GetDifficultyMultiplier();
-	int finalPoints = points * difficultyMultiplier;
+	// Aplicar multiplicador de XP basado en riesgo
+	float fMultiplier = EMS_GetXPMultiplier();
+	int finalXP = RoundToNearest(float(points) * fMultiplier);
 
 	// Otorgar a todos los survivors vivos que participaron
 	for (int client = 1; client <= MaxClients; client++)
@@ -614,11 +577,11 @@ public Action EclipsePoints_Event_MapComplete(Event event, const char[] name, bo
 			if (g_bPlayerLeftSafeArea[client] && !g_bMapCompleteAwarded[client])
 			{
 				// SOLO otorgar XP, NO currency
-				Leveling_AwardXP(client, finalPoints, "Completar mapa");
+				Leveling_AwardXP(client, finalXP, "Completar mapa");
 				g_bMapCompleteAwarded[client] = true;
 
 				// Mostrar mensaje al jugador
-				PrintToChat(client, "\x04[Eclipse]\x01 +%d XP por completar el mapa", finalPoints);
+				PrintToChat(client, "\x04[Eclipse]\x01 +%d XP por completar el mapa", finalXP);
 			}
 		}
 	}

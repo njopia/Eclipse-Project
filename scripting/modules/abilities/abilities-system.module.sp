@@ -45,7 +45,6 @@ enum AbilityIndex
 
 // ConVars
 ConVar cvar_AbilitiesEnabled;
-ConVar cvar_AbilitiesDebug;
 
 /**
  * Inicializa el sistema de abilities
@@ -54,7 +53,6 @@ public void Abilities_OnPluginStart()
 {
 	// ConVars
 	cvar_AbilitiesEnabled = CreateConVar("abilities_enabled", "1", "Habilita el sistema de abilities (1 = habilitado, 0 = deshabilitado)", FCVAR_PLUGIN);
-	cvar_AbilitiesDebug	  = CreateConVar("abilities_debug", "0", "Modo debug para abilities", FCVAR_PLUGIN);
 
 	// Timer para actualizar velocidad de melee (Berserker)
 	CreateTimer(0.1, Timer_UpdateAbilities, _, TIMER_REPEAT);
@@ -167,27 +165,52 @@ int Abilities_GetRequiredLevel(AbilityIndex ability)
 }
 
 /**
- * Obtiene el nombre de una ability
+ * Obtiene la descripción de una habilidad
  */
-void Abilities_GetName(AbilityIndex ability, char[] buffer, int maxlen)
+void Abilities_GetDescription(AbilityIndex ability, int client, char[] buffer, int maxlen)
 {
 	switch (ability)
 	{
-		case Ability_DetectZombie: strcopy(buffer, maxlen, "Detect Zombie");
-		case Ability_Berserker: strcopy(buffer, maxlen, "Berserker");
-		case Ability_AcidBath: strcopy(buffer, maxlen, "Acid Bath");
-		case Ability_Lifestealer: strcopy(buffer, maxlen, "Lifestealer");
-		case Ability_Flameshield: strcopy(buffer, maxlen, "Flameshield");
-		case Ability_Nightcrawler: strcopy(buffer, maxlen, "Nightcrawler");
-		case Ability_RapidFire: strcopy(buffer, maxlen, "Rapid Fire");
-		case Ability_ChainsawMassacre: strcopy(buffer, maxlen, "Chainsaw Massacre");
-		case Ability_HeatSeeker: strcopy(buffer, maxlen, "Heat Seeker");
-		case Ability_SpeedFreak: strcopy(buffer, maxlen, "Speed Freak");
-		case Ability_HealingAura: strcopy(buffer, maxlen, "Healing Aura");
-		case Ability_Soulshield: strcopy(buffer, maxlen, "Soulshield");
-		case Ability_Polymorph: strcopy(buffer, maxlen, "Polymorph");
-		case Ability_Instagib: strcopy(buffer, maxlen, "Instagib");
-		default: strcopy(buffer, maxlen, "Unknown");
+		case Ability_DetectZombie: Format(buffer, maxlen, "%T", "BM_Ability_DetectZombie_Desc", client);
+		case Ability_Berserker: Format(buffer, maxlen, "%T", "BM_Ability_Berserker_Desc", client);
+		case Ability_AcidBath: Format(buffer, maxlen, "%T", "BM_Ability_AcidBath_Desc", client);
+		case Ability_Lifestealer: Format(buffer, maxlen, "%T", "BM_Ability_LifeStealer_Desc", client);
+		case Ability_Flameshield: Format(buffer, maxlen, "%T", "BM_Ability_Flameshield_Desc", client);
+		case Ability_Nightcrawler: Format(buffer, maxlen, "%T", "BM_Ability_Nightcrawler_Desc", client);
+		case Ability_RapidFire: Format(buffer, maxlen, "%T", "BM_Ability_RapidFire_Desc", client);
+		case Ability_ChainsawMassacre: Format(buffer, maxlen, "%T", "BM_Ability_ChainsawMassacre_Desc", client);
+		case Ability_HeatSeeker: Format(buffer, maxlen, "%T", "BM_Ability_HeatSeeker_Desc", client);
+		case Ability_SpeedFreak: Format(buffer, maxlen, "%T", "BM_Ability_SpeedFreak_Desc", client);
+		case Ability_HealingAura: Format(buffer, maxlen, "%T", "BM_Ability_HealingAura_Desc", client);
+		case Ability_Soulshield: Format(buffer, maxlen, "%T", "BM_Ability_Soulshield_Desc", client);
+		case Ability_Polymorph: Format(buffer, maxlen, "%T", "BM_Ability_Polymorph_Desc", client);
+		case Ability_Instagib: Format(buffer, maxlen, "%T", "BM_Ability_Instagib_Desc", client);
+		default: Format(buffer, maxlen, "%T", "UI_NoDescription", client);
+	}
+}
+
+/**
+ * Obtiene el nombre de una ability
+ */
+void Abilities_GetName(AbilityIndex ability, int client, char[] buffer, int maxlen)
+{
+	switch (ability)
+	{
+		case Ability_DetectZombie: Format(buffer, maxlen, "%T", "BM_Ability_DetectZombie", client);
+		case Ability_Berserker: Format(buffer, maxlen, "%T", "BM_Ability_Berserker", client);
+		case Ability_AcidBath: Format(buffer, maxlen, "%T", "BM_Ability_AcidBath", client);
+		case Ability_Lifestealer: Format(buffer, maxlen, "%T", "BM_Ability_LifeStealer", client);
+		case Ability_Flameshield: Format(buffer, maxlen, "%T", "BM_Ability_Flameshield", client);
+		case Ability_Nightcrawler: Format(buffer, maxlen, "%T", "BM_Ability_Nightcrawler", client);
+		case Ability_RapidFire: Format(buffer, maxlen, "%T", "BM_Ability_RapidFire", client);
+		case Ability_ChainsawMassacre: Format(buffer, maxlen, "%T", "BM_Ability_ChainsawMassacre", client);
+		case Ability_HeatSeeker: Format(buffer, maxlen, "%T", "BM_Ability_HeatSeeker", client);
+		case Ability_SpeedFreak: Format(buffer, maxlen, "%T", "BM_Ability_SpeedFreak", client);
+		case Ability_HealingAura: Format(buffer, maxlen, "%T", "BM_Ability_HealingAura", client);
+		case Ability_Soulshield: Format(buffer, maxlen, "%T", "BM_Ability_Soulshield", client);
+		case Ability_Polymorph: Format(buffer, maxlen, "%T", "BM_Ability_Polymorph", client);
+		case Ability_Instagib: Format(buffer, maxlen, "%T", "BM_Ability_Instagib", client);
+		default: Format(buffer, maxlen, "%T", "UI_Unknown", client);
 	}
 }
 
@@ -263,21 +286,21 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 	// Verificar si el sistema esta habilitado
 	if (!GetConVarBool(cvar_AbilitiesEnabled))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 El sistema de abilities esta deshabilitado.");
+		PrintToChat(client, "\x04[Abilities]\x01 %T", "System_Disabled", client, "Abilities");
 		return false;
 	}
 
 	// Verificar equipo
 	if (GetClientTeam(client) != 2)
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 Solo los Survivors pueden usar abilities.");
+		PrintToChat(client, "\x04[Abilities]\x01 %T", "TSB_OnlyForSurvivors", client);
 		return false;
 	}
 
 	// Verificar si esta vivo
 	if (!IsPlayerAlive(client))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 Debes estar vivo para usar esta ability.");
+		PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_MustBeAlive", client);
 		return false;
 	}
 
@@ -285,42 +308,46 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 	if (!Abilities_HasAccess(client, ability))
 	{
 		int required = Abilities_GetRequiredLevel(ability);
-		PrintToChat(client, "\x04[Abilities]\x01 Necesitas nivel %d para usar esta ability.", required);
+		char desc[256], abilityName[64];
+		Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
+		Abilities_GetDescription(ability, client, desc, sizeof(desc));
+		
+		// Usar traduccion para el formato de informacion de habilidad bloqueada
+		PrintToChat(client, "\x04[Abilities]\x01 %T: \x05%s", "Ability_Info_Locked", client, abilityName, required, desc);
 		return false;
 	}
 
 	// Verificar cooldown
 	if (Abilities_IsOnCooldown(client, ability))
 	{
-		float remaining = Abilities_GetCooldownRemaining(client, ability);
-		int	  minutes	= RoundToFloor(remaining / 60.0);
-		int	  seconds	= RoundToFloor(remaining) % 60;
-		PrintToChat(client, "\x04[Abilities]\x01 Cooldown: %d:%02d restantes.", minutes, seconds);
+		int iRemaining = RoundToNearest(Abilities_GetCooldownRemaining(client, ability));
+		char desc[256], abilityName[64];
+		Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
+		Abilities_GetDescription(ability, client, desc, sizeof(desc));
+		
+		// Informar sobre el cooldown y mostrar la descripcion
+		PrintToChat(client, "\x04[Abilities]\x01 %T: \x05%s", "Ability_OnCooldown", client, abilityName, iRemaining, desc);
 		return false;
 	}
 
 	// Verificar si ya esta activa
 	if (Abilities_IsActive(client, ability))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 Esta ability ya esta activa.");
-		return false;
-	}
-	if (Abilities_HasAnyActive(client))
-	{
-		PrintToChat(client, "\x04[Abilities]\x01 Ya tienes una habilidad activa. Espera a que termine.");
+		char abilityName[64];
+		Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
+		PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_AlreadyActive", client, abilityName);
 		return false;
 	}
 
-	// Verificar si ya esta activa (esta es la que ya tenias, puedes dejarla o quitarla ya que la de arriba cubre todo)
-	if (Abilities_IsActive(client, ability))
+	if (Abilities_HasAnyActive(client))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 Esta ability ya esta activa.");
+		PrintToChat(client, "\x04[Abilities]\x01 %T", "UI_Waiting", client);
 		return false;
 	}
-	// Activar la ability segun su tipo
+
 	bool success = false;
 	char abilityName[64];
-	Abilities_GetName(ability, abilityName, sizeof(abilityName));
+	Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
 
 	switch (ability)
 	{
@@ -357,12 +384,7 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		WritePackCell(data, GetClientUserId(client));
 		WritePackCell(data, view_as<int>(ability));
 
-		PrintToChat(client, "\x04[%s]\x01 Ability activada! Duracion: %.0f segundos.", abilityName, ABILITY_DURATION);
-
-		if (GetConVarBool(cvar_AbilitiesDebug))
-		{
-			PrintToChat(client, "\x03[DEBUG]\x01 Cooldown establecido: %.0f segundos.", ABILITY_COOLDOWN);
-		}
+		PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_Activated", client, abilityName);
 	}
 
 	return success;
@@ -385,8 +407,8 @@ public Action Timer_AbilityEnd(Handle timer, Handle data)
 	Abilities_Deactivate(client, ability);
 
 	char abilityName[64];
-	Abilities_GetName(ability, abilityName, sizeof(abilityName));
-	PrintToChat(client, "\x04[%s]\x01 Ability desactivada.", abilityName);
+	Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
+	PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_Deactivated", client, abilityName);
 
 	return Plugin_Stop;
 }
@@ -471,16 +493,11 @@ public Action Command_AbilitiesMenu(int client, int args)
 void ShowAbilitiesMenu(int client)
 {
 	int level = Leveling_GetPlayerLevel(client);
-
-	// Nivel minimo para acceder al menu (basado en la primera habilidad: Detect Zombie nivel 3)
-	if (level < 3)
-	{
-		PrintToChat(client, "\x04[Abilities]\x01 Necesitas alcanzar el nivel 3 para desbloquear habilidades.");
-		return;
-	}
+	char title[128];
+	Format(title, sizeof(title), "%T", "Abilities_MenuTitle", client, level);
 
 	Menu menu = new Menu(AbilitiesMenu_Handler);
-	menu.SetTitle("=== MENU DE HABILIDADES ===\nNivel: %d\n ", level);
+	menu.SetTitle(title);
 
 	char display[128];
 	char info[8];
@@ -494,45 +511,46 @@ void ShowAbilitiesMenu(int client)
 		AbilityIndex ability  = view_as<AbilityIndex>(i);
 		int			 reqLevel = Abilities_GetRequiredLevel(ability);
 
-		// Solo mostrar habilidades que ya han sido desbloqueadas por nivel
-		if (level >= reqLevel)
+		char abilityName[64];
+		Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
+		int style = ITEMDRAW_DEFAULT;
+
+		// CASO 0: Habilidad bloqueada por nivel
+		if (level < reqLevel)
 		{
-			char abilityName[64];
-			Abilities_GetName(ability, abilityName, sizeof(abilityName));
-
-			int style = ITEMDRAW_DEFAULT;
-
-			// CASO 1: La habilidad esta actualmente activa
-			if (Abilities_IsActive(client, ability))
-			{
-				Format(display, sizeof(display), "%s [ACTIVA]", abilityName);
-				// Opcional: style = ITEMDRAW_DISABLED; // Si no quieres que puedan clickear la activa
-			}
-			// CASO 2: La habilidad esta en Cooldown
-			else if (Abilities_IsOnCooldown(client, ability))
-			{
-				float remaining = Abilities_GetCooldownRemaining(client, ability);
-				int	  minutes	= RoundToFloor(remaining / 60.0);
-				int	  seconds	= RoundToFloor(remaining) % 60;
-				Format(display, sizeof(display), "%s [CD: %d:%02d]", abilityName, minutes, seconds);
-				style = ITEMDRAW_DISABLED;
-			}
-			// CASO 3: Hay OTRA habilidad activa (Bloqueo de simultaneidad)
-			else if (bAnyActive)
-			{
-				Format(display, sizeof(display), "%s [ESPERA]", abilityName);
-				style = ITEMDRAW_DISABLED;
-			}
-			// CASO 4: Lista para usar
-			else
-			{
-				Format(display, sizeof(display), "%s [LISTO]", abilityName);
-				style = ITEMDRAW_DEFAULT;
-			}
-
-			Format(info, sizeof(info), "%d", i);
-			menu.AddItem(info, display, style);
+			Format(display, sizeof(display), "%s [%T]", abilityName, "UI_Locked", client, reqLevel);
+			style = ITEMDRAW_DEFAULT; // Permitir click para ver info
 		}
+		// CASO 1: La habilidad esta actualmente activa
+		else if (Abilities_IsActive(client, ability))
+		{
+			Format(display, sizeof(display), "%s [%T]", abilityName, "UI_Active", client);
+			// Opcional: style = ITEMDRAW_DISABLED; // Si no quieres que puedan clickear la activa
+		}
+		// CASO 2: La habilidad esta en Cooldown
+		else if (Abilities_IsOnCooldown(client, ability))
+		{
+			float remaining = Abilities_GetCooldownRemaining(client, ability);
+			int	  minutes	= RoundToFloor(remaining / 60.0);
+			int	  seconds	= RoundToFloor(remaining) % 60;
+			Format(display, sizeof(display), "%s [%T: %d:%02d]", abilityName, "UI_Cooldown", client, minutes, seconds);
+				style = ITEMDRAW_DEFAULT; // Permitir click para ver info
+		}
+		// CASO 3: Hay OTRA habilidad activa (Bloqueo de simultaneidad)
+		else if (bAnyActive)
+		{
+			Format(display, sizeof(display), "%s [%T]", abilityName, "UI_Waiting", client);
+				style = ITEMDRAW_DEFAULT; // Permitir click para ver info
+		}
+		// CASO 4: Lista para usar
+		else
+		{
+			Format(display, sizeof(display), "%s [%T]", abilityName, "UI_Ready", client);
+			style = ITEMDRAW_DEFAULT;
+		}
+
+		Format(info, sizeof(info), "%d", i);
+		menu.AddItem(info, display, style);
 	}
 
 	menu.ExitBackButton = true;
@@ -715,10 +733,10 @@ public Action Timer_UpdateAbilitiesHUD(Handle timer)
 				int	  seconds	= RoundToFloor(remaining);
 
 				char abilityName[64];
-				Abilities_GetName(ability, abilityName, sizeof(abilityName));
+				Abilities_GetName(ability, i, abilityName, sizeof(abilityName));
 
 				if (seconds > 0)
-					PrintHintText(i, "%s: %ds restantes", abilityName, seconds);
+					PrintHintText(i, "%s: %ds %T", abilityName, seconds, "TSB_TimeRemaining_Label", i);
 
 				break;
 			}

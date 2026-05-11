@@ -8,12 +8,12 @@
 //==================================================
 
 // --- Arrays para estadisticas de currency ---
-int g_iCurrencyEarned[MAXPLAYERS + 1];        // Total de currency ganada por sesion
-int g_iCommonKills[MAXPLAYERS + 1];           // Total de infectados comunes matados
-int g_iSpecialKills[MAXPLAYERS + 1];          // Total de especiales matados
-int g_iHeadshots[MAXPLAYERS + 1];             // Total de headshots
-int g_iTotalRevivals[MAXPLAYERS + 1];         // Total de revives dados
-int g_iTotalHeals[MAXPLAYERS + 1];            // Total de curaciones dadas
+int g_iCurrencyEarned[MAXPLAYERS + 1];	  // Total de currency ganada por sesion
+int g_iCommonKills[MAXPLAYERS + 1];		  // Total de infectados comunes matados
+int g_iSpecialKills[MAXPLAYERS + 1];	  // Total de especiales matados
+int g_iHeadshots[MAXPLAYERS + 1];		  // Total de headshots
+int g_iTotalRevivals[MAXPLAYERS + 1];	  // Total de revives dados
+int g_iTotalHeals[MAXPLAYERS + 1];		  // Total de curaciones dadas
 
 /**
  * Inicializa el modulo de estadisticas de currency
@@ -22,6 +22,10 @@ public void CurrencyStats_OnPluginStart()
 {
 	// No hay ConVars, solo inicializacion de arrays
 	// Los arrays se resetean en ResetPlayerCurrencyStats()
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		ResetPlayerCurrencyStats(i);
+	}
 }
 
 /**
@@ -31,11 +35,11 @@ public void CurrencyStats_OnPluginStart()
 public void ResetPlayerCurrencyStats(int client)
 {
 	g_iCurrencyEarned[client] = 0;
-	g_iCommonKills[client] = 0;
-	g_iSpecialKills[client] = 0;
-	g_iHeadshots[client] = 0;
-	g_iTotalRevivals[client] = 0;
-	g_iTotalHeals[client] = 0;
+	g_iCommonKills[client]	  = 0;
+	g_iSpecialKills[client]	  = 0;
+	g_iHeadshots[client]	  = 0;
+	g_iTotalRevivals[client]  = 0;
+	g_iTotalHeals[client]	  = 0;
 }
 
 /**

@@ -67,27 +67,27 @@ bool g_bOrchestratorChanging = false;
 public void DifficultyOrchestrator_OnPluginStart()
 {
 	g_cvar_DiffOrch_Enable = CreateConVar(
-		"difficulty_orchestrator_enable", "1",
+		"difficulty_orchestrator_enable", "0",
 		"Habilita el orquestador de dificultad",
 		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_ProgressionEnable = CreateConVar(
-		"difficulty_progression_enable", "1",
+		"difficulty_progression_enable", "0",
 		"Progresion automatica al ganar campanas",
 		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_MutualExclusion = CreateConVar(
-		"difficulty_mutual_exclusion", "1",
+		"difficulty_mutual_exclusion", "0",
 		"Solo un modo activo a la vez",
 		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_AutoUnlock = CreateConVar(
-		"difficulty_auto_unlock", "1",
+		"difficulty_auto_unlock", "0",
 		"Desbloqueo automatico al cumplir requisitos",
 		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
 	g_cvar_DiffOrch_Debug = CreateConVar(
-		"difficulty_debug", "0",
+		"difficulty_debug", "1",
 		"Debug de modos de dificultad (chat + log + servidor)",
 		FCVAR_PLUGIN, true, 0.0, true, 1.0);
 
@@ -148,8 +148,8 @@ public Action _DiffOrch_Timer_ReapplyMode(Handle timer)
 		// luego toggle on (hook del modulo activa, orquestador actualiza estado + mutex).
 		g_bOrchestratorChanging = true;
 		SetConVarBool(h, false);
-		g_bOrchestratorChanging = false;
 		SetConVarBool(h, true);
+		g_bOrchestratorChanging = false;
 	}
 
 	return Plugin_Stop;

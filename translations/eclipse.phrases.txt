@@ -80,6 +80,58 @@
     "tr"  "Çılgın Savaşçı"
     "chi" "狂战士"
   }
+  "BM_Ability_DetectZombie"
+  {
+    "en"  "Detect Zombie"
+    "es"  "Detectar Zombi"
+    "pt"  "Detectar Zumbi"
+    "fr"  "Détecter Zombie"
+    "de"  "Zombie erkennen"
+    "ru"  "Детектор зомби"
+    "it"  "Rileva Zombie"
+    "pl"  "Wykrywanie Zombie"
+    "tr"  "Zombi Tespit Et"
+    "chi" "探测僵尸"
+  }
+  "BM_Ability_DetectZombie_Desc"
+  {
+    "en"  "Reveals the aura of nearby infected through obstacles."
+    "es"  "Revela el aura de los infectados cercanos a través de obstáculos."
+    "pt"  "Revela a aura de infectados próximos através de obstáculos."
+    "fr"  "Révèle l'aura des infectés proches à travers les obstacles."
+    "de"  "Enthüllt die Aura von Infizierten in der Nähe durch Hindernisse."
+    "ru"  "Подсвечивает ауру ближайших зараженных сквозь препятствия."
+    "it"  "Rivela l'aura degli infetti vicini attraverso gli ostacoli."
+    "pl"  "Ujawnia aurę pobliskich zarażonych przez przeszkody."
+    "tr"  "Yakındaki enfektelerin aurasını engellerin arkasından gösterir."
+    "chi" "透过障碍物显示附近感染者的光环。"
+  }
+  "BM_Ability_Flameshield"
+  {
+    "en"  "Flameshield"
+    "es"  "Escudo de Fuego"
+    "pt"  "Escudo de Chamas"
+    "fr"  "Bouclier de Flammes"
+    "de"  "Flammenschild"
+    "ru"  "Огненный щит"
+    "it"  "Scudo di Fiamme"
+    "pl"  "Ognista Tarcza"
+    "tr"  "Alev Kalkanı"
+    "chi" "火焰护盾"
+  }
+  "BM_Ability_Flameshield_Desc"
+  {
+    "en"  "Fire immunity and creates an aura that burns nearby infected."
+    "es"  "Inmunidad al fuego y genera un aura que quema infectados cercanos."
+    "pt"  "Imunidade ao fogo e cria uma aura que queima infectados próximos."
+    "fr"  "Immunité au feu et crée une aura qui brûle les infectés proches."
+    "de"  "Feuerimmunität und erzeugt eine Aura, die Infizierte in der Nähe verbrennt."
+    "ru"  "Иммунитет к огню и аура, поджигающая ближайших зараженных."
+    "it"  "Immunità al fuoco e crea un'aura que brucia gli infetti vicini."
+    "pl"  "Odporność na ogień i aura podpalająca pobliskich zarażonych."
+    "tr"  "Ateş bağışıklığı sağlar ve yakındaki enfekteleri yakan bir aura oluşturur."
+    "chi" "火焰免疫并产生一个烧伤附近感染者的光环。"
+  }
   "BM_Ability_Berserker_Desc"
   {
     "en"  "Increases melee damage and resistance"
@@ -144,6 +196,214 @@
     "pl"  "Kradnie życie wrogom przy każdym uderzeniu"
     "tr"  "Her vuruşta düşmanlardan can çalar"
     "chi" "每次攻击从敌人处窃取生命"
+  }
+  "BM_Ability_Nightcrawler"
+  {
+    "en"  "Nightcrawler"
+    "es"  "Merodeador Nocturno"
+    "pt"  "Rastreador Noturno"
+    "fr"  "Rôdeur Nocturne"
+    "de"  "Nachtschleicher"
+    "ru"  "Ночной охотник"
+    "it"  "Predatore Notturno"
+    "pl"  "Nocny Łowca"
+    "tr"  "Gece Gezgini"
+    "chi" "暗夜行者"
+  }
+  "BM_Ability_Nightcrawler_Desc"
+  {
+    "en"  "You become invisible to the infected for a duration."
+    "es"  "Te vuelves invisible para los infectados durante un tiempo."
+    "pt"  "Você se torna invisível para os infectados por um tempo."
+    "fr"  "Vous devenez invisible pour les infectés pendant une durée."
+    "de"  "Du wirst für eine gewisse Zeit für Infizierte unsichtbar."
+    "ru"  "Вы становитесь невидимым для зараженных на некоторое время."
+    "it"  "Diventi invisibile agli infetti per una certa durata."
+    "pl"  "Stajesz się niewidzialny dla zarażonych na pewien czas."
+    "tr"  "Bir süreliğine enfekteler için görünmez olursunuz."
+    "chi" "在一段时间内对感染者隐身。"
+  }
+  "BM_Ability_RapidFire"
+  {
+    "en"  "Rapid Fire"
+    "es"  "Disparo Rápido"
+    "pt"  "Tiro Rápido"
+    "fr"  "Tir Rapide"
+    "de"  "Schnellfeuer"
+    "ru"  "Скорострельность"
+    "it"  "Fuoco Rapido"
+    "pl"  "Szybki Ostrzał"
+    "tr"  "Seri Ateş"
+    "chi" "极速射击"
+  }
+  "BM_Ability_RapidFire_Desc"
+  {
+    "en"  "Drastically increases the fire rate of your weapons."
+    "es"  "Aumenta drásticamente la cadencia de disparo de tus armas."
+    "pt"  "Aumenta drasticamente a cadência de tiro das suas armas."
+    "fr"  "Augmente considérablement la cadence de tir de vos armes."
+    "de"  "Erhöht drastisch die Feuerrate deiner Waffen."
+    "ru"  "Значительно увеличивает скорострельность вашего оружия."
+    "it"  "Aumenta drasticamente la cadenza di fuoco delle tue armi."
+    "pl"  "Drastycznie zwiększa szybkostrzelność twojej broni."
+    "tr"  "Silahlarınızın atış hızını büyük ölçüde artırır."
+    "chi" "大幅提升武器射速。"
+  }
+  "BM_Ability_ChainsawMassacre"
+  {
+    "en"  "Chainsaw Massacre"
+    "es"  "Masacre con Motosierra"
+    "pt"  "Massacre de Motosserra"
+    "fr"  "Massacre à la Tronçonneuse"
+    "de"  "Kettensägenmassaker"
+    "ru"  "Резня бензопилой"
+    "it"  "Massacro con Motosega"
+    "pl"  "Masakra Piłą Mechaniczną"
+    "tr"  "Elektrikli Testere Katliamı"
+    "chi" "电锯惊魂"
+  }
+  "BM_Ability_ChainsawMassacre_Desc"
+  {
+    "en"  "Improves chainsaw performance and grants extra experience."
+    "es"  "Mejora el rendimiento de la motosierra y otorga experiencia extra."
+    "pt"  "Melhora o desempenho da motosserra e concede experiência extra."
+    "fr"  "Améliore les performances de la tronçonneuse et accorde de l'expérience supplémentaire."
+    "de"  "Verbessert die Kettensägenleistung und gewährt zusätzliche Erfahrung."
+    "ru"  "Улучшает работу бензопилы и дает дополнительный опыт."
+    "it"  "Migliora le prestazioni della motosega e garantisce esperienza extra."
+    "pl"  "Poprawia wydajność piły mechanicznej i przyznaje dodatkowe doświadczenie."
+    "tr"  "Elektrikli testere performansını artırır ve ekstra deneyim sağlar."
+    "chi" "提升电锯性能并给予额外经验。"
+  }
+  "BM_Ability_HeatSeeker"
+  {
+    "en"  "Heat Seeker"
+    "es"  "Buscador de Calor"
+    "pt"  "Buscador de Calor"
+    "fr"  "Chercheur de Chaleur"
+    "de"  "Hitzesucher"
+    "ru"  "Тепловой наводчик"
+    "it"  "Ricerca Calore"
+    "pl"  "Poszukiwacz Ciepła"
+    "tr"  "Isı Güdümlü"
+    "chi" "热能追踪"
+  }
+  "BM_Ability_HeatSeeker_Desc"
+  {
+    "en"  "Your projectiles automatically chase enemies."
+    "es"  "Tus proyectiles persiguen automáticamente a los enemigos."
+    "pt"  "Seus projéteis perseguem automaticamente os inimigos."
+    "fr"  "Vos projectiles poursuivent automatiquement les ennemis."
+    "de"  "Deine Projektile verfolgen automatisch Feinde."
+    "ru"  "Ваши снаряды автоматически преследуют врагов."
+    "it"  "I tuoi proiettili inseguono automaticamente i nemici."
+    "pl"  "Twoje pociski automatycznie ścigają wrogów."
+    "tr"  "Mermileriniz düşmanları otomatik olarak takip eder."
+    "chi" "你的子弹会自动追踪敌人。"
+  }
+  "BM_Ability_HealingAura"
+  {
+    "en"  "Healing Aura"
+    "es"  "Aura de Curación"
+    "pt"  "Aura de Cura"
+    "fr"  "Aura de Soin"
+    "de"  "Heilungsaura"
+    "ru"  "Лечебная аура"
+    "it"  "Aura di Guarigione"
+    "pl"  "Aura Leczenia"
+    "tr"  "İyileştirme Aurası"
+    "chi" "治疗光环"
+  }
+  "BM_Ability_HealingAura_Desc"
+  {
+    "en"  "Generates a gradual healing zone for the entire team."
+    "es"  "Genera una zona de curación gradual para todo el equipo."
+    "pt"  "Gera uma zona de cura gradual para toda a equipe."
+    "fr"  "Génère une zone de soin graduel para toute l'équipe."
+    "de"  "Erzeugt eine schrittweise Heilungszone für das gesamte Team."
+    "ru"  "Создает зону постепенного исцеления для всей команды."
+    "it"  "Genera una zona di guarigione graduale per l'intera squadra."
+    "pl"  "Tworzy strefę stopniowego leczenia dla całego zespołu."
+    "tr"  "Tüm takım için kademeli bir iyileştirme bölgesi oluşturur."
+    "chi" "为整个团队产生一个持续治疗区域。"
+  }
+  "BM_Ability_Soulshield"
+  {
+    "en"  "Soulshield"
+    "es"  "Escudo de Almas"
+    "pt"  "Escudo de Almas"
+    "fr"  "Bouclier d'Âmes"
+    "de"  "Seelenschild"
+    "ru"  "Щит душ"
+    "it"  "Scudo de Anime"
+    "pl"  "Tarcza Dusz"
+    "tr"  "Ruh Kalkanı"
+    "chi" "灵魂护盾"
+  }
+  "BM_Ability_Soulshield_Desc"
+  {
+    "en"  "Protective shield that reduces damage taken based on your kills."
+    "es"  "Escudo protector que reduce el daño recibido según tus bajas."
+    "pt"  "Escudo protetor que reduz o dano recebido com base em suas mortes."
+    "fr"  "Bouclier protecteur qui réduit les dégâts subis en fonction de vos éliminations."
+    "de"  "Schutzschild, der erlittenen Schaden basierend auf deinen Kills reduziert."
+    "ru"  "Защитный щит, уменьшающий входящий урон в зависимости от ваших убийств."
+    "it"  "Scudo protettivo che riduce il danno subito in base alle tue uccisioni."
+    "pl"  "Tarcza ochronna zmniejszająca otrzymywane obrażenia na podstawie twoich zabójstw."
+    "tr"  "Öldürmelerinize bağlı olarak alınan hasarı azaltan koruyucu kalkan."
+    "chi" "根据你的击杀数减少所受伤害的保护盾。"
+  }
+  "BM_Ability_Polymorph"
+  {
+    "en"  "Polymorph"
+    "es"  "Polimorfia"
+    "pt"  "Polimorfia"
+    "fr"  "Polymorphie"
+    "de"  "Polymorphie"
+    "ru"  "Полиморф"
+    "it"  "Polimorfismo"
+    "pl"  "Polimorfia"
+    "tr"  "Polimorf"
+    "chi" "多态术"
+  }
+  "BM_Ability_Polymorph_Desc"
+  {
+    "en"  "Chance to transform dead infected into supplies."
+    "es"  "Probabilidad de transformar infectados muertos en suministros."
+    "pt"  "Chance de transformar infectados mortos em suprimentos."
+    "fr"  "Chance de transformer les infectés morts en fournitures."
+    "de"  "Chance, tote Infizierte in Vorräte zu verwandeln."
+    "ru"  "Шанс превратить убитых зараженных в припасы."
+    "it"  "Possibilità di trasformare gli infetti morti in rifornimenti."
+    "pl"  "Szansa na przemianę martwych zarażonych w zaopatrzenie."
+    "tr"  "Ölü enfekteleri ikmal malzemelerine dönüştürme şansı."
+    "chi" "有几率将死去的感染者转化为补给品。"
+  }
+  "BM_Ability_Instagib"
+  {
+    "en"  "Instagib"
+    "es"  "Muerte Instantánea"
+    "pt"  "Morte Instantânea"
+    "fr"  "Mort Instantanée"
+    "de"  "Sofortiger Tod"
+    "ru"  "Мгновенная смерть"
+    "it"  "Morte Istantanea"
+    "pl"  "Natychmiastowa Śmierć"
+    "tr"  "Anında Ölüm"
+    "chi" "秒杀"
+  }
+  "BM_Ability_Instagib_Desc"
+  {
+    "en"  "Your attacks instantly eliminate most infected."
+    "es"  "Tus ataques eliminan instantáneamente a la mayoría de infectados."
+    "pt"  "Seus ataques eliminam instantaneamente a maioria dos infectados."
+    "fr"  "Vos ataques éliminent instantanément la plupart des infectés."
+    "de"  "Deine Angriffe eliminieren die meisten Infizierten sofort."
+    "ru"  "Ваши атаки мгновенно уничтожают большинство зараженных."
+    "it"  "I tuoi attacchi eliminano istantaneamente la mayoría degli infetti."
+    "pl"  "Twoje ataki natychmiast eliminują większość zarażonych."
+    "tr"  "Saldırılarınız çoğu enfekteyi anında yok eder."
+    "chi" "你的攻击会瞬间消灭大多数感染者。"
   }
   "BM_Ability_SpeedFreak"
   {
@@ -283,6 +543,23 @@
     "tr"  "{1} zaten etkin."
     "chi" "{1} 已经激活。"
   }
+  "Ability_Info_Locked"
+  {
+    "#format" "{1:s},{2:i}"
+    "en"  "{1} (Lvl {2})"
+    "es"  "{1} (Nivel {2})"
+  }
+  "Ability_MustBeAlive"
+  {
+    "en"  "You must be alive to use this ability."
+    "es"  "Debes estar vivo para usar esta habilidad."
+  }
+  "Abilities_MenuTitle"
+  {
+    "#format" "{1:i}"
+    "en"  "=== ABILITIES MENU ===\nLevel: {1}\n "
+    "es"  "=== MENU DE HABILIDADES ===\nNivel: {1}\n "
+  }
 
   "BM_Deployables"
   {
@@ -348,6 +625,19 @@
     "pl"  "Działo Jonowe"
     "tr"  "İyon Topu"
     "chi" "离子炮"
+  }
+  "BM_Deployables_Sentry_Gun"
+  {
+    "en"  "Sentry Gun"
+    "es"  "Centinela"
+    "pt"  "Metralhadora Centinela"
+    "fr"  "Tourelle"
+    "de"  "Wachpistole"
+    "ru"  "Часовая пушка"
+    "it"  "Torretta"
+    "pl"  "Działko Strażnicze"
+    "tr"  "Nöbetçi Silahı"
+    "chi" "哨兵枪"
   }
   "BM_Deployables_Defense_Grid"
   {
@@ -507,6 +797,11 @@
     "pl"  "{1} aktywował Przyspieszenie Drużyny. Wszyscy są przyspieszeni!"
     "tr"  "{1} Takım Hız Artışı'nı etkinleştirdi. Herkes hızlandırıldı!"
     "chi" "{1} 激活了团队加速。所有人都被加速了！"
+  }
+  "TSB_TimeRemaining_Label"
+  {
+    "en"  "remaining"
+    "es"  "restantes"
   }
   "TSB_Expired"
   {
@@ -861,6 +1156,45 @@
     "pl"  "Gotowy"
     "tr"  "Hazır"
     "chi" "就绪"
+  }
+  "UI_Unknown"
+  {
+    "en"  "Unknown"
+    "es"  "Desconocido"
+    "pt"  "Desconhecido"
+    "fr"  "Inconnu"
+    "de"  "Unbekannt"
+    "ru"  "Неизвестно"
+    "it"  "Sconosciuto"
+    "pl"  "Nieznany"
+    "tr"  "Bilinmiyor"
+    "chi" "未知"
+  }
+  "UI_NoDescription"
+  {
+    "en"  "Description not available."
+    "es"  "Descripción no disponible."
+    "pt"  "Descrição não disponível."
+    "fr"  "Description non disponible."
+    "de"  "Beschreibung nicht verfügbar."
+    "ru"  "Описание недоступно."
+    "it"  "Descrizione non disponibile."
+    "pl"  "Opis niedostępny."
+    "tr"  "Açıklama mevcut değil."
+    "chi" "暂无描述。"
+  }
+  "UI_Waiting"
+  {
+    "en"  "WAITING"
+    "es"  "ESPERA"
+    "pt"  "AGUARDANDO"
+    "fr"  "ATTENTE"
+    "de"  "WARTEN"
+    "ru"  "ОЖИДАНИЕ"
+    "it"  "ATTESA"
+    "pl"  "OCZEKIWANIE"
+    "tr"  "BEKLEME"
+    "chi" "等待"
   }
   "UI_Used"
   {

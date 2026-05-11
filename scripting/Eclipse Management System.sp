@@ -264,9 +264,9 @@ public int Native_GetLevelProgress(Handle plugin, int numParams)
 
 /**
  * Native: Get player's currency/points
- * NOTA: Currency persiste durante la sesion (se mantiene entre mapas, se resetea al desconectar)
+ * NOTA: Currency se resetea en cada mapa y al desconectar
  * @param client Client index
- * @return Player's currency amount (session-persistent, not saved in DB)
+ * @return Player's currency amount (Volatile, not saved in DB)
  */
 public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 {
@@ -275,8 +275,97 @@ public int Native_GetPlayerCurrency(Handle plugin, int numParams)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client))
 		return 0;
 
-	// Currency persiste durante la sesion
+	// Currency se resetea en cada mapa
 	return GetPlayerCurrency(client);
+}
+
+/**
+ * Multiplicador de Economia (Currency):
+ * Ayuda al jugador en dificultades bajas.
+ * Facil: 1.5x | Normal: 1.0x | Avanzado: 0.8x | Experto: 0.6x
+ */
+stock float EMS_GetCurrencyMultiplier()
+{
+    ConVar hDiff = FindConVar("leveling_difficulty");
+    if (hDiff == null) return 1.0;
+
+    switch (hDiff.IntValue)
+    {
+        case 0: return 1.5; // Facil: Mas dinero para comprar equipo
+        case 1: return 1.0; // Normal
+        case 2: return 0.8; // Avanzado
+        case 3: return 0.6; // Experto: Recursos limitados
+        default: return 1.0;
+    }
+}
+
+/**
+ * Multiplicador de Prestigio (XP):
+ * Premia el riesgo y la habilidad.
+ * Facil: 0.5x | Normal: 1.0x | Avanzado: 1.5x | Experto: 2.5x
+ */
+stock float EMS_GetXPMultiplier()
+{
+    ConVar hDiff = FindConVar("leveling_difficulty");
+    if (hDiff == null) return 1.0;
+
+    switch (hDiff.IntValue)
+    {
+        case 0: return 0.5; // Facil: Menos XP por bajo riesgo
+        case 1: return 1.0; // Normal
+        case 2: return 1.5; // Avanzado: Bonus por peligro
+        case 3: return 2.5; // Experto: Recompensa maxima de nivel
+        default: return 1.0;
+    }
+}
+
+/**
+ * Sincroniza la dificultad de Eclipse cuando el grupo cambia la dificultad del juego
+ * mediante votación o menús nativos (z_difficulty).
+ */
+public void OnZDifficultyChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	ConVar hLevelDiff = FindConVar("leveling_difficulty");
+	if (hLevelDiff == null) return;
+
+	int iSyncVal = 1; // Default Normal
+
+	if (StrEqual(newValue, "Easy", false)) iSyncVal = 0;
+	else if (StrEqual(newValue, "Normal", false)) iSyncVal = 1;
+	else if (StrEqual(newValue, "Hard", false) || StrEqual(newValue, "Advanced", false)) iSyncVal = 2;
+	else if (StrEqual(newValue, "Impossible", false) || StrEqual(newValue, "Expert", false)) iSyncVal = 3;
+
+	// Al cambiar leveling_difficulty, se disparará automáticamente OnDifficultyChanged
+	// y se mostrará el mensaje de los multiplicadores en el chat.
+	if (hLevelDiff.IntValue != iSyncVal)
+	{
+		hLevelDiff.IntValue = iSyncVal;
+	}
+}
+
+/**
+ * Callback que se dispara cuando cambia la dificultad leveling_difficulty.
+ * Notifica a todos los jugadores los nuevos multiplicadores de recompensas.
+ */
+public void OnDifficultyChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	int iDiff = convar.IntValue;
+	float fCurrency = EMS_GetCurrencyMultiplier();
+	float fXP = EMS_GetXPMultiplier();
+
+	char sDiffName[32];
+	switch (iDiff)
+	{
+		case 0: sDiffName = "Fácil";
+		case 1: sDiffName = "Normal";
+		case 2: sDiffName = "Avanzado";
+		case 3: sDiffName = "Experto";
+		default: sDiffName = "Desconocida";
+	}
+
+	PrintToChatAll("\x04[Eclipse]\x01 La dificultad ha cambiado a: \x05%s", sDiffName);
+	PrintToChatAll("\x04[Eclipse]\x01 → Bono de \x03Economía\x01: \x05%.1fx", fCurrency);
+	PrintToChatAll("\x04[Eclipse]\x01 → Bono de \x03Prestigio (XP)\x01: \x05%.1fx", fXP);
 }
 
 //==================================================
@@ -375,6 +464,20 @@ public void OnPluginStart()
 
 	// Load translations
 	LoadTranslations("eclipse.phrases");
+
+	// Hook para cambios de dificultad en tiempo real
+	ConVar hDiff = FindConVar("leveling_difficulty");
+	if (hDiff != null)
+	{
+		hDiff.AddChangeHook(OnDifficultyChanged);
+	}
+
+	// Hook para cambios de dificultad nativa (Votos, Menú de pausa)
+	ConVar hZDiff = FindConVar("z_difficulty");
+	if (hZDiff != null)
+	{
+		hZDiff.AddChangeHook(OnZDifficultyChanged);
+	}
 
 	// Hook events
 	HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
@@ -1015,7 +1118,9 @@ public Action Timer_UpdateHostname(Handle timer)
 	// Update hostname with player count
 	char newHostname[128];
 	Format(newHostname, sizeof(newHostname), "%s [%d/%d] - Eclipse BETA Release", BASE_HOSTNAME, humans, maxplayers);
-	SetConVarString(FindConVar("hostname"), newHostname);
+	ConVar hHostname = FindConVar("hostname");
+	if (hHostname != null)
+		hHostname.SetString(newHostname);
 
 	return Plugin_Continue;
 }

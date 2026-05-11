@@ -117,9 +117,11 @@ public void FragsSystem_Event_PlayerDeath(Event event, const char[] name, bool d
 		if (isHeadshot)
 			basePoints += 3;
 
-		// Aplicar multiplicador de dificultad para mostrar puntos FINALES
-		int difficultyMultiplier = GetDifficultyMultiplier();
-		int finalPoints = basePoints * difficultyMultiplier;
+		// Aplicar multiplicador de economia (Currency) para mostrar puntos FINALES en el mensaje
+		// Concepto: Mas facil = Mas moneda
+		float fCurrencyMult = EMS_GetCurrencyMultiplier();
+		int finalPoints = RoundToNearest(float(basePoints) * fCurrencyMult);
+		if (finalPoints < 1 && basePoints >= 1) finalPoints = 1;
 
 		// Usar funcion centralizada de buy-menu para mostrar el mensaje con puntos FINALES
 		BuyMenu_PrintKillMessage(attacker, victim, Frags[attacker], FragsSystem_GetFragsPos(attacker), finalPoints);

@@ -39,7 +39,7 @@ Estos comandos están diseñados para solucionar problemas visuales o de red dur
 
 ## Notas Técnicas
 
-- **Persistencia de Currency**: Los puntos ganados mediante comandos o eventos persisten durante la sesión del servidor pero se resetean al desconectar (a menos que se migren a base de datos).
+- **Volatilidad de Currency**: Los puntos de la tienda (!buy) son temporales. Se resetean automáticamente al cambiar de mapa o al desconectar del servidor. **No se almacenan en la base de datos.**
 - **Niveles**: El progreso de los comandos `!level` se guarda automáticamente en la base de datos `players`.
 - **Traducciones**: Todos los mensajes de respuesta de estos comandos están localizados en `translations/eclipse.phrases.txt`.
 

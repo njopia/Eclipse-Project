@@ -37,8 +37,8 @@
 // Se mantiene incluso al cambiar de mapa usando cookies de SourceMod
 // Se resetea solo al desconectarse completamente del servidor
 // NO se guarda en base de datos
-int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	 // Currency de sesion (se mantiene entre mapas con cookies)
-Handle g_hCurrencyCookie = INVALID_HANDLE;			 // Cookie para persistir currency entre cambios de mapa
+int	   g_iPlayerLocalCurrency[MAXPLAYERS + 1];	  // Currency de sesion (se mantiene entre mapas con cookies)
+// Handle g_hCurrencyCookie = INVALID_HANDLE;			 // Cookie para persistir currency entre cambios de mapa
 
 // Buy Cost ConVars
 Handle cvar_CostConvertHP	   = INVALID_HANDLE;
@@ -49,6 +49,11 @@ Handle cvar_CostIonCannon	   = INVALID_HANDLE;
 Handle cvar_CostTeamHeal	   = INVALID_HANDLE;
 Handle cvar_CostTeamSpeedBoost = INVALID_HANDLE;
 Handle cvar_CostNuclearStrike  = INVALID_HANDLE;
+Handle cvar_CostAmmoPile	   = INVALID_HANDLE;
+Handle cvar_CostUVLight		   = INVALID_HANDLE;
+Handle cvar_CostHealingStation = INVALID_HANDLE;
+Handle cvar_SentryGunCost	   = INVALID_HANDLE;
+Handle cvar_DefenseGridCost	   = INVALID_HANDLE;
 // ======================================================
 
 /////// HELPERS /////////////////////////////
@@ -107,10 +112,15 @@ public void buyMenuOnPluginStart()
 	cvar_CostTeamHeal		= CreateConVar("buy_cost_team_heal", "55", "Cost in points to buy Team Heal", FCVAR_PLUGIN);
 	cvar_CostTeamSpeedBoost = CreateConVar("buy_cost_team_speed_boost", "60", "Cost in points to buy Team Speed Boost", FCVAR_PLUGIN);
 	cvar_CostNuclearStrike	= CreateConVar("buy_cost_nuclear_strike", "100", "Cost in points to buy Nuclear Strike", FCVAR_PLUGIN);
+	cvar_CostAmmoPile		= CreateConVar("buy_cost_ammo_pile", "40", "Cost in points to buy Ammo Pile", FCVAR_PLUGIN);
+	cvar_CostUVLight		= CreateConVar("buy_cost_uv_light", "50", "Cost in points to buy UV Light", FCVAR_PLUGIN);
+	cvar_CostHealingStation = CreateConVar("buy_cost_healing_station", "50", "Cost in points to buy Healing Station", FCVAR_PLUGIN);
+	cvar_SentryGunCost		= CreateConVar("buy_cost_sentry_gun", "60", "Cost in points to buy Sentry Gun", FCVAR_PLUGIN);
+	cvar_DefenseGridCost	= CreateConVar("buy_cost_defense_grid", "60", "Cost in points to buy Defense Grid", FCVAR_PLUGIN);
 	// ============================================
 
 	// Create cookie to persist currency across map changes
-	g_hCurrencyCookie = RegClientCookie("eclipse_session_currency", "Currency points during current session", CookieAccess_Private);
+	// g_hCurrencyCookie = RegClientCookie("eclipse_session_currency", "Currency points during current session", CookieAccess_Private);
 
 	// Initialize player currency (always temporal)
 	for (int i = 1; i <= MaxClients; i++)
@@ -162,7 +172,7 @@ public void BuyMenu_OnClientPutInServer(int client)
 	if (!IsFakeClient(client) && AreClientCookiesCached(client))
 	{
 		char sCurrency[32];
-		GetClientCookie(client, g_hCurrencyCookie, sCurrency, sizeof(sCurrency));
+		// GetClientCookie(client, g_hCurrencyCookie, sCurrency, sizeof(sCurrency));
 		if (strlen(sCurrency) > 0)
 		{
 			g_iPlayerLocalCurrency[client] = StringToInt(sCurrency);
@@ -188,15 +198,15 @@ void BuyMenu_OnClientDisconnect(int client)
 	{
 		char sCurrency[32];
 		IntToString(g_iPlayerLocalCurrency[client], sCurrency, sizeof(sCurrency));
-		SetClientCookie(client, g_hCurrencyCookie, sCurrency);
+		// SetClientCookie(client, g_hCurrencyCookie, sCurrency);
 	}
 
 	// Guardar datos del jugador antes de resetear
 	Leveling_OnClientDisconnect(client);
 
-	g_fNextHint[client]		  = 0.0;
-	g_bHadMaxHealth[client]	  = false;
-	g_iPlayerLocalCurrency[client] = 0;	  // Reset local variable (pero ya guardado en cookie)
+	g_fNextHint[client]			   = 0.0;
+	g_bHadMaxHealth[client]		   = false;
+	g_iPlayerLocalCurrency[client] = 0;	   // Reset local variable (pero ya guardado en cookie)
 	IonCannon_OnClientDisconnect(client);
 	IonCannonFeature_OnClientDisconnect(client);
 #if defined _SENTRY_GUN_FEATURE_
@@ -458,7 +468,7 @@ stock void UpdateCurrencyCookie(int client)
 
 	char sCurrency[32];
 	IntToString(g_iPlayerLocalCurrency[client], sCurrency, sizeof(sCurrency));
-	SetClientCookie(client, g_hCurrencyCookie, sCurrency);
+	// SetClientCookie(client, g_hCurrencyCookie, sCurrency);
 }
 
 /**
@@ -566,7 +576,7 @@ public Action Event_BuyMenu_PlayerHurt(Event event, const char[] name, bool dont
  */
 public Action Hook_BuyMenu_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
-	Action result = Plugin_Continue;
+	Action result	  = Plugin_Continue;
 
 	// Acid Bath: Convierte dano de acido en curacion
 	Action acidResult = AcidBath_OnTakeDamage(victim, attacker, inflictor, damage, damagetype);

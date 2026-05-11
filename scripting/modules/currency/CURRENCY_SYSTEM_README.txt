@@ -4,7 +4,7 @@ ECLIPSE MANAGEMENT SYSTEM - CURRENCY EVENTS IMPLEMENTATION
 
 DESCRIPCION GENERAL:
 El sistema de currency ahora esta vinculado a eventos del juego.
-Los jugadores ganan puntos por diferentes acciones en el juego.
+Los jugadores ganan puntos por diferentes acciones. Los puntos se resetean en cada cambio de mapa.
 
 ===============================================================
 MODULOS CREADOS:
