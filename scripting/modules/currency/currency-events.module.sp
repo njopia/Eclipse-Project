@@ -155,6 +155,9 @@ public Action Event_HealSuccess(Event event, const char[] name, bool dontBroadca
 	if (healer <= 0 || healer > MaxClients || !IsClientInGame(healer))
 		return Plugin_Continue;
 
+	if (GetClientTeam(healer) != 2)
+		return Plugin_Continue;
+
 	int reward = GetConVarInt(cvar_CurrencyHeal);
 	AwardCurrency(healer, reward, "Curar companero");
 	CurrencyStats_AddHeal(healer);
@@ -170,6 +173,9 @@ public Action Event_ReviveSuccess(Event event, const char[] name, bool dontBroad
 	int healer = GetClientOfUserId(event.GetInt("userid"));
 
 	if (healer <= 0 || healer > MaxClients || !IsClientInGame(healer))
+		return Plugin_Continue;
+
+	if (GetClientTeam(healer) != 2)
 		return Plugin_Continue;
 
 	int reward = GetConVarInt(cvar_CurrencyRevive);
@@ -188,6 +194,9 @@ public Action Event_DefibUsed(Event event, const char[] name, bool dontBroadcast
 	int userid = GetClientOfUserId(event.GetInt("userid"));
 
 	if (userid <= 0 || userid > MaxClients || !IsClientInGame(userid))
+		return Plugin_Continue;
+
+	if (GetClientTeam(userid) != 2)
 		return Plugin_Continue;
 
 	int reward = GetConVarInt(cvar_CurrencyDefibrillator);

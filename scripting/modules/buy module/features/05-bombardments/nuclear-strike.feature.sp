@@ -1120,6 +1120,12 @@ stock void NuclearStrike_OnMapStart()
  */
 stock void NuclearStrike_OnClientDisconnect(int client)
 {
+	if (!g_bNukeActive[client]
+		&& g_hNukeDamageTimer[client] == INVALID_HANDLE
+		&& g_hNukeEffectsTimer[client] == INVALID_HANDLE
+		&& g_hNukeSirenTimer[client] == INVALID_HANDLE)
+		return;
+
 	NukeLog("[DEBUG] Limpieza por desconexion del cliente %d", client);
 	StopSound(client, SNDCHAN_AUTO, NUKE_SOUND_PLANE);
 	StopSound(client, SNDCHAN_AUTO, NUKE_SOUND_RUMBLE);

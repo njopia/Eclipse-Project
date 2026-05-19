@@ -219,12 +219,30 @@ stock void UpdateHealingStation(int client)
 {
 	int item  = HSModel[client];
 	int timer = HSTimer[client];
-	if (item > 0 && IsValidEntity(item))
+
+	if (item > 0)
 	{
-		if (timer <= 250)
+		bool valid = IsValidEntity(item);
+		if (valid)
 		{
-			SetEntProp(item, Prop_Send, "m_bFlashing", 1);
+			char classname[32];
+			GetEdictClassname(item, classname, sizeof(classname));
+			if (!StrEqual(classname, "prop_dynamic", false))
+				valid = false;
 		}
+
+		if (!valid)
+		{
+			// Entidad reciclada o destruida (e.g. cambio de mapa) — limpiar estado
+			HSModel[client]   = 0;
+			HSTrigger[client] = 0;
+			HSTimer[client]   = 0;
+			return;
+		}
+
+		if (timer <= 250)
+			SetEntProp(item, Prop_Send, "m_bFlashing", 1);
 	}
+
 	HSTimer[client] -= 1;
 }

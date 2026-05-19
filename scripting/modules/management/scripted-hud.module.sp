@@ -142,8 +142,8 @@ void ScriptedHUD_LoadMessagesFromDB()
 		return;
 	}
 
-	// Reset message count
-	g_MessageCount = 0;
+	// No resetear g_MessageCount aquí: los mensajes actuales siguen mostrándose
+	// mientras la query asíncrona está en vuelo. El reset ocurre en el callback.
 
 	char query[256];
 	Format(query, sizeof(query), "SELECT message FROM server_hud_messages WHERE is_active = 1 ORDER BY id ASC");
@@ -178,6 +178,10 @@ void ScriptedHUD_OnMessagesLoaded(Handle owner, Handle hndl, const char[] error,
 	{
 		LogMessage("[ScriptedHUD] %d mensajes cargados desde la base de datos", g_MessageCount);
 	}
+
+	// Actualizar g_CurrentMessage inmediatamente con los nuevos mensajes
+	// para no esperar al próximo tick del timer de rotación (10 s).
+	ScriptedHUD_AdvanceMessage();
 }
 
 void ScriptedHUD_LoadDefaultMessages()
@@ -239,10 +243,10 @@ void ScriptedHUD_OnPluginStart()
 	g_hCvar_HUD1_Width.AddChangeHook(ScriptedHUD_OnCvarChanged);
 	g_hCvar_HUD1_Height.AddChangeHook(ScriptedHUD_OnCvarChanged);
 
-	// Initialize message rotation
+	// Initialize message rotation (TIMER_FLAG_NO_MAPCHANGE: persiste entre mapas)
 	ScriptedHUD_AdvanceMessage();
 	CreateTimer(ROTATE_INTERVAL, ScriptedHUD_Timer_RotateMessage, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(1.0, ScriptedHUD_Timer_CheckTank, _, TIMER_REPEAT);
+	CreateTimer(1.0, ScriptedHUD_Timer_CheckTank, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 
 	// Initialize auto-reload timer
 	g_tAutoReload = CreateTimer(AUTO_RELOAD_INTERVAL, ScriptedHUD_Timer_AutoReload, _, TIMER_REPEAT);
@@ -255,6 +259,20 @@ void ScriptedHUD_OnConfigsExecuted()
 
 	delete g_tUpdateInterval;
 	g_tUpdateInterval = CreateTimer(g_fCvar_HUD_UpdateInterval, ScriptedHUD_Timer_UpdateHUD, _, TIMER_REPEAT);
+
+	// g_tAutoReload muere en cada cambio de mapa (sin TIMER_FLAG_NO_MAPCHANGE): recrear
+	if (g_tAutoReload == INVALID_HANDLE)
+	{
+		g_tAutoReload = CreateTimer(AUTO_RELOAD_INTERVAL, ScriptedHUD_Timer_AutoReload, _, TIMER_REPEAT);
+		ScriptedHUD_LoadMessagesFromDB();
+	}
+
+	// Re-habilitar challenge mode DESPUÉS de que los timers estén creados y haya mapa cargado.
+	// GameRules_SetProp falla si no hay mapa activo → verificar antes de llamar.
+	char sMap[64];
+	GetCurrentMap(sMap, sizeof(sMap));
+	if (sMap[0] != '\0')
+		GameRules_SetProp("m_bChallengeModeActive", 1);
 }
 
 void ScriptedHUD_OnMapStart()
@@ -265,9 +283,12 @@ void ScriptedHUD_OnMapStart()
 
 void ScriptedHUD_OnMapEnd()
 {
-	// Limpiar timers
+	// Limpiar timers que no tienen TIMER_FLAG_NO_MAPCHANGE
 	delete g_tUpdateInterval;
+	g_tUpdateInterval = INVALID_HANDLE;
+
 	delete g_tAutoReload;
+	g_tAutoReload = INVALID_HANDLE;
 }
 
 // ====================================================================================================

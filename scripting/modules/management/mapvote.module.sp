@@ -1,6 +1,5 @@
 /*
- * Map Vote Module - Campaign/Map voting system
- * Original author: satannuts
+ * Auto Map Change Module
  * Adapted for Eclipse Management System
  */
 
@@ -11,517 +10,243 @@
 #define _MAPVOTE_MODULE_
 
 //==================================================
-// === MAP VOTE MODULE ===
-// Allows players to vote for map/campaign changes
+// === AUTO MAP CHANGE MODULE ===
+// Al terminar una finale (win o loss), elige un mapa
+// aleatorio OFICIAL de la lista y cambia directamente.
+// !custom (admin): menú con campañas custom para cambio manual.
 //==================================================
 
-char g_MapVote_gameMode[64];
-Handle g_MapVote_mapMenu = null;
+#define FINALE_MAX_MAPS          16
+#define FINALE_MAX_CUSTOM_MAPS   32
+#define FINALE_VEHICLE_DELAY     10.0   // Delay tras finale_vehicle_leaving (survivors win)
+#define FINALE_LOSS_DELAY         3.0   // Delay tras mission_lost (survivors lose)
+#define FINALE_CHANGELEVEL_DELAY  7.0   // Tiempo entre anuncio y changelevel
 
-int g_MapVote_AllowVote[MAXPLAYERS + 1];
-int g_MapVote_yes, g_MapVote_no;
-char g_MapVote_mapname[255];
+static char g_MapVote_gameMode[64];
+static bool g_MapVote_game_l4d2     = false;
+static bool g_bWasFinaleStarted     = false;
+static bool g_bFinaleChangePending  = false;
+static char g_sNextMap[64];
+static char g_sNextMapName[64];
 
-bool g_MapVote_game_l4d2 = false;
+// Official maps — used for auto-change after finale
+static char g_sFinaleMapList[FINALE_MAX_MAPS][64];
+static char g_sFinaleNameList[FINALE_MAX_MAPS][64];
+static int  g_iFinaleMapCount = 0;
 
-/**
- * Initialize map vote module
- */
+// Custom maps — used exclusively by !custom admin command
+static char g_sCustomMapList[FINALE_MAX_CUSTOM_MAPS][64];
+static char g_sCustomNameList[FINALE_MAX_CUSTOM_MAPS][64];
+static int  g_iCustomMapCount = 0;
+
+static Handle g_hFinaleCLTimer       = INVALID_HANDLE;
+static Handle g_hFinaleAnnounceTimer = INVALID_HANDLE;
+
+// ==================================================
+// === LIFECYCLE ===
+// ==================================================
+
 public void MapVote_OnPluginStart()
 {
 	char game_name[64];
 	GetGameFolderName(game_name, sizeof(game_name));
-	if (StrEqual(game_name, "left4dead2", false))
-	{
-		g_MapVote_game_l4d2 = true;
-	}
+	g_MapVote_game_l4d2 = StrEqual(game_name, "left4dead2", false);
 
-	g_MapVote_yes = 0;
-	g_MapVote_no = 0;
-
-	for (int i = 1; i <= MaxClients; i++) {
-		if (MapVote_IsValidPlayer(i)) {
-			g_MapVote_AllowVote[i] = 1;
-		}
-	}
+	HookEvent("finale_start",           MapVote_Event_FinaleStart,          EventHookMode_Post);
+	HookEvent("finale_vehicle_leaving", MapVote_Event_FinaleVehicleLeaving, EventHookMode_Post);
+	HookEvent("mission_lost",           MapVote_Event_MissionLost,          EventHookMode_Post);
 }
 
-/**
- * Called on map start
- */
 public void MapVote_OnMapStart()
 {
-	ConVar currentGameMode = FindConVar("mp_gamemode");
-	currentGameMode.GetString(g_MapVote_gameMode, sizeof(g_MapVote_gameMode));
-	g_MapVote_yes = 0;
-	g_MapVote_no = 0;
+	ConVar hMode = FindConVar("mp_gamemode");
+	if (hMode != null)
+		hMode.GetString(g_MapVote_gameMode, sizeof(g_MapVote_gameMode));
+
+	g_bWasFinaleStarted    = false;
+	g_bFinaleChangePending = false;
+	g_sNextMap[0]          = '\0';
+	g_sNextMapName[0]      = '\0';
+
+	if (g_hFinaleCLTimer       != INVALID_HANDLE) { KillTimer(g_hFinaleCLTimer);       g_hFinaleCLTimer       = INVALID_HANDLE; }
+	if (g_hFinaleAnnounceTimer != INVALID_HANDLE) { KillTimer(g_hFinaleAnnounceTimer); g_hFinaleAnnounceTimer = INVALID_HANDLE; }
+
+	FinaleMap_BuildList();
 }
 
-/**
- * Called when client is post admin checked
- */
-public void MapVote_OnClientPostAdminCheck(int client)
+public void MapVote_OnClientPostAdminCheck(int client) {}
+
+// ==================================================
+// === FINALE DETECTION ===
+// ==================================================
+
+public Action MapVote_Event_FinaleStart(Event event, const char[] name, bool dontBroadcast)
 {
-	g_MapVote_AllowVote[client] = 1;
-}
-
-/**
- * Command: sm_custom
- * Opens the map vote menu
- */
-public Action MapVote_Command_MapVote(int client, int args)
-{
-	if (MapVote_IsValidPlayer(client)) MapVote_DoMapVoteList(client);
-	return Plugin_Handled;
-}
-
-/**
- * Command: sm_cancelvote
- * Cancels the current vote
- */
-public Action MapVote_Command_CancelVote(int client, int args)
-{
-	CancelVote();
-	return Plugin_Handled;
-}
-
-/**
- * Display map vote list to client
- */
-void MapVote_DoMapVoteList(int client)
-{
-	if (!MapVote_IsValidPlayer(client)) return;
-
-	if (g_MapVote_AllowVote[client] != 1) {
-		PrintToChat(client, "\x04[MAPVOTE]\x01 %t", "MapVote_VoteLimit");
-		return;
-	}
-	g_MapVote_AllowVote[client] = 0;
-	CreateTimer(120.0, MapVote_SetAllowVote, client);
-
-	g_MapVote_mapMenu = MapVote_BuildMapMenu(false);
-	DisplayMenu(g_MapVote_mapMenu, client, 60);
-}
-
-/**
- * Timer to reset vote permission
- */
-public Action MapVote_SetAllowVote(Handle timer, int client)
-{
-	g_MapVote_AllowVote[client] = 1;
+	g_bWasFinaleStarted = true;
 	return Plugin_Continue;
 }
 
-/**
- * Timer to finish vote
- */
-public Action MapVote_FinishVoteTimer(Handle timer, int client)
+public Action MapVote_Event_FinaleVehicleLeaving(Event event, const char[] name, bool dontBroadcast)
 {
-	if (g_MapVote_yes > 0) MapVote_FinishVote();
+	FinaleMap_TriggerChange(FINALE_VEHICLE_DELAY);
 	return Plugin_Continue;
 }
 
-/**
- * Menu handler for map selection
- */
-public int MapVote_Handle_MapVoteList(Menu mapMenu, MenuAction action, int param1, int param2)
+public Action MapVote_Event_MissionLost(Event event, const char[] name, bool dontBroadcast)
 {
-	if(action == MenuAction_Select)
-	{
-		char map[64];
-		GetMenuItem(mapMenu, param2, map, sizeof(map));
-		Format(g_MapVote_mapname, sizeof(g_MapVote_mapname), "%s", map);
+	if (!g_bWasFinaleStarted)
+		return Plugin_Continue;
 
-		if (g_MapVote_yes > 0) {
-			PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_InProgress");
-			return 0;
-		}
-		CreateTimer(30.0, MapVote_FinishVoteTimer, INVALID_HANDLE);
-		g_MapVote_yes = 1;
-		g_MapVote_no = 0;
-		PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_Started", MapVote_GetName(param1), g_MapVote_mapname);
-
-		MapVote_DoVoteMenu(param1);
-	}
-	else if (action == MenuAction_End)
-	{
-		delete mapMenu;
-	}
-	return 0;
+	FinaleMap_TriggerChange(FINALE_LOSS_DELAY);
+	return Plugin_Continue;
 }
 
-/**
- * Start vote menu
- */
-void MapVote_DoVoteMenu(int client)
+// ==================================================
+// === AUTO CHANGE LOGIC ===
+// ==================================================
+
+static void FinaleMap_TriggerChange(float initialDelay)
 {
-	if (IsVoteInProgress())	{
-		PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_AlreadyInProgress");
+	if (g_bFinaleChangePending || g_iFinaleMapCount == 0)
 		return;
-	}
 
-	for (int i=1; i<=MaxClients; i++)
-		if ( (MapVote_IsValidPlayer(i)) && (i != client) )
-			MapVote_ShowVotePanel(i);
+	g_bFinaleChangePending = true;
+
+	int idx = GetRandomInt(0, g_iFinaleMapCount - 1);
+	strcopy(g_sNextMap,     sizeof(g_sNextMap),     g_sFinaleMapList[idx]);
+	strcopy(g_sNextMapName, sizeof(g_sNextMapName), g_sFinaleNameList[idx]);
+
+	if (g_hFinaleAnnounceTimer != INVALID_HANDLE)
+		KillTimer(g_hFinaleAnnounceTimer);
+
+	g_hFinaleAnnounceTimer = CreateTimer(initialDelay, Timer_FinaleAnnounce);
 }
 
-/**
- * Finish vote and change map if successful
- */
-void MapVote_FinishVote()
+public Action Timer_FinaleAnnounce(Handle timer)
 {
-	PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_Finished", g_MapVote_yes, g_MapVote_no);
-	if (g_MapVote_yes > g_MapVote_no) {
-		PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_Changing", g_MapVote_mapname);
-		g_MapVote_yes = 0;
-		g_MapVote_no = 0;
-		ServerCommand("changelevel %s", g_MapVote_mapname);
-	}
-	else PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_Failed");
+	g_hFinaleAnnounceTimer = INVALID_HANDLE;
+
+	PrintToChatAll("\x04[Eclipse]\x01 Próxima campaña: \x05%s\x01 — cambiando en \x04%.0f\x01 segundos.",
+		g_sNextMapName, FINALE_CHANGELEVEL_DELAY);
+
+	if (g_hFinaleCLTimer != INVALID_HANDLE)
+		KillTimer(g_hFinaleCLTimer);
+
+	g_hFinaleCLTimer = CreateTimer(FINALE_CHANGELEVEL_DELAY, Timer_FinaleChangeLevel);
+
+	return Plugin_Stop;
 }
 
-/**
- * Show vote panel to client
- */
-void MapVote_ShowVotePanel(int client)
+public Action Timer_FinaleChangeLevel(Handle timer)
 {
-	Panel VoteMapPanel = new Panel();
-
-	char text[255];
-
-	Format(text, sizeof(text), "%T", "MapVote_ChangeMapQuestion", client, g_MapVote_mapname);
-	VoteMapPanel.SetTitle(text);
-
-	Format(text, sizeof(text), "%T", "MapVote_Yes", client);
-	VoteMapPanel.DrawItem(text);
-
-	Format(text, sizeof(text), "%T", "MapVote_No", client);
-	VoteMapPanel.DrawItem(text);
-
-	VoteMapPanel.Send(client, MapVote_VoteMapPanelHandler, 60);
-	delete VoteMapPanel;
+	g_hFinaleCLTimer = INVALID_HANDLE;
+	ServerCommand("changelevel %s", g_sNextMap);
+	return Plugin_Stop;
 }
 
-/**
- * Panel handler for vote responses
- */
-public int MapVote_VoteMapPanelHandler(Menu menu, MenuAction action, int param1, int param2)
+// ==================================================
+// === MAP LISTS ===
+// ==================================================
+
+static void FinaleMap_AddOfficial(const char[] mapname, const char[] displayname)
 {
-	if  (!MapVote_IsValidPlayer(param1)) return 0;
-
-	if ((param2 == 1) || (param2 == 2)) {
-
-		if (param2 == 1) {
-			g_MapVote_yes++;
-			PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_VotedYes", MapVote_GetName(param1), g_MapVote_yes, g_MapVote_no);
-		}
-		else if (param2 == 2) {
-			g_MapVote_no++;
-			PrintToChatAll("\x04[MAPVOTE]\x01 %t", "MapVote_VotedNo", MapVote_GetName(param1), g_MapVote_yes, g_MapVote_no);
-		}
-
-		if ( g_MapVote_yes+g_MapVote_no >= MapVote_GetTeamHumanCount(2)+MapVote_GetTeamHumanCount(3) ) {
-			MapVote_FinishVote();
-		}
-	}
-	else MapVote_ShowVotePanel(param1);
-
-	return 0;
+	if (g_iFinaleMapCount >= FINALE_MAX_MAPS)
+		return;
+	strcopy(g_sFinaleMapList[g_iFinaleMapCount],  64, mapname);
+	strcopy(g_sFinaleNameList[g_iFinaleMapCount], 64, displayname);
+	g_iFinaleMapCount++;
 }
 
-/**
- * Build map menu based on game mode
- */
-Menu MapVote_BuildMapMenu(bool adminMode = false)
+static void FinaleMap_AddCustom(const char[] mapname, const char[] displayname)
 {
-	#pragma unused adminMode
-	Menu mapMenu = new Menu(MapVote_Handle_MapVoteList);
+	if (g_iCustomMapCount >= FINALE_MAX_CUSTOM_MAPS)
+		return;
+	strcopy(g_sCustomMapList[g_iCustomMapCount],  64, mapname);
+	strcopy(g_sCustomNameList[g_iCustomMapCount], 64, displayname);
+	g_iCustomMapCount++;
+}
 
-	char title[128];
-	Format(title, sizeof(title), "%T", "MapVote_ChooseMap", LANG_SERVER);
-	mapMenu.SetTitle(title);
-	mapMenu.ExitButton = false;
+static void FinaleMap_BuildList()
+{
+	g_iFinaleMapCount = 0;
+	g_iCustomMapCount = 0;
 
-	if(g_MapVote_game_l4d2)
+	if (g_MapVote_game_l4d2)
 	{
-		if(strcmp(g_MapVote_gameMode, "coop", false) == 0)
-		{
-			// Official Campaigns
-			mapMenu.AddItem("c1m1_hotel", "Dead Center");
-			mapMenu.AddItem("c2m1_highway", "Dark Carnival");
-			mapMenu.AddItem("c3m1_plankcountry", "Swamp Fever");
-			mapMenu.AddItem("c4m1_milltown_a", "Hard Rain");
-			mapMenu.AddItem("c5m1_waterfront", "The Parish");
-			mapMenu.AddItem("c6m1_riverbank", "The Passing");
-			mapMenu.AddItem("c7m1_docks", "The Sacrifice");
-			mapMenu.AddItem("c8m1_apartment", "No Mercy");
-			mapMenu.AddItem("c9m1_alleys", "Crash Course");
-			mapMenu.AddItem("c10m1_caves", "Death Toll");
-			mapMenu.AddItem("c11m1_greenhouse", "Dead Air");
-			mapMenu.AddItem("c12m1_hilltop", "Blood Harvest");
-			mapMenu.AddItem("c13m1_alpinecreek", "Cold Stream");
-			mapMenu.AddItem("c14m1_junkyard", "The Last Stand");
+		// --- Official L4D2 Campaigns (auto-change pool) ---
+		FinaleMap_AddOfficial("c1m1_hotel",              "Dead Center");
+		FinaleMap_AddOfficial("c2m1_highway",            "Dark Carnival");
+		FinaleMap_AddOfficial("c3m1_plankcountry",       "Swamp Fever");
+		FinaleMap_AddOfficial("c4m1_milltown_a",         "Hard Rain");
+		FinaleMap_AddOfficial("c5m1_waterfront",         "The Parish");
+		FinaleMap_AddOfficial("c6m1_riverbank",          "The Passing");
+		FinaleMap_AddOfficial("c7m1_docks",              "The Sacrifice");
+		FinaleMap_AddOfficial("c13m1_alpinecreek",       "Cold Stream");
+		FinaleMap_AddOfficial("c14m1_junkyard",          "The Last Stand");
 
-			// Custom Campaigns
-			mapMenu.AddItem("cbm1_lake", "BloodProof");
-			mapMenu.AddItem("l4d2_bts01_forest", "Back to School");
-			mapMenu.AddItem("bdp_bunker01", "Buried Deep");
-			mapMenu.AddItem("cwm1_intro", "Carried Off");
-			mapMenu.AddItem("l4d2_daybreak01_hotel", "Day Break");
-			mapMenu.AddItem("deathrow01_streets", "Death Row");
-			mapMenu.AddItem("dm1_suburbs", "Devil Mountain");
-			mapMenu.AddItem("dprm1_milltown_a", "Downpour");
-			mapMenu.AddItem("gb_prologue", "Ghostbusters Project");
-			mapMenu.AddItem("l4d_grave_city", "Grave Outdoors");
-			mapMenu.AddItem("l4d2_diescraper1_apartment_361", "Diescraper");
-			mapMenu.AddItem("map_part1", "Left 4 Invasion");
-			mapMenu.AddItem("l4d_lastnight01_arrival", "Last Night");
-			mapMenu.AddItem("l4d_mic2_trapmentd", "MIC2");
-			mapMenu.AddItem("l4d2_stadium1_apartment", "Suicide Blitz 2");
-			mapMenu.AddItem("l4d2_timemachine_01", "Time Machine");
-		}
-		else if(strcmp(g_MapVote_gameMode, "realism", false) == 0)
-		{
-			// Official Campaigns only
-			mapMenu.AddItem("c1m1_hotel", "Dead Center");
-			mapMenu.AddItem("c2m1_highway", "Dark Carnival");
-			mapMenu.AddItem("c3m1_plankcountry", "Swamp Fever");
-			mapMenu.AddItem("c4m1_milltown_a", "Hard Rain");
-			mapMenu.AddItem("c5m1_waterfront", "The Parish");
-			mapMenu.AddItem("c6m1_riverbank", "The Passing");
-			mapMenu.AddItem("c7m1_docks", "The Sacrifice");
-			mapMenu.AddItem("c8m1_apartment", "No Mercy");
-			mapMenu.AddItem("c9m1_alleys", "Crash Course");
-			mapMenu.AddItem("c10m1_caves", "Death Toll");
-			mapMenu.AddItem("c11m1_greenhouse", "Dead Air");
-			mapMenu.AddItem("c12m1_hilltop", "Blood Harvest");
-			mapMenu.AddItem("c13m1_alpinecreek", "Cold Stream");
-			mapMenu.AddItem("c14m1_junkyard", "The Last Stand");
-		}
-		else if(strcmp(g_MapVote_gameMode, "versus", false) == 0)
-		{
-			// Official Campaigns
-			mapMenu.AddItem("c1m1_hotel", "Dead Center");
-			mapMenu.AddItem("c2m1_highway", "Dark Carnival");
-			mapMenu.AddItem("c3m1_plankcountry", "Swamp Fever");
-			mapMenu.AddItem("c4m1_milltown_a", "Hard Rain");
-			mapMenu.AddItem("c5m1_waterfront", "The Parish");
-			mapMenu.AddItem("c6m1_riverbank", "The Passing");
-			mapMenu.AddItem("c7m1_docks", "The Sacrifice");
-			mapMenu.AddItem("c8m1_apartment", "No Mercy");
-			mapMenu.AddItem("c9m1_alleys", "Crash Course");
-			mapMenu.AddItem("c10m1_caves", "Death Toll");
-			mapMenu.AddItem("c11m1_greenhouse", "Dead Air");
-			mapMenu.AddItem("c12m1_hilltop", "Blood Harvest");
-			mapMenu.AddItem("c13m1_alpinecreek", "Cold Stream");
-			mapMenu.AddItem("c14m1_junkyard", "The Last Stand");
-
-			// Custom Campaigns
-			mapMenu.AddItem("cbm1_lake", "BloodProof");
-			mapMenu.AddItem("l4d2_bts01_forest", "Back to School");
-			mapMenu.AddItem("bdp_bunker01", "Buried Deep");
-			mapMenu.AddItem("cwm1_intro", "Carried Off");
-			mapMenu.AddItem("l4d2_daybreak01_hotel", "Day Break");
-			mapMenu.AddItem("deathrow01_streets", "Death Row");
-			mapMenu.AddItem("dm1_suburbs", "Devil Mountain");
-			mapMenu.AddItem("dprm1_milltown_a", "Downpour");
-			mapMenu.AddItem("gb_prologue", "Ghostbusters Project");
-			mapMenu.AddItem("l4d_grave_city", "Grave Outdoors");
-			mapMenu.AddItem("l4d2_diescraper1_apartment_361", "Diescraper");
-			mapMenu.AddItem("map_part1", "Left 4 Invasion");
-			mapMenu.AddItem("l4d_lastnight01_arrival", "Last Night");
-			mapMenu.AddItem("l4d_mic2_trapmentd", "MIC2");
-			mapMenu.AddItem("l4d2_stadium1_apartment", "Suicide Blitz 2");
-			mapMenu.AddItem("l4d2_timemachine_01", "Time Machine");
-		}
-		else if(strcmp(g_MapVote_gameMode, "teamversus", false) == 0)
-		{
-			// Official Campaigns only
-			mapMenu.AddItem("c1m1_hotel", "Dead Center");
-			mapMenu.AddItem("c2m1_highway", "Dark Carnival");
-			mapMenu.AddItem("c3m1_plankcountry", "Swamp Fever");
-			mapMenu.AddItem("c4m1_milltown_a", "Hard Rain");
-			mapMenu.AddItem("c5m1_waterfront", "The Parish");
-			mapMenu.AddItem("c6m1_riverbank", "The Passing");
-			mapMenu.AddItem("c7m1_docks", "The Sacrifice");
-			mapMenu.AddItem("c8m1_apartment", "No Mercy");
-			mapMenu.AddItem("c9m1_alleys", "Crash Course");
-			mapMenu.AddItem("c10m1_caves", "Death Toll");
-			mapMenu.AddItem("c11m1_greenhouse", "Dead Air");
-			mapMenu.AddItem("c12m1_hilltop", "Blood Harvest");
-			mapMenu.AddItem("c13m1_alpinecreek", "Cold Stream");
-			mapMenu.AddItem("c14m1_junkyard", "The Last Stand");
-		}
-		else if(strcmp(g_MapVote_gameMode, "survival", false) == 0)
-		{
-			mapMenu.AddItem("c1m4_atrium", "Atrium");
-			mapMenu.AddItem("c2m1_highway", "Highway");
-			mapMenu.AddItem("c2m4_barns", "Barns");
-			mapMenu.AddItem("c2m5_concert", "Concert");
-			mapMenu.AddItem("c3m1_plankcountry", "Plank Country");
-			mapMenu.AddItem("c3m4_plantation", "Plantation");
-			mapMenu.AddItem("c4m1_milltown_a", "Mill Town 1");
-			mapMenu.AddItem("c4m2_sugarmill_a", "Sugar Mill 1");
-			mapMenu.AddItem("c5m2_park", "Park");
-			mapMenu.AddItem("c5m5_bridge ", "Bridge");
-		}
-		else if(strcmp(g_MapVote_gameMode, "scavenge", false) == 0)
-		{
-			mapMenu.AddItem("c1m4_atrium", "Atrium");
-			mapMenu.AddItem("c2m1_highway", "Highway");
-			mapMenu.AddItem("c3m1_plankcountry", "Plank Country");
-			mapMenu.AddItem("c4m1_milltown_a", "Mill Town 1");
-			mapMenu.AddItem("c4m2_sugarmill_a", "Sugar Mill 1");
-			mapMenu.AddItem("c5m2_park", "Park");
-		}
-		else if(strcmp(g_MapVote_gameMode, "teamscavenge", false) == 0)
-		{
-			mapMenu.AddItem("c1m4_atrium", "Atrium");
-			mapMenu.AddItem("c2m1_highway", "Highway");
-			mapMenu.AddItem("c3m1_plankcountry", "Plank Country");
-			mapMenu.AddItem("c4m1_milltown_a", "Mill Town 1");
-			mapMenu.AddItem("c4m2_sugarmill_a", "Sugar Mill 1");
-			mapMenu.AddItem("c5m2_park", "Park");
-		}
-		else
-		{
-			// Default: All campaigns
-			mapMenu.AddItem("c1m1_hotel", "Dead Center");
-			mapMenu.AddItem("c2m1_highway", "Dark Carnival");
-			mapMenu.AddItem("c3m1_plankcountry", "Swamp Fever");
-			mapMenu.AddItem("c4m1_milltown_a", "Hard Rain");
-			mapMenu.AddItem("c5m1_waterfront", "The Parish");
-			mapMenu.AddItem("c6m1_riverbank", "The Passing");
-			mapMenu.AddItem("c7m1_docks", "The Sacrifice");
-			mapMenu.AddItem("c8m1_apartment", "No Mercy");
-			mapMenu.AddItem("c9m1_alleys", "Crash Course");
-			mapMenu.AddItem("c10m1_caves", "Death Toll");
-			mapMenu.AddItem("c11m1_greenhouse", "Dead Air");
-			mapMenu.AddItem("c12m1_hilltop", "Blood Harvest");
-			mapMenu.AddItem("c13m1_alpinecreek", "Cold Stream");
-			mapMenu.AddItem("c14m1_junkyard", "The Last Stand");
-
-			// Custom Campaigns
-			mapMenu.AddItem("cbm1_lake", "BloodProof");
-			mapMenu.AddItem("l4d2_bts01_forest", "Back to School");
-			mapMenu.AddItem("bdp_bunker01", "Buried Deep");
-			mapMenu.AddItem("cwm1_intro", "Carried Off");
-			mapMenu.AddItem("l4d2_daybreak01_hotel", "Day Break");
-			mapMenu.AddItem("deathrow01_streets", "Death Row");
-			mapMenu.AddItem("dm1_suburbs", "Devil Mountain");
-			mapMenu.AddItem("dprm1_milltown_a", "Downpour");
-			mapMenu.AddItem("gb_prologue", "Ghostbusters Project");
-			mapMenu.AddItem("l4d_grave_city", "Grave Outdoors");
-			mapMenu.AddItem("l4d2_diescraper1_apartment_361", "Diescraper");
-			mapMenu.AddItem("map_part1", "Left 4 Invasion");
-			mapMenu.AddItem("l4d_lastnight01_arrival", "Last Night");
-			mapMenu.AddItem("l4d_mic2_trapmentd", "MIC2");
-			mapMenu.AddItem("l4d2_stadium1_apartment", "Suicide Blitz 2");
-			mapMenu.AddItem("l4d2_timemachine_01", "Time Machine");
-		}
+		// --- Custom Campaigns (!custom command only) ---
+		FinaleMap_AddCustom("cbm1_lake",               "BloodProof");
+		FinaleMap_AddCustom("l4d2_bts01_forest",       "Back to School");
+		FinaleMap_AddCustom("bdp_bunker01",            "Buried Deep");
+		FinaleMap_AddCustom("cwm1_intro",              "Carried Off");
+		FinaleMap_AddCustom("l4d2_daybreak01_hotel",   "Day Break");
+		FinaleMap_AddCustom("deathrow01_streets",      "Death Row");
+		FinaleMap_AddCustom("dm1_suburbs",             "Devil Mountain");
+		FinaleMap_AddCustom("dprm1_milltown_a",        "Downpour");
+		FinaleMap_AddCustom("l4d_grave_city",          "Grave Outdoors");
+		FinaleMap_AddCustom("l4d2_stadium1_apartment", "Suicide Blitz 2");
+		FinaleMap_AddCustom("l4d_lastnight01_arrival", "Last Night");
+		FinaleMap_AddCustom("l4d2_timemachine_01",     "Time Machine");
 	}
 	else
 	{
-		// L4D1 maps
-		if(strcmp(g_MapVote_gameMode, "coop", false) == 0)
-		{
-			mapMenu.AddItem("l4d_hospital01_apartment", "Mercy Hospital");
-			mapMenu.AddItem("l4d_garage01_alleys", "Crash Course");
-			mapMenu.AddItem("l4d_smalltown01_caves", "Death Toll");
-			mapMenu.AddItem("l4d_airport01_greenhouse", "Dead Air");
-			mapMenu.AddItem("l4d_farm01_hilltop", "Blood Harvest");
-		}
-		else if(strcmp(g_MapVote_gameMode, "versus", false) == 0)
-		{
-			mapMenu.AddItem("l4d_vs_hospital01_apartment", "Mercy Hospital");
-			mapMenu.AddItem("l4d_garage01_alleys", "Crash Course");
-			mapMenu.AddItem("l4d_vs_smalltown01_caves", "Death Toll");
-			mapMenu.AddItem("l4d_vs_airport01_greenhouse", "Dead Air");
-			mapMenu.AddItem("l4d_vs_farm01_hilltop", "Blood Harvest");
-		}
-		else if(strcmp(g_MapVote_gameMode, "survival", false) == 0)
-		{
-			mapMenu.AddItem("l4d_hospital02_subway", "Generator Room");
-			mapMenu.AddItem("l4d_hospital03_sewers", "Gas Station");
-			mapMenu.AddItem("l4d_hospital04_interior", "Hospital");
-			mapMenu.AddItem("l4d_vs_hospital05_rooftop", "Rooftop");
-			mapMenu.AddItem("l4d_garage01_alleys", "Bridge (crashcourse)");
-			mapMenu.AddItem("l4d_garage02_lots", "Truck Depot");
-			mapMenu.AddItem("l4d_smalltown02_drainage", "Drains");
-			mapMenu.AddItem("l4d_smalltown03_ranchhouse", "Church");
-			mapMenu.AddItem("l4d_smalltown04_mainstreet", "Street");
-			mapMenu.AddItem("l4d_vs_smalltown05_houseboat", "Boathouse");
-			mapMenu.AddItem("l4d_airport02_offices", "Crane");
-			mapMenu.AddItem("l4d_airport03_garage", "Construction Site");
-			mapMenu.AddItem("l4d_airport04_terminal", "Terminal");
-			mapMenu.AddItem("l4d_vs_airport05_runway", "Runway");
-			mapMenu.AddItem("l4d_farm02_traintunnel", "Warehouse");
-			mapMenu.AddItem("l4d_farm03_bridge", "Bridge (bloodharvest)");
-			mapMenu.AddItem("l4d_vs_farm05_cornfield", "Farmhouse");
-			mapMenu.AddItem("l4d_sv_lighthouse", "Lighthouse");
-		}
+		// --- Official L4D1 Campaigns (auto-change pool) ---
+		FinaleMap_AddOfficial("l4d_hospital01_apartment", "Mercy Hospital");
+		FinaleMap_AddOfficial("l4d_garage01_alleys",      "Crash Course");
+		FinaleMap_AddOfficial("l4d_smalltown01_caves",    "Death Toll");
+		FinaleMap_AddOfficial("l4d_airport01_greenhouse", "Dead Air");
+		FinaleMap_AddOfficial("l4d_farm01_hilltop",       "Blood Harvest");
 	}
-
-	return mapMenu;
 }
 
-/**
- * Get sanitized player name
- */
-char[] MapVote_GetName(int client)
+// ==================================================
+// === ADMIN COMMAND (!custom — custom maps only) ===
+// ==================================================
+
+public Action MapVote_Cmd_AdminMapChange(int client, int args)
 {
-	char name[MAX_NAME_LENGTH];
-	Format(name, sizeof(name), "noname");
-	if ((client <= 0) || (client > MaxClients) || (!IsClientConnected(client))) return name;
+	Menu menu = new Menu(MapVote_AdminMenuHandler);
+	menu.SetTitle("Cambiar a Campaña Custom");
+	menu.ExitButton = true;
 
-	GetClientName(client, name, MAX_NAME_LENGTH);
-
-	// Sanitize name
-	ReplaceString(name, sizeof(name), "<?php", "");
-	ReplaceString(name, sizeof(name), "<?PHP", "");
-	ReplaceString(name, sizeof(name), "?>", "");
-	ReplaceString(name, sizeof(name), "\\", "");
-	ReplaceString(name, sizeof(name), "'", "");
-	ReplaceString(name, sizeof(name), ";", "");
-	ReplaceString(name, sizeof(name), "ґ", "");
-	ReplaceString(name, sizeof(name), "`", "");
-
-	return name;
-}
-
-/**
- * Check if client is a valid player
- */
-bool MapVote_IsValidPlayer(int client)
-{
-	if (client == 0)
-		return false;
-
-	if (!IsClientConnected(client))
-		return false;
-
-	if (!IsClientInGame(client))
-		return false;
-
-	if (IsFakeClient(client))
-		return false;
-
-	return true;
-}
-
-/**
- * Get human player count for a team
- */
-stock int MapVote_GetTeamHumanCount(int team)
-{
-	int humans = 0;
-
-	for(int i = 1; i <= MaxClients; i++)
+	for (int i = 0; i < g_iCustomMapCount; i++)
 	{
-		if ( (MapVote_IsValidPlayer(i)) && (GetClientTeam(i) == team) )  {
-			humans++;
-		}
+		char itemInfo[8];
+		IntToString(i, itemInfo, sizeof(itemInfo));
+		menu.AddItem(itemInfo, g_sCustomNameList[i]);
 	}
 
-	return humans;
+	menu.Display(client, 60);
+	return Plugin_Handled;
+}
+
+public int MapVote_AdminMenuHandler(Menu menu, MenuAction action, int client, int param)
+{
+	if (action == MenuAction_Select)
+	{
+		char info[8];
+		menu.GetItem(param, info, sizeof(info));
+		int idx = StringToInt(info);
+
+		if (idx < 0 || idx >= g_iCustomMapCount)
+			return 0;
+
+		PrintToChatAll("\x04[Eclipse]\x01 Admin cambia a: \x05%s\x01", g_sCustomNameList[idx]);
+		ServerCommand("changelevel %s", g_sCustomMapList[idx]);
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	return 0;
 }

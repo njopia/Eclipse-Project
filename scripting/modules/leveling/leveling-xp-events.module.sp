@@ -298,11 +298,11 @@ public Action Event_DefibUsed_XP(Event event, const char[] name, bool dontBroadc
  * Evento: Player Left Safe Area
  * Marca que el mapa comenzo (para dar XP al completarlo)
  */
-bool g_bMapStarted = false;
+bool g_bXPMapStarted = false;
 
 public Action Event_LeftSafeArea_XP(Event event, const char[] name, bool dontBroadcast)
 {
-	g_bMapStarted = true;
+	g_bXPMapStarted = true;
 	return Plugin_Continue;
 }
 
@@ -312,7 +312,7 @@ public Action Event_LeftSafeArea_XP(Event event, const char[] name, bool dontBro
  */
 public Action Event_MapComplete_XP(Event event, const char[] name, bool dontBroadcast)
 {
-	if (!g_bMapStarted)
+	if (!g_bXPMapStarted)
 		return Plugin_Continue;
 
 	Handle xpCompleteMap = FindConVar("xp_complete_map");
@@ -330,6 +330,6 @@ public Action Event_MapComplete_XP(Event event, const char[] name, bool dontBroa
 		}
 	}
 
-	g_bMapStarted = false;
+	g_bXPMapStarted = false;
 	return Plugin_Continue;
 }

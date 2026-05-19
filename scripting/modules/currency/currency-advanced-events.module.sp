@@ -68,6 +68,9 @@ public Action Event_SmokSave(Event event, const char[] name, bool dontBroadcast)
 	if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
 		return Plugin_Continue;
 
+	if (GetClientTeam(victim) != 2)
+		return Plugin_Continue;
+
 	// Otorgar puntos al que fue salvado
 	int reward = GetConVarInt(cvar_CurrencySmokerSave);
 	AwardCurrency(victim, reward, "Escapar de Smoker");
@@ -84,6 +87,9 @@ public Action Event_HunterSave(Event event, const char[] name, bool dontBroadcas
 	int victim = GetClientOfUserId(event.GetInt("victim"));
 
 	if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
+		return Plugin_Continue;
+
+	if (GetClientTeam(victim) != 2)
 		return Plugin_Continue;
 
 	// Otorgar puntos al que fue salvado
@@ -114,6 +120,9 @@ public Action Event_JockeySave(Event event, const char[] name, bool dontBroadcas
 	int victim = GetClientOfUserId(event.GetInt("victim"));
 
 	if (victim <= 0 || victim > MaxClients || !IsClientInGame(victim))
+		return Plugin_Continue;
+
+	if (GetClientTeam(victim) != 2)
 		return Plugin_Continue;
 
 	// Otorgar puntos al que fue salvado

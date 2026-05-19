@@ -119,9 +119,7 @@ void RegisterEMSCommands()
 	#endif
 
 	#if defined _MAPVOTE_MODULE_
-		RegAdminCmd("sm_mapvote",     MapVote_Command_MapVote, ADMFLAG_VOTE,   "Start a manual map vote");
-		RegConsoleCmd("sm_custom",    MapVote_Command_MapVote, "Open map vote menu");
-		RegAdminCmd("sm_cancelvote",  MapVote_Command_CancelVote, ADMFLAG_VOTE, "Cancel current vote");
+		RegAdminCmd("sm_custom",      MapVote_Cmd_AdminMapChange, ADMFLAG_CHANGEMAP, "Cambiar campaña directamente (admin)");
 	#endif
 
 

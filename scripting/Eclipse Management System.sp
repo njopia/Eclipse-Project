@@ -44,6 +44,8 @@
 #tryinclude "modules/leveling/leveling-ui.module.sp"
 #tryinclude "modules/leveling/leveling-info.module.sp"
 #tryinclude "modules/leveling/leveling-reset.module.sp"
+#tryinclude "modules/leveling/leveling-xp-events.module.sp"
+#tryinclude "modules/leveling/leveling-debug.module.sp"
 
 //==================================================
 // === ABILITIES SYSTEM MODULE ===
@@ -129,6 +131,9 @@
 #tryinclude "modules/management/mapvote.module.sp"
 #tryinclude "modules/management/admin-manager.sp"
 #tryinclude "modules/management/bot-control.module.sp"
+#tryinclude "modules/management/advertising.module.sp"
+#tryinclude "modules/management/respawn-system.module.sp"
+#tryinclude "modules/management/empty-server-restart.module.sp"
 
 //==================================================
 // === MAIN MENU MODULE ===
@@ -156,9 +161,8 @@ ConVar		cvar_render;
 char		sMap[96];
 
 // Dynamic hostname
-#define UPDATE_INTERVAL 5.0					// Seconds between updates
 #define BASE_HOSTNAME	"[US-EAST] Coop"	// Base server name
-Handle g_hTimer = INVALID_HANDLE;
+ConVar g_hHostname;
 
 //==================================================
 // === PLUGIN INFO ===
@@ -409,6 +413,8 @@ public void OnPluginStart()
 	LevelingUI_OnPluginStart();
 	LevelingInfo_OnPluginStart();
 	LevelingReset_OnPluginStart();
+	LevelingXPEvents_OnPluginStart();
+	LevelingDebug_OnPluginStart();
 
 	// Initialize abilities system (AFTER leveling system)
 	Abilities_OnPluginStart();
@@ -456,6 +462,21 @@ public void OnPluginStart()
 	MapVote_OnPluginStart();
 #endif
 
+	// Initialize advertising module
+#if defined _ADVERTISING_MODULE_
+	Advertising_OnPluginStart();
+#endif
+
+	// Initialize respawn system
+#if defined _RESPAWN_SYSTEM_MODULE_
+	RespawnSystem_OnPluginStart();
+#endif
+
+	// Initialize empty server auto-restart
+#if defined _EMPTY_SERVER_RESTART_MODULE_
+	EmptyServerRestart_OnPluginStart();
+#endif
+
 	// Initialize main menu
 	MainMenu_OnPluginStart();
 
@@ -491,10 +512,9 @@ public void OnPluginStart()
 	// Precache all resources
 	PrecacheAll();
 
-	// Initialize dynamic hostname timer
-	if (g_hTimer != INVALID_HANDLE)
-		CloseHandle(g_hTimer);
-	g_hTimer = CreateTimer(UPDATE_INTERVAL, Timer_UpdateHostname, _, TIMER_REPEAT);
+	// Cache hostname ConVar y setear valor inicial
+	g_hHostname = FindConVar("hostname");
+	UpdateHostname();
 }
 
 /**
@@ -563,6 +583,14 @@ public void OnMapStart()
 
 	// Initialize leveling system
 	Leveling_OnMapStart();
+
+#if defined _ADVERTISING_MODULE_
+	Advertising_OnMapStart();
+#endif
+
+#if defined _RESPAWN_SYSTEM_MODULE_
+	RespawnSystem_OnMapStart();
+#endif
 }
 
 /**
@@ -615,6 +643,9 @@ public void OnConfigsExecuted()
  */
 public void OnClientPutInServer(int client)
 {
+	UpdateHostname();
+	LevelingDebug_OnClientConnect(client);
+
 	// Hook damage for active abilities (in buy module)
 	BuyMenu_OnClientPutInServer(client);
 
@@ -658,9 +689,6 @@ public void OnClientPostAdminCheck(int client)
 #if defined _MAPVOTE_MODULE_
 	MapVote_OnClientPostAdminCheck(client);
 #endif
-
-	// Initialize Trophy System
-	Leveling_OnClientPostAdminCheck(client);
 }
 
 /**
@@ -684,11 +712,23 @@ public void OnClientCookiesCached(int client)
  */
 public void OnClientDisconnect(int client)
 {
+	Leveling_OnClientDisconnect(client);
+	LevelingDebug_OnClientDisconnect(client);
 	BuyMenu_OnClientDisconnect(client);
 
 #if defined _SPECIALS_MODULE_
 	Specials_OnClientDisconnect(client);
 #endif
+
+#if defined _RESPAWN_SYSTEM_MODULE_
+	RespawnSystem_OnClientDisconnect(client);
+#endif
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+	// Actualizar hostname después de que el cliente ya salió del conteo
+	UpdateHostname();
 }
 
 /**
@@ -1093,34 +1133,21 @@ public Action CreateSnowFall(Handle timer)
 // === DYNAMIC HOSTNAME SYSTEM ===
 //==================================================
 
-/**
- * Timer: Update dynamic hostname
- * Updates server hostname with current player count
- * @return Plugin_Continue
- */
-public Action Timer_UpdateHostname(Handle timer)
+stock void UpdateHostname()
 {
-	int maxplayers = GetMaxHumanPlayers();
-	int humans	   = 0;
+	if (g_hHostname == null)
+		return;
 
-	// Count human players
+	int maxplayers = GetMaxHumanPlayers();
+	int humans     = 0;
+
 	for (int i = 1; i <= maxplayers; i++)
 	{
-		if (!IsClientInGame(i))
-			continue;
-
-		if (IsFakeClient(i))
-			continue;
-		else
+		if (IsClientInGame(i) && !IsFakeClient(i))
 			humans++;
 	}
 
-	// Update hostname with player count
 	char newHostname[128];
 	Format(newHostname, sizeof(newHostname), "%s [%d/%d] - Eclipse BETA Release", BASE_HOSTNAME, humans, maxplayers);
-	ConVar hHostname = FindConVar("hostname");
-	if (hHostname != null)
-		hHostname.SetString(newHostname);
-
-	return Plugin_Continue;
+	g_hHostname.SetString(newHostname);
 }

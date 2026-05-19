@@ -129,9 +129,22 @@ public void Leveling_OnPluginStart()
 	// Registrar hook para cuando un jugador se conecta
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
 
+	// Timer de guardado periódico: reduce pérdida de progreso en caso de crash
+	CreateTimer(60.0, Timer_SaveAllPlayersData, _, TIMER_REPEAT);
+
 	// Construir path de log
 	BuildPath(Path_SM, g_szLevelingLogPath, sizeof(g_szLevelingLogPath), "logs\\Leveling_System.log");
 	LogToFile(g_szLevelingLogPath, "[INIT] Leveling System v%s inicializado", LEVELING_MODULE_VERSION);
+}
+
+public Action Timer_SaveAllPlayersData(Handle timer)
+{
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && !IsFakeClient(i) && g_bPlayerDataLoaded[i])
+			Leveling_UpdatePlayerDatabase(i);
+	}
+	return Plugin_Continue;
 }
 
 public void Leveling_OnPluginEnd()
@@ -274,6 +287,10 @@ public void Callback_LoadPlayerLevel(Database db, DBResultSet results, const cha
 				  Leveling_GetXPRequiredForNextLevel(client), g_iTotalPlayerXP[client],
 				  g_bShoulderCannon_AutoEquip[client]);
 
+		// Si la BD tenía XP > umbral (estado inconsistente), corregir silenciosamente
+		// antes de aplicar pasivas o mostrar datos al jugador.
+		Leveling_NormalizePlayerData(client);
+
 		// Aplicar pasivas inmediatamente si el jugador esta vivo
 		if (IsPlayerAlive(client) && g_iPlayerLevel[client] > 0)
 		{
@@ -349,6 +366,32 @@ public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadca
 }
 
 /**
+ * Corrige silenciosamente un estado de BD inconsistente donde current_xp >= xp_required.
+ * Se llama una vez al cargar datos. Si ocurre un level-up, persiste el nuevo estado en BD.
+ */
+static void Leveling_NormalizePlayerData(int client)
+{
+	int xp_required = Leveling_GetXPRequiredForNextLevel(client);
+	bool leveled    = false;
+
+	while (g_iPlayerXP[client] >= xp_required)
+	{
+		g_iPlayerXP[client] -= xp_required;
+		g_iPlayerLevel[client]++;
+		leveled      = true;
+		xp_required  = Leveling_GetXPRequiredForNextLevel(client);
+	}
+
+	if (leveled)
+	{
+		LogToFile(g_szLevelingLogPath,
+			"[NORMALIZE] %N corregido a Nivel %d (XP inconsistente en BD)",
+			client, g_iPlayerLevel[client]);
+		Leveling_UpdatePlayerDatabase(client);
+	}
+}
+
+/**
  * Otorga XP a un jugador y maneja el level-up
  * @param client - ID del cliente
  * @param xp_amount - Cantidad de XP a otorgar
@@ -359,7 +402,15 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client))
 		return;
 
+	if (GetClientTeam(client) != 2)
+		return;
+
 	if (xp_amount <= 0)
+		return;
+
+	// No procesar XP hasta que los datos estén cargados desde BD.
+	// Evita race condition post-crash donde arrays son 0 y se sobreescribe BD con basura.
+	if (!g_bPlayerDataLoaded[client])
 		return;
 
 	// Agregar XP al total
@@ -397,12 +448,19 @@ public void Leveling_AwardXP(int client, int xp_amount, const char[] reason)
  */
 public void Leveling_OnLevelUp(int client)
 {
-	// Mostrar mensaje en chat
+	char playerName[MAX_NAME_LENGTH];
+	GetClientName(client, playerName, sizeof(playerName));
+
+	// Mensaje privado al jugador que subió
 	char message[128];
 	Format(message, sizeof(message), "%T", "Leveling_LevelUp", client, g_iPlayerLevel[client]);
 	PrintToChat(client, "\x04[LEVELING]\x01 %s", message);
-	CmdTrophy(client, 0);	 // Mostrar trofeo
-	// Log antes de aplicar rewards
+
+	// Anuncio global + sonido de Moustachio para todos
+	PrintToChatAll("\x04[LEVELING]\x01 ¡\x05%s\x01 ha alcanzado el \x04Nivel %d\x01!", playerName, g_iPlayerLevel[client]);
+	EmitSoundToAll(SOUND_ACHIEVEMENT);
+
+	CmdTrophy(client, 0);
 	LogMessage("[LEVELING DEBUG] OnLevelUp - %N alcanzo nivel %d, aplicando rewards...", client, g_iPlayerLevel[client]);
 
 	// Aplicar beneficios del nuevo nivel
@@ -466,6 +524,11 @@ public void Leveling_ApplyLevelRewards(int client, int level)
 public void Leveling_UpdatePlayerDatabase(int client)
 {
 	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client))
+		return;
+
+	// Nunca escribir a BD si los datos aún no fueron cargados desde ella.
+	// Segunda línea de defensa contra la race condition post-crash.
+	if (!g_bPlayerDataLoaded[client])
 		return;
 
 	char steamid[32];

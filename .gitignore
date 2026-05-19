@@ -20,3 +20,5 @@ data/left4dhooks.l4d2.cfg
 data/left4dhooks.l4d1.cfg
 .claude/settings.local.json
 .gitignore
+*.smx
+/compiled/*.smx

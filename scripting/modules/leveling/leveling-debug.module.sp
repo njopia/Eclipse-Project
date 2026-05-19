@@ -393,14 +393,10 @@ void ResetAllDebugForClient(int client)
  */
 int GetClientLevel(int client)
 {
-	// Si hay un nivel forzado por debug, usarlo
 	if (g_iDebug_ForcedLevel[client] >= 0)
 		return g_iDebug_ForcedLevel[client];
 
-	// Aqui deberia obtener el nivel real del sistema de leveling
-	// Por ahora retornamos 1 como placeholder
-	// TODO: Integrar con el sistema de leveling real
-	return 1;
+	return Leveling_GetPlayerLevel(client);
 }
 
 /**
