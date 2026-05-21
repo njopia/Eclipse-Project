@@ -10,7 +10,7 @@
 // y lo respawnea cerca del grupo al finalizar.
 //==================================================
 
-#define RESPAWN_HINT_INTERVAL  1.0   // Actualiza el hint cada 1s
+#define RESPAWN_HINT_INTERVAL  5.0   // Actualiza el hint cada 5s
 #define RESPAWN_TELEPORT_DELAY 0.2   // Delay tras L4D_RespawnPlayer antes de teleportar
 
 ConVar g_hRespawnDelay;
@@ -159,9 +159,11 @@ void RespawnSystem_ShowHint(int client)
 	if (!IsClientInGame(client) || IsPlayerAlive(client))
 		return;
 
-	char msg[256];
-	Format(msg, sizeof(msg), "%T", "Respawn_Hint", client, g_iRespawnCountdown[client]);
-	PrintHintText(client, "%s", msg);
+	// Obtener la frase traducida (contiene %d como placeholder del número)
+	// y aplicar el número directamente a través de PrintHintText.
+	char fmt[256];
+	Format(fmt, sizeof(fmt), "%T", "Respawn_Hint", client);
+	PrintHintText(client, fmt, g_iRespawnCountdown[client]);
 }
 
 /**

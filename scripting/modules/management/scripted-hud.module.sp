@@ -59,7 +59,7 @@
 
 #define MSG_COUNT				  5
 #define ROTATE_INTERVAL			  10.0
-#define AUTO_RELOAD_INTERVAL	  30.0	// Auto-recarga de mensajes desde BD cada 30 segundos
+#define AUTO_RELOAD_INTERVAL	  60.0	// Auto-recarga de mensajes desde BD cada 60 segundos
 
 // ====================================================================================================
 // Module Variables
@@ -250,7 +250,6 @@ void ScriptedHUD_OnPluginStart()
 
 	// Initialize auto-reload timer
 	g_tAutoReload = CreateTimer(AUTO_RELOAD_INTERVAL, ScriptedHUD_Timer_AutoReload, _, TIMER_REPEAT);
-	LogMessage("[ScriptedHUD] Auto-reload timer iniciado (cada %.1f segundos)", AUTO_RELOAD_INTERVAL);
 }
 
 void ScriptedHUD_OnConfigsExecuted()
@@ -470,8 +469,6 @@ Action ScriptedHUD_Cmd_ReloadMessages(int client, int args)
 	{
 		PrintToChat(client, "\x04[HUD]\x01 Mensajes recargados desde la base de datos. Total: \x05%d\x01 mensajes", g_MessageCount);
 	}
-
-	PrintToServer("[ScriptedHUD] Mensajes recargados por %N. Total: %d mensajes", client > 0 ? client : 0, g_MessageCount);
 
 	return Plugin_Handled;
 }

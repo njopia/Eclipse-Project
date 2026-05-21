@@ -133,7 +133,6 @@
 #tryinclude "modules/management/bot-control.module.sp"
 #tryinclude "modules/management/advertising.module.sp"
 #tryinclude "modules/management/respawn-system.module.sp"
-#tryinclude "modules/management/empty-server-restart.module.sp"
 
 //==================================================
 // === MAIN MENU MODULE ===
@@ -472,10 +471,6 @@ public void OnPluginStart()
 	RespawnSystem_OnPluginStart();
 #endif
 
-	// Initialize empty server auto-restart
-#if defined _EMPTY_SERVER_RESTART_MODULE_
-	EmptyServerRestart_OnPluginStart();
-#endif
 
 	// Initialize main menu
 	MainMenu_OnPluginStart();

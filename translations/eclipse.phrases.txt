@@ -2931,16 +2931,16 @@
   // === RESPAWN SYSTEM ===
   "Respawn_Hint"
   {
-    "en"  "You will be respawned in {1:d} seconds. Hold on!"
-    "es"  "Serás revivido en {1:d} segundos. ¡Aguanta!"
-    "pt"  "Você será revivido em {1:d} segundos. Aguenteee!"
-    "fr"  "Vous serez relancé dans {1:d} secondes. Tenez bon!"
-    "de"  "Du wirst in {1:d} Sekunden gespawnt. Durchhalten!"
-    "ru"  "Вы возродитесь через {1:d} секунд. Держитесь!"
-    "it"  "Verrai respawnato tra {1:d} secondi. Resisti!"
-    "pl"  "Odrodzisz się za {1:d} sekund. Wytrzymaj!"
-    "tr"  "{1:d} saniye içinde yeniden doğacaksın. Dayannn!"
-    "chi" "你将在 {1:d} 秒后复活。坚持住！"
+    "en"  "You will be respawned in %d seconds. Hold on!"
+    "es"  "Serás revivido en %d segundos. ¡Aguanta!"
+    "pt"  "Você será revivido em %d segundos. Aguenteee!"
+    "fr"  "Vous serez relancé dans %d secondes. Tenez bon!"
+    "de"  "Du wirst in %d Sekunden gespawnt. Durchhalten!"
+    "ru"  "Вы возродитесь через %d секунд. Держитесь!"
+    "it"  "Verrai respawnato tra %d secondi. Resisti!"
+    "pl"  "Odrodzisz się za %d sekund. Wytrzymaj!"
+    "tr"  "%d saniye içinde yeniden doğacaksın. Dayannn!"
+    "chi" "你将在 %d 秒后复活。坚持住！"
   }
   "Respawn_Spawning"
   {
