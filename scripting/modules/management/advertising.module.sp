@@ -118,7 +118,7 @@ public Action Timer_Advertise(Handle timer)
 			continue;
 
 		Format(msg, sizeof(msg), "%T", g_sAdvertKeys[g_iAdvertIndex], i);
-		PrintToChat(i, "%s%s", ADVERT_PREFIX, msg);
+		CPrintToChat(i, "%s%s", ADVERT_PREFIX, msg);
 	}
 
 	g_iAdvertIndex = (g_iAdvertIndex + 1) % g_iAdvertCount;

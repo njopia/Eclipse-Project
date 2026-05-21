@@ -15,6 +15,8 @@
 // ====================================================================================================
 // Defines
 // ====================================================================================================
+#define SCRIPTEDHUD_LOG_ENABLED 0  // 1 = activa logs de carga de mensajes
+
 #define HUD1 0
 
 #define HUD_FLAG_NONE			  0
@@ -130,7 +132,9 @@ bool ScriptedHUD_ConnectDatabase()
 		return false;
 	}
 
+	#if SCRIPTEDHUD_LOG_ENABLED
 	LogMessage("[ScriptedHUD] Conexion a base de datos exitosa");
+	#endif
 	return true;
 }
 
@@ -171,12 +175,16 @@ void ScriptedHUD_OnMessagesLoaded(Handle owner, Handle hndl, const char[] error,
 
 	if (g_MessageCount == 0)
 	{
+		#if SCRIPTEDHUD_LOG_ENABLED
 		LogMessage("[ScriptedHUD] No se encontraron mensajes activos en la BD, usando mensajes por defecto");
+		#endif
 		ScriptedHUD_LoadDefaultMessages();
 	}
 	else
 	{
+		#if SCRIPTEDHUD_LOG_ENABLED
 		LogMessage("[ScriptedHUD] %d mensajes cargados desde la base de datos", g_MessageCount);
+		#endif
 	}
 
 	// Actualizar g_CurrentMessage inmediatamente con los nuevos mensajes
@@ -193,7 +201,9 @@ void ScriptedHUD_LoadDefaultMessages()
 	strcopy(g_Messages[3], sizeof(g_Messages[]), "Level up to unlock bonuses");
 	strcopy(g_Messages[4], sizeof(g_Messages[]), "Have fun playing!");
 
+	#if SCRIPTEDHUD_LOG_ENABLED
 	LogMessage("[ScriptedHUD] Mensajes por defecto cargados");
+	#endif
 }
 
 // ====================================================================================================

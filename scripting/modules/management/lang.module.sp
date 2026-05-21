@@ -238,12 +238,12 @@ void ChangeLanguage(int client, int lang)
 
 		char message[128];
 		Format(message, sizeof(message), "%T", "Lang_Changed", client, name, code, lang);
-		PrintToChat(client, "\x04[Language]\x01 %s", message);
+		CPrintToChat(client, "\x04[Language]\x01 %s", message);
 	}
 	else
 	{
 		char message[128];
 		Format(message, sizeof(message), "%T", "Lang_ErrorCode", client);
-		PrintToChat(client, "\x05[Language]\x01 %s", message);
+		CPrintToChat(client, "\x05[Language]\x01 %s", message);
 	}
 }

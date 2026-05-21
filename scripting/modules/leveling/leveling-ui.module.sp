@@ -120,22 +120,22 @@ public void LevelingUI_DisplayLevelInfo(int client)
 	// Encabezado
 	char titleMsg[128];
 	Format(titleMsg, sizeof(titleMsg), "%T", "Leveling_InfoTitle", client);
-	PrintToChat(client, "\x04%s", titleMsg);
+	CPrintToChat(client, "%s", titleMsg);
 
 	// Nivel
 	char levelMsg[128];
 	Format(levelMsg, sizeof(levelMsg), "%T", "Leveling_InfoLevel", client, level);
-	PrintToChat(client, "\x04%s", levelMsg);
+	CPrintToChat(client, "%s", levelMsg);
 
 	// XP actual vs requerido
 	char currentXPMsg[128];
 	Format(currentXPMsg, sizeof(currentXPMsg), "%T", "Leveling_InfoCurrentXP", client, currentXP, nextLevelXP);
-	PrintToChat(client, "\x04%s", currentXPMsg);
+	CPrintToChat(client, "%s", currentXPMsg);
 
 	// XP total acumulado
 	char totalXPMsg[128];
 	Format(totalXPMsg, sizeof(totalXPMsg), "%T", "Leveling_InfoTotalXP", client, totalXP);
-	PrintToChat(client, "\x04%s", totalXPMsg);
+	CPrintToChat(client, "%s", totalXPMsg);
 
 	// Barra de progreso (si esta habilitada)
 	if (GetConVarBool(cvar_UIShowProgressBar))
@@ -144,13 +144,13 @@ public void LevelingUI_DisplayLevelInfo(int client)
 		LevelingUI_CreateProgressBar(progress, progressBar, sizeof(progressBar));
 		char progressMsg[128];
 		Format(progressMsg, sizeof(progressMsg), "%T", "Leveling_InfoProgress", client, progress);
-		PrintToChat(client, "\x04%s\x01 %s", progressMsg, progressBar);
+		CPrintToChat(client, "%s %s", progressMsg, progressBar);
 	}
 	else
 	{
 		char progressMsg[128];
 		Format(progressMsg, sizeof(progressMsg), "%T", "Leveling_InfoProgress", client, progress);
-		PrintToChat(client, "\x04%s", progressMsg);
+		CPrintToChat(client, "%s", progressMsg);
 	}
 }
 
@@ -174,7 +174,7 @@ public void LevelingUI_DisplayXPGain(int client, int xp_gained, const char[] rea
 
 	char message[256];
 	Format(message, sizeof(message), "%T", "Leveling_XPGained", client, xp_gained, reason, currentXP, nextLevelXP, progress);
-	PrintToChat(client, "\x04[XP]\x01 %s", message);
+	CPrintToChat(client, "%s", message);
 }
 
 /**

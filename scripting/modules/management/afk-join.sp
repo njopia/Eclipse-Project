@@ -32,7 +32,7 @@ public Action CmdAfk(int client, int args)
 	{
 		char message[128];
 		Format(message, sizeof(message), "%T", "AFK_AlreadySpectator", client);
-		PrintToChat(client, "\x04[AFK]\x01 %s", message);
+		CPrintToChat(client, "\x04[AFK]\x01 %s", message);
 		return Plugin_Handled;
 	}
 
@@ -131,7 +131,7 @@ void ToSpectator(int client, bool verbose)
 		{
 			char message[128];
 			Format(message, sizeof(message), "%T", "AFK_AlreadySpectator", client);
-			PrintToChat(client, "\x04[AFK]\x01 %s", message);
+			CPrintToChat(client, "\x04[AFK]\x01 %s", message);
 		}
 		return;
 	}
@@ -144,7 +144,7 @@ void ToSpectator(int client, bool verbose)
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "AFK_MovedToSpectator", LANG_SERVER, client);
-	PrintToChatAll("\x04[AFK]\x01 %s", message);
+	CPrintToChatAll("\x04[AFK]\x01 %s", message);
 }
 
 void TryJoinSurvivors(int client)
@@ -153,7 +153,7 @@ void TryJoinSurvivors(int client)
 	{
 		char message[128];
 		Format(message, sizeof(message), "%T", "Join_AlreadySurvivor", client);
-		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
+		CPrintToChat(client, "\x04[JOIN]\x01 %s", message);
 		return;
 	}
 
@@ -165,7 +165,7 @@ void TryJoinSurvivors(int client)
 	{
 		char message[256];
 		Format(message, sizeof(message), "%T", "Join_SurvivorsFull", client, survHumans, maxSurv);
-		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
+		CPrintToChat(client, "\x04[JOIN]\x01 %s", message);
 		return;
 	}
 
@@ -199,13 +199,13 @@ public Action PostJoinCheck(Handle timer, any userid)
 	{
 		char message[128];
 		Format(message, sizeof(message), "%T", "Join_JoinedSurvivors", LANG_SERVER, client);
-		PrintToChatAll("\x04[JOIN]\x01 %s", message);
+		CPrintToChatAll("\x04[JOIN]\x01 %s", message);
 	}
 	else
 	{
 		char message[256];
 		Format(message, sizeof(message), "%T", "Join_Failed", client);
-		PrintToChat(client, "\x04[JOIN]\x01 %s", message);
+		CPrintToChat(client, "\x04[JOIN]\x01 %s", message);
 	}
 	// PrintToChatAll("client team: %d", GetClientTeam(client));
 	// PrintToChatAll("TEAM_SURVIVOR: %d", TEAM_SURVIVOR);

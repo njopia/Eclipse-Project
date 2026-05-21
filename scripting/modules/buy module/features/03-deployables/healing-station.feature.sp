@@ -163,7 +163,6 @@ public Action HSOnThink(int entity)
 						return Plugin_Continue;
 					}
 				}
-				PrintToChatAll("disabling");
 				AcceptEntityInput(entity, "Disable");
 				SetVariantString("OnUser1 !self:Enable::0.1:-1");
 				AcceptEntityInput(entity, "AddOutput");

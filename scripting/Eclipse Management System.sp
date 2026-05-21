@@ -3,6 +3,8 @@
 #include <sourcemod>
 #include <left4dhooks>
 #include <clientprefs>
+#include <geoip>
+#include <colors>
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -133,6 +135,7 @@
 #tryinclude "modules/management/bot-control.module.sp"
 #tryinclude "modules/management/advertising.module.sp"
 #tryinclude "modules/management/respawn-system.module.sp"
+#tryinclude "modules/management/join-message.module.sp"
 
 //==================================================
 // === MAIN MENU MODULE ===
@@ -586,6 +589,10 @@ public void OnMapStart()
 #if defined _RESPAWN_SYSTEM_MODULE_
 	RespawnSystem_OnMapStart();
 #endif
+
+#if defined _JOIN_MESSAGE_MODULE_
+	JoinMessage_OnMapStart();
+#endif
 }
 
 /**
@@ -683,6 +690,11 @@ public void OnClientPostAdminCheck(int client)
 	// Initialize map vote system
 #if defined _MAPVOTE_MODULE_
 	MapVote_OnClientPostAdminCheck(client);
+#endif
+
+	// Show join announcement
+#if defined _JOIN_MESSAGE_MODULE_
+	JoinMessage_OnClientPostAdminCheck(client);
 #endif
 }
 

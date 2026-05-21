@@ -78,7 +78,7 @@ public Action Cmd_Buy(int client, int args)
 	{
 		char errorMsg[128];
 		Format(errorMsg, sizeof(errorMsg), "%T", "Error_OnlyForSurvivors", client);
-		PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
+		CPrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
 		return Plugin_Handled;
 	}
 
@@ -530,7 +530,7 @@ static void _BM_PrintLevelError(int client, int requiredLevel, const char[] item
 {
 	char errorMsg[128];
 	Format(errorMsg, sizeof(errorMsg), "%T", "Error_LevelRequired", client, requiredLevel, itemName);
-	PrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
+	CPrintToChat(client, "\x05[Eclipse]\x01 %s", errorMsg);
 }
 
 stock void ExecuteCheatCommand(int client, const char[] command, const char[] arguments = "")

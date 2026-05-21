@@ -212,7 +212,7 @@ static void _DiffOrch_ProcessProgression()
 		case MODE_NONE:
 		{
 			Format(msg, sizeof(msg), "%t", "DiffOrch_BloodmoonUnlocked");
-			PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
+			CPrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 			EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
 			DifficultyOrchestrator_SetMode(MODE_BLOODMOON);
 			g_iDifficultyWins = 0;
@@ -222,7 +222,7 @@ static void _DiffOrch_ProcessProgression()
 			if (g_iDifficultyWins >= PROGRESSION_BLOODMOON_TO_HELL)
 			{
 				Format(msg, sizeof(msg), "%t", "DiffOrch_HellUnlocked");
-				PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
+				CPrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 				EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
 				DifficultyOrchestrator_SetMode(MODE_HELL);
 				g_iDifficultyWins = 0;
@@ -234,7 +234,7 @@ static void _DiffOrch_ProcessProgression()
 			if (g_iDifficultyWins >= PROGRESSION_HELL_TO_INFERNO)
 			{
 				Format(msg, sizeof(msg), "%t", "DiffOrch_InfernoUnlocked");
-				PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
+				CPrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 				EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
 				DifficultyOrchestrator_SetMode(MODE_INFERNO);
 				g_iDifficultyWins = 0;
@@ -246,7 +246,7 @@ static void _DiffOrch_ProcessProgression()
 			if (g_iDifficultyWins >= PROGRESSION_INFERNO_TO_COWLEVEL)
 			{
 				Format(msg, sizeof(msg), "%t", "DiffOrch_CowLevelUnlocked");
-				PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
+				CPrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 				EmitSoundToAll("npc/mega_mob/mega_mob_incoming.wav");
 				DifficultyOrchestrator_SetMode(MODE_COWLEVEL);
 				g_iDifficultyWins = 0;
@@ -256,7 +256,7 @@ static void _DiffOrch_ProcessProgression()
 		case MODE_COWLEVEL:
 		{
 			Format(msg, sizeof(msg), "%t", "DiffOrch_AllCompleted");
-			PrintToChatAll("\x05[Eclipse]\x04 %s", msg);
+			CPrintToChatAll("\x05[Eclipse]\x04 %s", msg);
 			DifficultyOrchestrator_SetMode(MODE_NONE);
 			g_iDifficultyWins = 0;
 		}

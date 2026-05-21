@@ -412,7 +412,7 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 	{
 		char message[128];
 		Format(message, sizeof(message), "%T", "Buy_InsufficientPoints", client, cost, g_iPlayerLocalCurrency[client]);
-		PrintToChat(client, "\x05[Buy]\x01 %s", message);
+		CPrintToChat(client, "\x05[Buy]\x01 %s", message);
 		return false;
 	}
 
@@ -424,7 +424,7 @@ stock bool PurchaseItem(int client, int cost, const char[] itemName)
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "Buy_PurchaseSuccess", client, itemName, g_iPlayerLocalCurrency[client]);
-	PrintToChat(client, "\x04[Buy]\x01 %s", message);
+	CPrintToChat(client, "\x04[Buy]\x01 %s", message);
 	return true;
 }
 
@@ -488,13 +488,13 @@ stock void BuyMenu_PrintKillMessage(int attacker, int victim, int frags, int top
 	{
 		char message[256];
 		Format(message, sizeof(message), "%T", "Buy_KillRewardWithCurrency", LANG_SERVER, attacker, victim, frags, topPosition, pointsGained);
-		PrintToChatAll("\x04[Eclipse]\x01 %s", message);
+		CPrintToChatAll("\x04[Eclipse]\x01 %s", message);
 	}
 	else
 	{
 		char message[256];
 		Format(message, sizeof(message), "%T", "Buy_KillReward", LANG_SERVER, attacker, victim, frags, topPosition);
-		PrintToChatAll("\x04[Eclipse]\x01 %s", message);
+		CPrintToChatAll("\x04[Eclipse]\x01 %s", message);
 	}
 }
 
@@ -528,7 +528,7 @@ stock void SetPlayerCurrency(int client, int amount)
 
 	char message[128];
 	Format(message, sizeof(message), "%T", "Buy_AdminSetBalance", client, amount);
-	PrintToChat(client, "\x04[Admin]\x01 %s", message);
+	CPrintToChat(client, "\x04[Admin]\x01 %s", message);
 }
 // ============================================================================
 

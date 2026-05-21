@@ -286,21 +286,21 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 	// Verificar si el sistema esta habilitado
 	if (!GetConVarBool(cvar_AbilitiesEnabled))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 %T", "System_Disabled", client, "Abilities");
+		CPrintToChat(client, "\x04[Abilities]\x01 %T", "System_Disabled", client, "Abilities");
 		return false;
 	}
 
 	// Verificar equipo
 	if (GetClientTeam(client) != 2)
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 %T", "TSB_OnlyForSurvivors", client);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T", "TSB_OnlyForSurvivors", client);
 		return false;
 	}
 
 	// Verificar si esta vivo
 	if (!IsPlayerAlive(client))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_MustBeAlive", client);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_MustBeAlive", client);
 		return false;
 	}
 
@@ -313,7 +313,7 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		Abilities_GetDescription(ability, client, desc, sizeof(desc));
 		
 		// Usar traduccion para el formato de informacion de habilidad bloqueada
-		PrintToChat(client, "\x04[Abilities]\x01 %T: \x05%s", "Ability_Info_Locked", client, abilityName, required, desc);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T: \x05%s", "Ability_Info_Locked", client, abilityName, required, desc);
 		return false;
 	}
 
@@ -326,7 +326,7 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		Abilities_GetDescription(ability, client, desc, sizeof(desc));
 		
 		// Informar sobre el cooldown y mostrar la descripcion
-		PrintToChat(client, "\x04[Abilities]\x01 %T: \x05%s", "Ability_OnCooldown", client, abilityName, iRemaining, desc);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T: \x05%s", "Ability_OnCooldown", client, abilityName, iRemaining, desc);
 		return false;
 	}
 
@@ -335,13 +335,13 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 	{
 		char abilityName[64];
 		Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
-		PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_AlreadyActive", client, abilityName);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_AlreadyActive", client, abilityName);
 		return false;
 	}
 
 	if (Abilities_HasAnyActive(client))
 	{
-		PrintToChat(client, "\x04[Abilities]\x01 %T", "UI_Waiting", client);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T", "UI_Waiting", client);
 		return false;
 	}
 
@@ -384,7 +384,7 @@ bool Abilities_Activate(int client, AbilityIndex ability)
 		WritePackCell(data, GetClientUserId(client));
 		WritePackCell(data, view_as<int>(ability));
 
-		PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_Activated", client, abilityName);
+		CPrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_Activated", client, abilityName);
 	}
 
 	return success;
@@ -408,7 +408,7 @@ public Action Timer_AbilityEnd(Handle timer, Handle data)
 
 	char abilityName[64];
 	Abilities_GetName(ability, client, abilityName, sizeof(abilityName));
-	PrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_Deactivated", client, abilityName);
+	CPrintToChat(client, "\x04[Abilities]\x01 %T", "Ability_Deactivated", client, abilityName);
 
 	return Plugin_Stop;
 }

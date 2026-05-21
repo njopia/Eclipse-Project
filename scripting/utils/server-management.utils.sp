@@ -15,7 +15,7 @@ public Action Cmd_Reload_Translations(int client, int args)
 {
 	char reloadingMsg[128];
 	Format(reloadingMsg, sizeof(reloadingMsg), "%T", "System_TranslationsReloading", LANG_SERVER);
-	PrintToChatAll("\x04[System]\x01 %s", reloadingMsg);
+	CPrintToChatAll("\x04[System]\x01 %s", reloadingMsg);
 
 	ServerCommand("sm_reload_translations");
 

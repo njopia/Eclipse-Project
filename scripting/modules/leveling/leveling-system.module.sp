@@ -454,7 +454,7 @@ public void Leveling_OnLevelUp(int client)
 	// Mensaje privado al jugador que subió
 	char message[128];
 	Format(message, sizeof(message), "%T", "Leveling_LevelUp", client, g_iPlayerLevel[client]);
-	PrintToChat(client, "\x04[LEVELING]\x01 %s", message);
+	CPrintToChat(client, "\x04[LEVELING]\x01 %s", message);
 
 	// Anuncio global + sonido de Moustachio para todos
 	PrintToChatAll("\x04[LEVELING]\x01 ¡\x05%s\x01 ha alcanzado el \x04Nivel %d\x01!", playerName, g_iPlayerLevel[client]);

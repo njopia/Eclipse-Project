@@ -243,7 +243,7 @@ public Action Timer_TeleportToGroup(Handle timer, int userid)
 
 		char action[200];
 		Format(action, sizeof(action), "%T", "Respawn_Notification", i);
-		PrintToChat(i, "\x04[Eclipse]\x01 \x05%s\x01 %s", playerName, action);
+		CPrintToChat(i, "\x04[Eclipse]\x01 \x05%s\x01 %s", playerName, action);
 	}
 
 	return Plugin_Stop;

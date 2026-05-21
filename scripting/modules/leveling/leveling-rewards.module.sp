@@ -53,7 +53,7 @@ public void LevelingRewards_OnPluginStart()
 	// ConVar de debug
 	cvar_Rewards_Debug = CreateConVar(
 		"leveling_rewards_debug",
-		"1",
+		"0",
 		"Show debug messages when rewards are applied (0=Off, 1=On)",
 		FCVAR_PLUGIN
 	);

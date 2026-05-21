@@ -201,7 +201,7 @@ public Action Timer_WelcomeToCowLevel(Handle timer, int userid)
 		SetGlobalTransTarget(client);
 		char message[256];
 		Format(message, sizeof(message), "%t", "CowLevel_Welcome");
-		PrintToChat(client, "\x05[Eclipse]\x01 %s", message);
+		CPrintToChat(client, "\x05[Eclipse]\x01 %s", message);
 	}
 	return Plugin_Stop;
 }
@@ -219,13 +219,13 @@ public Action Command_ToggleCowLevel(int client, int args)
 	{
 		SetGlobalTransTarget(client);
 		Format(message, sizeof(message), "%t", "CowLevel_Activated");
-		PrintToChat(client, "\x05[Admin]\x01 %s", message);
+		CPrintToChat(client, "\x05[Admin]\x01 %s", message);
 	}
 	else
 	{
 		SetGlobalTransTarget(client);
 		Format(message, sizeof(message), "%t", "CowLevel_Deactivated");
-		PrintToChat(client, "\x05[Admin]\x01 %s", message);
+		CPrintToChat(client, "\x05[Admin]\x01 %s", message);
 	}
 
 	return Plugin_Handled;
@@ -257,7 +257,7 @@ void CowLevel_Activate()
 	SetGlobalTransTarget(LANG_SERVER);
 	char message[256];
 	Format(message, sizeof(message), "%t", "CowLevel_Unlocked");
-	PrintToChatAll("\x05[Eclipse]\x04 %s", message);
+	CPrintToChatAll("\x05[Eclipse]\x04 %s", message);
 
 	// Reproducir sonido
 	LogMessage("[Cow Level] Playing activation sound...");
@@ -328,7 +328,7 @@ void CowLevel_Deactivate()
 	SetGlobalTransTarget(LANG_SERVER);
 	char message[128];
 	Format(message, sizeof(message), "%t", "CowLevel_Ended");
-	PrintToChatAll("\x05[Eclipse]\x01 %s", message);
+	CPrintToChatAll("\x05[Eclipse]\x01 %s", message);
 }
 
 /**
