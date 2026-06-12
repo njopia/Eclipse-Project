@@ -22,3 +22,4 @@ data/left4dhooks.l4d1.cfg
 .gitignore
 *.smx
 /compiled/*.smx
+node_modules/

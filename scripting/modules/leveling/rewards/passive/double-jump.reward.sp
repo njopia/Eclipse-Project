@@ -23,7 +23,7 @@ public void DoubleJump_OnPluginStart()
 {
 	cvar_DoubleJump_RequiredLevel = CreateConVar(
 		"reward_double_jump_level",
-		"1",
+		"999",
 		"Nivel requerido para desbloquear doble salto",
 		FCVAR_PLUGIN
 	);

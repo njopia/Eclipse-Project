@@ -1,0 +1,16 @@
+{
+  "name": "upload-smx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "ssh2-sftp-client": "^12.1.1"
+  }
+}
